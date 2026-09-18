@@ -120,3 +120,123 @@ test('Edge cases (0 classes conducted)', () => {
   assert.strictEqual(zero.safeBunks, 0);
   assert.strictEqual(zero.recoveryNeeded, 0);
 });
+
+// Period Attendance Single-Marking Engine
+function simulatePeriodAttendance(existingRecords, subjects, slot, date, newStatus) {
+  const periodKey = `${date}_${slot.id}`;
+  const existing = existingRecords[periodKey];
+
+  if (existing && existing.status === newStatus) {
+    return {
+      success: false,
+      alreadyMarked: true,
+      subjects,
+      records: existingRecords,
+    };
+  }
+
+  let deltaAttended = 0;
+  let deltaTotal = 0;
+
+  if (!existing) {
+    if (newStatus === 'attended') {
+      deltaAttended = 1;
+      deltaTotal = 1;
+    } else if (newStatus === 'bunked') {
+      deltaAttended = 0;
+      deltaTotal = 1;
+    } else if (newStatus === 'cancelled') {
+      deltaAttended = 0;
+      deltaTotal = 0;
+    }
+  } else {
+    if (existing.status === 'attended') {
+      deltaAttended -= 1;
+      deltaTotal -= 1;
+    } else if (existing.status === 'bunked') {
+      deltaTotal -= 1;
+    }
+
+    if (newStatus === 'attended') {
+      deltaAttended += 1;
+      deltaTotal += 1;
+    } else if (newStatus === 'bunked') {
+      deltaTotal += 1;
+    }
+  }
+
+  const updatedSubjects = subjects.map((s) => {
+    if (s.id === slot.subjectId) {
+      return {
+        ...s,
+        attended: Math.max(0, s.attended + deltaAttended),
+        total: Math.max(0, s.total + deltaTotal),
+      };
+    }
+    return s;
+  });
+
+  const updatedRecords = {
+    ...existingRecords,
+    [periodKey]: {
+      periodKey,
+      date,
+      slotId: slot.id,
+      subjectId: slot.subjectId,
+      status: newStatus,
+    },
+  };
+
+  return {
+    success: true,
+    alreadyMarked: false,
+    subjects: updatedSubjects,
+    records: updatedRecords,
+  };
+}
+
+test('Prevents double-marking attendance for the same period', () => {
+  const initialSubjects = [{ id: 'sub_edm', name: 'EDM', attended: 20, total: 24 }];
+  const slot = { id: 'slot_thu_1', subjectId: 'sub_edm', startTime: '08:30', endTime: '10:20' };
+  const date = '2026-09-18';
+  let records = {};
+
+  // First tap: Mark Attended
+  const firstTap = simulatePeriodAttendance(records, initialSubjects, slot, date, 'attended');
+  assert.strictEqual(firstTap.success, true);
+  assert.strictEqual(firstTap.alreadyMarked, false);
+  assert.strictEqual(firstTap.subjects[0].attended, 21);
+  assert.strictEqual(firstTap.subjects[0].total, 25);
+  records = firstTap.records;
+
+  // Second tap: User tries to tap "I Attended" again on the same period
+  const secondTap = simulatePeriodAttendance(records, firstTap.subjects, slot, date, 'attended');
+  assert.strictEqual(secondTap.success, false);
+  assert.strictEqual(secondTap.alreadyMarked, true);
+  // Numbers MUST remain strictly unchanged (21/25)
+  assert.strictEqual(secondTap.subjects[0].attended, 21);
+  assert.strictEqual(secondTap.subjects[0].total, 25);
+});
+
+test('Accurately adjusts attendance when correcting period status', () => {
+  const initialSubjects = [{ id: 'sub_la', name: 'LA', attended: 15, total: 18 }];
+  const slot = { id: 'slot_thu_2', subjectId: 'sub_la', startTime: '10:40', endTime: '12:30' };
+  const date = '2026-09-18';
+
+  // 1. Marked as Attended initially -> 16 / 19
+  const step1 = simulatePeriodAttendance({}, initialSubjects, slot, date, 'attended');
+  assert.strictEqual(step1.subjects[0].attended, 16);
+  assert.strictEqual(step1.subjects[0].total, 19);
+
+  // 2. Student corrects to Bunked -> attended reverts from 16 to 15, total stays 19 (1 bunk added)
+  const step2 = simulatePeriodAttendance(step1.records, step1.subjects, slot, date, 'bunked');
+  assert.strictEqual(step2.success, true);
+  assert.strictEqual(step2.subjects[0].attended, 15);
+  assert.strictEqual(step2.subjects[0].total, 19);
+
+  // 3. Class was actually Cancelled -> total reverts from 19 to 18 (cancelled period removed)
+  const step3 = simulatePeriodAttendance(step2.records, step2.subjects, slot, date, 'cancelled');
+  assert.strictEqual(step3.success, true);
+  assert.strictEqual(step3.subjects[0].attended, 15);
+  assert.strictEqual(step3.subjects[0].total, 18);
+});

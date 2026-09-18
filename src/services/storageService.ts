@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Subject, TimetableSlot, AttendanceLog, MedicalClaimRecord } from '../types';
+import { Subject, TimetableSlot, AttendanceLog, MedicalClaimRecord, PeriodAttendanceRecord } from '../types';
 
 const STORAGE_KEYS = {
   SUBJECTS: '@attendance_monitor_subjects',
@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   LOGS: '@attendance_monitor_logs',
   MEDICAL_CLAIMS: '@attendance_monitor_medical_claims',
   AUTH_USER: '@attendance_monitor_auth_user',
+  PERIOD_RECORDS: '@attendance_monitor_period_records_',
 };
 
 // Initial realistic seed data
@@ -198,5 +199,30 @@ export const StorageService = {
     } catch (e) {
       console.warn('Storage error:', e);
     }
-  }
+  },
+
+  async getPeriodRecords(rollNo: string): Promise<Record<string, PeriodAttendanceRecord>> {
+    try {
+      if (!rollNo) return {};
+      const key = `${STORAGE_KEYS.PERIOD_RECORDS}${rollNo.toUpperCase()}`;
+      const data = await AsyncStorage.getItem(key);
+      return data ? JSON.parse(data) : {};
+    } catch (e) {
+      console.warn('Error reading period records:', e);
+      return {};
+    }
+  },
+
+  async savePeriodRecords(
+    rollNo: string,
+    records: Record<string, PeriodAttendanceRecord>
+  ): Promise<void> {
+    try {
+      if (!rollNo) return;
+      const key = `${STORAGE_KEYS.PERIOD_RECORDS}${rollNo.toUpperCase()}`;
+      await AsyncStorage.setItem(key, JSON.stringify(records));
+    } catch (e) {
+      console.warn('Error saving period records:', e);
+    }
+  },
 };

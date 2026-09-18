@@ -9,7 +9,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { Subject, TimetableSlot, MedicalClaimRecord } from './src/types';
+import { Subject, TimetableSlot, MedicalClaimRecord, PeriodAttendanceRecord, AttendanceStatus } from './src/types';
 import { StorageService, INITIAL_MEDICAL_CLAIMS } from './src/services/storageService';
 import { NotificationService } from './src/services/notificationService';
 import { DashboardScreen } from './src/screens/DashboardScreen';
@@ -31,6 +31,7 @@ export default function App() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
   const [medicalClaims, setMedicalClaims] = useState<MedicalClaimRecord[]>(INITIAL_MEDICAL_CLAIMS);
+  const [periodRecords, setPeriodRecords] = useState<Record<string, PeriodAttendanceRecord>>({});
 
   // Check saved session on launch
   useEffect(() => {
@@ -42,6 +43,8 @@ export default function App() {
           setActiveRollNo(officialRoll);
           setSubjects(PsgimService.generateSubjectsForStudent(officialRoll));
           setTimetable(PsgimService.generateTimetableForStudent(officialRoll));
+          const storedRecords = await StorageService.getPeriodRecords(officialRoll);
+          setPeriodRecords(storedRecords);
           setIsAuthenticated(true);
         }
 
@@ -63,10 +66,12 @@ export default function App() {
   const handleLoginSuccess = async (rollNo: string) => {
     const studentSubjects = PsgimService.generateSubjectsForStudent(rollNo);
     const studentTimetable = PsgimService.generateTimetableForStudent(rollNo);
+    const storedRecords = await StorageService.getPeriodRecords(rollNo);
 
     setActiveRollNo(rollNo);
     setSubjects(studentSubjects);
     setTimetable(studentTimetable);
+    setPeriodRecords(storedRecords);
     setIsAuthenticated(true);
     await StorageService.setAuthUser(rollNo);
   };
@@ -76,7 +81,111 @@ export default function App() {
     await StorageService.clearAuthUser();
     setIsAuthenticated(false);
     setActiveRollNo('');
+    setPeriodRecords({});
     setActiveTab('DASHBOARD');
+  };
+
+  // Dedicated single-marking handler for hourly periods (prevents double-marking)
+  const handleRecordPeriodAttendance = async (
+    slot: TimetableSlot,
+    date: string,
+    newStatus: AttendanceStatus
+  ): Promise<{ success: boolean; message: string; isChange: boolean; alreadyMarked?: boolean }> => {
+    const periodKey = `${date}_${slot.id}`;
+    const existing = periodRecords[periodKey];
+
+    if (existing && existing.status === newStatus) {
+      return {
+        success: false,
+        message: `You have already marked this period as "${newStatus.toUpperCase()}". A period cannot be marked twice.`,
+        isChange: false,
+        alreadyMarked: true,
+      };
+    }
+
+    const subject = subjects.find((s) => s.id === slot.subjectId);
+    if (!subject) {
+      return {
+        success: false,
+        message: 'Course not found in your assigned curriculum.',
+        isChange: false,
+      };
+    }
+
+    // Compute delta to correctly adjust attendance totals without duplicate increments
+    let deltaAttended = 0;
+    let deltaTotal = 0;
+
+    if (!existing) {
+      // First time recording this period
+      if (newStatus === 'attended') {
+        deltaAttended = 1;
+        deltaTotal = 1;
+      } else if (newStatus === 'bunked') {
+        deltaAttended = 0;
+        deltaTotal = 1;
+      } else if (newStatus === 'cancelled') {
+        deltaAttended = 0;
+        deltaTotal = 0;
+      }
+    } else {
+      // Correcting/switching previously recorded status
+      if (existing.status === 'attended') {
+        deltaAttended -= 1;
+        deltaTotal -= 1;
+      } else if (existing.status === 'bunked') {
+        deltaTotal -= 1;
+      }
+
+      if (newStatus === 'attended') {
+        deltaAttended += 1;
+        deltaTotal += 1;
+      } else if (newStatus === 'bunked') {
+        deltaTotal += 1;
+      }
+    }
+
+    const updatedSubjects = subjects.map((s) => {
+      if (s.id === slot.subjectId) {
+        const nextAttended = Math.max(0, s.attended + deltaAttended);
+        const nextTotal = Math.max(nextAttended, s.total + deltaTotal);
+        return {
+          ...s,
+          attended: nextAttended,
+          total: nextTotal,
+        };
+      }
+      return s;
+    });
+
+    const newRecord: PeriodAttendanceRecord = {
+      periodKey,
+      date,
+      slotId: slot.id,
+      subjectId: slot.subjectId,
+      status: newStatus,
+      recordedAt: Date.now(),
+    };
+
+    const updatedRecords = {
+      ...periodRecords,
+      [periodKey]: newRecord,
+    };
+
+    setSubjects(updatedSubjects);
+    setPeriodRecords(updatedRecords);
+
+    await StorageService.saveSubjects(updatedSubjects);
+    await StorageService.savePeriodRecords(activeRollNo, updatedRecords);
+
+    const isChange = Boolean(existing);
+    return {
+      success: true,
+      message: isChange
+        ? `Status updated from ${existing?.status.toUpperCase()} to ${newStatus.toUpperCase()}. Totals adjusted accurately.`
+        : `Marked as ${newStatus.toUpperCase()} for ${subject.name}. (Period locked)`,
+      isChange,
+    };
   };
 
   // Update subject helper
@@ -212,6 +321,8 @@ export default function App() {
             timetable={timetable}
             studentRollNo={activeRollNo}
             studentName={studentName}
+            periodRecords={periodRecords}
+            onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onUpdateSubject={handleUpdateSubject}
             onToggleMedicalClaim={handleToggleMedicalClaim}
             onQuickAttend={handleQuickAttend}

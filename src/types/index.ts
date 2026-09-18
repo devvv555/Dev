@@ -44,6 +44,15 @@ export interface AttendanceLog {
   timestamp: number;
 }
 
+export interface PeriodAttendanceRecord {
+  periodKey: string; // e.g. "2026-09-18_slot_D26AA01_Thursday_0"
+  date: string; // "YYYY-MM-DD"
+  slotId: string;
+  subjectId: string;
+  status: AttendanceStatus;
+  recordedAt: number;
+}
+
 export type MedicalClaimStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED';
 
 export interface MedicalClaimRecord {

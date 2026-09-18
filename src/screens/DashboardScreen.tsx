@@ -8,7 +8,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import { Subject, TimetableSlot } from '../types';
+import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus } from '../types';
 import { calculateOverallMetrics } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 import { SubjectCard } from '../components/SubjectCard';
@@ -19,6 +19,12 @@ interface DashboardScreenProps {
   timetable: TimetableSlot[];
   studentRollNo: string;
   studentName: string;
+  periodRecords: Record<string, PeriodAttendanceRecord>;
+  onRecordPeriodAttendance: (
+    slot: TimetableSlot,
+    date: string,
+    status: AttendanceStatus
+  ) => Promise<{ success: boolean; message: string; isChange: boolean; alreadyMarked?: boolean }>;
   onUpdateSubject: (subject: Subject) => void;
   onToggleMedicalClaim: (id: string) => void;
   onQuickAttend: (id: string) => void;
@@ -30,6 +36,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   timetable,
   studentRollNo,
   studentName,
+  periodRecords,
+  onRecordPeriodAttendance,
   onUpdateSubject,
   onToggleMedicalClaim,
   onQuickAttend,
@@ -142,18 +150,59 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     };
   };
 
+  const todayDate = now.toISOString().split('T')[0];
+  const currentPeriodKey = currentSlot ? `${todayDate}_${currentSlot.id}` : null;
+  const currentRecord = currentPeriodKey ? periodRecords[currentPeriodKey] : undefined;
   const slotStatus = getSlotStatus();
 
-  const handleAutoRecord = (status: 'attended' | 'bunked' | 'cancelled') => {
-    if (!currentSubject) return;
-    if (status === 'attended') {
-      onQuickAttend(currentSubject.id);
-      Alert.alert('Logged Present ✅', `+1 hour added for ${currentSubject.name}! Attendance updated.`);
-    } else if (status === 'bunked') {
-      onQuickBunk(currentSubject.id);
-      Alert.alert('Logged Bunk ❌', `Bunk logged for ${currentSubject.name}. Safe bunk allowance recalculated.`);
+  const handleAutoRecord = async (status: AttendanceStatus) => {
+    if (!currentSlot || !currentSubject) return;
+
+    if (currentRecord) {
+      if (currentRecord.status === status) {
+        Alert.alert(
+          'Already Recorded ℹ️',
+          `You have already marked this period as "${status.toUpperCase()}".\n\nA class period cannot be counted twice.`
+        );
+        return;
+      }
+
+      // Prompt confirmation before changing previous attendance status
+      const fromStatus = currentRecord.status.toUpperCase();
+      const toStatus = status.toUpperCase();
+
+      Alert.alert(
+        'Change Attendance Status? 🔄',
+        `This period is currently recorded as "${fromStatus}".\n\nDo you want to change it to "${toStatus}"? Your attendance totals will be adjusted accurately.`,
+        [
+          { text: 'Keep As Is', style: 'cancel' },
+          {
+            text: `Switch to ${toStatus}`,
+            onPress: async () => {
+              const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
+              if (res.success) {
+                Alert.alert('Status Updated 🔄', res.message);
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    // First time recording this period
+    const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
+    if (res.success) {
+      Alert.alert(
+        status === 'attended'
+          ? 'Logged Present ✅'
+          : status === 'bunked'
+          ? 'Logged Bunk ❌'
+          : 'Class Cancelled ⚪',
+        res.message
+      );
     } else {
-      Alert.alert('Class Cancelled ⚪', `${currentSubject.name} hour skipped without affecting percentage.`);
+      Alert.alert('Notice', res.message);
     }
   };
 
@@ -248,6 +297,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             {activeDaySlots.map((slot, idx) => {
               const sub = subjects.find((s) => s.id === slot.subjectId);
               const isSelected = idx === activeIndex;
+              const pKey = `${todayDate}_${slot.id}`;
+              const rec = periodRecords[pKey];
+
               return (
                 <TouchableOpacity
                   key={idx}
@@ -256,11 +308,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   style={[
                     styles.periodPill,
                     isSelected ? styles.periodPillActive : styles.periodPillInactive,
+                    rec?.status === 'attended' && !isSelected && styles.periodPillMarkedAttended,
+                    rec?.status === 'bunked' && !isSelected && styles.periodPillMarkedBunked,
+                    rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
                   ]}
                 >
-                  <Text style={[styles.periodPillTime, isSelected && styles.periodPillTextActive]}>
-                    {slot.startTime}
-                  </Text>
+                  <View style={styles.pillHeaderRow}>
+                    <Text style={[styles.periodPillTime, isSelected && styles.periodPillTextActive]}>
+                      {slot.startTime}
+                    </Text>
+                    {rec && (
+                      <Text style={styles.pillStatusIndicator}>
+                        {rec.status === 'attended' ? '✅' : rec.status === 'bunked' ? '❌' : '⚪'}
+                      </Text>
+                    )}
+                  </View>
                   <Text style={[styles.periodPillCode, isSelected && styles.periodPillTextActive]}>
                     {sub?.code || slot.subjectId.replace('sub_', '').toUpperCase()}
                   </Text>
@@ -270,30 +332,79 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </ScrollView>
         )}
 
+        {/* If this period was already marked, display locked status banner */}
+        {currentRecord && (
+          <View
+            style={[
+              styles.periodLockedBanner,
+              currentRecord.status === 'attended' && styles.lockedBannerAttended,
+              currentRecord.status === 'bunked' && styles.lockedBannerBunked,
+              currentRecord.status === 'cancelled' && styles.lockedBannerCancelled,
+            ]}
+          >
+            <View style={styles.lockedBannerRow}>
+              <Text style={styles.lockedBannerIcon}>
+                {currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
+              </Text>
+              <View style={styles.lockedBannerTextContainer}>
+                <Text style={styles.lockedBannerTitle}>
+                  {currentRecord.status === 'attended' && 'Recorded: Attended (Present)'}
+                  {currentRecord.status === 'bunked' && 'Recorded: Bunked (Absent)'}
+                  {currentRecord.status === 'cancelled' && 'Recorded: Free / Cancelled'}
+                </Text>
+                <Text style={styles.lockedBannerSub}>
+                  Locked for this period to prevent double-counting. Tap any other option below to switch status.
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* 1-Tap Attendance Actions */}
         <View style={styles.promptActionsRow}>
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.promptActionBtn, styles.promptAttendBtn]}
+            style={[
+              styles.promptActionBtn,
+              styles.promptAttendBtn,
+              currentRecord?.status === 'attended' && styles.promptBtnSelected,
+              currentRecord && currentRecord.status !== 'attended' && styles.promptBtnDimmed,
+            ]}
             onPress={() => handleAutoRecord('attended')}
           >
-            <Text style={styles.promptAttendText}>✅ I Attended</Text>
+            <Text style={styles.promptAttendText}>
+              {currentRecord?.status === 'attended' ? '✅ Attended (Marked)' : '✅ I Attended'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.promptActionBtn, styles.promptBunkBtn]}
+            style={[
+              styles.promptActionBtn,
+              styles.promptBunkBtn,
+              currentRecord?.status === 'bunked' && styles.promptBtnSelected,
+              currentRecord && currentRecord.status !== 'bunked' && styles.promptBtnDimmed,
+            ]}
             onPress={() => handleAutoRecord('bunked')}
           >
-            <Text style={styles.promptBunkText}>❌ I Bunked</Text>
+            <Text style={styles.promptBunkText}>
+              {currentRecord?.status === 'bunked' ? '❌ Bunked (Marked)' : '❌ I Bunked'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.promptActionBtn, styles.promptCancelBtn]}
+            style={[
+              styles.promptActionBtn,
+              styles.promptCancelBtn,
+              currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
+              currentRecord && currentRecord.status !== 'cancelled' && styles.promptBtnDimmed,
+            ]}
             onPress={() => handleAutoRecord('cancelled')}
           >
-            <Text style={styles.promptCancelText}>⚪ Free / Cancelled</Text>
+            <Text style={styles.promptCancelText}>
+              {currentRecord?.status === 'cancelled' ? '⚪ Free (Marked)' : '⚪ Free / Cancelled'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -477,6 +588,66 @@ const styles = StyleSheet.create({
   periodPillTextActive: {
     color: '#FFFFFF',
   },
+  pillHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  pillStatusIndicator: {
+    fontSize: 9,
+  },
+  periodPillMarkedAttended: {
+    borderColor: '#059669',
+    backgroundColor: '#064E3B',
+  },
+  periodPillMarkedBunked: {
+    borderColor: '#DC2626',
+    backgroundColor: '#450A0A',
+  },
+  periodPillMarkedCancelled: {
+    borderColor: '#64748B',
+    backgroundColor: '#1E293B',
+  },
+  periodLockedBanner: {
+    borderRadius: 12,
+    padding: 10,
+    marginVertical: 10,
+    borderWidth: 1,
+  },
+  lockedBannerAttended: {
+    backgroundColor: 'rgba(5, 150, 105, 0.15)',
+    borderColor: '#059669',
+  },
+  lockedBannerBunked: {
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
+    borderColor: '#DC2626',
+  },
+  lockedBannerCancelled: {
+    backgroundColor: 'rgba(100, 116, 139, 0.15)',
+    borderColor: '#64748B',
+  },
+  lockedBannerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  lockedBannerIcon: {
+    fontSize: 20,
+  },
+  lockedBannerTextContainer: {
+    flex: 1,
+  },
+  lockedBannerTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  lockedBannerSub: {
+    color: '#CBD5E1',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
   promptActionsRow: {
     flexDirection: 'row',
     gap: 8,
@@ -488,6 +659,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  promptBtnSelected: {
+    borderWidth: 2,
+    borderColor: '#F8FAFC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  promptBtnDimmed: {
+    opacity: 0.6,
   },
   promptAttendBtn: {
     backgroundColor: '#059669',
