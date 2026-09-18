@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { PsgimService } from '../services/psgimService';
-import { toNewRollNo } from '../data/psgimMasterStudents';
+import { toNewRollNo, getStudentByAnyRoll, STUDENTS_BY_NEW_ROLL } from '../data/psgimMasterStudents';
 
 interface AuthScreenProps {
   onLoginSuccess: (rollNo: string) => void;
@@ -34,10 +34,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Verify student exists in PSGIM registry
-    const student = PsgimService.getStudent(cleanRoll);
+    // Direct students to their new roll number if they type an old internal ID (D26...)
+    if (cleanRoll.startsWith('D26')) {
+      const mapped = getStudentByAnyRoll(cleanRoll);
+      const newRoll = mapped?.collegeRollNo;
+      setErrorMessage(
+        newRoll
+          ? `Your username is your new roll number: "${newRoll}". Please sign in with ${newRoll}.`
+          : 'Please enter your new official Roll Number (e.g. 26AA04). Old internal roll numbers are discontinued.'
+      );
+      return;
+    }
+
+    // Verify student exists in official new roll number registry
+    const student = STUDENTS_BY_NEW_ROLL[cleanRoll] || PsgimService.getStudent(cleanRoll);
     if (!student) {
-      setErrorMessage(`Roll Number "${cleanRoll}" is not registered in the PSGIM Batch 2026–28 list.`);
+      setErrorMessage(`Roll Number "${cleanRoll}" is not registered in the PSGIM Batch 2026–28 roster.`);
       return;
     }
 
@@ -51,7 +63,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Success! Always use the official right-side roll number
+    // Success! Always use the official new roll number
     const officialRoll = toNewRollNo(cleanRoll);
     onLoginSuccess(officialRoll);
   };
@@ -88,7 +100,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           )}
 
           {/* Roll Number Input */}
-          <Text style={styles.inputLabel}>USERNAME (ROLL NUMBER)</Text>
+          <Text style={styles.inputLabel}>USERNAME (NEW ROLL NUMBER)</Text>
           <TextInput
             style={styles.textInput}
             placeholder="e.g. 26AA04, 26AB33, 26AC09"

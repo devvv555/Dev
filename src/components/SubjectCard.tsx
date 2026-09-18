@@ -153,7 +153,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                 <View>
                   <Text style={styles.modalTitle}>MCOB 1 Official Log</Text>
                   <Text style={styles.modalSubtitle}>
-                    {mcobData.name} ({mcobData.rollNo})
+                    {mcobData.name} ({studentRollNo || mcobData.rollNo})
                   </Text>
                 </View>
                 <TouchableOpacity

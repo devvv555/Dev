@@ -25,6 +25,8 @@
         "POST_NOTIFICATIONS"
       ]
     },
-
+    "plugins": [
+      "expo-status-bar"
+    ]
   }
 }
