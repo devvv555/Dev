@@ -16,11 +16,12 @@ import { DashboardScreen } from './src/screens/DashboardScreen';
 import { TimetableScreen } from './src/screens/TimetableScreen';
 import { MedicalVaultScreen } from './src/screens/MedicalVaultScreen';
 import { ReconcileScreen } from './src/screens/ReconcileScreen';
+import { CalendarScreen } from './src/screens/CalendarScreen';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { PsgimService } from './src/services/psgimService';
 import { toNewRollNo } from './src/data/psgimMasterStudents';
 
-type Tab = 'DASHBOARD' | 'TIMETABLE' | 'MEDICAL' | 'ERP_SYNC';
+type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -361,6 +362,7 @@ export default function App() {
             periodRecords={periodRecords}
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onToggleMedicalClaim={handleToggleMedicalClaim}
+            onOpenCalendar={() => setActiveTab('CALENDAR')}
           />
         )}
 
@@ -374,6 +376,10 @@ export default function App() {
               StorageService.saveTimetable(next);
             }}
           />
+        )}
+
+        {activeTab === 'CALENDAR' && (
+          <CalendarScreen onBack={() => setActiveTab('DASHBOARD')} />
         )}
 
         {activeTab === 'MEDICAL' && (
@@ -422,6 +428,17 @@ export default function App() {
 
         <TouchableOpacity
           activeOpacity={0.7}
+          style={[styles.tabItem, activeTab === 'CALENDAR' && styles.tabItemActive]}
+          onPress={() => setActiveTab('CALENDAR')}
+        >
+          <Text style={styles.tabIcon}>🌴</Text>
+          <Text style={[styles.tabLabel, activeTab === 'CALENDAR' && styles.tabLabelActive]}>
+            Holidays
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
           style={[styles.tabItem, activeTab === 'MEDICAL' && styles.tabItemActive]}
           onPress={() => setActiveTab('MEDICAL')}
         >
@@ -441,7 +458,7 @@ export default function App() {
             style={[styles.tabLabel, activeTab === 'ERP_SYNC' && styles.tabLabelActive]}
             numberOfLines={1}
           >
-            Attendance Sync
+            Sync
           </Text>
         </TouchableOpacity>
       </View>

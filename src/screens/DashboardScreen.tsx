@@ -14,6 +14,7 @@ import { calculateOverallMetrics } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 import { SubjectCard } from '../components/SubjectCard';
 import { PsgimService } from '../services/psgimService';
+import { getNextHoliday } from '../data/academicCalendarData';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -30,6 +31,7 @@ interface DashboardScreenProps {
   onToggleMedicalClaim: (id: string) => void;
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
+  onOpenCalendar?: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -40,6 +42,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   periodRecords,
   onRecordPeriodAttendance,
   onToggleMedicalClaim,
+  onOpenCalendar,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'MEDICAL' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
@@ -47,6 +50,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   const overall = calculateOverallMetrics(subjects);
   const profile = PsgimService.getStudentProfile(studentRollNo);
+  const nextHolidayInfo = getNextHoliday();
 
   // Filter subjects based on selected tab
   const filteredSubjects = subjects.filter((s) => {
@@ -290,6 +294,43 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
         ) : null}
       </View>
+
+      {/* Upcoming Holiday & Trip Planner Banner */}
+      {nextHolidayInfo && (
+        <TouchableOpacity
+          style={styles.holidayBannerCard}
+          onPress={onOpenCalendar}
+          activeOpacity={0.8}
+        >
+          <View style={styles.holidayBannerLeft}>
+            <View style={styles.holidayBannerIconCircle}>
+              <Text style={styles.holidayBannerIcon}>🌴</Text>
+            </View>
+            <View style={styles.holidayBannerTextCol}>
+              <View style={styles.holidayBadgeRow}>
+                <Text style={styles.holidayCountdownBadge}>
+                  {nextHolidayInfo.daysRemaining === 0
+                    ? 'TODAY IS A HOLIDAY! 🎉'
+                    : nextHolidayInfo.daysRemaining === 1
+                    ? 'HOLIDAY TOMORROW! 🚀'
+                    : `HOLIDAY IN ${nextHolidayInfo.daysRemaining} DAYS`}
+                </Text>
+                {nextHolidayInfo.holiday.longWeekendTag && (
+                  <View style={styles.holidayWeekendPill}>
+                    <Text style={styles.holidayWeekendPillText}>
+                      {nextHolidayInfo.holiday.longWeekendTag}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.holidayBannerTitle} numberOfLines={1}>
+                {nextHolidayInfo.holiday.title}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.holidayBannerChevron}>→</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Top Banner: Overall Attendance Metric */}
       <View style={styles.summaryCard}>
@@ -1033,5 +1074,77 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  // ── Upcoming Holiday Banner Styles ─────────────────────────
+  holidayBannerCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  holidayBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    marginRight: 8,
+  },
+  holidayBannerIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holidayBannerIcon: {
+    fontSize: 18,
+  },
+  holidayBannerTextCol: {
+    flex: 1,
+  },
+  holidayBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginBottom: 2,
+  },
+  holidayCountdownBadge: {
+    color: '#34D399',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  holidayWeekendPill: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: '#EAB308',
+  },
+  holidayWeekendPillText: {
+    color: '#FDE047',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  holidayBannerTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  holidayBannerChevron: {
+    color: '#38BDF8',
+    fontSize: 16,
+    fontWeight: '800',
   },
 });
