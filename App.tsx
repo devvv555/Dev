@@ -330,7 +330,7 @@ export default function App() {
         <View style={styles.appHeaderLeft}>
           <Text style={styles.appLogo}>🏛️</Text>
           <View>
-            <Text style={styles.appName}>PSG Institute of Management</Text>
+            <Text style={styles.appName}>Attendance Monitor</Text>
             <Text style={styles.appTagline}>I MBA (2026–28) • Semester 1</Text>
           </View>
         </View>
@@ -338,12 +338,7 @@ export default function App() {
         {/* Logged in student badge & Logout button */}
         <View style={styles.userProfileRow}>
           <View style={styles.studentBadge}>
-            <Text style={styles.studentBadgeText}>🎓 {activeRollNo}</Text>
-            {studentName !== activeRollNo && (
-              <Text style={styles.studentNameBadgeText} numberOfLines={1}>
-                {studentName}
-              </Text>
-            )}
+            <Text style={styles.studentBadgeText}>👤 {studentName || activeRollNo}</Text>
           </View>
           <TouchableOpacity
             style={styles.logoutBtn}

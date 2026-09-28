@@ -49,7 +49,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     // Verify student exists in official new roll number registry
     const student = STUDENTS_BY_NEW_ROLL[cleanRoll] || PsgimService.getStudent(cleanRoll);
     if (!student) {
-      setErrorMessage(`Roll Number "${cleanRoll}" is not registered in the PSGIM Batch 2026–28 roster.`);
+      setErrorMessage(`Roll Number "${cleanRoll}" is not registered in the Batch 2026–28 roster.`);
       return;
     }
 
@@ -79,8 +79,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           <View style={styles.logoBadge}>
             <Text style={styles.logoText}>🏛️</Text>
           </View>
-          <Text style={styles.collegeName}>PSG Institute of Management</Text>
-          <Text style={styles.collegeSub}>PSG College of Technology</Text>
+          <Text style={styles.collegeName}>Attendance Monitor</Text>
+          <Text style={styles.collegeSub}>Student Attendance & Timetable Portal</Text>
           <View style={styles.badgePill}>
             <Text style={styles.badgePillText}>I MBA (Batch 2026–28) Portal</Text>
           </View>

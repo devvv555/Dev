@@ -273,10 +273,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.welcomeInfo}>
             <Text style={styles.welcomeGreeting}>Welcome,</Text>
             <Text style={styles.welcomeName} numberOfLines={1}>
-              {studentName !== studentRollNo ? studentName : studentRollNo}
+              {studentName || studentRollNo}
             </Text>
             <Text style={styles.welcomeSub}>
-              Roll No: <Text style={styles.welcomeRoll}>{studentRollNo}</Text> • {profile.section} • PSG MBA (2026–28)
+              {profile.section ? `${profile.section} • ` : ''}MBA (2026–28)
             </Text>
           </View>
         </View>
