@@ -330,3 +330,35 @@ export function toOldRollNo(inputRoll: string): string {
 export function getMasterStudent(rollNo: string): PsgimStudentInfo | null {
   return getStudentByAnyRoll(rollNo);
 }
+
+/**
+ * Resolves a student by their Name (case-insensitive, trims extra whitespace)
+ */
+export function getStudentByName(inputName: string): PsgimStudentInfo | null {
+  if (!inputName) return null;
+  const clean = inputName.trim().toUpperCase().replace(/\s+/g, ' ');
+
+  // 1. Direct match on name
+  const exact = Object.values(PSGIM_MASTER_STUDENTS).find(
+    (s) => s.name.toUpperCase().trim() === clean
+  );
+  if (exact) return exact;
+
+  // 2. StartsWith match (e.g. "POOJA" -> "POOJA R")
+  const startsWithMatches = Object.values(PSGIM_MASTER_STUDENTS).filter((s) =>
+    s.name.toUpperCase().trim().startsWith(clean)
+  );
+  if (startsWithMatches.length === 1) return startsWithMatches[0];
+
+  // 3. Substring match
+  if (clean.length >= 3) {
+    const includeMatches = Object.values(PSGIM_MASTER_STUDENTS).filter((s) =>
+      s.name.toUpperCase().trim().includes(clean)
+    );
+    if (includeMatches.length >= 1) return includeMatches[0];
+  }
+
+  // 4. Fallback: check if the input was actually a roll number
+  return getStudentByAnyRoll(inputName);
+}
+

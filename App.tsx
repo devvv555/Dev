@@ -339,7 +339,7 @@ export default function App() {
         {/* Logged in student badge & Logout button */}
         <View style={styles.userProfileRow}>
           <View style={styles.studentBadge}>
-            <Text style={styles.studentBadgeText}>👤 {studentName || activeRollNo}</Text>
+            <Text style={styles.studentBadgeText}>👤 {studentName || 'Student'}</Text>
           </View>
           <TouchableOpacity
             style={styles.logoutBtn}

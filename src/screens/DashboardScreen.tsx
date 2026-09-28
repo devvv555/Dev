@@ -14,7 +14,7 @@ import { calculateOverallMetrics } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 import { SubjectCard } from '../components/SubjectCard';
 import { PsgimService } from '../services/psgimService';
-import { getNextHoliday } from '../data/academicCalendarData';
+import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -51,6 +51,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const overall = calculateOverallMetrics(subjects);
   const profile = PsgimService.getStudentProfile(studentRollNo);
   const nextHolidayInfo = getNextHoliday();
+  const weekdayHolidayAlert = getUpcomingWeekdayHolidayNotification();
 
   // Filter subjects based on selected tab
   const filteredSubjects = subjects.filter((s) => {
@@ -277,7 +278,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.welcomeInfo}>
             <Text style={styles.welcomeGreeting}>Welcome,</Text>
             <Text style={styles.welcomeName} numberOfLines={1}>
-              {studentName || studentRollNo}
+              {studentName || 'Student'}
             </Text>
             <Text style={styles.welcomeSub}>
               {profile.section ? `${profile.section} • ` : ''}MBA (2026–28)
@@ -295,8 +296,35 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         ) : null}
       </View>
 
-      {/* Upcoming Holiday & Trip Planner Banner */}
-      {nextHolidayInfo && (
+      {/* Weekday Holiday 7-Day Notification Alert (Strictly NO notification for weekend holidays) */}
+      {weekdayHolidayAlert ? (
+        <TouchableOpacity
+          style={styles.weekdayNotifCard}
+          onPress={onOpenCalendar}
+          activeOpacity={0.85}
+        >
+          <View style={styles.weekdayNotifTop}>
+            <View style={styles.weekdayNotifBadge}>
+              <Text style={styles.weekdayNotifBadgeText}>
+                🔔 HOLIDAY ALERT • {weekdayHolidayAlert.daysRemaining === 0 ? 'TODAY' : weekdayHolidayAlert.daysRemaining === 1 ? 'TOMORROW' : `IN ${weekdayHolidayAlert.daysRemaining} DAYS`}
+              </Text>
+            </View>
+            <Text style={styles.weekdayNotifLink}>View Calendar →</Text>
+          </View>
+
+          <Text style={styles.weekdayNotifTitle}>
+            🌴 {weekdayHolidayAlert.holiday.title} ({weekdayHolidayAlert.holiday.day})
+          </Text>
+
+          {/* Academic calendar pre-accounted message */}
+          <View style={styles.weekdayNotifAccountedBox}>
+            <Text style={styles.weekdayNotifAccountedText}>
+              ✓ {weekdayHolidayAlert.accountingNote}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      ) : nextHolidayInfo ? (
+        /* Regular calendar access card when no weekday holiday is within 7 days */
         <TouchableOpacity
           style={styles.holidayBannerCard}
           onPress={onOpenCalendar}
@@ -309,11 +337,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <View style={styles.holidayBannerTextCol}>
               <View style={styles.holidayBadgeRow}>
                 <Text style={styles.holidayCountdownBadge}>
-                  {nextHolidayInfo.daysRemaining === 0
-                    ? 'TODAY IS A HOLIDAY! 🎉'
-                    : nextHolidayInfo.daysRemaining === 1
-                    ? 'HOLIDAY TOMORROW! 🚀'
-                    : `HOLIDAY IN ${nextHolidayInfo.daysRemaining} DAYS`}
+                  ACADEMIC CALENDAR & HOLIDAYS
                 </Text>
                 {nextHolidayInfo.holiday.longWeekendTag && (
                   <View style={styles.holidayWeekendPill}>
@@ -324,13 +348,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 )}
               </View>
               <Text style={styles.holidayBannerTitle} numberOfLines={1}>
-                {nextHolidayInfo.holiday.title}
+                Next: {nextHolidayInfo.holiday.title} ({nextHolidayInfo.holiday.day})
               </Text>
             </View>
           </View>
           <Text style={styles.holidayBannerChevron}>→</Text>
         </TouchableOpacity>
-      )}
+      ) : null}
 
       {/* Top Banner: Overall Attendance Metric */}
       <View style={styles.summaryCard}>
@@ -1074,6 +1098,66 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  // ── Weekday Holiday 7-Day Notification Alert Styles ────────
+  weekdayNotifCard: {
+    backgroundColor: '#064E3B',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  weekdayNotifTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  weekdayNotifBadge: {
+    backgroundColor: '#022C22',
+    borderColor: '#34D399',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  weekdayNotifBadgeText: {
+    color: '#6EE7B7',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  weekdayNotifLink: {
+    color: '#6EE7B7',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  weekdayNotifTitle: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  weekdayNotifAccountedBox: {
+    backgroundColor: 'rgba(2, 44, 34, 0.75)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.3)',
+  },
+  weekdayNotifAccountedText: {
+    color: '#A7F3D0',
+    fontSize: 11.5,
+    fontWeight: '600',
+    lineHeight: 16,
   },
 
   // ── Upcoming Holiday Banner Styles ─────────────────────────

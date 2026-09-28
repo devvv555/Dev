@@ -131,9 +131,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
               <View style={styles.modalHeader}>
                 <View>
                   <Text style={styles.modalTitle}>MCOB 1 Official Log</Text>
-                  <Text style={styles.modalSubtitle}>
-                    {mcobData.name} ({studentRollNo || mcobData.rollNo})
-                  </Text>
+                  <Text style={styles.modalSubtitle}>{mcobData.name}</Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => setShowSessionsModal(false)}

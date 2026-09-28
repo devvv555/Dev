@@ -515,3 +515,58 @@ export function getNextHoliday(referenceDateStr?: string): {
 
   return { holiday: next, daysRemaining };
 }
+
+export interface WeekdayHolidayNotification {
+  holiday: AcademicCalendarItem;
+  daysRemaining: number;
+  message: string;
+  accountingNote: string;
+}
+
+/**
+ * Returns upcoming weekday holidays occurring within 7 days (a week ago).
+ * Strictly excludes weekend holidays (Saturday and Sunday - NO notification).
+ * Explicitly mentions that it is already counted in the academic calendar.
+ */
+export function getUpcomingWeekdayHolidayNotification(
+  referenceDateStr?: string
+): WeekdayHolidayNotification | null {
+  const today = referenceDateStr ? new Date(referenceDateStr) : new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Strictly filter for weekday holidays only (exclude Saturday & Sunday)
+  const upcomingWeekdayHolidays = ACADEMIC_CALENDAR.filter((item) => {
+    if (item.type !== 'HOLIDAY') return false;
+    const day = item.day.trim().toLowerCase();
+    const isWeekend = day === 'saturday' || day === 'sunday';
+    if (isWeekend) return false; // Strictly NO notification for weekend holidays
+    return item.date >= todayStr;
+  }).sort((a, b) => a.date.localeCompare(b.date));
+
+  if (upcomingWeekdayHolidays.length === 0) return null;
+
+  const next = upcomingWeekdayHolidays[0];
+  const targetDate = new Date(next.date + 'T00:00:00');
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diffTime = targetDate.getTime() - todayMidnight.getTime();
+  const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+  // Send notification a week ago (within 7 days)
+  if (daysRemaining <= 7) {
+    const countdownText =
+      daysRemaining === 0
+        ? 'Today is a weekday holiday!'
+        : daysRemaining === 1
+        ? 'Tomorrow is a weekday holiday!'
+        : `Upcoming weekday holiday in ${daysRemaining} days (${next.day})!`;
+
+    return {
+      holiday: next,
+      daysRemaining,
+      message: `${countdownText} ${next.title}`,
+      accountingNote: 'This holiday is already counted in your academic calendar schedule.',
+    };
+  }
+
+  return null;
+}

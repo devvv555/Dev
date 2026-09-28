@@ -79,6 +79,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
         </Text>
       </View>
 
+      {/* Pre-accounted calendar notice */}
+      <View style={styles.calendarNoticeBox}>
+        <Text style={styles.calendarNoticeText}>
+          ✓ All holidays in this academic calendar are already pre-accounted for in the schedule and will not affect your attendance percentage.
+        </Text>
+      </View>
+
       {/* Next Upcoming Holiday Spotlight */}
       {nextHolidayInfo && (
         <View style={styles.spotlightCard}>
@@ -259,6 +266,20 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 4,
     lineHeight: 18,
+  },
+  calendarNoticeBox: {
+    backgroundColor: 'rgba(6, 78, 59, 0.35)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  calendarNoticeText: {
+    color: '#A7F3D0',
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600',
   },
   spotlightCard: {
     backgroundColor: '#1E293B',

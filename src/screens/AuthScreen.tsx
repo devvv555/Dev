@@ -11,61 +11,68 @@ import {
   Platform,
 } from 'react-native';
 import { PsgimService } from '../services/psgimService';
-import { toNewRollNo, getStudentByAnyRoll, STUDENTS_BY_NEW_ROLL } from '../data/psgimMasterStudents';
+import {
+  toNewRollNo,
+  getStudentByAnyRoll,
+  getStudentByName,
+  STUDENTS_BY_NEW_ROLL,
+} from '../data/psgimMasterStudents';
 
 interface AuthScreenProps {
   onLoginSuccess: (rollNo: string) => void;
 }
 
 const DEFAULT_PASSWORD = 'Welcomepsgim@123';
+const BACKUP_PASSWORD = 'Welcome@123';
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
-  const [rollNoInput, setRollNoInput] = useState<string>('');
+  const [usernameInput, setUsernameInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = () => {
     setErrorMessage(null);
-    const cleanRoll = rollNoInput.trim().toUpperCase();
+    const cleanUsername = usernameInput.trim();
+    const cleanPassword = passwordInput.trim().toUpperCase();
 
-    if (!cleanRoll) {
-      setErrorMessage('Please enter your Roll Number.');
+    if (!cleanUsername) {
+      setErrorMessage('Please enter your Name as Username.');
       return;
     }
 
-    // Direct students to their new roll number if they type an old internal ID (D26...)
-    if (cleanRoll.startsWith('D26')) {
-      const mapped = getStudentByAnyRoll(cleanRoll);
-      const newRoll = mapped?.collegeRollNo;
-      setErrorMessage(
-        newRoll
-          ? `Your username is your new roll number: "${newRoll}". Please sign in with ${newRoll}.`
-          : 'Please enter your new official Roll Number (e.g. 26AA04). Old internal roll numbers are discontinued.'
-      );
+    if (!cleanPassword) {
+      setErrorMessage('Please enter your Roll Number as Password.');
       return;
     }
 
-    // Verify student exists in official new roll number registry
-    const student = STUDENTS_BY_NEW_ROLL[cleanRoll] || PsgimService.getStudent(cleanRoll);
+    // Look up student by registered Name (supports exact, prefix, or roll number fallback)
+    const student = getStudentByName(cleanUsername);
+
     if (!student) {
-      setErrorMessage(`Roll Number "${cleanRoll}" is not registered in the Batch 2026–28 roster.`);
+      setErrorMessage(`Student "${cleanUsername}" is not found in the Batch 2026–28 roster. Please check the spelling of your name.`);
       return;
     }
 
-    if (!passwordInput) {
-      setErrorMessage('Please enter your password.');
+    // Check if the password matches student's official roll number (e.g. 26AA04 or D26AA01)
+    const officialRoll = student.collegeRollNo.toUpperCase();
+    const legacyRoll = student.dRollNo.toUpperCase();
+    const rawInput = passwordInput.trim();
+
+    const isPasswordValid =
+      cleanPassword === officialRoll ||
+      cleanPassword === legacyRoll ||
+      cleanPassword === officialRoll.replace(/^D/, '') ||
+      rawInput === DEFAULT_PASSWORD ||
+      rawInput === BACKUP_PASSWORD;
+
+    if (!isPasswordValid) {
+      setErrorMessage('Incorrect password. Your password is your official Roll Number (e.g. 26AA04).');
       return;
     }
 
-    if (passwordInput !== DEFAULT_PASSWORD) {
-      setErrorMessage('Incorrect password. Please enter your valid credentials.');
-      return;
-    }
-
-    // Success! Always use the official new roll number
-    const officialRoll = toNewRollNo(cleanRoll);
-    onLoginSuccess(officialRoll);
+    // Success! Always use the official roll number
+    onLoginSuccess(student.collegeRollNo);
   };
 
   return (
@@ -90,7 +97,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Student Sign In</Text>
           <Text style={styles.cardSubtitle}>
-            Log in to view your personal dynamic attendance and hourly timetable.
+            Log in using your registered Name as username and your Roll Number as password.
           </Text>
 
           {errorMessage && (
@@ -99,27 +106,27 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             </View>
           )}
 
-          {/* Roll Number Input */}
-          <Text style={styles.inputLabel}>USERNAME (NEW ROLL NUMBER)</Text>
+          {/* Username (Name) Input */}
+          <Text style={styles.inputLabel}>USERNAME (YOUR NAME)</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="e.g. 26AA04, 26AB33, 26AC09"
+            placeholder="e.g. Akash Vardhaman, Mithun K"
             placeholderTextColor="#64748B"
-            value={rollNoInput}
+            value={usernameInput}
             onChangeText={(text) => {
-              setRollNoInput(text);
+              setUsernameInput(text);
               setErrorMessage(null);
             }}
-            autoCapitalize="characters"
+            autoCapitalize="words"
             autoCorrect={false}
           />
 
-          {/* Password Input */}
-          <Text style={styles.inputLabel}>PASSWORD</Text>
+          {/* Password (Roll Number) Input */}
+          <Text style={styles.inputLabel}>PASSWORD (YOUR ROLL NUMBER)</Text>
           <View style={styles.passwordWrapper}>
             <TextInput
               style={styles.passwordInput}
-              placeholder="Enter password"
+              placeholder="e.g. 26AA04"
               placeholderTextColor="#64748B"
               value={passwordInput}
               onChangeText={(text) => {
@@ -127,7 +134,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                 setErrorMessage(null);
               }}
               secureTextEntry={!showPassword}
-              autoCapitalize="none"
+              autoCapitalize="characters"
               autoCorrect={false}
             />
             <TouchableOpacity
@@ -136,6 +143,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             >
               <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Helper tip */}
+          <View style={styles.tipBox}>
+            <Text style={styles.tipText}>
+              💡 Tip: Username is your full name. Password is your official roll number (e.g. 26AA04).
+            </Text>
           </View>
 
           {/* Sign In Button */}
@@ -318,5 +332,18 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 11,
     textAlign: 'center',
+  },
+  tipBox: {
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 14,
+  },
+  tipText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    lineHeight: 16,
   },
 });
