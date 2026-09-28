@@ -18,7 +18,7 @@ interface AdminDashboardScreenProps {
   onClose: () => void;
 }
 
-const CORRECT_ADMIN_PIN = '2026';
+const CORRECT_ADMIN_PIN = 'Au76.;@dgb(Knu&!fhk:mh';
 
 export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   visible,
@@ -26,6 +26,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [pinInput, setPinInput] = useState<string>('');
+  const [showPin, setShowPin] = useState<boolean>(false);
   const [pinError, setPinError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'FEEDBACK'>('ANALYTICS');
@@ -171,7 +172,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
               <View style={styles.lockBadge}>
                 <Text style={styles.lockIcon}>🔐</Text>
               </View>
-              <Text style={styles.pinTitle}>Enter Admin PIN</Text>
+              <Text style={styles.pinTitle}>Enter Admin Passkey</Text>
               <Text style={styles.pinSub}>
                 Authorized developer and administrator access only.
               </Text>
@@ -182,16 +183,29 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                 </View>
               )}
 
-              <TextInput
-                style={styles.pinInput}
-                placeholder="4-digit PIN (default: 2026)"
-                placeholderTextColor="#64748B"
-                value={pinInput}
-                onChangeText={setPinInput}
-                keyboardType="numeric"
-                secureTextEntry
-                maxLength={4}
-              />
+              <View style={styles.pinWrapper}>
+                <TextInput
+                  style={styles.pinInput}
+                  placeholder="Enter secret passkey"
+                  placeholderTextColor="#64748B"
+                  value={pinInput}
+                  onChangeText={(text) => {
+                    setPinInput(text);
+                    setPinError(null);
+                  }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={!showPin}
+                  maxLength={64}
+                />
+                <TouchableOpacity
+                  style={styles.showPinBtn}
+                  onPress={() => setShowPin(!showPin)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.showPinText}>{showPin ? 'Hide' : 'Show'}</Text>
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
                 style={styles.unlockBtn}
@@ -540,19 +554,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
-  pinInput: {
+  pinWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#0F172A',
     borderWidth: 1,
     borderColor: '#334155',
     borderRadius: 12,
     width: '100%',
+    marginBottom: 16,
+    paddingHorizontal: 12,
+  },
+  pinInput: {
+    flex: 1,
     paddingVertical: 14,
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: 4,
-    marginBottom: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  showPinBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  showPinText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '700',
   },
   unlockBtn: {
     backgroundColor: '#2563EB',
