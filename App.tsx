@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Subject, TimetableSlot, MedicalClaimRecord, PeriodAttendanceRecord, AttendanceStatus } from './src/types';
 import { StorageService, INITIAL_MEDICAL_CLAIMS } from './src/services/storageService';
 import { NotificationService } from './src/services/notificationService';
@@ -245,12 +245,47 @@ export default function App() {
     StorageService.saveMedicalClaims(next);
   };
 
-  // Update official ERP baseline for weekly sync
-  const handleUpdateSubjectOfficial = (subjectId: string, officialAttended: number, officialTotal: number) => {
+  // Cycle claim status: SUBMITTED → APPROVED → DRAFT (tap to update)
+  const handleUpdateClaimStatus = (claimId: string) => {
+    const next = medicalClaims.map((c) => {
+      if (c.id !== claimId) return c;
+      const cycle: Record<string, MedicalClaimRecord['status']> = {
+        SUBMITTED: 'APPROVED',
+        APPROVED: 'DRAFT',
+        DRAFT: 'SUBMITTED',
+      };
+      return { ...c, status: cycle[c.status] ?? 'SUBMITTED' };
+    });
+    setMedicalClaims(next);
+    StorageService.saveMedicalClaims(next);
+  };
+
+  // Bulk-activate 65% threshold for multiple subjects (from date-range auto-detection)
+  const handleAutoApplyMedicalClaims = (subjectIds: string[]) => {
+    const next = subjects.map((s) => {
+      if (subjectIds.includes(s.id) && !s.hasMedicalClaim) {
+        return { ...s, hasMedicalClaim: true };
+      }
+      return s;
+    });
+    setSubjects(next);
+    StorageService.saveSubjects(next);
+  };
+
+  // Update attendance in Attendance Sync (both App counts and official ERP baseline)
+  const handleUpdateAttendance = (
+    subjectId: string,
+    appAttended: number,
+    appTotal: number,
+    officialAttended: number,
+    officialTotal: number
+  ) => {
     const next = subjects.map((s) => {
       if (s.id === subjectId) {
         return {
           ...s,
+          attended: appAttended,
+          total: appTotal,
           officialAttended,
           officialTotal,
           lastOfficialUpdate: new Date().toISOString().split('T')[0],
@@ -265,22 +300,29 @@ export default function App() {
   // Loading spinner during auth check
   if (isCheckingAuth) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#38BDF8" />
-      </View>
+      <SafeAreaProvider>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#38BDF8" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   // If not logged in, display Sign In screen
   if (!isAuthenticated) {
-    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <SafeAreaProvider>
+        <AuthScreen onLoginSuccess={handleLoginSuccess} />
+      </SafeAreaProvider>
+    );
   }
 
   const activeMedCount = subjects.filter((s) => s.hasMedicalClaim).length;
   const studentName = PsgimService.getStudentName(activeRollNo);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
       {/* Main Top Header */}
@@ -323,10 +365,7 @@ export default function App() {
             studentName={studentName}
             periodRecords={periodRecords}
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
-            onUpdateSubject={handleUpdateSubject}
             onToggleMedicalClaim={handleToggleMedicalClaim}
-            onQuickAttend={handleQuickAttend}
-            onQuickBunk={handleQuickBunk}
           />
         )}
 
@@ -345,16 +384,19 @@ export default function App() {
         {activeTab === 'MEDICAL' && (
           <MedicalVaultScreen
             subjects={subjects}
+            timetable={timetable}
             medicalClaims={medicalClaims}
             onToggleMedicalClaim={handleToggleMedicalClaim}
             onAddMedicalClaim={handleAddMedicalClaim}
+            onUpdateClaimStatus={handleUpdateClaimStatus}
+            onAutoApplyMedicalClaims={handleAutoApplyMedicalClaims}
           />
         )}
 
         {activeTab === 'ERP_SYNC' && (
           <ReconcileScreen
             subjects={subjects}
-            onUpdateSubjectOfficial={handleUpdateSubjectOfficial}
+            onUpdateAttendance={handleUpdateAttendance}
           />
         )}
       </View>
@@ -400,12 +442,16 @@ export default function App() {
           onPress={() => setActiveTab('ERP_SYNC')}
         >
           <Text style={styles.tabIcon}>🔄</Text>
-          <Text style={[styles.tabLabel, activeTab === 'ERP_SYNC' && styles.tabLabelActive]}>
-            ERP Sync
+          <Text
+            style={[styles.tabLabel, activeTab === 'ERP_SYNC' && styles.tabLabelActive]}
+            numberOfLines={1}
+          >
+            Attendance Sync
           </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -512,8 +558,9 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     color: '#64748B',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
+    textAlign: 'center',
   },
   tabLabelActive: {
     color: '#38BDF8',

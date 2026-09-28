@@ -13,54 +13,85 @@ import { Subject } from '../types';
 
 interface ReconcileScreenProps {
   subjects: Subject[];
-  onUpdateSubjectOfficial: (subjectId: string, officialAttended: number, officialTotal: number) => void;
+  onUpdateAttendance: (
+    subjectId: string,
+    appAttended: number,
+    appTotal: number,
+    officialAttended: number,
+    officialTotal: number
+  ) => void;
+  onUpdateSubjectOfficial?: (subjectId: string, officialAttended: number, officialTotal: number) => void;
 }
 
 export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   subjects,
+  onUpdateAttendance,
   onUpdateSubjectOfficial,
 }) => {
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-  const [newAttended, setNewAttended] = useState('');
-  const [newTotal, setNewTotal] = useState('');
+  const [appAttended, setAppAttended] = useState('');
+  const [appTotal, setAppTotal] = useState('');
+  const [officialAttended, setOfficialAttended] = useState('');
+  const [officialTotal, setOfficialTotal] = useState('');
 
   const handleOpenEdit = (subject: Subject) => {
     setEditingSubject(subject);
-    setNewAttended(subject.officialAttended.toString());
-    setNewTotal(subject.officialTotal.toString());
+    setAppAttended(subject.attended.toString());
+    setAppTotal(subject.total.toString());
+    setOfficialAttended(subject.officialAttended.toString());
+    setOfficialTotal(subject.officialTotal.toString());
   };
 
-  const handleSaveOfficial = () => {
+  const handleCopyErpToApp = () => {
+    setAppAttended(officialAttended);
+    setAppTotal(officialTotal);
+  };
+
+  const handleSave = () => {
     if (!editingSubject) return;
-    const att = parseInt(newAttended, 10);
-    const tot = parseInt(newTotal, 10);
-    if (isNaN(att) || isNaN(tot) || att < 0 || tot < att) {
-      Alert.alert('Invalid Numbers', 'Attended must be non-negative and less than or equal to total held.');
+    const aAtt = parseInt(appAttended, 10);
+    const aTot = parseInt(appTotal, 10);
+    const oAtt = parseInt(officialAttended, 10);
+    const oTot = parseInt(officialTotal, 10);
+
+    if (isNaN(aAtt) || isNaN(aTot) || aAtt < 0 || aTot < aAtt) {
+      Alert.alert('Invalid App Attendance', 'App attended classes must be non-negative and less than or equal to total held.');
       return;
     }
-    onUpdateSubjectOfficial(editingSubject.id, att, tot);
+
+    if (isNaN(oAtt) || isNaN(oTot) || oAtt < 0 || oTot < oAtt) {
+      Alert.alert('Invalid ERP Baseline', 'College ERP attended classes must be non-negative and less than or equal to total held.');
+      return;
+    }
+
+    if (onUpdateAttendance) {
+      onUpdateAttendance(editingSubject.id, aAtt, aTot, oAtt, oTot);
+    } else if (onUpdateSubjectOfficial) {
+      onUpdateSubjectOfficial(editingSubject.id, oAtt, oTot);
+    }
+
     setEditingSubject(null);
-    Alert.alert('ERP Synced! 🔄', `Updated official baseline for ${editingSubject.name}.`);
+    Alert.alert('Attendance Synced! 🔄', `Updated attendance numbers for ${editingSubject.name}.`);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Weekly ERP Reconciler</Text>
+        <Text style={styles.headerTitle}>Attendance Sync</Text>
         <Text style={styles.headerSubtitle}>
-          Compare your hour-by-hour logs against the weekly batch update from the college ERP.
+          Review, synchronize, and edit your subject attendance against college portal updates.
         </Text>
       </View>
 
       <View style={styles.infoBanner}>
         <Text style={styles.infoBannerIcon}>💡</Text>
         <Text style={styles.infoBannerText}>
-          When your college updates portal attendance on the weekend, enter the latest counts here to keep your baseline calibrated and detect any faculty marking errors.
+          Need to calibrate your attendance or adjust for college ERP updates? Tap "✏️ Edit" on any subject below to adjust your recorded app counts or college official baseline.
         </Text>
       </View>
 
       <View style={styles.tableCard}>
-        <Text style={styles.tableTitle}>Attendance Comparison</Text>
+        <Text style={styles.tableTitle}>Subject Attendance & Reconciliation</Text>
 
         {subjects.map((sub) => {
           const appPct = sub.total === 0 ? 100 : (sub.attended / sub.total) * 100;
@@ -71,7 +102,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           return (
             <View key={sub.id} style={styles.rowItem}>
               <View style={styles.rowTop}>
-                <View>
+                <View style={styles.subjectTitleContainer}>
                   <Text style={styles.subjectCode}>{sub.code}</Text>
                   <Text style={styles.subjectName}>{sub.name}</Text>
                 </View>
@@ -81,7 +112,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                   onPress={() => handleOpenEdit(sub)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.syncBtnText}>✏️ Edit ERP</Text>
+                  <Text style={styles.syncBtnText}>✏️ Edit Attendance</Text>
                 </TouchableOpacity>
               </View>
 
@@ -132,43 +163,96 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       {/* Edit Modal */}
       <Modal visible={!!editingSubject} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Update College ERP Baseline</Text>
-            <Text style={styles.modalSubtitle}>
-              {editingSubject?.name} ({editingSubject?.code})
-            </Text>
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Edit Subject Attendance</Text>
+              <Text style={styles.modalSubtitle}>
+                {editingSubject?.name} ({editingSubject?.code})
+              </Text>
 
-            <Text style={styles.inputLabel}>Official Attended Classes (from College Portal)</Text>
-            <TextInput
-              style={styles.textInput}
-              keyboardType="numeric"
-              value={newAttended}
-              onChangeText={setNewAttended}
-            />
+              {/* Section 1: App Attendance */}
+              <View style={styles.modalSection}>
+                <Text style={styles.sectionHeader}>📱 Hourly App Attendance</Text>
+                <View style={styles.inputRow}>
+                  <View style={styles.inputCol}>
+                    <Text style={styles.inputLabel}>Classes Attended</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      keyboardType="numeric"
+                      value={appAttended}
+                      onChangeText={setAppAttended}
+                      placeholder="0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+                  <View style={styles.inputCol}>
+                    <Text style={styles.inputLabel}>Total Held</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      keyboardType="numeric"
+                      value={appTotal}
+                      onChangeText={setAppTotal}
+                      placeholder="0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+                </View>
+              </View>
 
-            <Text style={styles.inputLabel}>Official Total Classes Held (from College Portal)</Text>
-            <TextInput
-              style={styles.textInput}
-              keyboardType="numeric"
-              value={newTotal}
-              onChangeText={setNewTotal}
-            />
+              {/* Section 2: College ERP Baseline */}
+              <View style={styles.modalSection}>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionHeader}>🏛️ College Portal (ERP Baseline)</Text>
+                  <TouchableOpacity
+                    onPress={handleCopyErpToApp}
+                    style={styles.copyErpBtn}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.copyErpBtnText}>⚡ Copy to App</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.inputRow}>
+                  <View style={styles.inputCol}>
+                    <Text style={styles.inputLabel}>Official Attended</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      keyboardType="numeric"
+                      value={officialAttended}
+                      onChangeText={setOfficialAttended}
+                      placeholder="0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+                  <View style={styles.inputCol}>
+                    <Text style={styles.inputLabel}>Official Total</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      keyboardType="numeric"
+                      value={officialTotal}
+                      onChangeText={setOfficialTotal}
+                      placeholder="0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+                </View>
+              </View>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelBtn}
-                onPress={() => setEditingSubject(null)}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalSubmitBtn}
-                onPress={handleSaveOfficial}
-              >
-                <Text style={styles.modalSubmitText}>Save ERP Counts</Text>
-              </TouchableOpacity>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setEditingSubject(null)}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalSubmitBtn}
+                  onPress={handleSave}
+                >
+                  <Text style={styles.modalSubmitText}>Save Attendance</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </ScrollView>
@@ -354,6 +438,54 @@ const styles = StyleSheet.create({
     padding: 10,
     color: '#FFFFFF',
     fontSize: 15,
+  },
+  subjectTitleContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  modalSection: {
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  sectionHeader: {
+    color: '#38BDF8',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  copyErpBtn: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#0284C7',
+  },
+  copyErpBtnText: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  inputCol: {
+    flex: 1,
   },
   modalActions: {
     flexDirection: 'row',

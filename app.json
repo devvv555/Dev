@@ -16,6 +16,7 @@
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0F172A"
       },
       "package": "com.collegemonitor.attendancemonitor",
@@ -27,6 +28,11 @@
     },
     "plugins": [
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9493178d-c80b-4bd4-8096-62d73d2f527f"
+      }
+    }
   }
 }

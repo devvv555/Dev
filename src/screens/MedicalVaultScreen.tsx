@@ -9,38 +9,131 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import { Subject, MedicalClaimRecord } from '../types';
+import { Subject, MedicalClaimRecord, TimetableSlot } from '../types';
 
 interface MedicalVaultScreenProps {
   subjects: Subject[];
+  timetable: TimetableSlot[];
   medicalClaims: MedicalClaimRecord[];
   onToggleMedicalClaim: (id: string) => void;
   onAddMedicalClaim: (claim: MedicalClaimRecord) => void;
+  onUpdateClaimStatus: (claimId: string) => void;
+  onAutoApplyMedicalClaims: (subjectIds: string[]) => void;
 }
 
 export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
   subjects,
+  timetable,
   medicalClaims,
   onToggleMedicalClaim,
   onAddMedicalClaim,
+  onUpdateClaimStatus,
+  onAutoApplyMedicalClaims,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [reason, setReason] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [clinic, setClinic] = useState('');
-  const [fromDate, setFromDate] = useState('2026-09-14');
-  const [toDate, setToDate] = useState('2026-09-18');
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('sub_2');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  // Calendar picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerTarget, setDatePickerTarget] = useState<'from' | 'to'>('from');
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
+  const [pickerMonth, setPickerMonth] = useState(new Date().getMonth()); // 0-indexed
+
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  /** Build array of {day, isCurrentMonth} for the calendar grid */
+  const getCalendarGrid = (year: number, month: number) => {
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const grid: Array<{ day: number; active: boolean }> = [];
+    for (let i = 0; i < firstDay; i++) grid.push({ day: 0, active: false });
+    for (let d = 1; d <= daysInMonth; d++) grid.push({ day: d, active: true });
+    return grid;
+  };
+
+  const openDatePicker = (target: 'from' | 'to') => {
+    setDatePickerTarget(target);
+    // Start at the already-selected date's month if available
+    const existing = target === 'from' ? fromDate : toDate;
+    if (existing) {
+      const d = new Date(existing);
+      if (!isNaN(d.getTime())) { setPickerYear(d.getFullYear()); setPickerMonth(d.getMonth()); }
+    }
+    setShowDatePicker(true);
+  };
+
+  const selectDay = (day: number) => {
+    const mm = String(pickerMonth + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    const selected = `${pickerYear}-${mm}-${dd}`;
+    if (datePickerTarget === 'from') setFromDate(selected);
+    else setToDate(selected);
+    setShowDatePicker(false);
+  };
+
+  const prevMonth = () => {
+    if (pickerMonth === 0) { setPickerMonth(11); setPickerYear(y => y - 1); }
+    else setPickerMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (pickerMonth === 11) { setPickerMonth(0); setPickerYear(y => y + 1); }
+    else setPickerMonth(m => m + 1);
+  };
+
+  /** Format YYYY-MM-DD to "DD MMM YYYY" for display */
+  const formatDisplay = (dateStr: string) => {
+    if (!dateStr) return 'Tap to select';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getFullYear()}`;
+  };
+
+  /** Returns set of day-of-week names covered by the date range */
+  const getDaysInRange = (from: string, to: string): Set<string> => {
+    const days = new Set<string>();
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    try {
+      const start = new Date(from);
+      const end = new Date(to);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return days;
+      const cur = new Date(start);
+      while (cur <= end) {
+        const name = DAY_NAMES[cur.getDay()];
+        if (name !== 'Sunday') days.add(name);
+        cur.setDate(cur.getDate() + 1);
+      }
+    } catch {}
+    return days;
+  };
 
   const handleSaveClaim = () => {
     if (!reason || !doctorName) {
       Alert.alert('Missing Details', 'Please enter reason for illness and doctor name.');
       return;
     }
+    if (!fromDate || !toDate) {
+      Alert.alert('Missing Dates', 'Please enter the from and to dates of your leave.');
+      return;
+    }
+
+    // Auto-detect which subjects have classes on the leave days
+    const leaveDays = getDaysInRange(fromDate, toDate);
+    const affectedSubjectIds = [
+      ...new Set(
+        timetable
+          .filter((slot) => leaveDays.has(slot.day))
+          .map((slot) => slot.subjectId)
+      ),
+    ];
 
     const newClaim: MedicalClaimRecord = {
       id: `med_${Date.now()}`,
-      subjectId: selectedSubjectId,
+      subjectId: affectedSubjectIds.length > 0 ? affectedSubjectIds.join(',') : 'ALL',
       fromDate,
       toDate,
       reason,
@@ -52,19 +145,29 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
     };
 
     onAddMedicalClaim(newClaim);
-    // Also auto-activate claim for selected subject if specific
-    if (selectedSubjectId !== 'ALL') {
-      const sub = subjects.find((s) => s.id === selectedSubjectId);
-      if (sub && !sub.hasMedicalClaim) {
-        onToggleMedicalClaim(sub.id);
-      }
+
+    // Auto-apply 65% threshold to all affected subjects
+    if (affectedSubjectIds.length > 0) {
+      onAutoApplyMedicalClaims(affectedSubjectIds);
     }
 
     setShowModal(false);
     setReason('');
     setDoctorName('');
     setClinic('');
-    Alert.alert('Medical Claim Submitted! 🏥', '65% condonation threshold has been applied.');
+    setFromDate('');
+    setToDate('');
+
+    const subjectNames = affectedSubjectIds
+      .map((id) => subjects.find((s) => s.id === id)?.name ?? id)
+      .join(', ');
+
+    Alert.alert(
+      'Medical Claim Submitted! 🏥',
+      affectedSubjectIds.length > 0
+        ? `65% threshold auto-applied to:\n${subjectNames}`
+        : '65% condonation threshold has been applied.'
+    );
   };
 
   const activeClaimsCount = subjects.filter((s) => s.hasMedicalClaim).length;
@@ -171,14 +274,30 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
                     📅 {claim.fromDate} to {claim.toDate}
                   </Text>
                 </View>
-                <View
+                <TouchableOpacity
+                  onPress={() => onUpdateClaimStatus(claim.id)}
+                  activeOpacity={0.7}
                   style={[
                     styles.statusBadge,
-                    claim.status === 'APPROVED' ? styles.statusApproved : styles.statusSubmitted,
+                    claim.status === 'APPROVED'
+                      ? styles.statusApproved
+                      : claim.status === 'DRAFT'
+                      ? styles.statusDraft
+                      : styles.statusSubmitted,
                   ]}
                 >
-                  <Text style={styles.statusBadgeText}>{claim.status}</Text>
-                </View>
+                  <Text style={[
+                    styles.statusBadgeText,
+                    claim.status === 'APPROVED'
+                      ? styles.statusApprovedText
+                      : claim.status === 'DRAFT'
+                      ? styles.statusDraftText
+                      : styles.statusSubmittedText,
+                  ]}>
+                    {claim.status === 'APPROVED' ? '✅ APPROVED' : claim.status === 'DRAFT' ? '📝 DRAFT' : '🕐 SUBMITTED'}
+                  </Text>
+                  <Text style={styles.statusTapHint}>✏️ tap to update</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.doctorRow}>
@@ -236,26 +355,31 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
               onChangeText={setClinic}
             />
 
+            {/* Date Picker Buttons */}
             <View style={styles.dateInputsRow}>
               <View style={styles.dateInputCol}>
-                <Text style={styles.inputLabel}>From Date</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={fromDate}
-                  onChangeText={setFromDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#64748B"
-                />
+                <Text style={styles.inputLabel}>📅 From Date</Text>
+                <TouchableOpacity
+                  style={[styles.datePickerBtn, fromDate ? styles.datePickerBtnSelected : null]}
+                  onPress={() => openDatePicker('from')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={fromDate ? styles.datePickerBtnTextSelected : styles.datePickerBtnTextPlaceholder}>
+                    {formatDisplay(fromDate)}
+                  </Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.dateInputCol}>
-                <Text style={styles.inputLabel}>To Date</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={toDate}
-                  onChangeText={setToDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#64748B"
-                />
+                <Text style={styles.inputLabel}>📅 To Date</Text>
+                <TouchableOpacity
+                  style={[styles.datePickerBtn, toDate ? styles.datePickerBtnSelected : null]}
+                  onPress={() => openDatePicker('to')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={toDate ? styles.datePickerBtnTextSelected : styles.datePickerBtnTextPlaceholder}>
+                    {formatDisplay(toDate)}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -273,6 +397,80 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
                 <Text style={styles.modalSubmitText}>Submit Claim (Apply 65%)</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Calendar Date Picker Modal */}
+      <Modal visible={showDatePicker} animationType="fade" transparent>
+        <View style={styles.calOverlay}>
+          <View style={styles.calCard}>
+            {/* Header */}
+            <Text style={styles.calTitle}>
+              {datePickerTarget === 'from' ? '📅 Select From Date' : '📅 Select To Date'}
+            </Text>
+
+            {/* Month Navigator */}
+            <View style={styles.calNavRow}>
+              <TouchableOpacity onPress={prevMonth} style={styles.calNavBtn}>
+                <Text style={styles.calNavArrow}>‹</Text>
+              </TouchableOpacity>
+              <Text style={styles.calMonthLabel}>
+                {MONTH_NAMES[pickerMonth]} {pickerYear}
+              </Text>
+              <TouchableOpacity onPress={nextMonth} style={styles.calNavBtn}>
+                <Text style={styles.calNavArrow}>›</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Day labels */}
+            <View style={styles.calDayLabelRow}>
+              {DAY_LABELS.map((l) => (
+                <Text key={l} style={styles.calDayLabel}>{l}</Text>
+              ))}
+            </View>
+
+            {/* Day grid */}
+            <View style={styles.calGrid}>
+              {getCalendarGrid(pickerYear, pickerMonth).map((cell, idx) => {
+                const mm = String(pickerMonth + 1).padStart(2, '0');
+                const dd = String(cell.day).padStart(2, '0');
+                const dateStr = `${pickerYear}-${mm}-${dd}`;
+                const isFrom = dateStr === fromDate;
+                const isTo = dateStr === toDate;
+                const inRange = fromDate && toDate && dateStr > fromDate && dateStr < toDate;
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[
+                      styles.calDayCell,
+                      !cell.active && styles.calDayCellEmpty,
+                      isFrom || isTo ? styles.calDayCellSelected : null,
+                      inRange ? styles.calDayCellInRange : null,
+                    ]}
+                    onPress={() => cell.active && selectDay(cell.day)}
+                    activeOpacity={cell.active ? 0.7 : 1}
+                  >
+                    {cell.active ? (
+                      <Text style={[
+                        styles.calDayText,
+                        isFrom || isTo ? styles.calDayTextSelected : null,
+                        inRange ? styles.calDayTextInRange : null,
+                      ]}>
+                        {cell.day}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={styles.calCancelBtn}
+              onPress={() => setShowDatePicker(false)}
+            >
+              <Text style={styles.calCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -468,19 +666,44 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 6,
+    alignItems: 'center',
+    minWidth: 80,
   },
   statusApproved: {
     backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderWidth: 1,
+    borderColor: '#10B981',
   },
   statusSubmitted: {
     backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+  },
+  statusDraft: {
+    backgroundColor: 'rgba(100, 116, 139, 0.15)',
+    borderWidth: 1,
+    borderColor: '#64748B',
   },
   statusBadgeText: {
-    color: '#38BDF8',
     fontSize: 11,
     fontWeight: '800',
+  },
+  statusApprovedText: {
+    color: '#34D399',
+  },
+  statusSubmittedText: {
+    color: '#60A5FA',
+  },
+  statusDraftText: {
+    color: '#94A3B8',
+  },
+  statusTapHint: {
+    color: '#38BDF8',
+    fontSize: 9,
+    marginTop: 2,
+    fontWeight: '600',
   },
   doctorRow: {
     flexDirection: 'row',
@@ -595,4 +818,134 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+
+  // ── Date picker button styles ──────────────────────────
+  datePickerBtn: {
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+  },
+  datePickerBtnSelected: {
+    borderColor: '#0284C7',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+  },
+  datePickerBtnTextPlaceholder: {
+    color: '#64748B',
+    fontSize: 12,
+  },
+  datePickerBtnTextSelected: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // ── Calendar modal styles ──────────────────────────────
+  calOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  calCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 18,
+    padding: 16,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  calTitle: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  calNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  calNavBtn: {
+    padding: 6,
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    width: 36,
+    alignItems: 'center',
+  },
+  calNavArrow: {
+    color: '#38BDF8',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  calMonthLabel: {
+    color: '#F1F5F9',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  calDayLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 4,
+  },
+  calDayLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '700',
+    width: 36,
+    textAlign: 'center',
+  },
+  calGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calDayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  calDayCellEmpty: {
+    opacity: 0,
+  },
+  calDayCellSelected: {
+    backgroundColor: '#0284C7',
+    borderRadius: 20,
+  },
+  calDayCellInRange: {
+    backgroundColor: 'rgba(2, 132, 199, 0.2)',
+    borderRadius: 0,
+  },
+  calDayText: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  calDayTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  calDayTextInRange: {
+    color: '#38BDF8',
+  },
+  calCancelBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    backgroundColor: '#334155',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  calCancelText: {
+    color: '#CBD5E1',
+    fontWeight: '600',
+  },
 });
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   Alert,
+  Vibration,
 } from 'react-native';
 import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus } from '../types';
 import { calculateOverallMetrics } from '../services/attendanceEngine';
@@ -25,10 +26,10 @@ interface DashboardScreenProps {
     date: string,
     status: AttendanceStatus
   ) => Promise<{ success: boolean; message: string; isChange: boolean; alreadyMarked?: boolean }>;
-  onUpdateSubject: (subject: Subject) => void;
+  onUpdateSubject?: (subject: Subject) => void;
   onToggleMedicalClaim: (id: string) => void;
-  onQuickAttend: (id: string) => void;
-  onQuickBunk: (id: string) => void;
+  onQuickAttend?: (id: string) => void;
+  onQuickBunk?: (id: string) => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -38,10 +39,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   studentName,
   periodRecords,
   onRecordPeriodAttendance,
-  onUpdateSubject,
   onToggleMedicalClaim,
-  onQuickAttend,
-  onQuickBunk,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'MEDICAL' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
@@ -154,6 +152,62 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const currentPeriodKey = currentSlot ? `${todayDate}_${currentSlot.id}` : null;
   const currentRecord = currentPeriodKey ? periodRecords[currentPeriodKey] : undefined;
   const slotStatus = getSlotStatus();
+
+  // Interactive Class Ended Notification popup state
+  const [endedSlotNotification, setEndedSlotNotification] = useState<{
+    slot: TimetableSlot;
+    subject: Subject;
+  } | null>(null);
+  const alertedSlotsRef = useRef<Set<string>>(new Set());
+
+  // Automatic detector that fires notification & vibration when class ends
+  useEffect(() => {
+    const checkEndedClasses = () => {
+      const currentTime = new Date();
+      const mins = currentTime.getHours() * 60 + currentTime.getMinutes();
+      const today = currentTime.toISOString().split('T')[0];
+      const todayDay = dayNames[currentTime.getDay()].toLowerCase();
+
+      // Find any class from today that has reached its endTime and is not yet marked
+      const endedSlot = timetable.find((slot) => {
+        if (slot.day.toLowerCase() !== todayDay) return false;
+        const end = timeToMinutes(slot.endTime);
+        const periodKey = `${today}_${slot.id}`;
+        return mins >= end && mins <= end + 180 && !periodRecords[periodKey];
+      });
+
+      if (endedSlot) {
+        const periodKey = `${today}_${endedSlot.id}`;
+        if (!alertedSlotsRef.current.has(periodKey)) {
+          alertedSlotsRef.current.add(periodKey);
+          const sub = subjects.find((s) => s.id === endedSlot.subjectId);
+          if (sub) {
+            try {
+              Vibration.vibrate([0, 500, 200, 500]);
+            } catch {}
+            setEndedSlotNotification({ slot: endedSlot, subject: sub });
+          }
+        }
+      }
+    };
+
+    checkEndedClasses();
+    const interval = setInterval(checkEndedClasses, 30000);
+    return () => clearInterval(interval);
+  }, [timetable, periodRecords, subjects]);
+
+  const handleRecordFromNotification = async (status: AttendanceStatus) => {
+    if (!endedSlotNotification) return;
+    const { slot, subject } = endedSlotNotification;
+    const res = await onRecordPeriodAttendance(slot, todayDate, status);
+    setEndedSlotNotification(null);
+    if (res.success) {
+      Alert.alert(
+        status === 'attended' ? 'Marked Present ✅' : status === 'bunked' ? 'Marked Bunk ❌' : 'Class Cancelled ⚪',
+        `Attendance recorded for ${subject.name}.`
+      );
+    }
+  };
 
   const handleAutoRecord = async (status: AttendanceStatus) => {
     if (!currentSlot || !currentSubject) return;
@@ -433,10 +487,73 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           subject={subject}
           studentRollNo={studentRollNo}
           onToggleMedicalClaim={onToggleMedicalClaim}
-          onQuickAttend={onQuickAttend}
-          onQuickBunk={onQuickBunk}
         />
       ))}
+
+      {/* Class Ended Interactive Notification Pop-up */}
+      <Modal
+        visible={!!endedSlotNotification}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setEndedSlotNotification(null)}
+      >
+        <View style={styles.notifOverlay}>
+          <View style={styles.notifCard}>
+            <View style={styles.notifHeaderRow}>
+              <View style={styles.notifIconCircle}>
+                <Text style={styles.notifIconText}>🔔</Text>
+              </View>
+              <View style={styles.notifHeaderInfo}>
+                <Text style={styles.notifHeaderBadge}>CLASS CONCLUDED</Text>
+                <Text style={styles.notifSubjectName} numberOfLines={1}>
+                  {endedSlotNotification?.subject.name}
+                </Text>
+                <Text style={styles.notifTimeSlot}>
+                  ⏰ {endedSlotNotification?.slot.startTime} – {endedSlotNotification?.slot.endTime} • {endedSlotNotification?.slot.day}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.notifBodyText}>
+              Your class has ended! Mark your attendance now so your records stay up to date:
+            </Text>
+
+            <View style={styles.notifActionsRow}>
+              <TouchableOpacity
+                style={[styles.notifBtn, styles.notifAttendBtn]}
+                onPress={() => handleRecordFromNotification('attended')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.notifAttendText}>✅ Attended</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.notifBtn, styles.notifBunkBtn]}
+                onPress={() => handleRecordFromNotification('bunked')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.notifBunkText}>❌ Bunked</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.notifBtn, styles.notifCancelBtn]}
+                onPress={() => handleRecordFromNotification('cancelled')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.notifCancelText}>⚪ Free / Off</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.notifDismissBtn}
+              onPress={() => setEndedSlotNotification(null)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.notifDismissText}>Remind Me Later</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -797,6 +914,124 @@ const styles = StyleSheet.create({
   profilePillText: {
     color: '#94A3B8',
     fontSize: 11,
+    fontWeight: '600',
+  },
+
+  // ── Class Ended Notification Pop-up Styles ─────────────────────────
+  notifOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.82)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  notifCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    padding: 22,
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  notifHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  notifIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notifIconText: {
+    fontSize: 22,
+  },
+  notifHeaderInfo: {
+    flex: 1,
+  },
+  notifHeaderBadge: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  notifSubjectName: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  notifTimeSlot: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  notifBodyText: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 18,
+  },
+  notifActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  notifBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  notifAttendBtn: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderColor: '#10B981',
+  },
+  notifAttendText: {
+    color: '#34D399',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  notifBunkBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: '#EF4444',
+  },
+  notifBunkText: {
+    color: '#F87171',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  notifCancelBtn: {
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+    borderColor: '#64748B',
+  },
+  notifCancelText: {
+    color: '#CBD5E1',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  notifDismissBtn: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  notifDismissText: {
+    color: '#64748B',
+    fontSize: 12,
     fontWeight: '600',
   },
 });

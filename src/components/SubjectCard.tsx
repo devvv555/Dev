@@ -9,16 +9,14 @@ interface SubjectCardProps {
   subject: Subject;
   studentRollNo?: string;
   onToggleMedicalClaim: (id: string) => void;
-  onQuickAttend: (id: string) => void;
-  onQuickBunk: (id: string) => void;
+  onQuickAttend?: (id: string) => void;
+  onQuickBunk?: (id: string) => void;
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
   subject,
   studentRollNo,
   onToggleMedicalClaim,
-  onQuickAttend,
-  onQuickBunk,
 }) => {
   const [showSessionsModal, setShowSessionsModal] = useState(false);
 
@@ -119,25 +117,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           </Text>
         </TouchableOpacity>
       )}
-
-      {/* Quick Action Buttons */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.actionBtn, styles.attendBtn]}
-          onPress={() => onQuickAttend(subject.id)}
-        >
-          <Text style={styles.attendBtnText}>+1 Present ✅</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.actionBtn, styles.bunkBtn]}
-          onPress={() => onQuickBunk(subject.id)}
-        >
-          <Text style={styles.bunkBtnText}>+1 Bunk ❌</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Official Sessions Breakdown Modal */}
       {mcobData && (
