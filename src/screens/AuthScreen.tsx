@@ -17,6 +17,7 @@ import {
   getStudentByName,
   STUDENTS_BY_NEW_ROLL,
 } from '../data/psgimMasterStudents';
+import { TermsModal } from '../components/TermsModal';
 
 interface AuthScreenProps {
   onLoginSuccess: (rollNo: string) => void;
@@ -29,6 +30,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean>(false);
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = () => {
@@ -43,6 +46,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     if (!cleanPassword) {
       setErrorMessage('Please enter your Roll Number as Password.');
+      return;
+    }
+
+    if (!hasAcceptedTerms) {
+      setErrorMessage('Please review and check "I agree to Terms & Conditions" to continue.');
       return;
     }
 
@@ -152,9 +160,31 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             </Text>
           </View>
 
+          {/* Mandatory Terms & Data Consent Checkbox */}
+          <View style={styles.consentRow}>
+            <TouchableOpacity
+              style={[styles.consentCheckbox, hasAcceptedTerms && styles.consentCheckboxActive]}
+              onPress={() => setHasAcceptedTerms(!hasAcceptedTerms)}
+              activeOpacity={0.8}
+            >
+              {hasAcceptedTerms && <Text style={styles.consentCheckmark}>✓</Text>}
+            </TouchableOpacity>
+            <View style={styles.consentTextCol}>
+              <Text style={styles.consentText}>
+                I have read and agree to the{' '}
+                <Text
+                  style={styles.consentLink}
+                  onPress={() => setShowTermsModal(true)}
+                >
+                  Terms of Service & Data Consent Agreement
+                </Text>
+              </Text>
+            </View>
+          </View>
+
           {/* Sign In Button */}
           <TouchableOpacity
-            style={styles.submitBtn}
+            style={[styles.submitBtn, !hasAcceptedTerms && styles.submitBtnDisabled]}
             onPress={handleLogin}
             activeOpacity={0.8}
           >
@@ -169,6 +199,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Full 7-Clause Legal Terms Modal */}
+      <TermsModal
+        visible={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => {
+          setHasAcceptedTerms(true);
+          setShowTermsModal(false);
+        }}
+        showAcceptButton={true}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -345,5 +386,48 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 12,
     lineHeight: 16,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  consentCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#64748B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0F172A',
+  },
+  consentCheckboxActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#3B82F6',
+  },
+  consentCheckmark: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  consentTextCol: {
+    flex: 1,
+  },
+  consentText: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  consentLink: {
+    color: '#38BDF8',
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  submitBtnDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#334155',
   },
 });

@@ -86,3 +86,35 @@ export interface AttendanceMetrics {
   recoveryNeededAt75: number;
   summaryMessage: string;
 }
+
+export type FeedbackCategory = 'BUG' | 'FEATURE' | 'SCHEDULE' | 'GENERAL';
+
+export interface StudentFeedback {
+  id: string;
+  studentName: string;
+  studentRollNo: string;
+  batch: string;
+  isAnonymous: boolean;
+  category: FeedbackCategory;
+  rating: number; // 1 to 5
+  message: string;
+  createdAt: string; // ISO string
+  status: 'NEW' | 'REVIEWED' | 'RESOLVED';
+}
+
+export interface FeatureUsageStats {
+  hourlyTrackerViews: number;
+  timetableViews: number;
+  calendarViews: number;
+  medicalVaultViews: number;
+  erpSyncViews: number;
+  totalLogins: number;
+  uniqueStudentsCount: number;
+  activeTodayCount: number;
+  batchBreakdown: {
+    A: number;
+    B: number;
+    C: number;
+    D: number;
+  };
+}

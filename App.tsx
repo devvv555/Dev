@@ -18,8 +18,11 @@ import { MedicalVaultScreen } from './src/screens/MedicalVaultScreen';
 import { ReconcileScreen } from './src/screens/ReconcileScreen';
 import { CalendarScreen } from './src/screens/CalendarScreen';
 import { AuthScreen } from './src/screens/AuthScreen';
+import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
+import { FeedbackModal } from './src/components/FeedbackModal';
+import { AnalyticsService } from './src/services/analyticsService';
 import { PsgimService } from './src/services/psgimService';
-import { toNewRollNo } from './src/data/psgimMasterStudents';
+import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC';
 
@@ -29,6 +32,8 @@ export default function App() {
   const [activeRollNo, setActiveRollNo] = useState<string>('');
 
   const [activeTab, setActiveTab] = useState<Tab>('DASHBOARD');
+  const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
   const [medicalClaims, setMedicalClaims] = useState<MedicalClaimRecord[]>(INITIAL_MEDICAL_CLAIMS);
@@ -47,6 +52,9 @@ export default function App() {
           const storedRecords = await StorageService.getPeriodRecords(officialRoll);
           setPeriodRecords(storedRecords);
           setIsAuthenticated(true);
+
+          const student = getMasterStudent(officialRoll);
+          AnalyticsService.recordLogin(officialRoll, student?.name || '', student?.batch || 'A');
         }
 
         const storedMed = await StorageService.getMedicalClaims();
@@ -63,6 +71,18 @@ export default function App() {
     initSession();
   }, []);
 
+  const handleTabChange = (newTab: Tab) => {
+    setActiveTab(newTab);
+    const featureMap: Record<Tab, 'HOURLY' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC'> = {
+      DASHBOARD: 'HOURLY',
+      TIMETABLE: 'TIMETABLE',
+      CALENDAR: 'CALENDAR',
+      MEDICAL: 'MEDICAL',
+      ERP_SYNC: 'ERP_SYNC',
+    };
+    AnalyticsService.recordFeatureVisit(featureMap[newTab]);
+  };
+
   // Login handler
   const handleLoginSuccess = async (rollNo: string) => {
     const studentSubjects = PsgimService.generateSubjectsForStudent(rollNo);
@@ -75,6 +95,9 @@ export default function App() {
     setPeriodRecords(storedRecords);
     setIsAuthenticated(true);
     await StorageService.setAuthUser(rollNo);
+
+    const student = getMasterStudent(rollNo);
+    AnalyticsService.recordLogin(rollNo, student?.name || '', student?.batch || 'A');
   };
 
   // Logout handler
@@ -338,6 +361,22 @@ export default function App() {
 
         {/* Logged in student badge & Logout button */}
         <View style={styles.userProfileRow}>
+          <TouchableOpacity
+            style={styles.feedbackHeaderBtn}
+            onPress={() => setShowFeedbackModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.feedbackHeaderBtnText}>💡 Feedback</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.adminHeaderBtn}
+            onPress={() => setShowAdminModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.adminHeaderBtnText}>🛡️ Admin</Text>
+          </TouchableOpacity>
+
           <View style={styles.studentBadge}>
             <Text style={styles.studentBadgeText}>👤 {studentName || 'Student'}</Text>
           </View>
@@ -362,7 +401,7 @@ export default function App() {
             periodRecords={periodRecords}
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onToggleMedicalClaim={handleToggleMedicalClaim}
-            onOpenCalendar={() => setActiveTab('CALENDAR')}
+            onOpenCalendar={() => handleTabChange('CALENDAR')}
           />
         )}
 
@@ -379,7 +418,7 @@ export default function App() {
         )}
 
         {activeTab === 'CALENDAR' && (
-          <CalendarScreen onBack={() => setActiveTab('DASHBOARD')} />
+          <CalendarScreen onBack={() => handleTabChange('DASHBOARD')} />
         )}
 
         {activeTab === 'MEDICAL' && (
@@ -407,7 +446,7 @@ export default function App() {
         <TouchableOpacity
           activeOpacity={0.7}
           style={[styles.tabItem, activeTab === 'DASHBOARD' && styles.tabItemActive]}
-          onPress={() => setActiveTab('DASHBOARD')}
+          onPress={() => handleTabChange('DASHBOARD')}
         >
           <Text style={styles.tabIcon}>⚡</Text>
           <Text style={[styles.tabLabel, activeTab === 'DASHBOARD' && styles.tabLabelActive]}>
@@ -418,7 +457,7 @@ export default function App() {
         <TouchableOpacity
           activeOpacity={0.7}
           style={[styles.tabItem, activeTab === 'TIMETABLE' && styles.tabItemActive]}
-          onPress={() => setActiveTab('TIMETABLE')}
+          onPress={() => handleTabChange('TIMETABLE')}
         >
           <Text style={styles.tabIcon}>📅</Text>
           <Text style={[styles.tabLabel, activeTab === 'TIMETABLE' && styles.tabLabelActive]}>
@@ -429,7 +468,7 @@ export default function App() {
         <TouchableOpacity
           activeOpacity={0.7}
           style={[styles.tabItem, activeTab === 'CALENDAR' && styles.tabItemActive]}
-          onPress={() => setActiveTab('CALENDAR')}
+          onPress={() => handleTabChange('CALENDAR')}
         >
           <Text style={styles.tabIcon}>🌴</Text>
           <Text style={[styles.tabLabel, activeTab === 'CALENDAR' && styles.tabLabelActive]}>
@@ -440,7 +479,7 @@ export default function App() {
         <TouchableOpacity
           activeOpacity={0.7}
           style={[styles.tabItem, activeTab === 'MEDICAL' && styles.tabItemActive]}
-          onPress={() => setActiveTab('MEDICAL')}
+          onPress={() => handleTabChange('MEDICAL')}
         >
           <Text style={styles.tabIcon}>🏥</Text>
           <Text style={[styles.tabLabel, activeTab === 'MEDICAL' && styles.tabLabelActive]}>
@@ -451,7 +490,7 @@ export default function App() {
         <TouchableOpacity
           activeOpacity={0.7}
           style={[styles.tabItem, activeTab === 'ERP_SYNC' && styles.tabItemActive]}
-          onPress={() => setActiveTab('ERP_SYNC')}
+          onPress={() => handleTabChange('ERP_SYNC')}
         >
           <Text style={styles.tabIcon}>🔄</Text>
           <Text
@@ -462,6 +501,21 @@ export default function App() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Student Feedback & Improvement Suggestions Modal */}
+      <FeedbackModal
+        visible={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        studentName={studentName}
+        studentRollNo={activeRollNo}
+        batch={getMasterStudent(activeRollNo)?.batch || 'A'}
+      />
+
+      {/* Secret Admin Dashboard Protected by PIN */}
+      <AdminDashboardScreen
+        visible={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
+      />
     </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -511,7 +565,33 @@ const styles = StyleSheet.create({
   userProfileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+  },
+  feedbackHeaderBtn: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    borderWidth: 1,
+    borderColor: '#EAB308',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  feedbackHeaderBtnText: {
+    color: '#FDE047',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  adminHeaderBtn: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  adminHeaderBtnText: {
+    color: '#60A5FA',
+    fontSize: 11,
+    fontWeight: '700',
   },
   studentBadge: {
     backgroundColor: '#1E293B',
