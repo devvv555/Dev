@@ -3805,6 +3805,37 @@ export const STUDENT_REGISTRY: Record<string, StudentRecord> = {
 export const ALL_ROLL_NUMBERS = Object.keys(STUDENT_REGISTRY);
 
 /**
+ * Resolves the specific classroom/hall for a student based on their assigned group
+ */
+export function resolveExactRoom(course: string, groupNum: number, defaultRoom: string): string {
+  if (course === 'SPORTS') return 'Sports Ground';
+  if (course === 'CLUB') return 'Auditorium / Clubs';
+  if (defaultRoom && defaultRoom.includes('ALPS')) return 'ALPS Team';
+
+  // Spreadsheet Applications (SSA) Lab / Hall mappings
+  if (course === 'SSA') {
+    switch (groupNum) {
+      case 1: return 'LH-401';
+      case 2: return 'LH-405';
+      case 3: return 'LH-101';
+      case 4: return 'LH-109';
+      default: return defaultRoom && !defaultRoom.includes('/') ? defaultRoom : 'LH-101';
+    }
+  }
+
+  // Standard courses: MCOB, EDM, ADM, BS, MC, SSM, LA
+  switch (groupNum) {
+    case 1: return 'LH-101';
+    case 2: return 'LH-109';
+    case 3: return 'LH-401';
+    case 4: return 'LH-405';
+    default:
+      if (defaultRoom && !defaultRoom.includes('/')) return defaultRoom;
+      return 'LH-101';
+  }
+}
+
+/**
  * Returns personalized timetable slots for any specific student roll number
  */
 export function getTimetableForStudent(rollNo: string) {
@@ -3821,6 +3852,7 @@ export function getTimetableForStudent(rollNo: string) {
     const studentBatch = student.batches[slot.course as keyof typeof student.batches];
     const groupNum = studentBatch ? parseInt(studentBatch.replace(/\D/g, ''), 10) : 0;
     const facultyName = (groupNum && course?.faculty[groupNum]) || (course?.faculty[1] || 'Faculty');
+    const specificRoom = resolveExactRoom(slot.course, groupNum, slot.defaultRoom);
 
     return {
       id: `slot_${rollNo}_${slot.day}_${index}`,
@@ -3832,7 +3864,7 @@ export function getTimetableForStudent(rollNo: string) {
       shortForm: slot.course,
       batch: studentBatch || slot.applicableBatches[0],
       faculty: facultyName,
-      room: slot.defaultRoom,
+      room: specificRoom,
       color: course?.color || '#3B82F6'
     };
   });

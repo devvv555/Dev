@@ -3,6 +3,7 @@ import {
   STUDENT_REGISTRY,
   PSGIM_COURSES,
   getTimetableForStudent as getPsgimTimetable,
+  resolveExactRoom,
   ALL_ROLL_NUMBERS,
 } from '../data/psgimData';
 import { getMcobData, McobStudentData } from '../data/mcobAttendanceData';
@@ -117,7 +118,13 @@ export const PsgimService = {
         lastOfficialUpdate: '2026-09-15',
         batch: isBlankBatch ? '' : batchCode,
         faculty: isBlankBatch ? '' : faculty,
-        room: isBlankBatch ? '' : (course?.halls || 'LH-101'),
+        room: isBlankBatch
+          ? ''
+          : resolveExactRoom(
+              courseKey,
+              parseInt(batchCode.replace(/\D/g, '') || '0', 10),
+              course?.halls || 'LH-101'
+            ),
       };
     });
   },

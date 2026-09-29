@@ -359,36 +359,44 @@ export default function App() {
       <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-      {/* Main Top Header */}
+      {/* Main Top Header (Balanced 2-Row Clean Layout) */}
       <View style={styles.appHeader}>
-        <View style={styles.appHeaderLeft}>
-          <Text style={styles.appLogo}>🏛️</Text>
-          <View>
-            <Text style={styles.appName}>Attendance Monitor</Text>
-            <Text style={styles.appTagline}>I MBA (2026–28) • Semester 1</Text>
+        {/* Row 1: Brand Logo & Title + Actions */}
+        <View style={styles.headerTopRow}>
+          <View style={styles.brandContainer}>
+            <Text style={styles.appLogo}>🏛️</Text>
+            <Text style={styles.appName} numberOfLines={1}>
+              Attendance Monitor
+            </Text>
+          </View>
+
+          <View style={styles.headerActionsRow}>
+            <TouchableOpacity
+              style={styles.feedbackHeaderBtn}
+              onPress={() => setShowFeedbackModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.feedbackHeaderBtnText}>💡 Feedback</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.logoutBtn}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.logoutBtnText}>Logout</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Logged in student badge & Logout button (Zero admin button visible to students) */}
-        <View style={styles.userProfileRow}>
-          <TouchableOpacity
-            style={styles.feedbackHeaderBtn}
-            onPress={() => setShowFeedbackModal(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.feedbackHeaderBtnText}>💡 Feedback</Text>
-          </TouchableOpacity>
-
+        {/* Row 2: Cohort Sub-bar & Logged In Student Identity */}
+        <View style={styles.headerSubRow}>
+          <Text style={styles.appTagline}>I MBA (2026–28) • Semester 1</Text>
           <View style={styles.studentBadge}>
-            <Text style={styles.studentBadgeText}>👤 {studentName || 'Student'}</Text>
+            <Text style={styles.studentBadgeText} numberOfLines={1}>
+              👤 {studentName || 'Student'}
+            </Text>
           </View>
-          <TouchableOpacity
-            style={styles.logoutBtn}
-            onPress={handleLogout}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.logoutBtnText}>Logout</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -536,45 +544,73 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   appHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#1E293B',
     backgroundColor: '#0F172A',
+    gap: 8,
   },
-  appHeaderLeft: {
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     flex: 1,
+    marginRight: 8,
   },
   appLogo: {
-    fontSize: 24,
+    fontSize: 22,
   },
   appName: {
     color: '#F8FAFC',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
+    flexShrink: 1,
+  },
+  headerActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerSubRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(30, 41, 59, 0.6)',
   },
   appTagline: {
     color: '#94A3B8',
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  userProfileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  studentBadge: {
+    backgroundColor: '#1E293B',
+    borderColor: '#3B82F6',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    maxWidth: 170,
+  },
+  studentBadgeText: {
+    color: '#93C5FD',
+    fontSize: 11,
+    fontWeight: '700',
   },
   feedbackHeaderBtn: {
     backgroundColor: 'rgba(234, 179, 8, 0.15)',
     borderWidth: 1,
     borderColor: '#EAB308',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 8,
   },
   feedbackHeaderBtnText: {
@@ -582,42 +618,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  adminHeaderBtn: {
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  adminHeaderBtnText: {
-    color: '#60A5FA',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  studentBadge: {
-    backgroundColor: '#1E293B',
-    borderColor: '#3B82F6',
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  studentBadgeText: {
-    color: '#93C5FD',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  studentNameBadgeText: {
-    color: '#CBD5E1',
-    fontSize: 10,
-    fontWeight: '600',
-    maxWidth: 120,
-  },
   logoutBtn: {
     backgroundColor: '#334155',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
   },
   logoutBtnText: {
