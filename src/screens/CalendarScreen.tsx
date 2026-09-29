@@ -17,12 +17,34 @@ interface CalendarScreenProps {
   onBack?: () => void;
 }
 
+const getTodayDateStr = (): string => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const isItemPassed = (item: AcademicCalendarItem, todayStr: string): boolean => {
+  const effectiveEnd = item.endDate || item.date;
+  return effectiveEnd < todayStr;
+};
+
 export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
 
   const nextHolidayInfo = getNextHoliday();
+  const todayStr = getTodayDateStr();
+
+  const upcomingHolidaysCount = ACADEMIC_CALENDAR.filter(
+    (item) => item.type === 'HOLIDAY' && !isItemPassed(item, todayStr)
+  ).length;
 
   const filteredItems = ACADEMIC_CALENDAR.filter((item) => {
+    // Strictly exclude holidays that have already passed
+    if (item.type === 'HOLIDAY' && isItemPassed(item, todayStr)) {
+      return false;
+    }
     if (filter === 'ALL') return true;
     if (filter === 'HOLIDAY') return item.type === 'HOLIDAY';
     if (filter === 'EXAM') return item.type === 'EXAM';
@@ -136,7 +158,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'HOLIDAY' && styles.filterChipTextActive]}>
-            🌴 Holidays (18)
+            🌴 Holidays ({upcomingHolidaysCount})
           </Text>
         </TouchableOpacity>
 
@@ -173,7 +195,14 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
 
       {/* Timeline List */}
       <View style={styles.timelineList}>
-        {filteredItems.map((item) => {
+        {filteredItems.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyIcon}>🌴</Text>
+            <Text style={styles.emptyTitle}>No upcoming holidays</Text>
+            <Text style={styles.emptySub}>All scheduled holidays for this category have passed or concluded.</Text>
+          </View>
+        ) : (
+          filteredItems.map((item) => {
           const typeBadge = getTypeBadge(item.type);
           const dateParts = item.date.split('-');
           const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -223,7 +252,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
               </View>
             </View>
           );
-        })}
+        }))}
       </View>
     </ScrollView>
   );
@@ -473,5 +502,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     lineHeight: 17,
+  },
+  emptyCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 14,
+    padding: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginTop: 10,
+  },
+  emptyIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  emptyTitle: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  emptySub: {
+    color: '#94A3B8',
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });

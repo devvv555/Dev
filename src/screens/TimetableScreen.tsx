@@ -17,11 +17,21 @@ interface TimetableScreenProps {
 
 const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+const getTodayDayOfWeek = (): DayOfWeek => {
+  const dayIndex = new Date().getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  if (dayIndex === 0) {
+    return 'Monday'; // Default to Monday on Sundays
+  }
+  const days: DayOfWeek[] = ['Monday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[dayIndex] || 'Monday';
+};
+
 export const TimetableScreen: React.FC<TimetableScreenProps> = ({
   subjects,
   timetable,
 }) => {
-  const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Thursday');
+  const todayDay = getTodayDayOfWeek();
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek>(todayDay);
 
   const daySlots = timetable.filter((s) => s.day === selectedDay);
 
@@ -32,23 +42,31 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Weekly Timetable</Text>
         <Text style={styles.headerSubtitle}>
-          The app triggers hourly attendance alerts at the end of each slot.
+          Showing {selectedDay}'s schedule{selectedDay === todayDay ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
         </Text>
       </View>
 
       {/* Day Selector */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daySelector}>
-        {DAYS.map((day) => (
-          <TouchableOpacity
-            key={day}
-            onPress={() => setSelectedDay(day)}
-            style={[styles.dayButton, selectedDay === day && styles.dayButtonActive]}
-          >
-            <Text style={[styles.dayText, selectedDay === day && styles.dayTextActive]}>
-              {day.slice(0, 3)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {DAYS.map((day) => {
+          const isSelected = selectedDay === day;
+          const isToday = day === todayDay;
+          return (
+            <TouchableOpacity
+              key={day}
+              onPress={() => setSelectedDay(day)}
+              style={[
+                styles.dayButton,
+                isSelected && styles.dayButtonActive,
+                isToday && !isSelected && styles.dayButtonToday,
+              ]}
+            >
+              <Text style={[styles.dayText, isSelected && styles.dayTextActive]}>
+                {day.slice(0, 3)}{isToday ? ' •' : ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       {/* Slots List */}
@@ -135,6 +153,9 @@ const styles = StyleSheet.create({
   dayButtonActive: {
     backgroundColor: '#2563EB',
     borderColor: '#3B82F6',
+  },
+  dayButtonToday: {
+    borderColor: '#38BDF8',
   },
   dayText: {
     color: '#94A3B8',

@@ -436,6 +436,7 @@ export default function App() {
             subjects={subjects}
             timetable={timetable}
             medicalClaims={medicalClaims}
+            periodRecords={periodRecords}
             onToggleMedicalClaim={handleToggleMedicalClaim}
             onAddMedicalClaim={handleAddMedicalClaim}
             onUpdateClaimStatus={handleUpdateClaimStatus}
