@@ -13,18 +13,20 @@ import { FeatureUsageStats, StudentFeedback, FeedbackCategory } from '../types';
 import { AnalyticsService } from '../services/analyticsService';
 import { FeedbackService } from '../services/feedbackService';
 
-interface AdminDashboardScreenProps {
+export interface AdminDashboardScreenProps {
   visible: boolean;
   onClose: () => void;
+  initiallyAuthenticated?: boolean;
 }
 
-const CORRECT_ADMIN_PIN = 'Au76.;@dgb(Knu&!fhk:mh';
+export const CORRECT_ADMIN_PIN = 'Au76.;@dgb(Knu&!fhk:mh';
 
 export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   visible,
   onClose,
+  initiallyAuthenticated = false,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initiallyAuthenticated);
   const [pinInput, setPinInput] = useState<string>('');
   const [showPin, setShowPin] = useState<boolean>(false);
   const [pinError, setPinError] = useState<string | null>(null);
@@ -42,10 +44,13 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   };
 
   useEffect(() => {
-    if (visible && isAuthenticated) {
+    if (visible) {
+      if (initiallyAuthenticated) {
+        setIsAuthenticated(true);
+      }
       loadData();
     }
-  }, [visible, isAuthenticated]);
+  }, [visible, initiallyAuthenticated]);
 
   const handleVerifyPin = () => {
     setPinError(null);

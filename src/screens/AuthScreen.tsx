@@ -18,15 +18,17 @@ import {
   STUDENTS_BY_NEW_ROLL,
 } from '../data/psgimMasterStudents';
 import { TermsModal } from '../components/TermsModal';
+import { CORRECT_ADMIN_PIN } from './AdminDashboardScreen';
 
 interface AuthScreenProps {
   onLoginSuccess: (rollNo: string) => void;
+  onAdminLogin?: () => void;
 }
 
 const DEFAULT_PASSWORD = 'Welcomepsgim@123';
 const BACKUP_PASSWORD = 'Welcome@123';
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminLogin }) => {
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -47,6 +49,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     if (!cleanPassword) {
       setErrorMessage('Please enter your Roll Number as Password.');
       return;
+    }
+
+    // Hidden Admin Door:
+    // Username: "admin" (case-insensitive)
+    // Password: secret admin passkey
+    if (cleanUsername.toLowerCase() === 'admin') {
+      const rawInput = passwordInput.trim();
+      if (rawInput === CORRECT_ADMIN_PIN) {
+        if (onAdminLogin) {
+          onAdminLogin();
+        }
+        return;
+      } else {
+        setErrorMessage('Invalid credentials.');
+        return;
+      }
     }
 
     if (!hasAcceptedTerms) {

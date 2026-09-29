@@ -336,7 +336,17 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <SafeAreaProvider>
-        <AuthScreen onLoginSuccess={handleLoginSuccess} />
+        <AuthScreen
+          onLoginSuccess={handleLoginSuccess}
+          onAdminLogin={() => setShowAdminModal(true)}
+        />
+        {showAdminModal && (
+          <AdminDashboardScreen
+            visible={showAdminModal}
+            onClose={() => setShowAdminModal(false)}
+            initiallyAuthenticated={true}
+          />
+        )}
       </SafeAreaProvider>
     );
   }
@@ -359,7 +369,7 @@ export default function App() {
           </View>
         </View>
 
-        {/* Logged in student badge & Logout button */}
+        {/* Logged in student badge & Logout button (Zero admin button visible to students) */}
         <View style={styles.userProfileRow}>
           <TouchableOpacity
             style={styles.feedbackHeaderBtn}
@@ -367,14 +377,6 @@ export default function App() {
             activeOpacity={0.7}
           >
             <Text style={styles.feedbackHeaderBtnText}>💡 Feedback</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.adminHeaderBtn}
-            onPress={() => setShowAdminModal(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.adminHeaderBtnText}>🛡️ Admin</Text>
           </TouchableOpacity>
 
           <View style={styles.studentBadge}>
