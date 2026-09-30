@@ -321,6 +321,25 @@ export default function App() {
     StorageService.saveSubjects(next);
   };
 
+  // Full-app refresh handler (triggered by pull-down / slide up to down)
+  const handleRefresh = async () => {
+    try {
+      if (activeRollNo) {
+        const studentSubjects = PsgimService.generateSubjectsForStudent(activeRollNo);
+        const studentTimetable = PsgimService.generateTimetableForStudent(activeRollNo);
+        const storedRecords = await StorageService.getPeriodRecords(activeRollNo);
+        const storedMed = await StorageService.getMedicalClaims();
+
+        setSubjects(studentSubjects);
+        setTimetable(studentTimetable);
+        setPeriodRecords(storedRecords);
+        setMedicalClaims(storedMed);
+      }
+    } catch (e) {
+      console.warn('App refresh error:', e);
+    }
+  };
+
   // Loading spinner during auth check
   if (isCheckingAuth) {
     return (
@@ -412,6 +431,7 @@ export default function App() {
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onToggleMedicalClaim={handleToggleMedicalClaim}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
+            onRefresh={handleRefresh}
           />
         )}
 
@@ -424,11 +444,15 @@ export default function App() {
               setTimetable(next);
               StorageService.saveTimetable(next);
             }}
+            onRefresh={handleRefresh}
           />
         )}
 
         {activeTab === 'CALENDAR' && (
-          <CalendarScreen onBack={() => handleTabChange('DASHBOARD')} />
+          <CalendarScreen
+            onBack={() => handleTabChange('DASHBOARD')}
+            onRefresh={handleRefresh}
+          />
         )}
 
         {activeTab === 'MEDICAL' && (
@@ -441,6 +465,7 @@ export default function App() {
             onAddMedicalClaim={handleAddMedicalClaim}
             onUpdateClaimStatus={handleUpdateClaimStatus}
             onAutoApplyMedicalClaims={handleAutoApplyMedicalClaims}
+            onRefresh={handleRefresh}
           />
         )}
 

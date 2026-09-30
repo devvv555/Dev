@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
+  Vibration,
 } from 'react-native';
 import {
   ACADEMIC_CALENDAR,
@@ -15,6 +17,7 @@ import {
 
 interface CalendarScreenProps {
   onBack?: () => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 const getTodayDateStr = (): string => {
@@ -30,8 +33,27 @@ const isItemPassed = (item: AcademicCalendarItem, todayStr: string): boolean => 
   return effectiveEnd < todayStr;
 };
 
-export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
+export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefresh }) => {
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      try {
+        Vibration.vibrate(35);
+      } catch {}
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (e) {
+      console.warn('Calendar refresh error:', e);
+    } finally {
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 600);
+    }
+  };
 
   const nextHolidayInfo = getNextHoliday();
   const todayStr = getTodayDateStr();
@@ -87,7 +109,19 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor="#38BDF8"
+          colors={['#38BDF8', '#2563EB']}
+          progressBackgroundColor="#1E293B"
+        />
+      }
+    >
       {/* Header */}
       <View style={styles.header}>
         {onBack && (

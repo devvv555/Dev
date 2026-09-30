@@ -8,6 +8,7 @@ import {
   Modal,
   Alert,
   Vibration,
+  RefreshControl,
 } from 'react-native';
 import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus } from '../types';
 import { calculateOverallMetrics } from '../services/attendanceEngine';
@@ -32,6 +33,7 @@ interface DashboardScreenProps {
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
   onOpenCalendar?: () => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -43,6 +45,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onRecordPeriodAttendance,
   onToggleMedicalClaim,
   onOpenCalendar,
+  onRefresh,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'MEDICAL' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
@@ -265,8 +268,40 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     }
   };
 
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      try {
+        Vibration.vibrate(35);
+      } catch {}
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (e) {
+      console.warn('Dashboard refresh error:', e);
+    } finally {
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 600);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor="#38BDF8"
+          colors={['#38BDF8', '#2563EB']}
+          progressBackgroundColor="#1E293B"
+        />
+      }
+    >
       {/* Student Welcome Card */}
       <View style={styles.welcomeCard}>
         <View style={styles.welcomeTopRow}>

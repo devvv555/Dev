@@ -8,6 +8,8 @@ import {
   TextInput,
   Modal,
   Alert,
+  RefreshControl,
+  Vibration,
 } from 'react-native';
 import { Subject, MedicalClaimRecord, TimetableSlot, PeriodAttendanceRecord, DayOfWeek } from '../types';
 
@@ -20,6 +22,7 @@ interface MedicalVaultScreenProps {
   onAddMedicalClaim: (claim: MedicalClaimRecord) => void;
   onUpdateClaimStatus: (claimId: string) => void;
   onAutoApplyMedicalClaims: (subjectIds: string[]) => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
@@ -31,8 +34,29 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
   onAddMedicalClaim,
   onUpdateClaimStatus,
   onAutoApplyMedicalClaims,
+  onRefresh,
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      try {
+        Vibration.vibrate(35);
+      } catch {}
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (e) {
+      console.warn('Medical vault refresh error:', e);
+    } finally {
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 600);
+    }
+  };
+
   const [reason, setReason] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [clinic, setClinic] = useState('');
@@ -175,7 +199,19 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
   const activeClaimsCount = subjects.filter((s) => s.hasMedicalClaim).length;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor="#38BDF8"
+          colors={['#38BDF8', '#2563EB']}
+          progressBackgroundColor="#1E293B"
+        />
+      }
+    >
       {/* Regulation Policy Header */}
       <View style={styles.policyCard}>
         <View style={styles.policyHeader}>

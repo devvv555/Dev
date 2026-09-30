@@ -6,13 +6,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  RefreshControl,
+  Vibration,
 } from 'react-native';
 import { DayOfWeek, Subject, TimetableSlot } from '../types';
 
 interface TimetableScreenProps {
   subjects: Subject[];
   timetable: TimetableSlot[];
-  onAddSlot: (slot: TimetableSlot) => void;
+  onAddSlot?: (slot: TimetableSlot) => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -29,16 +32,48 @@ const getTodayDayOfWeek = (): DayOfWeek => {
 export const TimetableScreen: React.FC<TimetableScreenProps> = ({
   subjects,
   timetable,
+  onRefresh,
 }) => {
   const todayDay = getTodayDayOfWeek();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(todayDay);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      try {
+        Vibration.vibrate(35);
+      } catch {}
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (e) {
+      console.warn('Timetable refresh error:', e);
+    } finally {
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 600);
+    }
+  };
 
   const daySlots = timetable.filter((s) => s.day === selectedDay);
 
   const getSubject = (id: string) => subjects.find((s) => s.id === id);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor="#38BDF8"
+          colors={['#38BDF8', '#2563EB']}
+          progressBackgroundColor="#1E293B"
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Weekly Timetable</Text>
         <Text style={styles.headerSubtitle}>
