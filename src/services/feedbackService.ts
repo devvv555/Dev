@@ -54,12 +54,21 @@ const INITIAL_FEEDBACKS: StudentFeedback[] = [
   },
 ];
 
+import { CloudSyncService } from './cloudSyncService';
+
 export const FeedbackService = {
   /**
    * Retrieves all student feedback submissions sorted newest first.
    */
   async getAllFeedbacks(): Promise<StudentFeedback[]> {
     try {
+      // 1. Fetch cloud feedbacks from Firebase
+      const cloudList = await CloudSyncService.fetchCloudFeedback();
+      if (cloudList && cloudList.length > 0) {
+        return cloudList;
+      }
+
+      // 2. Fallback to local storage if offline
       const data = await AsyncStorage.getItem(STORAGE_KEY_FEEDBACKS);
       if (!data) {
         await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(INITIAL_FEEDBACKS));
@@ -91,6 +100,12 @@ export const FeedbackService = {
 
     const updated = [newFeedback, ...feedbacks];
     await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(updated));
+
+    // Sync to Firestore in the background
+    CloudSyncService.syncFeedback(newFeedback).catch((err) => {
+      console.warn('Firebase feedback sync warning:', err);
+    });
+
     return newFeedback;
   },
 

@@ -23,6 +23,7 @@ import { FeedbackModal } from './src/components/FeedbackModal';
 import { AnalyticsService } from './src/services/analyticsService';
 import { PsgimService } from './src/services/psgimService';
 import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
+import { CloudSyncService } from './src/services/cloudSyncService';
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC';
 
@@ -55,6 +56,8 @@ export default function App() {
 
           const student = getMasterStudent(officialRoll);
           AnalyticsService.recordLogin(officialRoll, student?.name || '', student?.batch || 'A');
+          CloudSyncService.syncStudentProfile(officialRoll, student?.name || '', student?.batch || 'A');
+          CloudSyncService.syncSubjects(officialRoll, PsgimService.generateSubjectsForStudent(officialRoll));
         }
 
         const storedMed = await StorageService.getMedicalClaims();
@@ -98,6 +101,8 @@ export default function App() {
 
     const student = getMasterStudent(rollNo);
     AnalyticsService.recordLogin(rollNo, student?.name || '', student?.batch || 'A');
+    CloudSyncService.syncStudentProfile(rollNo, student?.name || '', student?.batch || 'A');
+    CloudSyncService.syncSubjects(rollNo, studentSubjects);
   };
 
   // Logout handler
@@ -202,6 +207,12 @@ export default function App() {
     await StorageService.saveSubjects(updatedSubjects);
     await StorageService.savePeriodRecords(activeRollNo, updatedRecords);
 
+    // Sync to Firebase Cloud
+    if (activeRollNo) {
+      CloudSyncService.syncPeriodRecord(activeRollNo, newRecord);
+      CloudSyncService.syncSubjects(activeRollNo, updatedSubjects);
+    }
+
     const isChange = Boolean(existing);
     return {
       success: true,
@@ -217,6 +228,9 @@ export default function App() {
     const next = subjects.map((s) => (s.id === updated.id ? updated : s));
     setSubjects(next);
     StorageService.saveSubjects(next);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, next);
+    }
   };
 
   // Toggle Medical Claim Concession (switches threshold to 65% vs 75%)
@@ -229,6 +243,9 @@ export default function App() {
     });
     setSubjects(next);
     StorageService.saveSubjects(next);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, next);
+    }
   };
 
   // Quick action: +1 Present
@@ -245,6 +262,9 @@ export default function App() {
     });
     setSubjects(next);
     StorageService.saveSubjects(next);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, next);
+    }
   };
 
   // Quick action: +1 Bunk
@@ -260,6 +280,9 @@ export default function App() {
     });
     setSubjects(next);
     StorageService.saveSubjects(next);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, next);
+    }
   };
 
   // Add new Medical Claim record
@@ -267,6 +290,9 @@ export default function App() {
     const next = [claim, ...medicalClaims];
     setMedicalClaims(next);
     StorageService.saveMedicalClaims(next);
+    if (activeRollNo) {
+      CloudSyncService.syncMedicalClaim(activeRollNo, claim);
+    }
   };
 
   // Cycle claim status: SUBMITTED → APPROVED → DRAFT (tap to update)
@@ -294,6 +320,9 @@ export default function App() {
     });
     setSubjects(next);
     StorageService.saveSubjects(next);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, next);
+    }
   };
 
   // Update attendance in Attendance Sync (both App counts and official ERP baseline)
@@ -319,6 +348,9 @@ export default function App() {
     });
     setSubjects(next);
     StorageService.saveSubjects(next);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, next);
+    }
   };
 
   // Full-app refresh handler (triggered by pull-down / slide up to down)
@@ -334,6 +366,13 @@ export default function App() {
         setTimetable(studentTimetable);
         setPeriodRecords(storedRecords);
         setMedicalClaims(storedMed);
+
+        // Fetch cloud-persisted subjects if available
+        const cloudSubjects = await CloudSyncService.fetchCloudSubjects(activeRollNo);
+        if (cloudSubjects && cloudSubjects.length > 0) {
+          setSubjects(cloudSubjects);
+          await StorageService.saveSubjects(cloudSubjects);
+        }
       }
     } catch (e) {
       console.warn('App refresh error:', e);
