@@ -94,6 +94,150 @@ export const StudzoneService = {
   },
 
   /**
+   * Verifies student credentials against PSG Studzone portal.
+   * Returns { success, rollNo, error }.
+   * Only authenticates — does NOT extract attendance data.
+   */
+  async verifyLogin(
+    rollNo: string,
+    dobPassword: string
+  ): Promise<{ success: boolean; rollNo: string; error?: string; cookies?: string }> {
+    const cleanRollNo = rollNo.trim().toUpperCase().replace(/\s+/g, '');
+    const cleanPassword = dobPassword.trim().toUpperCase().replace(/\s+/g, '');
+
+    if (!cleanRollNo) {
+      return { success: false, rollNo: '', error: 'Please enter your Student Roll Number.' };
+    }
+    if (!cleanPassword) {
+      return {
+        success: false,
+        rollNo: '',
+        error: 'Please enter your Date of Birth password (e.g. 13AUG05).',
+      };
+    }
+
+    try {
+      // Step 1: GET login page for anti-forgery token + cookies
+      const loginPageRes = await fetch(STUDZONE_BASE_URL, {
+        method: 'GET',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+
+      if (!loginPageRes.ok) {
+        return {
+          success: false,
+          rollNo: '',
+          error: `Cannot reach Studzone portal (HTTP ${loginPageRes.status}). Check your internet connection.`,
+        };
+      }
+
+      const loginHtml = await loginPageRes.text();
+      const token = this._extractVerificationToken(loginHtml);
+      const initialCookies = this._extractCookies(loginPageRes.headers);
+
+      if (!token) {
+        return {
+          success: false,
+          rollNo: '',
+          error: 'Studzone portal is temporarily unavailable. Please try again.',
+        };
+      }
+
+      // Step 2: POST credentials
+      const formData = new URLSearchParams();
+      formData.append('rollno', cleanRollNo);
+      formData.append('password', cleanPassword);
+      formData.append('chkterms', 'on');
+      formData.append('__RequestVerificationToken', token);
+
+      const postHeaders: Record<string, string> = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Referer: STUDZONE_BASE_URL,
+      };
+      if (initialCookies) {
+        postHeaders['Cookie'] = initialCookies;
+      }
+
+      const loginRes = await fetch(STUDZONE_BASE_URL, {
+        method: 'POST',
+        headers: postHeaders,
+        body: formData.toString(),
+        redirect: 'manual',
+      });
+
+      const responseText = await loginRes.text();
+      const loginCookies = this._extractCookies(loginRes.headers);
+      const combinedCookies = [initialCookies, loginCookies].filter(Boolean).join('; ');
+
+      // Detect lockout
+      if (
+        responseText.toLowerCase().includes('account has been locked') ||
+        responseText.toLowerCase().includes('locked after 5')
+      ) {
+        return {
+          success: false,
+          rollNo: '',
+          error:
+            'Your Studzone account is temporarily locked due to too many incorrect attempts. Use "Forgot Password" on the official portal to unlock.',
+        };
+      }
+
+      // Detect wrong credentials
+      const isInvalidCreds =
+        responseText.toLowerCase().includes('invalid rollno') ||
+        responseText.toLowerCase().includes('invalid password') ||
+        responseText.toLowerCase().includes('incorrect password') ||
+        (responseText.includes('passwordError') &&
+          !responseText.includes('id="passwordError"></span'));
+
+      if (isInvalidCreds) {
+        return {
+          success: false,
+          rollNo: '',
+          error:
+            'Incorrect Roll Number or DOB Password.\n\n⚠️ Password format: DDMMMYY (e.g. 13AUG05 for 13 Aug 2005). Caution: 5 wrong attempts will lock your account.',
+        };
+      }
+
+      // If login succeeded, the portal redirects away from the login page.
+      // A successful response either has no login form, or contains a welcome/dashboard element.
+      const isLoginPageAgain =
+        responseText.includes('id="rollno"') || responseText.includes('name="rollno"');
+
+      if (isLoginPageAgain) {
+        // Still on the login page — credentials were rejected
+        return {
+          success: false,
+          rollNo: '',
+          error:
+            'Incorrect credentials. Please re-check your Roll Number and DOB Password format (DDMMMYY).',
+        };
+      }
+
+      // Login succeeded!
+      return {
+        success: true,
+        rollNo: cleanRollNo,
+        cookies: combinedCookies,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        rollNo: '',
+        error: err.message?.includes('Network')
+          ? 'No internet connection. Please connect to Wi-Fi or mobile data and try again.'
+          : err.message || 'An unexpected error occurred. Please try again.',
+      };
+    }
+  },
+
+  /**
    * Connects to Studzone, logs in with Roll Number and DOB Password,
    * and extracts live subject-wise attendance percentages and class counts.
    */
