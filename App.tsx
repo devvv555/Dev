@@ -353,6 +353,15 @@ export default function App() {
     }
   };
 
+  // Batch update subjects (e.g. from Studzone automated extraction)
+  const handleBatchUpdateSubjects = (updatedSubjects: Subject[]) => {
+    setSubjects(updatedSubjects);
+    StorageService.saveSubjects(updatedSubjects);
+    if (activeRollNo) {
+      CloudSyncService.syncSubjects(activeRollNo, updatedSubjects);
+    }
+  };
+
   // Full-app refresh handler (triggered by pull-down / slide up to down)
   const handleRefresh = async () => {
     try {
@@ -511,7 +520,10 @@ export default function App() {
         {activeTab === 'ERP_SYNC' && (
           <ReconcileScreen
             subjects={subjects}
+            activeRollNo={activeRollNo}
             onUpdateAttendance={handleUpdateAttendance}
+            onBatchUpdateSubjects={handleBatchUpdateSubjects}
+            onRefresh={handleRefresh}
           />
         )}
       </View>
