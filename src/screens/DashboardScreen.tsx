@@ -199,12 +199,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           }
         }
       }
+
+      // Check upcoming weekday holiday and notify system notification tray
+      if (weekdayHolidayAlert && !alertedSlotsRef.current.has(`holiday_${today}_${weekdayHolidayAlert.holiday.id}`)) {
+        alertedSlotsRef.current.add(`holiday_${today}_${weekdayHolidayAlert.holiday.id}`);
+        NotificationService.notifyUpcomingHoliday(
+          weekdayHolidayAlert.holiday.title,
+          weekdayHolidayAlert.holiday.day,
+          weekdayHolidayAlert.daysRemaining
+        );
+      }
     };
 
     checkEndedClasses();
     const interval = setInterval(checkEndedClasses, 30000);
     return () => clearInterval(interval);
-  }, [timetable, periodRecords, subjects]);
+  }, [timetable, periodRecords, subjects, weekdayHolidayAlert]);
 
   const handleRecordFromNotification = async (status: AttendanceStatus) => {
     if (!endedSlotNotification) return;

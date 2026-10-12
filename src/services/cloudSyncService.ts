@@ -141,4 +141,27 @@ export const CloudSyncService = {
       return null;
     }
   },
+
+  /**
+   * Fetches cloud period records (marked by teacher or synced) for a student
+   */
+  async fetchCloudPeriodRecords(rollNo: string): Promise<Record<string, PeriodAttendanceRecord>> {
+    if (!rollNo) return {};
+    try {
+      const periodsCol = collection(db, 'students', rollNo, 'periods');
+      const snap = await getDocs(periodsCol);
+      const records: Record<string, PeriodAttendanceRecord> = {};
+      snap.forEach((d) => {
+        const data = d.data() as PeriodAttendanceRecord;
+        if (data && data.periodKey) {
+          records[data.periodKey] = data;
+        }
+      });
+      return records;
+    } catch (e) {
+      console.warn('[CloudSync] fetchCloudPeriodRecords failed:', e);
+      return {};
+    }
+  },
 };
+
