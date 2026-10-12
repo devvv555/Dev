@@ -212,7 +212,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
               <View style={styles.passwordWrapper}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="e.g. 13AUG05"
+                  placeholder="e.g. 01JAN04"
                   placeholderTextColor="#475569"
                   value={passwordInput}
                   onChangeText={(t) => {
@@ -241,7 +241,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                 <Text style={styles.hintBody}>
                   Your Studzone password is your <Text style={styles.highlight}>Date of Birth</Text> in{' '}
                   <Text style={styles.highlight}>DDMMMYY</Text> format.{'\n'}
-                  Example: <Text style={styles.highlight}>13AUG05</Text> = 13th August 2005
+                  Example: <Text style={styles.highlight}>01JAN04</Text> = 1st January 2004
                 </Text>
               </View>
 

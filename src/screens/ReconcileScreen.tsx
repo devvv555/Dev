@@ -614,7 +614,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                         autoCapitalize="characters"
                         value={studzonePassword}
                         onChangeText={(val) => setStudzonePassword(val.toUpperCase())}
-                        placeholder="e.g. 13AUG05"
+                        placeholder="e.g. 01JAN04"
                         placeholderTextColor="#64748B"
                         editable={!isExtracting}
                       />
@@ -631,8 +631,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                       <Text style={styles.dobHintText}>
                         Password is your Date of Birth in format{' '}
                         <Text style={styles.boldText}>DDMMMYY</Text>. For example, if you were born on{' '}
-                        <Text style={styles.boldText}>13th August 2005</Text>, enter{' '}
-                        <Text style={styles.boldText}>13AUG05</Text>.
+                        <Text style={styles.boldText}>1st January 2004</Text>, enter{' '}
+                        <Text style={styles.boldText}>01JAN04</Text>.
                       </Text>
                     </View>
 

@@ -150,7 +150,7 @@ export const StudzoneService = {
       return {
         success: false,
         rollNo: '',
-        error: 'Please enter your Date of Birth password (e.g. 13AUG05).',
+        error: 'Please enter your Date of Birth password (e.g. 01JAN04 for 1st January 2004).',
       };
     }
 
