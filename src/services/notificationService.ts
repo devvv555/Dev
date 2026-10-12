@@ -131,4 +131,21 @@ export const NotificationService = {
       return null;
     }
   },
+
+  /**
+   * Exciting broadcast notification to phone notification tray when attendance is refreshed / extracted
+   */
+  async notifyAttendanceUpdated(
+    updatedByName?: string,
+    subjectsCount?: number
+  ): Promise<string | null> {
+    const who = updatedByName ? `${updatedByName} just extracted attendance!` : 'Fresh attendance uploaded!';
+    const countInfo = subjectsCount ? ` ${subjectsCount} subjects recalibrated.` : '';
+    const title = `🔥 ATTENDANCE PORTAL UPDATED!`;
+    const body = `⚡ ${who}${countInfo} Tap to view your latest percentages & bunk status! 📊`;
+    return this.sendLocalNotification(title, body, {
+      type: 'ATTENDANCE_UPDATED',
+      timestamp: Date.now(),
+    });
+  },
 };

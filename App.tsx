@@ -85,6 +85,23 @@ export default function App() {
       }
     }
     initSession();
+
+    // 🌟 Global Real-time Listener:
+    // When ANY student is the first to extract attendance from Studzone,
+    // everyone running the app receives an immediate exciting notification!
+    let lastKnownSyncTime = Date.now();
+    const unsubGlobal = CloudSyncService.listenToGlobalAttendanceUpdates((update) => {
+      if (update && update.timestamp && update.timestamp > lastKnownSyncTime) {
+        lastKnownSyncTime = update.timestamp;
+        // Trigger notification to user's phone notification tray
+        NotificationService.notifyAttendanceUpdated(
+          update.updatedByName,
+          update.subjectsCount
+        );
+      }
+    });
+
+    return () => unsubGlobal();
   }, []);
 
   const handleTabChange = (newTab: Tab) => {

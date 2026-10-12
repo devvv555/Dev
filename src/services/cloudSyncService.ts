@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from './firebase';
 import { Subject, PeriodAttendanceRecord, MedicalClaimRecord, StudentFeedback } from '../types';
 
@@ -161,6 +161,92 @@ export const CloudSyncService = {
     } catch (e) {
       console.warn('[CloudSync] fetchCloudPeriodRecords failed:', e);
       return {};
+    }
+  },
+
+  /**
+   * Broadcasts a global attendance update to the college/batch.
+   * When any student extracts attendance from Studzone, this doc updates,
+   * triggering real-time broadcast notifications to everyone in the app.
+   */
+  async broadcastGlobalAttendanceUpdate(
+    rollNo: string,
+    studentName: string,
+    subjectsCount: number
+  ): Promise<void> {
+    try {
+      const globalRef = doc(db, 'system_updates', 'latest_attendance_sync');
+      await setDoc(
+        globalRef,
+        {
+          updatedByRollNo: rollNo,
+          updatedByName: studentName || rollNo,
+          subjectsCount,
+          updatedAt: new Date().toISOString(),
+          timestamp: Date.now(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] broadcastGlobalAttendanceUpdate failed:', e);
+    }
+  },
+
+  /**
+   * Fetches the latest global attendance update metadata
+   */
+  async getLatestGlobalAttendanceUpdate(): Promise<{
+    updatedByRollNo: string;
+    updatedByName: string;
+    subjectsCount: number;
+    updatedAt: string;
+    timestamp: number;
+  } | null> {
+    try {
+      const globalRef = doc(db, 'system_updates', 'latest_attendance_sync');
+      const snap = await getDoc(globalRef);
+      if (snap.exists()) {
+        return snap.data() as any;
+      }
+      return null;
+    } catch (e) {
+      console.warn('[CloudSync] getLatestGlobalAttendanceUpdate failed:', e);
+      return null;
+    }
+  },
+
+  /**
+   * Subscribes to real-time global attendance updates across all students.
+   * Runs callback whenever someone extracts and updates attendance.
+   */
+  listenToGlobalAttendanceUpdates(
+    callback: (update: {
+      updatedByRollNo: string;
+      updatedByName: string;
+      subjectsCount: number;
+      updatedAt: string;
+      timestamp: number;
+    }) => void
+  ): Unsubscribe {
+    try {
+      const globalRef = doc(db, 'system_updates', 'latest_attendance_sync');
+      return onSnapshot(
+        globalRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (data && data.timestamp) {
+              callback(data as any);
+            }
+          }
+        },
+        (error) => {
+          console.warn('[CloudSync] listenToGlobalAttendanceUpdates error:', error);
+        }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] listenToGlobalAttendanceUpdates setup failed:', e);
+      return () => {};
     }
   },
 };

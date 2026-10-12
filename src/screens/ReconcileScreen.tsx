@@ -18,6 +18,9 @@ import {
   StudzoneService,
   StudzoneAttendanceRecord,
 } from '../services/studzoneService';
+import { CloudSyncService } from '../services/cloudSyncService';
+import { NotificationService } from '../services/notificationService';
+import { getMasterStudent } from '../data/psgimMasterStudents';
 
 interface ReconcileScreenProps {
   subjects: Subject[];
@@ -63,7 +66,15 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   // Pull-to-refresh
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load saved credentials on mount or roll change
+  // Last sync info state (local and global)
+  const [lastSyncInfo, setLastSyncInfo] = useState<{
+    lastSyncedAt: string;
+    studentName?: string;
+    rollNo?: string;
+    subjectsCount?: number;
+  } | null>(null);
+
+  // Load saved credentials & sync status on mount or roll change
   useEffect(() => {
     async function loadSaved() {
       const saved = await StudzoneService.getSavedCredentials();
@@ -74,8 +85,37 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       } else if (activeRollNo) {
         setStudzoneRollNo(activeRollNo);
       }
+
+      // Check local last sync info
+      const localSync = await StudzoneService.getLastSyncInfo();
+      if (localSync) {
+        setLastSyncInfo(localSync);
+      } else {
+        // Fallback to latest global sync info from Firestore
+        const globalSync = await CloudSyncService.getLatestGlobalAttendanceUpdate();
+        if (globalSync) {
+          setLastSyncInfo({
+            lastSyncedAt: globalSync.updatedAt,
+            studentName: globalSync.updatedByName,
+            rollNo: globalSync.updatedByRollNo,
+            subjectsCount: globalSync.subjectsCount,
+          });
+        }
+      }
     }
     loadSaved();
+
+    // Listen to real-time global sync updates across everyone
+    const unsub = CloudSyncService.listenToGlobalAttendanceUpdates((update) => {
+      setLastSyncInfo({
+        lastSyncedAt: update.updatedAt,
+        studentName: update.updatedByName,
+        rollNo: update.updatedByRollNo,
+        subjectsCount: update.subjectsCount,
+      });
+    });
+
+    return () => unsub();
   }, [activeRollNo]);
 
   const handlePullRefresh = async () => {
@@ -224,6 +264,36 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       Alert.alert('Studzone Sync Complete! 🚀', `Updated official baseline from Studzone.`);
     }
 
+    const nowIso = new Date().toISOString();
+    const student = getMasterStudent(activeRollNo);
+    const studentName = student ? student.name : activeRollNo;
+    const subjectsCount = extractedRecords.length;
+
+    // Persist local last sync details
+    StudzoneService.setLastSyncInfo({
+      lastSyncedAt: nowIso,
+      studentName,
+      rollNo: activeRollNo,
+      subjectsCount,
+    });
+
+    setLastSyncInfo({
+      lastSyncedAt: nowIso,
+      studentName,
+      rollNo: activeRollNo,
+      subjectsCount,
+    });
+
+    // 🌟 Broadcast to cloud Firestore so ALL classmates get live notification & badge
+    CloudSyncService.broadcastGlobalAttendanceUpdate(
+      activeRollNo,
+      studentName,
+      subjectsCount
+    );
+
+    // 📲 Fire exciting system notification on device notification shade
+    NotificationService.notifyAttendanceUpdated(studentName, subjectsCount);
+
     setExtractedRecords(null);
     setIsStudzoneModalVisible(false);
   };
@@ -273,6 +343,29 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         <Text style={styles.studzoneDescription}>
           Automatically pull your official subject-wise attended and total classes directly from your college portal.
         </Text>
+
+        {/* Last Updated Live Banner */}
+        <View style={styles.lastUpdatedBanner}>
+          <View style={styles.lastUpdatedPulseRow}>
+            <View style={styles.livePulseDot} />
+            <Text style={styles.lastUpdatedLabel}>PORTAL STATUS</Text>
+          </View>
+          {lastSyncInfo ? (
+            <View style={styles.lastUpdatedDetails}>
+              <Text style={styles.lastUpdatedTime}>
+                🕒 Last Synced: <Text style={styles.highlightText}>{new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at {new Date(lastSyncInfo.lastSyncedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</Text>
+              </Text>
+              <Text style={styles.lastUpdatedWho}>
+                👤 Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || lastSyncInfo.rollNo || 'Student'}</Text>
+                {lastSyncInfo.subjectsCount ? ` • ${lastSyncInfo.subjectsCount} subjects refreshed` : ''}
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.lastUpdatedEmpty}>
+              ⚡ Not synced yet this session. Tap below to extract your official portal data!
+            </Text>
+          )}
+        </View>
 
         <TouchableOpacity
           style={styles.studzoneSyncButton}
@@ -755,6 +848,57 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 10,
     lineHeight: 18,
+  },
+  lastUpdatedBanner: {
+    marginTop: 12,
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  lastUpdatedPulseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  livePulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+  },
+  lastUpdatedLabel: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  lastUpdatedDetails: {
+    gap: 3,
+  },
+  lastUpdatedTime: {
+    color: '#E2E8F0',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  highlightText: {
+    color: '#38BDF8',
+    fontWeight: '700',
+  },
+  lastUpdatedWho: {
+    color: '#94A3B8',
+    fontSize: 11,
+  },
+  studentNameText: {
+    color: '#F1F5F9',
+    fontWeight: '700',
+  },
+  lastUpdatedEmpty: {
+    color: '#64748B',
+    fontSize: 11.5,
+    fontStyle: 'italic',
   },
   studzoneSyncButton: {
     marginTop: 14,

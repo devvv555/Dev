@@ -69,6 +69,43 @@ export const StudzoneService = {
   },
 
   /**
+   * Retrieves timestamp & details of the last attendance extraction on this device
+   */
+  async getLastSyncInfo(): Promise<{
+    lastSyncedAt: string;
+    studentName?: string;
+    rollNo?: string;
+    subjectsCount?: number;
+  } | null> {
+    try {
+      const data = await AsyncStorage.getItem('@attendance_monitor_last_studzone_sync');
+      if (!data) return null;
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Persists timestamp & details of the latest attendance extraction
+   */
+  async setLastSyncInfo(info: {
+    lastSyncedAt: string;
+    studentName?: string;
+    rollNo?: string;
+    subjectsCount?: number;
+  }): Promise<void> {
+    try {
+      await AsyncStorage.setItem(
+        '@attendance_monitor_last_studzone_sync',
+        JSON.stringify(info)
+      );
+    } catch (e) {
+      console.warn('Failed saving last sync info:', e);
+    }
+  },
+
+  /**
    * Helper to parse cookie string from fetch headers
    */
   _extractCookies(headers: Headers): string {
