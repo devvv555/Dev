@@ -134,9 +134,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     date: '2026-09-21',
     endDate: '2026-09-24',
     day: 'Monday',
-    title: 'Mid Term Examination (Semester 1)',
+    title: 'I MBA Mid Term Examination — Semester 1',
     type: 'EXAM',
-    description: 'Strict attendance required - Do not bunk',
+    description: 'Internal assessment exams for all Sem 1 subjects. Attendance is mandatory. Covers all topics taught up to this point.',
   },
   {
     id: 'cal_0925',
@@ -198,8 +198,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     date: '2026-10-21',
     endDate: '2026-10-23',
     day: 'Wednesday',
-    title: 'Mid Term Examination 2 (Integrated MBA / Reviews)',
+    title: 'I MBA Project Interim Review & Presentation',
     type: 'EXAM',
+    description: 'Interim project review and viva presentations for I Year MBA students.',
   },
   {
     id: 'cal_1023',
@@ -252,9 +253,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     id: 'cal_1120',
     date: '2026-11-20',
     day: 'Friday',
-    title: 'Social Sensitization for Managers (SSM) Viva',
+    title: 'I MBA — Social Sensitization for Managers (SSM) Viva',
     type: 'EXAM',
-    description: 'Mandatory course viva for I Year MBA',
+    description: 'Mandatory SSM course viva-voce for all I Year MBA students. Prepare your reflection journal and field visit report.',
   },
   {
     id: 'cal_1127',
@@ -268,9 +269,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     id: 'cal_1130',
     date: '2026-11-30',
     day: 'Monday',
-    title: 'End Semester Examinations Begin (Sem 1)',
+    title: 'I MBA End Semester Examinations — Semester 1',
     type: 'EXAM',
-    description: 'Autonomous End Semester Theory & Lab Exams',
+    description: 'Autonomous End Semester Theory & Lab Exams for all Sem 1 subjects. Minimum 75% attendance required to be eligible.',
   },
 
   // ── DECEMBER 2026 ───────────────────────────────────────────
@@ -335,8 +336,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     date: '2027-01-18',
     endDate: '2027-01-20',
     day: 'Monday',
-    title: 'Mid Term Examination (Semester 2)',
+    title: 'I MBA Mid Term Examination — Semester 2',
     type: 'EXAM',
+    description: 'Internal assessment exams for all Sem 2 subjects. Attendance is mandatory.',
   },
   {
     id: 'cal_0122',
@@ -430,8 +432,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     id: 'cal_0408',
     date: '2027-04-08',
     day: 'Thursday',
-    title: 'Business Immersion Viva for I MBA',
+    title: 'I MBA — Business Immersion Program (BIP) Viva',
     type: 'EXAM',
+    description: 'Viva-voce for the Business Immersion Project. Present your industry findings, learnings, and management insights.',
   },
   {
     id: 'cal_0414',
@@ -462,9 +465,9 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     id: 'cal_0420',
     date: '2027-04-20',
     day: 'Tuesday',
-    title: 'Semester II End Examinations Begin',
+    title: 'I MBA End Semester Examinations — Semester 2',
     type: 'EXAM',
-    description: 'Final Year-1 university exams',
+    description: 'Final Year-1 university exams. Minimum 75% attendance required across all subjects to be eligible to appear.',
   },
 
   // ── MAY 2027 ────────────────────────────────────────────────
