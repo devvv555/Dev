@@ -6,10 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "backgroundColor": "#0F172A",
-      "resizeMode": "contain"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.collegemonitor.attendancemonitor"
@@ -34,7 +30,8 @@
           "icon": "./assets/icon.png",
           "color": "#0284C7"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {

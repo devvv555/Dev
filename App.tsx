@@ -52,12 +52,25 @@ export default function App() {
           setTimetable(PsgimService.generateTimetableForStudent(officialRoll));
           const storedRecords = await StorageService.getPeriodRecords(officialRoll);
           setPeriodRecords(storedRecords);
+          // Sync with latest cloud updates (e.g. from Teacher Google Sheets)
+          const cloudSubjects = await CloudSyncService.fetchCloudSubjects(officialRoll);
+          if (cloudSubjects && cloudSubjects.length > 0) {
+            setSubjects(cloudSubjects);
+            await StorageService.saveSubjects(cloudSubjects);
+          }
+
+          const cloudPeriods = await CloudSyncService.fetchCloudPeriodRecords(officialRoll);
+          if (cloudPeriods && Object.keys(cloudPeriods).length > 0) {
+            const mergedRecords = { ...storedRecords, ...cloudPeriods };
+            setPeriodRecords(mergedRecords);
+            await StorageService.savePeriodRecords(officialRoll, mergedRecords);
+          }
+
           setIsAuthenticated(true);
 
           const student = getMasterStudent(officialRoll);
           AnalyticsService.recordLogin(officialRoll, student?.name || '', student?.batch || 'A');
           CloudSyncService.syncStudentProfile(officialRoll, student?.name || '', student?.batch || 'A');
-          CloudSyncService.syncSubjects(officialRoll, PsgimService.generateSubjectsForStudent(officialRoll));
         }
 
         const storedMed = await StorageService.getMedicalClaims();
@@ -381,6 +394,14 @@ export default function App() {
         if (cloudSubjects && cloudSubjects.length > 0) {
           setSubjects(cloudSubjects);
           await StorageService.saveSubjects(cloudSubjects);
+        }
+
+        // Fetch cloud-persisted period attendance records (marked by teacher from Google Sheets)
+        const cloudPeriods = await CloudSyncService.fetchCloudPeriodRecords(activeRollNo);
+        if (cloudPeriods && Object.keys(cloudPeriods).length > 0) {
+          const mergedRecords = { ...storedRecords, ...cloudPeriods };
+          setPeriodRecords(mergedRecords);
+          await StorageService.savePeriodRecords(activeRollNo, mergedRecords);
         }
       }
     } catch (e) {
