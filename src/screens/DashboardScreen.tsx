@@ -16,6 +16,7 @@ import { AttendanceGauge } from '../components/AttendanceGauge';
 import { SubjectCard } from '../components/SubjectCard';
 import { PsgimService } from '../services/psgimService';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
+import { NotificationService } from '../services/notificationService';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -193,7 +194,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             try {
               Vibration.vibrate([0, 500, 200, 500]);
             } catch {}
-            setEndedSlotNotification({ slot: endedSlot, subject: sub });
+            // Send system notification directly to phone's notification tab/shade
+            NotificationService.notifyClassEnded(endedSlot, sub);
           }
         }
       }
