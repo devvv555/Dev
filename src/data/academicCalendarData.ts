@@ -16,13 +16,6 @@ export interface AcademicCalendarItem {
 export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
   // ── JULY & AUGUST 2026 ──────────────────────────────────────
   {
-    id: 'cal_0720',
-    date: '2026-07-20',
-    day: 'Monday',
-    title: 'Semester III Commences (II MBA)',
-    type: 'ACADEMIC',
-  },
-  {
     id: 'cal_0723',
     date: '2026-07-23',
     endDate: '2026-07-24',
@@ -485,13 +478,6 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     title: 'I MBA Summer Internship (SIP) Begins',
     type: 'ACADEMIC',
     description: '8-week corporate summer internship commences',
-  },
-  {
-    id: 'cal_0515',
-    date: '2027-05-15',
-    day: 'Saturday',
-    title: 'Commencement Ceremony (Graduation)',
-    type: 'EVENT',
   },
 ];
 
