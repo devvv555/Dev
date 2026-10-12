@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Subject } from '../types';
+import { getMasterStudent } from '../data/psgimMasterStudents';
 
 const STUDZONE_CREDS_KEY = '@attendance_monitor_studzone_credentials';
 const STUDZONE_BASE_URL = 'https://ecampus.psgtech.ac.in/studzone';
@@ -227,6 +228,16 @@ export const StudzoneService = {
         cookies: combinedCookies,
       };
     } catch (err: any) {
+      // Offline / Portal Down Fallback:
+      // If student credentials match preloaded master student DOB records, allow login!
+      const student = getMasterStudent(cleanRollNo);
+      if (student && student.dobPassword && student.dobPassword.toUpperCase() === cleanPassword) {
+        return {
+          success: true,
+          rollNo: cleanRollNo,
+        };
+      }
+
       return {
         success: false,
         rollNo: '',
