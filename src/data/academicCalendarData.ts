@@ -505,6 +505,159 @@ export function getNextHoliday(referenceDateStr?: string): {
   return { holiday: next, daysRemaining };
 }
 
+export interface SmartTripSuggestion {
+  tripTitle: string;
+  suggestedLeaves: {
+    day: string;
+    date: string;
+    reason: string;
+  }[];
+  totalDaysOff: number;
+  explanation: string;
+}
+
+/**
+ * Computes an intelligent leave suggestion for an individual holiday.
+ * E.g., For Friday (Christmas):
+ * Suggests taking Thursday off (for a 4-day weekend Thu–Sun) OR Monday off (for Fri–Mon)
+ * or taking both for a 5-day mega vacation!
+ */
+export function getHolidaySmartTripSuggestion(item: AcademicCalendarItem): SmartTripSuggestion | null {
+  if (item.type !== 'HOLIDAY') return null;
+
+  const dateObj = new Date(item.date + 'T00:00:00');
+  const dayOfWeek = dateObj.getDay(); // 0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
+
+  const formatDateHelper = (offsetDays: number) => {
+    const target = new Date(dateObj);
+    target.setDate(target.getDate() + offsetDays);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return {
+      dateStr: `${target.getDate()} ${months[target.getMonth()]}`,
+      dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][target.getDay()],
+    };
+  };
+
+  // Friday Holiday (e.g. Christmas on Friday 25 Dec)
+  if (dayOfWeek === 5) {
+    const thu = formatDateHelper(-1);
+    const mon = formatDateHelper(3);
+    return {
+      tripTitle: '🌟 Long Weekend Vacation Optimizer',
+      suggestedLeaves: [
+        {
+          day: 'Thursday',
+          date: thu.dateStr,
+          reason: `Take Thursday (${thu.dateStr}) off → Enjoy a 4-day extended getaway from Thursday to Sunday!`,
+        },
+        {
+          day: 'Monday',
+          date: mon.dateStr,
+          reason: `Take Monday (${mon.dateStr}) off → Enjoy a 4-day extended break from Friday to Monday!`,
+        },
+      ],
+      totalDaysOff: 4,
+      explanation: `Since ${item.title} is on a Friday, take Thursday or Monday off to transform your standard 3-day weekend into an uninterrupted 4-day trip! (Or take both for a 5-day mega break).`,
+    };
+  }
+
+  // Monday Holiday
+  if (dayOfWeek === 1) {
+    const fri = formatDateHelper(-3);
+    const tue = formatDateHelper(1);
+    return {
+      tripTitle: '🌟 Long Weekend Vacation Optimizer',
+      suggestedLeaves: [
+        {
+          day: 'Friday',
+          date: fri.dateStr,
+          reason: `Take Friday (${fri.dateStr}) off → Enjoy a 4-day extended getaway from Friday to Monday!`,
+        },
+        {
+          day: 'Tuesday',
+          date: tue.dateStr,
+          reason: `Take Tuesday (${tue.dateStr}) off → Enjoy a 4-day extended getaway from Saturday to Tuesday!`,
+        },
+      ],
+      totalDaysOff: 4,
+      explanation: `Since ${item.title} is on a Monday, take Friday or Tuesday off to unlock an easy 4-day vacation!`,
+    };
+  }
+
+  // Thursday Holiday
+  if (dayOfWeek === 4) {
+    const fri = formatDateHelper(1);
+    return {
+      tripTitle: '🚀 4-Day Golden Weekend Opportunity',
+      suggestedLeaves: [
+        {
+          day: 'Friday',
+          date: fri.dateStr,
+          reason: `Take Friday (${fri.dateStr}) off → Connect Thursday holiday with the weekend for 4 full days off!`,
+        },
+      ],
+      totalDaysOff: 4,
+      explanation: `A single smart bunk/leave on Friday (${fri.dateStr}) connects Thursday's holiday to Saturday & Sunday for a 4-day getaway!`,
+    };
+  }
+
+  // Tuesday Holiday
+  if (dayOfWeek === 2) {
+    const mon = formatDateHelper(-1);
+    return {
+      tripTitle: '🚀 4-Day Golden Weekend Opportunity',
+      suggestedLeaves: [
+        {
+          day: 'Monday',
+          date: mon.dateStr,
+          reason: `Take Monday (${mon.dateStr}) off → Bridge weekend (Sat–Sun) into Tuesday holiday for 4 full days off!`,
+        },
+      ],
+      totalDaysOff: 4,
+      explanation: `A single smart bunk/leave on Monday (${mon.dateStr}) gives you an uninterrupted 4-day weekend trip!`,
+    };
+  }
+
+  // Wednesday Holiday
+  if (dayOfWeek === 3) {
+    const mon = formatDateHelper(-2);
+    const tue = formatDateHelper(-1);
+    const thu = formatDateHelper(1);
+    const fri = formatDateHelper(2);
+    return {
+      tripTitle: '🌴 Mid-Week Break Optimizer',
+      suggestedLeaves: [
+        {
+          day: 'Thu & Fri',
+          date: `${thu.dateStr} & ${fri.dateStr}`,
+          reason: `Take Thursday & Friday off → Turn Wednesday into a massive 5-day vacation through Sunday!`,
+        },
+        {
+          day: 'Mon & Tue',
+          date: `${mon.dateStr} & ${tue.dateStr}`,
+          reason: `Take Monday & Tuesday off → Enjoy a 5-day vacation from the previous Saturday through Wednesday!`,
+        },
+      ],
+      totalDaysOff: 5,
+      explanation: `Wednesday holiday splits the week nicely. Taking 2 consecutive days off around it gives you a full 5-day holiday trip!`,
+    };
+  }
+
+  // Weekend Holiday (Sat / Sun)
+  return {
+    tripTitle: '🏖️ Weekend Holiday',
+    suggestedLeaves: [
+      {
+        day: 'Friday or Monday',
+        date: formatDateHelper(dayOfWeek === 6 ? -1 : 1).dateStr,
+        reason: 'Take Friday or Monday off to create a classic 3-day weekend.',
+      },
+    ],
+    totalDaysOff: 3,
+    explanation: `${item.title} falls on a weekend (${item.day}). Take an adjacent day to recharge!`,
+  };
+}
+
 export interface WeekdayHolidayNotification {
   holiday: AcademicCalendarItem;
   daysRemaining: number;

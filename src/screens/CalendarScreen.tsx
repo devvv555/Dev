@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   RefreshControl,
   Vibration,
+  Modal,
 } from 'react-native';
 import {
   ACADEMIC_CALENDAR,
   AcademicCalendarItem,
   CalendarEventType,
   getNextHoliday,
+  getHolidaySmartTripSuggestion,
+  SmartTripSuggestion,
 } from '../data/academicCalendarData';
 
 interface CalendarScreenProps {
@@ -36,6 +39,7 @@ const isItemPassed = (item: AcademicCalendarItem, todayStr: string): boolean => 
 export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefresh }) => {
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedHoliday, setSelectedHoliday] = useState<AcademicCalendarItem | null>(null);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -244,11 +248,24 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
           const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
           const monthLabel = months[parseInt(dateParts[1], 10) - 1];
           const dayNumber = dateParts[2];
+          const isHoliday = item.type === 'HOLIDAY';
 
           return (
-            <View key={item.id} style={styles.itemCard}>
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.itemCard, isHoliday && styles.itemCardHolidayClickable]}
+              activeOpacity={isHoliday ? 0.75 : 1}
+              onPress={() => {
+                if (isHoliday) {
+                  try {
+                    Vibration.vibrate(20);
+                  } catch {}
+                  setSelectedHoliday(item);
+                }
+              }}
+            >
               <View style={styles.itemLeftCol}>
-                <View style={styles.dateBlock}>
+                <View style={[styles.dateBlock, isHoliday && styles.dateBlockHoliday]}>
                   <Text style={styles.dateBlockMonth}>{monthLabel}</Text>
                   <Text style={styles.dateBlockDay}>{dayNumber}</Text>
                 </View>
@@ -270,6 +287,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
                       <Text style={styles.longWeekendPillText}>{item.longWeekendTag}</Text>
                     </View>
                   )}
+
+                  {isHoliday && (
+                    <View style={styles.tapToPlanPill}>
+                      <Text style={styles.tapToPlanText}>✈️ Smart Leave Planner ›</Text>
+                    </View>
+                  )}
                 </View>
 
                 <Text style={styles.itemTitle}>{item.title}</Text>
@@ -286,10 +309,96 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
                   </View>
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           );
         }))}
       </View>
+
+      {/* Smart Holiday Trip & Leave Planner Modal */}
+      {selectedHoliday && (() => {
+        const suggestion = getHolidaySmartTripSuggestion(selectedHoliday);
+        return (
+          <Modal
+            visible={!!selectedHoliday}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSelectedHoliday(null)}
+          >
+            <View style={styles.modalBackdrop}>
+              <View style={styles.tripModalCard}>
+                <View style={styles.tripModalHeader}>
+                  <View style={styles.tripModalIconCircle}>
+                    <Text style={styles.tripModalIcon}>🌴</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.tripModalTag}>
+                      {selectedHoliday.day.toUpperCase()} HOLIDAY
+                    </Text>
+                    <Text style={styles.tripModalTitle} numberOfLines={2}>
+                      {selectedHoliday.title}
+                    </Text>
+                    <Text style={styles.tripModalDate}>
+                      📅 {selectedHoliday.date} ({selectedHoliday.day})
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setSelectedHoliday(null)}
+                    style={styles.closeTripModalBtn}
+                  >
+                    <Text style={styles.closeTripModalBtnText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {suggestion && (
+                  <ScrollView style={styles.tripModalBody} showsVerticalScrollIndicator={false}>
+                    <View style={styles.tripHeroBanner}>
+                      <Text style={styles.tripHeroTitle}>{suggestion.tripTitle}</Text>
+                      <Text style={styles.tripHeroSubtitle}>
+                        {suggestion.explanation}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.smartLeaveSectionHeader}>
+                      🎯 RECOMMENDED SMART LEAVE OPTIONS
+                    </Text>
+
+                    {suggestion.suggestedLeaves.map((leave, idx) => (
+                      <View key={idx} style={styles.leaveOptionCard}>
+                        <View style={styles.leaveOptionHeader}>
+                          <View style={styles.leaveDayBadge}>
+                            <Text style={styles.leaveDayBadgeText}>OPTION {idx + 1}</Text>
+                          </View>
+                          <Text style={styles.leaveTargetDay}>
+                            Take {leave.day} Off ({leave.date})
+                          </Text>
+                        </View>
+                        <Text style={styles.leaveReasonText}>
+                          {leave.reason}
+                        </Text>
+                      </View>
+                    ))}
+
+                    <View style={styles.tripTipsBox}>
+                      <Text style={styles.tripTipsTitle}>💡 Pro-Tip for Attendance Safety:</Text>
+                      <Text style={styles.tripTipsText}>
+                        Before taking Thursday or Monday off, check your Safe Bunk calculator on the dashboard to ensure your attendance remains strictly above 75%.
+                      </Text>
+                    </View>
+                  </ScrollView>
+                )}
+
+                <TouchableOpacity
+                  style={styles.tripModalCloseAction}
+                  onPress={() => setSelectedHoliday(null)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.tripModalCloseActionText}>Got it, Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        );
+      })()}
     </ScrollView>
   );
 };
@@ -563,5 +672,195 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
     textAlign: 'center',
+  },
+  itemCardHolidayClickable: {
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  dateBlockHoliday: {
+    borderColor: '#10B981',
+  },
+  tapToPlanPill: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#0284C7',
+  },
+  tapToPlanText: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  tripModalCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    width: '100%',
+    maxHeight: '85%',
+    borderWidth: 1,
+    borderColor: '#334155',
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  tripModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+    paddingBottom: 14,
+    marginBottom: 12,
+  },
+  tripModalIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tripModalIcon: {
+    fontSize: 22,
+  },
+  tripModalTag: {
+    color: '#34D399',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  tripModalTitle: {
+    color: '#F8FAFC',
+    fontSize: 17,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  tripModalDate: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  closeTripModalBtn: {
+    backgroundColor: '#334155',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeTripModalBtnText: {
+    color: '#CBD5E1',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  tripModalBody: {
+    maxHeight: 380,
+  },
+  tripHeroBanner: {
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+    marginBottom: 14,
+  },
+  tripHeroTitle: {
+    color: '#38BDF8',
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  tripHeroSubtitle: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  smartLeaveSectionHeader: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  leaveOptionCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 10,
+  },
+  leaveOptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+    flexWrap: 'wrap',
+  },
+  leaveDayBadge: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  leaveDayBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  leaveTargetDay: {
+    color: '#FDE047',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  leaveReasonText: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  tripTipsBox: {
+    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.3)',
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  tripTipsTitle: {
+    color: '#FDE047',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  tripTipsText: {
+    color: '#E2E8F0',
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  tripModalCloseAction: {
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  tripModalCloseActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
