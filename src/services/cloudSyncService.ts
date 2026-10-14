@@ -172,7 +172,8 @@ export const CloudSyncService = {
   async broadcastGlobalAttendanceUpdate(
     rollNo: string,
     studentName: string,
-    subjectsCount: number
+    subjectsCount: number,
+    portalUpdatedDate?: string
   ): Promise<void> {
     try {
       const globalRef = doc(db, 'system_updates', 'latest_attendance_sync');
@@ -182,6 +183,7 @@ export const CloudSyncService = {
           updatedByRollNo: rollNo,
           updatedByName: studentName || rollNo,
           subjectsCount,
+          portalUpdatedDate: portalUpdatedDate || null,
           updatedAt: new Date().toISOString(),
           timestamp: Date.now(),
         },
@@ -199,6 +201,7 @@ export const CloudSyncService = {
     updatedByRollNo: string;
     updatedByName: string;
     subjectsCount: number;
+    portalUpdatedDate?: string;
     updatedAt: string;
     timestamp: number;
   } | null> {
@@ -224,6 +227,7 @@ export const CloudSyncService = {
       updatedByRollNo: string;
       updatedByName: string;
       subjectsCount: number;
+      portalUpdatedDate?: string;
       updatedAt: string;
       timestamp: number;
     }) => void

@@ -96,7 +96,8 @@ export default function App() {
         // Trigger notification to user's phone notification tray
         NotificationService.notifyAttendanceUpdated(
           update.updatedByName,
-          update.subjectsCount
+          update.subjectsCount,
+          update.portalUpdatedDate
         );
       }
     });

@@ -25,6 +25,7 @@ export interface StudzoneExtractionResult {
   records: StudzoneAttendanceRecord[];
   error?: string;
   fetchedAt?: string;
+  portalUpdatedDate?: string; // Date when the college portal last published/updated attendance
   studentName?: string;
 }
 
@@ -73,6 +74,7 @@ export const StudzoneService = {
    */
   async getLastSyncInfo(): Promise<{
     lastSyncedAt: string;
+    portalUpdatedDate?: string;
     studentName?: string;
     rollNo?: string;
     subjectsCount?: number;
@@ -91,6 +93,7 @@ export const StudzoneService = {
    */
   async setLastSyncInfo(info: {
     lastSyncedAt: string;
+    portalUpdatedDate?: string;
     studentName?: string;
     rollNo?: string;
     subjectsCount?: number;
@@ -495,17 +498,31 @@ export const StudzoneService = {
         };
       }
 
+      // Extract "As on [Date]" / "Updated On" date published by college portal if available
+      let portalUpdatedDate: string | undefined;
+      const dateMatch = percentageHtml.match(/(?:as\s+on|last\s+updated|updated\s+on|date\s*:?)\s*[:\-]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[0-9]{1,2}\s+[a-z]{3,9}\s+[0-9]{2,4})/i);
+      if (dateMatch && dateMatch[1]) {
+        portalUpdatedDate = dateMatch[1].trim();
+      }
+
       return {
         success: true,
         records,
         fetchedAt: new Date().toISOString(),
+        portalUpdatedDate,
       };
     } catch (err: any) {
       console.error('Studzone extraction error:', err);
+      let errMsg = err.message || 'An unexpected error occurred while communicating with Studzone.';
+      if (errMsg.includes('UnknownHostException') || errMsg.includes('No address associated with hostname')) {
+        errMsg = 'Unable to reach PSG portal (ecampus.psgtech.ac.in). Your phone DNS or internet connection timed out. Please check your mobile data / Wi-Fi or toggle Airplane Mode and try again.';
+      } else if (errMsg.includes('Network request failed')) {
+        errMsg = 'Network request failed. Please check your internet connection and try again.';
+      }
       return {
         success: false,
         records: [],
-        error: err.message || 'An unexpected error occurred while communicating with Studzone.',
+        error: errMsg,
       };
     }
   },

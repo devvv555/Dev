@@ -137,14 +137,17 @@ export const NotificationService = {
    */
   async notifyAttendanceUpdated(
     updatedByName?: string,
-    subjectsCount?: number
+    subjectsCount?: number,
+    portalUpdatedDate?: string
   ): Promise<string | null> {
-    const who = updatedByName ? `${updatedByName} just extracted attendance!` : 'Fresh attendance uploaded!';
-    const countInfo = subjectsCount ? ` ${subjectsCount} subjects recalibrated.` : '';
-    const title = `🔥 ATTENDANCE PORTAL UPDATED!`;
-    const body = `⚡ ${who}${countInfo} Tap to view your latest percentages & bunk status! 📊`;
+    const who = updatedByName ? `${updatedByName} just extracted fresh attendance!` : 'Fresh attendance uploaded!';
+    const asOnInfo = portalUpdatedDate ? ` Portal updated as on ${portalUpdatedDate}.` : '';
+    const countInfo = subjectsCount ? ` (${subjectsCount} subjects)` : '';
+    const title = `🔥 COLLEGE UPDATED ATTENDANCE!`;
+    const body = `⚡ ${who}${asOnInfo}${countInfo} Tap to view your latest official percentages! 📊`;
     return this.sendLocalNotification(title, body, {
       type: 'ATTENDANCE_UPDATED',
+      portalUpdatedDate,
       timestamp: Date.now(),
     });
   },
