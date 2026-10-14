@@ -143,12 +143,6 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
         </Text>
       </View>
 
-      {/* Pre-accounted calendar notice */}
-      <View style={styles.calendarNoticeBox}>
-        <Text style={styles.calendarNoticeText}>
-          ✓ All holidays in this academic calendar are already pre-accounted for in the schedule and will not affect your attendance percentage.
-        </Text>
-      </View>
 
       {/* Next Upcoming Holiday Spotlight */}
       {nextHolidayInfo && (
