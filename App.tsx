@@ -596,9 +596,9 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'CALENDAR' && styles.tabItemActive]}
           onPress={() => handleTabChange('CALENDAR')}
         >
-          <Text style={styles.tabIcon}>🌴</Text>
+          <Text style={styles.tabIcon}>🗓️</Text>
           <Text style={[styles.tabLabel, activeTab === 'CALENDAR' && styles.tabLabelActive]}>
-            Holidays
+            Calendar
           </Text>
         </TouchableOpacity>
 

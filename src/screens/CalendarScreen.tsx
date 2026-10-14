@@ -62,9 +62,17 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
     (item) => item.type === 'HOLIDAY' && !isItemPassed(item, todayStr)
   ).length;
 
+  const upcomingExamsCount = ACADEMIC_CALENDAR.filter(
+    (item) => item.type === 'EXAM' && !isItemPassed(item, todayStr)
+  ).length;
+
+  const upcomingEventsCount = ACADEMIC_CALENDAR.filter(
+    (item) => (item.type === 'EVENT' || item.type === 'ACADEMIC') && !isItemPassed(item, todayStr)
+  ).length;
+
   const filteredItems = ACADEMIC_CALENDAR.filter((item) => {
-    // Strictly exclude holidays that have already passed
-    if (item.type === 'HOLIDAY' && isItemPassed(item, todayStr)) {
+    // Strictly exclude items that have already passed across all categories (Holidays, Exams, Events & Trips)
+    if (isItemPassed(item, todayStr)) {
       return false;
     }
     if (filter === 'ALL') return true;
@@ -202,7 +210,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'EXAM' && styles.filterChipTextActive]}>
-            📝 Exams (7)
+            📝 Exams ({upcomingExamsCount})
           </Text>
         </TouchableOpacity>
 
@@ -212,7 +220,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'EVENT' && styles.filterChipTextActive]}>
-            ⛺ Events & Trips
+            ⛺ Events & Trips ({upcomingEventsCount})
           </Text>
         </TouchableOpacity>
 
@@ -222,7 +230,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'ALL' && styles.filterChipTextActive]}>
-            All
+            All ({upcomingHolidaysCount + upcomingExamsCount + upcomingEventsCount})
           </Text>
         </TouchableOpacity>
       </View>
@@ -231,9 +239,9 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
       <View style={styles.timelineList}>
         {filteredItems.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🌴</Text>
-            <Text style={styles.emptyTitle}>No upcoming holidays</Text>
-            <Text style={styles.emptySub}>All scheduled holidays for this category have passed or concluded.</Text>
+            <Text style={styles.emptyIcon}>🗓️</Text>
+            <Text style={styles.emptyTitle}>No Upcoming Events</Text>
+            <Text style={styles.emptySub}>All scheduled items for this category have passed or concluded.</Text>
           </View>
         ) : (
           filteredItems.map((item) => {
