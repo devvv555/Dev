@@ -366,12 +366,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             <View style={styles.lastUpdatedDetails}>
               {lastSyncInfo.portalUpdatedDate ? (
                 <View style={styles.portalDateHighlightRow}>
-                  <Text style={styles.portalDateBadge}>📅 COLLEGE UPDATED AS ON</Text>
+                  <Text style={styles.portalDateBadge}>📅 PORTAL LAST UPDATED</Text>
                   <Text style={styles.portalDateText}>{lastSyncInfo.portalUpdatedDate}</Text>
                 </View>
               ) : null}
               <Text style={styles.lastUpdatedTime}>
-                🕒 Portal Verified: <Text style={styles.highlightText}>{new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at {new Date(lastSyncInfo.lastSyncedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</Text>
+                🕒 Portal Last Updated: <Text style={styles.highlightText}>{lastSyncInfo.portalUpdatedDate ? lastSyncInfo.portalUpdatedDate : `${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at ${new Date(lastSyncInfo.lastSyncedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`}</Text>
               </Text>
               <Text style={styles.lastUpdatedWho}>
                 👤 First Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || lastSyncInfo.rollNo || 'Student'}</Text>
@@ -380,7 +380,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             </View>
           ) : (
             <Text style={styles.lastUpdatedEmpty}>
-              ⚡ Not verified yet today. Be the first to connect & extract attendance from the college portal!
+              ⚡ Portal not checked yet today. Be the first to connect & extract attendance from the college portal!
             </Text>
           )}
         </View>
@@ -720,6 +720,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     <Text style={styles.successPreviewTitle}>
                       🎉 Extracted {extractedRecords.length} Subjects Successfully!
                     </Text>
+                    {extractedPortalDate ? (
+                      <View style={[styles.portalDateHighlightRow, { marginTop: 6, marginBottom: 4 }]}>
+                        <Text style={styles.portalDateBadge}>📅 PORTAL LAST UPDATED</Text>
+                        <Text style={styles.portalDateText}>{extractedPortalDate}</Text>
+                      </View>
+                    ) : null}
                     <Text style={styles.successPreviewSubtitle}>
                       Official attendance report from PSG Studzone:
                     </Text>
