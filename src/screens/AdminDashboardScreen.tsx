@@ -399,10 +399,15 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                           <View>
                             <View style={styles.fbAuthorRow}>
                               <Text style={styles.fbAuthorName}>
-                                {fb.isAnonymous ? '👤 Anonymous Student' : `👤 ${fb.studentName}`}
+                                👤 {fb.studentName}
                               </Text>
-                              {fb.studentRollNo && fb.studentRollNo !== 'Hidden' && (
+                              {fb.studentRollNo ? (
                                 <Text style={styles.fbRollNo}>({fb.studentRollNo})</Text>
+                              ) : null}
+                              {fb.isAnonymous && (
+                                <View style={styles.anonymousBadge}>
+                                  <Text style={styles.anonymousBadgeText}>🕶️ Marked Anonymous</Text>
+                                </View>
                               )}
                               <View style={styles.fbBatchBadge}>
                                 <Text style={styles.fbBatchText}>Batch {fb.batch}</Text>
@@ -861,6 +866,19 @@ const styles = StyleSheet.create({
     color: '#38BDF8',
     fontSize: 9,
     fontWeight: '800',
+  },
+  anonymousBadge: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#EAB308',
+  },
+  anonymousBadgeText: {
+    color: '#FDE047',
+    fontSize: 9,
+    fontWeight: '700',
   },
   fbDate: {
     color: '#64748B',

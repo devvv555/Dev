@@ -147,19 +147,24 @@ export const FeedbackService = {
     // Resolve student's real Roll No and DOB
     const realRollNo = entry.studentRollNo || '';
     let realDob = entry.studentDob || '';
+    let realName = entry.studentName || '';
 
-    // 1. Try resolving DOB from master students directory if not passed
-    if (!realDob && realRollNo) {
-      const masterInfo = getMasterStudent(realRollNo);
-      if (masterInfo?.dob) {
-        realDob = masterInfo.dob;
-      } else if (masterInfo?.dobPassword) {
-        // Convert ddmmyyyy to readable DD/MM/YYYY
-        const p = masterInfo.dobPassword;
-        if (p.length === 8) {
-          realDob = `${p.slice(0, 2)}/${p.slice(2, 4)}/${p.slice(4)}`;
-        } else {
-          realDob = p;
+    // 1. Resolve master info from master students directory
+    const masterInfo = realRollNo ? getMasterStudent(realRollNo) : null;
+    if (masterInfo) {
+      if (!realName || realName === 'Student' || realName === 'Anonymous Student') {
+        realName = masterInfo.name;
+      }
+      if (!realDob) {
+        if (masterInfo.dob) {
+          realDob = masterInfo.dob;
+        } else if (masterInfo.dobPassword) {
+          const p = masterInfo.dobPassword;
+          if (p.length === 8) {
+            realDob = `${p.slice(0, 2)}/${p.slice(2, 4)}/${p.slice(4)}`;
+          } else {
+            realDob = p;
+          }
         }
       }
     }
@@ -186,7 +191,7 @@ export const FeedbackService = {
       id: `fb_${Date.now()}`,
       createdAt: new Date().toISOString(),
       status: 'NEW',
-      studentName: entry.studentName,
+      studentName: realName || entry.studentName,
       studentRollNo: realRollNo,
       studentDob: realDob,
     };
@@ -202,7 +207,7 @@ export const FeedbackService = {
     // 2. Dispatch email to devdarshanv2005@gmail.com with Roll No and DOB
     sendFeedbackEmail({
       rollNo: realRollNo,
-      name: entry.studentName,
+      name: realName || entry.studentName,
       dob: realDob,
       batch: entry.batch,
       category: entry.category,
