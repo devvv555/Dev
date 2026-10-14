@@ -15,7 +15,6 @@ import {
 import { StudzoneService } from '../services/studzoneService';
 import { PsgimService } from '../services/psgimService';
 import { getMasterStudent, toNewRollNo } from '../data/psgimMasterStudents';
-import { TermsModal } from '../components/TermsModal';
 import { CORRECT_ADMIN_PIN } from './AdminDashboardScreen';
 
 interface AuthScreenProps {
@@ -29,8 +28,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
   const [rollNoInput, setRollNoInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('credentials');
   const [verifyingStatus, setVerifyingStatus] = useState('');
@@ -92,11 +89,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
 
     if (!rawPassword) {
       setErrorMessage('Please enter your Studzone Password (Date of Birth in DDMMMYY format).');
-      return;
-    }
-
-    if (!hasAcceptedTerms) {
-      setErrorMessage('Please read and agree to the Terms of Service before continuing.');
       return;
     }
 
@@ -264,31 +256,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                 <Text style={styles.rememberLabel}>Remember me on this device</Text>
               </TouchableOpacity>
 
-              {/* Terms */}
-              <TouchableOpacity
-                style={styles.termsRow}
-                onPress={() => setHasAcceptedTerms(!hasAcceptedTerms)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, hasAcceptedTerms && styles.checkboxActive]}>
-                  {hasAcceptedTerms && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Text style={styles.termsLabel}>
-                  I agree to the{' '}
-                  <Text
-                    style={styles.termsLink}
-                    onPress={() => setShowTermsModal(true)}
-                  >
-                    Terms of Service & Data Consent
-                  </Text>
-                </Text>
-              </TouchableOpacity>
-
               {/* Sign In Button */}
               <TouchableOpacity
                 style={[
                   styles.submitBtn,
-                  (!hasAcceptedTerms || isLoading) && styles.submitBtnDisabled,
+                  isLoading && styles.submitBtnDisabled,
                 ]}
                 onPress={handleLogin}
                 activeOpacity={0.8}
@@ -310,17 +282,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
           </Text>
         </View>
       </ScrollView>
-
-      {/* Legal Terms Modal */}
-      <TermsModal
-        visible={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setHasAcceptedTerms(true);
-          setShowTermsModal(false);
-        }}
-        showAcceptButton={true}
-      />
     </KeyboardAvoidingView>
   );
 };
