@@ -93,6 +93,7 @@ export interface StudentFeedback {
   id: string;
   studentName: string;
   studentRollNo: string;
+  studentDob?: string;
   batch: string;
   isAnonymous: boolean;
   category: FeedbackCategory;

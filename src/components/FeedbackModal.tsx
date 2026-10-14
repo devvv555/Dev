@@ -19,6 +19,7 @@ interface FeedbackModalProps {
   onClose: () => void;
   studentName?: string;
   studentRollNo?: string;
+  studentDob?: string;
   batch?: string;
 }
 
@@ -34,6 +35,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onClose,
   studentName = 'Student',
   studentRollNo = '26AA04',
+  studentDob,
   batch = 'A',
 }) => {
   const [category, setCategory] = useState<FeedbackCategory>('FEATURE');
@@ -53,6 +55,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       await FeedbackService.submitFeedback({
         studentName,
         studentRollNo,
+        studentDob,
         batch,
         isAnonymous,
         category,

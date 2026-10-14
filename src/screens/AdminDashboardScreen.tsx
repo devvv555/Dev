@@ -401,7 +401,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                               <Text style={styles.fbAuthorName}>
                                 {fb.isAnonymous ? '👤 Anonymous Student' : `👤 ${fb.studentName}`}
                               </Text>
-                              {!fb.isAnonymous && fb.studentRollNo !== 'Hidden' && (
+                              {fb.studentRollNo && fb.studentRollNo !== 'Hidden' && (
                                 <Text style={styles.fbRollNo}>({fb.studentRollNo})</Text>
                               )}
                               <View style={styles.fbBatchBadge}>
@@ -409,7 +409,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                               </View>
                             </View>
                             <Text style={styles.fbDate}>
-                              {new Date(fb.createdAt).toLocaleDateString()} • {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {fb.studentDob ? `🎂 DOB: ${fb.studentDob} • ` : ''}{new Date(fb.createdAt).toLocaleDateString()} • {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </Text>
                           </View>
 

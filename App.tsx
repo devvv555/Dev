@@ -634,6 +634,7 @@ export default function App() {
         onClose={() => setShowFeedbackModal(false)}
         studentName={studentName}
         studentRollNo={activeRollNo}
+        studentDob={getMasterStudent(activeRollNo)?.dob || ''}
         batch={getMasterStudent(activeRollNo)?.batch || 'A'}
       />
 
