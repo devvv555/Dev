@@ -21,6 +21,7 @@ interface MedicalVaultScreenProps {
   onToggleMedicalClaim: (id: string) => void;
   onAddMedicalClaim: (claim: MedicalClaimRecord) => void;
   onUpdateClaimStatus: (claimId: string) => void;
+  onDeleteMedicalClaim?: (claimId: string) => void;
   onAutoApplyMedicalClaims: (subjectIds: string[]) => void;
   onRefresh?: () => Promise<void> | void;
 }
@@ -33,6 +34,7 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
   onToggleMedicalClaim,
   onAddMedicalClaim,
   onUpdateClaimStatus,
+  onDeleteMedicalClaim,
   onAutoApplyMedicalClaims,
   onRefresh,
 }) => {
@@ -309,6 +311,37 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
                   <Text style={styles.noteText}>"{claim.certificateNote}"</Text>
                 </View>
               )}
+
+              {/* Action row with Delete button */}
+              <View style={styles.claimActionsRow}>
+                <TouchableOpacity
+                  style={styles.deleteClaimBtn}
+                  onPress={() => {
+                    try {
+                      Vibration.vibrate(25);
+                    } catch {}
+                    Alert.alert(
+                      'Delete Medical Certificate',
+                      `Are you sure you want to delete this medical record ("${claim.reason}")? Any 65% condonation applied for this leave period will be removed.`,
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Delete',
+                          style: 'destructive',
+                          onPress: () => {
+                            if (onDeleteMedicalClaim) {
+                              onDeleteMedicalClaim(claim.id);
+                            }
+                          },
+                        },
+                      ]
+                    );
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.deleteClaimBtnText}>🗑️ Delete Record</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -673,6 +706,27 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 11,
     fontStyle: 'italic',
+  },
+  claimActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  deleteClaimBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+  },
+  deleteClaimBtnText: {
+    color: '#F87171',
+    fontSize: 11,
+    fontWeight: '700',
   },
   emptyCard: {
     padding: 20,

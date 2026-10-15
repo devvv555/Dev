@@ -341,6 +341,39 @@ export default function App() {
     StorageService.saveMedicalClaims(next);
   };
 
+  // Delete a Medical Claim record
+  const handleDeleteMedicalClaim = (claimId: string) => {
+    const claimToDelete = medicalClaims.find((c) => c.id === claimId);
+    const next = medicalClaims.filter((c) => c.id !== claimId);
+    setMedicalClaims(next);
+    StorageService.saveMedicalClaims(next);
+
+    // If deleted claim had affected subjects, check if any remaining claim still covers them
+    if (claimToDelete) {
+      const remainingClaimedSubjectIds = new Set<string>();
+      next.forEach((c) => {
+        if (c.subjectId === 'ALL') {
+          subjects.forEach((s) => remainingClaimedSubjectIds.add(s.id));
+        } else {
+          c.subjectId.split(',').forEach((id) => remainingClaimedSubjectIds.add(id.trim()));
+        }
+      });
+
+      const updatedSubjects = subjects.map((s) => {
+        if (s.hasMedicalClaim && !remainingClaimedSubjectIds.has(s.id)) {
+          return { ...s, hasMedicalClaim: false };
+        }
+        return s;
+      });
+      setSubjects(updatedSubjects);
+      StorageService.saveSubjects(updatedSubjects);
+      if (activeRollNo) {
+        CloudSyncService.syncSubjects(activeRollNo, updatedSubjects);
+      }
+    }
+  };
+
+
   // Bulk-activate 65% threshold for multiple subjects (from date-range auto-detection)
   const handleAutoApplyMedicalClaims = (subjectIds: string[]) => {
     const next = subjects.map((s) => {
@@ -537,6 +570,8 @@ export default function App() {
 
         {activeTab === 'CALENDAR' && (
           <CalendarScreen
+            subjects={subjects}
+            timetable={timetable}
             onBack={() => handleTabChange('DASHBOARD')}
             onRefresh={handleRefresh}
           />
@@ -551,6 +586,7 @@ export default function App() {
             onToggleMedicalClaim={handleToggleMedicalClaim}
             onAddMedicalClaim={handleAddMedicalClaim}
             onUpdateClaimStatus={handleUpdateClaimStatus}
+            onDeleteMedicalClaim={handleDeleteMedicalClaim}
             onAutoApplyMedicalClaims={handleAutoApplyMedicalClaims}
             onRefresh={handleRefresh}
           />
@@ -585,7 +621,7 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'TIMETABLE' && styles.tabItemActive]}
           onPress={() => handleTabChange('TIMETABLE')}
         >
-          <Text style={styles.tabIcon}>📅</Text>
+          <Text style={styles.tabIcon}>📋</Text>
           <Text style={[styles.tabLabel, activeTab === 'TIMETABLE' && styles.tabLabelActive]}>
             Timetable
           </Text>
@@ -609,7 +645,7 @@ export default function App() {
         >
           <Text style={styles.tabIcon}>🏥</Text>
           <Text style={[styles.tabLabel, activeTab === 'MEDICAL' && styles.tabLabelActive]}>
-            Med (65%)
+            Med
           </Text>
         </TouchableOpacity>
 

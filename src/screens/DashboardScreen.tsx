@@ -5,18 +5,21 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   Modal,
   Alert,
   Vibration,
   RefreshControl,
 } from 'react-native';
-import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus } from '../types';
+import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder } from '../types';
 import { calculateOverallMetrics } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 import { SubjectCard } from '../components/SubjectCard';
 import { PsgimService } from '../services/psgimService';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
 import { NotificationService } from '../services/notificationService';
+import { StorageService } from '../services/storageService';
+
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -51,6 +54,85 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'MEDICAL' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
   const [activeSlotIndex, setActiveSlotIndex] = useState(0);
+
+  // Period Reminder state
+  const [reminders, setReminders] = useState<PeriodReminder[]>([]);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderNote, setReminderNote] = useState('');
+  const [reminderTiming, setReminderTiming] = useState<'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM'>('NEXT_CLASS');
+
+  useEffect(() => {
+    if (studentRollNo) {
+      StorageService.getPeriodReminders(studentRollNo).then(setReminders);
+    }
+  }, [studentRollNo]);
+
+  const handleSaveReminder = async () => {
+    if (!reminderNote.trim()) {
+      Alert.alert('Empty Reminder', 'Please enter a reminder or task note.');
+      return;
+    }
+    try {
+      Vibration.vibrate(25);
+    } catch {}
+
+    const timingDesc =
+      reminderTiming === 'NEXT_CLASS'
+        ? 'Before Next Class'
+        : reminderTiming === 'TONIGHT_8PM'
+        ? 'Tonight at 8:00 PM'
+        : 'Tomorrow at 8:00 AM';
+
+    const newReminder: PeriodReminder = {
+      id: `rem_${Date.now()}`,
+      slotId: currentSlot?.id || 'slot_today',
+      subjectId: currentSlot?.subjectId || 'sub_general',
+      subjectName: currentSubject?.name || 'Class',
+      rollNo: studentRollNo,
+      note: reminderNote.trim(),
+      dueTiming: reminderTiming,
+      createdAt: Date.now(),
+      completed: false,
+    };
+
+    const next = [newReminder, ...reminders];
+    setReminders(next);
+    await StorageService.savePeriodReminders(studentRollNo, next);
+
+    await NotificationService.notifyPeriodReminder(
+      newReminder.subjectName,
+      newReminder.note,
+      timingDesc
+    );
+
+    setShowReminderModal(false);
+    setReminderNote('');
+    Alert.alert(
+      'Reminder Set! ⏰',
+      `Reminder saved: "${newReminder.note}" (${timingDesc}).`
+    );
+  };
+
+  const handleToggleReminder = async (id: string) => {
+    try {
+      Vibration.vibrate(20);
+    } catch {}
+    const next = reminders.map((r) =>
+      r.id === id ? { ...r, completed: !r.completed } : r
+    );
+    setReminders(next);
+    await StorageService.savePeriodReminders(studentRollNo, next);
+  };
+
+  const handleDeleteReminder = async (id: string) => {
+    try {
+      Vibration.vibrate(20);
+    } catch {}
+    const next = reminders.filter((r) => r.id !== id);
+    setReminders(next);
+    await StorageService.savePeriodReminders(studentRollNo, next);
+  };
+
 
   const overall = calculateOverallMetrics(subjects);
   const profile = PsgimService.getStudentProfile(studentRollNo);
@@ -464,6 +546,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               const isSelected = idx === activeIndex;
               const pKey = `${todayDate}_${slot.id}`;
               const rec = periodRecords[pKey];
+              const hasPendingReminder = reminders.some(
+                (r) => !r.completed && (r.slotId === slot.id || r.subjectId === slot.subjectId)
+              );
 
               return (
                 <TouchableOpacity
@@ -482,11 +567,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     <Text style={[styles.periodPillTime, isSelected && styles.periodPillTextActive]}>
                       {slot.startTime}
                     </Text>
-                    {rec && (
-                      <Text style={styles.pillStatusIndicator}>
-                        {rec.status === 'attended' ? '✅' : rec.status === 'bunked' ? '❌' : '⚪'}
-                      </Text>
-                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                      {hasPendingReminder && (
+                        <Text style={styles.pillReminderIndicator}>📌</Text>
+                      )}
+                      {rec && (
+                        <Text style={styles.pillStatusIndicator}>
+                          {rec.status === 'attended' ? '✅' : rec.status === 'bunked' ? '❌' : '⚪'}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                   <Text style={[styles.periodPillCode, isSelected && styles.periodPillTextActive]}>
                     {sub?.code || slot.subjectId.replace('sub_', '').toUpperCase()}
@@ -572,6 +662,76 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Next Class Tasks & Reminders Section */}
+        {(() => {
+          const slotReminders = reminders.filter(
+            (r) => r.slotId === currentSlot?.id || r.subjectId === currentSlot?.subjectId
+          );
+
+          return (
+            <View style={styles.periodReminderContainer}>
+              {slotReminders.length > 0 && (
+                <View style={styles.activeRemindersBox}>
+                  <Text style={styles.activeRemindersTitle}>
+                    📌 Tasks / Instructions for this Class:
+                  </Text>
+                  {slotReminders.map((rem) => (
+                    <View key={rem.id} style={styles.reminderRowItem}>
+                      <TouchableOpacity
+                        onPress={() => handleToggleReminder(rem.id)}
+                        style={styles.reminderCheckBtn}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.reminderCheckIcon}>
+                          {rem.completed ? '✅' : '⭕'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <View style={styles.reminderContentCol}>
+                        <Text
+                          style={[
+                            styles.reminderNoteText,
+                            rem.completed && styles.reminderNoteTextCompleted,
+                          ]}
+                        >
+                          {rem.note}
+                        </Text>
+                        <Text style={styles.reminderTimingText}>
+                          ⏰ {rem.dueTiming === 'NEXT_CLASS' ? 'Before Next Class' : rem.dueTiming === 'TONIGHT_8PM' ? 'Tonight at 8:00 PM' : 'Tomorrow at 8:00 AM'}
+                          {rem.completed ? ' • Done' : ''}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        onPress={() => handleDeleteReminder(rem.id)}
+                        style={styles.reminderDeleteAction}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.reminderDeleteActionText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={styles.addReminderTriggerBtn}
+                onPress={() => {
+                  setReminderNote('');
+                  setReminderTiming('NEXT_CLASS');
+                  setShowReminderModal(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.addReminderTriggerIcon}>⏰</Text>
+                <Text style={styles.addReminderTriggerText}>
+                  + Set Task / Reminder for Next Class
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })()}
       </View>
 
       {/* Filter Chips */}
@@ -586,7 +746,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {tab === 'ALL' && 'All Subjects'}
               {tab === 'SAFE' && '✅ Safe'}
               {tab === 'SHORTAGE' && '⚠️ Shortage'}
-              {tab === 'MEDICAL' && '🏥 Med Claim (65%)'}
+              {tab === 'MEDICAL' && '🏥 Med'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -663,6 +823,124 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             >
               <Text style={styles.notifDismissText}>Remind Me Later</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Next Class Reminder / Task Modal */}
+      <Modal
+        visible={showReminderModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowReminderModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.reminderModalCard}>
+            <View style={styles.reminderModalHeader}>
+              <View style={styles.reminderModalIconCircle}>
+                <Text style={styles.reminderModalIcon}>⏰</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.reminderModalTag}>CLASS INSTRUCTION / HOMEWORK</Text>
+                <Text style={styles.reminderModalSubject} numberOfLines={1}>
+                  {currentSubject?.name || 'Class Task'}
+                </Text>
+                <Text style={styles.reminderModalSlot}>
+                  {currentSlot ? `${currentSlot.startTime} – ${currentSlot.endTime} • ${currentSlot.day}` : ''}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowReminderModal(false)}
+                style={styles.closeTripModalBtn}
+              >
+                <Text style={styles.closeTripModalBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.reminderInputLabel}>
+              What did sir / ma'am say to complete before next class?
+            </Text>
+            <TextInput
+              style={styles.reminderTextInput}
+              placeholder="e.g. Submit Assignment 2, Bring scientific calculator, Prepare case PPT"
+              placeholderTextColor="#64748B"
+              value={reminderNote}
+              onChangeText={setReminderNote}
+              multiline
+              numberOfLines={3}
+            />
+
+            <Text style={styles.reminderTimingLabel}>When should we remind you?</Text>
+            <View style={styles.reminderTimingRow}>
+              <TouchableOpacity
+                style={[
+                  styles.timingChip,
+                  reminderTiming === 'NEXT_CLASS' && styles.timingChipActive,
+                ]}
+                onPress={() => setReminderTiming('NEXT_CLASS')}
+              >
+                <Text
+                  style={[
+                    styles.timingChipText,
+                    reminderTiming === 'NEXT_CLASS' && styles.timingChipTextActive,
+                  ]}
+                >
+                  ⏰ Before Next Class
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.timingChip,
+                  reminderTiming === 'TONIGHT_8PM' && styles.timingChipActive,
+                ]}
+                onPress={() => setReminderTiming('TONIGHT_8PM')}
+              >
+                <Text
+                  style={[
+                    styles.timingChipText,
+                    reminderTiming === 'TONIGHT_8PM' && styles.timingChipTextActive,
+                  ]}
+                >
+                  🌙 Tonight (8 PM)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.timingChip,
+                  reminderTiming === 'TOMORROW_8AM' && styles.timingChipActive,
+                ]}
+                onPress={() => setReminderTiming('TOMORROW_8AM')}
+              >
+                <Text
+                  style={[
+                    styles.timingChipText,
+                    reminderTiming === 'TOMORROW_8AM' && styles.timingChipTextActive,
+                  ]}
+                >
+                  🌅 Tomorrow (8 AM)
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.reminderModalActions}>
+              <TouchableOpacity
+                style={styles.cancelReminderBtn}
+                onPress={() => setShowReminderModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelReminderBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.saveReminderBtn}
+                onPress={handleSaveReminder}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.saveReminderBtnText}>Set Reminder 🔔</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1278,4 +1556,233 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+
+  // ── Period Reminders & Next Class Task Styles ──────────────
+  pillReminderIndicator: {
+    fontSize: 9,
+  },
+  periodReminderContainer: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  activeRemindersBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  activeRemindersTitle: {
+    color: '#FDE047',
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  reminderRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  reminderCheckBtn: {
+    paddingRight: 8,
+  },
+  reminderCheckIcon: {
+    fontSize: 14,
+  },
+  reminderContentCol: {
+    flex: 1,
+  },
+  reminderNoteText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  reminderNoteTextCompleted: {
+    color: '#64748B',
+    textDecorationLine: 'line-through',
+  },
+  reminderTimingText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  reminderDeleteAction: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  reminderDeleteActionText: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  addReminderTriggerBtn: {
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  addReminderTriggerIcon: {
+    fontSize: 14,
+  },
+  addReminderTriggerText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // ── Next Class Reminder Modal ──────────────────────────────
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  reminderModalCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  reminderModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  reminderModalIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reminderModalIcon: {
+    fontSize: 20,
+  },
+  reminderModalTag: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  reminderModalSubject: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  reminderModalSlot: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  closeTripModalBtn: {
+    backgroundColor: '#334155',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeTripModalBtnText: {
+    color: '#CBD5E1',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  reminderInputLabel: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  reminderTextInput: {
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+    color: '#F8FAFC',
+    padding: 12,
+    fontSize: 13,
+    marginBottom: 14,
+    minHeight: 70,
+    textAlignVertical: 'top',
+  },
+  reminderTimingLabel: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  reminderTimingRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  timingChip: {
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  timingChipActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#38BDF8',
+  },
+  timingChipText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  timingChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  reminderModalActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cancelReminderBtn: {
+    flex: 1,
+    backgroundColor: '#334155',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  cancelReminderBtnText: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  saveReminderBtn: {
+    flex: 2,
+    backgroundColor: '#2563EB',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  saveReminderBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
 });
+

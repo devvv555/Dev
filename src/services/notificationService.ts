@@ -151,4 +151,18 @@ export const NotificationService = {
       timestamp: Date.now(),
     });
   },
+
+  /**
+   * Schedule or send period task reminder
+   */
+  async notifyPeriodReminder(subjectName: string, note: string, dueTimingDesc: string): Promise<string | null> {
+    const title = `⏰ Reminder for ${subjectName}`;
+    const body = `📌 ${note} (${dueTimingDesc})`;
+    return this.sendLocalNotification(title, body, {
+      type: 'PERIOD_REMINDER',
+      subjectName,
+      note,
+    });
+  },
 };
+

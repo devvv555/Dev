@@ -17,8 +17,11 @@ import {
   getHolidaySmartTripSuggestion,
   SmartTripSuggestion,
 } from '../data/academicCalendarData';
+import { Subject, TimetableSlot } from '../types';
 
 interface CalendarScreenProps {
+  subjects?: Subject[];
+  timetable?: TimetableSlot[];
   onBack?: () => void;
   onRefresh?: () => Promise<void> | void;
 }
@@ -36,10 +39,16 @@ const isItemPassed = (item: AcademicCalendarItem, todayStr: string): boolean => 
   return effectiveEnd < todayStr;
 };
 
-export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefresh }) => {
+export const CalendarScreen: React.FC<CalendarScreenProps> = ({
+  subjects = [],
+  timetable = [],
+  onBack,
+  onRefresh,
+}) => {
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<AcademicCalendarItem | null>(null);
+
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -316,7 +325,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
 
       {/* Smart Holiday Trip & Leave Planner Modal */}
       {selectedHoliday && (() => {
-        const suggestion = getHolidaySmartTripSuggestion(selectedHoliday);
+        const suggestion = getHolidaySmartTripSuggestion(selectedHoliday, subjects, timetable);
         return (
           <Modal
             visible={!!selectedHoliday}
@@ -352,36 +361,114 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
                 {suggestion && (
                   <ScrollView style={styles.tripModalBody} showsVerticalScrollIndicator={false}>
                     <View style={styles.tripHeroBanner}>
-                      <Text style={styles.tripHeroTitle}>{suggestion.tripTitle}</Text>
+                      <View style={styles.tripHeroRow}>
+                        <Text style={styles.tripHeroTitle}>{suggestion.tripTitle}</Text>
+                        {suggestion.hasPersonalizedAttendance && (
+                          <View style={styles.liveSyncBadge}>
+                            <Text style={styles.liveSyncBadgeText}>⚡ Real Attendance Synced</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text style={styles.tripHeroSubtitle}>
                         {suggestion.explanation}
                       </Text>
                     </View>
 
                     <Text style={styles.smartLeaveSectionHeader}>
-                      🎯 RECOMMENDED SMART LEAVE OPTIONS
+                      🎯 ATTENDANCE-BASED LEAVE RECOMMENDATIONS
                     </Text>
 
                     {suggestion.suggestedLeaves.map((leave, idx) => (
                       <View key={idx} style={styles.leaveOptionCard}>
-                        <View style={styles.leaveOptionHeader}>
+                        {/* Option Tag & Status Badge */}
+                        <View style={styles.leaveOptionTopRow}>
                           <View style={styles.leaveDayBadge}>
-                            <Text style={styles.leaveDayBadgeText}>OPTION {idx + 1}</Text>
+                            <Text style={styles.leaveDayBadgeText}>{leave.optionLabel}</Text>
                           </View>
-                          <Text style={styles.leaveTargetDay}>
-                            Take {leave.day} Off ({leave.date})
-                          </Text>
+                          <View
+                            style={[
+                              styles.statusLeavePill,
+                              { backgroundColor: leave.statusBadgeBg, borderColor: leave.statusBadgeColor },
+                            ]}
+                          >
+                            <Text style={[styles.statusLeavePillText, { color: leave.statusBadgeColor }]}>
+                              {leave.statusBadge}
+                            </Text>
+                          </View>
                         </View>
-                        <Text style={styles.leaveReasonText}>
-                          {leave.reason}
-                        </Text>
+
+                        {/* Headline */}
+                        <Text style={styles.leaveOptionHeadline}>{leave.headline}</Text>
+
+                        {/* Reason / Advice */}
+                        <Text style={styles.leaveReasonText}>{leave.reason}</Text>
+
+                        {/* Subject Breakdown if classes exist on this day */}
+                        {leave.subjectBreakdown && leave.subjectBreakdown.length > 0 && (
+                          <View style={styles.subjectBreakdownBox}>
+                            <Text style={styles.breakdownTitle}>
+                              📚 Scheduled on {leave.day} ({leave.subjectBreakdown.length} classes):
+                            </Text>
+                            {leave.subjectBreakdown.map((item, sIdx) => (
+                              <View key={sIdx} style={styles.subjectRowItem}>
+                                <View style={styles.subjectRowLeft}>
+                                  <View style={styles.subjectBadgeRow}>
+                                    <View
+                                      style={[
+                                        styles.sessionTag,
+                                        item.session === 'FN' ? styles.sessionTagFN : styles.sessionTagAN,
+                                      ]}
+                                    >
+                                      <Text
+                                        style={[
+                                          styles.sessionTagText,
+                                          item.session === 'FN' ? styles.sessionTagTextFN : styles.sessionTagTextAN,
+                                        ]}
+                                      >
+                                        {item.sessionLabel}
+                                      </Text>
+                                    </View>
+                                    <Text style={styles.subjectCodeText}>{item.code}</Text>
+                                  </View>
+                                  <Text style={styles.subjectNameText} numberOfLines={1}>
+                                    {item.subjectName}
+                                  </Text>
+                                  <Text style={styles.subjectTimeText}>
+                                    ⏰ {item.timeSlot} {item.room ? `• ${item.room}` : ''}
+                                  </Text>
+                                </View>
+
+                                <View style={styles.subjectRowRight}>
+                                  <View
+                                    style={[
+                                      styles.attendanceBufferBadge,
+                                      item.isSafe ? styles.bufferSafe : styles.bufferTight,
+                                    ]}
+                                  >
+                                    <Text
+                                      style={[
+                                        styles.attendanceBufferText,
+                                        item.isSafe ? styles.bufferTextSafe : styles.bufferTextTight,
+                                      ]}
+                                    >
+                                      {item.isSafe ? `+${item.safeBunks} safe` : `0 safe`}
+                                    </Text>
+                                  </View>
+                                  <Text style={styles.subjectPctText}>
+                                    {item.attended}/{item.total} ({item.percentage}%)
+                                  </Text>
+                                </View>
+                              </View>
+                            ))}
+                          </View>
+                        )}
                       </View>
                     ))}
 
                     <View style={styles.tripTipsBox}>
-                      <Text style={styles.tripTipsTitle}>💡 Pro-Tip for Attendance Safety:</Text>
+                      <Text style={styles.tripTipsTitle}>💡 Smart Leave Rule of Thumb:</Text>
                       <Text style={styles.tripTipsText}>
-                        Before taking Thursday or Monday off, check your Safe Bunk calculator on the dashboard to ensure your attendance remains strictly above 75%.
+                        If you take leave only for subjects where you have surplus buffer (+1 or more safe bunks), your overall percentage remains above 75%. If any subject shows "0 safe", attending that class is essential to avoid condonation!
                       </Text>
                     </View>
                   </ScrollView>
@@ -399,6 +486,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ onBack, onRefres
           </Modal>
         );
       })()}
+
     </ScrollView>
   );
 };
@@ -862,5 +950,146 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+  tripHeroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 4,
+  },
+  liveSyncBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  liveSyncBadgeText: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  leaveOptionTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 6,
+  },
+  statusLeavePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  statusLeavePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  leaveOptionHeadline: {
+    color: '#FDE047',
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  subjectBreakdownBox: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  breakdownTitle: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  subjectRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 6,
+  },
+  subjectRowLeft: {
+    flex: 1,
+    marginRight: 8,
+  },
+  subjectBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  sessionTag: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  sessionTagFN: {
+    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+  },
+  sessionTagAN: {
+    backgroundColor: 'rgba(168, 85, 247, 0.2)',
+  },
+  sessionTagText: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  sessionTagTextFN: {
+    color: '#38BDF8',
+  },
+  sessionTagTextAN: {
+    color: '#C084FC',
+  },
+  subjectCodeText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  subjectNameText: {
+    color: '#CBD5E1',
+    fontSize: 11,
+  },
+  subjectTimeText: {
+    color: '#64748B',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  subjectRowRight: {
+    alignItems: 'flex-end',
+  },
+  attendanceBufferBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 2,
+  },
+  bufferSafe: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  bufferTight: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  attendanceBufferText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  bufferTextSafe: {
+    color: '#10B981',
+  },
+  bufferTextTight: {
+    color: '#EF4444',
+  },
+  subjectPctText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    fontWeight: '600',
   },
 });

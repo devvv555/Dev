@@ -119,3 +119,16 @@ export interface FeatureUsageStats {
     D: number;
   };
 }
+
+export interface PeriodReminder {
+  id: string;
+  slotId: string;
+  subjectId: string;
+  subjectName: string;
+  rollNo: string;
+  note: string;
+  dueTiming: 'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM';
+  createdAt: number;
+  completed: boolean;
+}
+

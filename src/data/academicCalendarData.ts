@@ -1,4 +1,8 @@
+import { Subject, TimetableSlot } from '../types';
+import { calculateAttendanceMetrics } from '../services/attendanceEngine';
+
 export type CalendarEventType = 'HOLIDAY' | 'EXAM' | 'EVENT' | 'ACADEMIC';
+
 
 export interface AcademicCalendarItem {
   id: string;
@@ -505,156 +509,382 @@ export function getNextHoliday(referenceDateStr?: string): {
   return { holiday: next, daysRemaining };
 }
 
+export type SmartLeaveType =
+  | 'FULL_DAY'
+  | 'FORENOON_HALF_DAY'
+  | 'AFTERNOON_HALF_DAY'
+  | 'NOT_RECOMMENDED'
+  | 'GENERAL_BRIDGE';
+
+export interface SubjectLeaveStatus {
+  subjectId: string;
+  subjectName: string;
+  code: string;
+  session: 'FN' | 'AN';
+  sessionLabel: string;
+  timeSlot: string;
+  room?: string;
+  attended: number;
+  total: number;
+  percentage: number;
+  safeBunks: number;
+  isSafe: boolean;
+}
+
+export interface SmartLeaveOption {
+  day: string;
+  date: string;
+  optionLabel: string; // e.g. "BRIDGE AFTER HOLIDAY" or "BRIDGE BEFORE HOLIDAY"
+  leaveType: SmartLeaveType;
+  statusBadge: string;
+  statusBadgeColor: string;
+  statusBadgeBg: string;
+  headline: string;
+  reason: string;
+  vacationDays: number; // e.g. 4 or 5
+  subjectBreakdown: SubjectLeaveStatus[];
+  fnSafe: boolean;
+  anSafe: boolean;
+  hasSlots: boolean;
+}
+
 export interface SmartTripSuggestion {
   tripTitle: string;
-  suggestedLeaves: {
-    day: string;
-    date: string;
-    reason: string;
-  }[];
+  suggestedLeaves: SmartLeaveOption[];
   totalDaysOff: number;
   explanation: string;
+  hasPersonalizedAttendance: boolean;
+}
+
+function evaluateBridgeDay(
+  dayName: string,
+  dateStr: string,
+  optionLabel: string,
+  vacationDays: number,
+  subjects: Subject[] = [],
+  timetable: TimetableSlot[] = []
+): SmartLeaveOption {
+  const daySlots = timetable
+    .filter((slot) => slot.day.toLowerCase() === dayName.toLowerCase())
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  if (daySlots.length === 0 || subjects.length === 0) {
+    return {
+      day: dayName,
+      date: dateStr,
+      optionLabel,
+      leaveType: 'GENERAL_BRIDGE',
+      statusBadge: '🌴 BRIDGE DAY OPPORTUNITY',
+      statusBadgeColor: '#38BDF8',
+      statusBadgeBg: 'rgba(56, 189, 248, 0.15)',
+      headline: `Take ${dayName} Off → ${vacationDays}-Day Vacation!`,
+      reason: `Taking ${dayName} (${dateStr}) off connects your holiday schedule into a ${vacationDays}-day extended vacation! Check your attendance buffer before taking leave.`,
+      vacationDays,
+      subjectBreakdown: [],
+      fnSafe: true,
+      anSafe: true,
+      hasSlots: false,
+    };
+  }
+
+  // Parse each slot into SubjectLeaveStatus
+  const parsedSlots: SubjectLeaveStatus[] = daySlots.map((slot) => {
+    const sub = subjects.find((s) => s.id === slot.subjectId) || {
+      id: slot.subjectId,
+      name: slot.subjectId,
+      code: slot.subjectId,
+      attended: 0,
+      total: 0,
+      hasMedicalClaim: false,
+      standardTarget: 75,
+      medicalTarget: 65,
+      color: '#38BDF8',
+      officialAttended: 0,
+      officialTotal: 0,
+    };
+
+    const metrics = calculateAttendanceMetrics(
+      sub.attended,
+      sub.total,
+      sub.hasMedicalClaim,
+      sub.standardTarget,
+      sub.medicalTarget
+    );
+
+    const [h] = slot.startTime.split(':').map(Number);
+    const isFN = (h || 0) < 13;
+    const session = isFN ? 'FN' : 'AN';
+    const sessionLabel = isFN ? '🌅 Forenoon' : '🌇 Afternoon';
+
+    return {
+      subjectId: sub.id,
+      subjectName: sub.name,
+      code: sub.code || sub.id,
+      session,
+      sessionLabel,
+      timeSlot: `${slot.startTime} – ${slot.endTime}`,
+      room: slot.room,
+      attended: sub.attended,
+      total: sub.total,
+      percentage: metrics.percentage,
+      safeBunks: metrics.safeBunksAt75,
+      isSafe: metrics.safeBunksAt75 >= 1,
+    };
+  });
+
+  const fnSubjects = parsedSlots.filter((s) => s.session === 'FN');
+  const anSubjects = parsedSlots.filter((s) => s.session === 'AN');
+
+  // Forenoon is safe if all FN subjects have safeBunks >= 1
+  const fnSafe = fnSubjects.length === 0 || fnSubjects.every((s) => s.safeBunks >= 1);
+  // Afternoon is safe if all AN subjects have safeBunks >= 1
+  const anSafe = anSubjects.length === 0 || anSubjects.every((s) => s.safeBunks >= 1);
+  const fullDaySafe = fnSafe && anSafe;
+
+  let leaveType: SmartLeaveType;
+  let statusBadge = '';
+  let statusBadgeColor = '#10B981';
+  let statusBadgeBg = 'rgba(16, 185, 129, 0.15)';
+  let headline = '';
+  let reason = '';
+
+  const formatList = (items: SubjectLeaveStatus[]) =>
+    items.map((i) => `${i.code}: +${i.safeBunks} safe`).join(', ');
+
+  const formatUnsafe = (items: SubjectLeaveStatus[]) =>
+    items.filter((i) => i.safeBunks < 1).map((i) => `${i.code} (${i.percentage}%)`).join(', ');
+
+  if (fullDaySafe) {
+    leaveType = 'FULL_DAY';
+    statusBadge = '🌟 FULL DAY LEAVE RECOMMENDED';
+    statusBadgeColor = '#10B981';
+    statusBadgeBg = 'rgba(16, 185, 129, 0.15)';
+    headline = `Take Full Day ${dayName} Off → ${vacationDays}-Day Mega Vacation!`;
+    reason = `You have surplus attendance in all ${dayName} subjects (${formatList(parsedSlots)}). You can safely take the entire day off to enjoy a ${vacationDays}-day vacation without dropping below 75%!`;
+  } else if (fnSafe && !anSafe) {
+    leaveType = 'FORENOON_HALF_DAY';
+    statusBadge = '🌗 FORENOON HALF-DAY LEAVE RECOMMENDED';
+    statusBadgeColor = '#38BDF8';
+    statusBadgeBg = 'rgba(56, 189, 248, 0.15)';
+    headline = `Take Forenoon Half-Day Leave on ${dayName}`;
+    reason = `You have surplus buffer in your morning classes (${formatList(fnSubjects)}), but afternoon class ${formatUnsafe(anSubjects)} has 0 safe bunks. We recommend taking the forenoon off and attending afternoon classes to keep your attendance safe!`;
+  } else if (!fnSafe && anSafe) {
+    leaveType = 'AFTERNOON_HALF_DAY';
+    statusBadge = '🌓 AFTERNOON HALF-DAY LEAVE RECOMMENDED';
+    statusBadgeColor = '#A855F7';
+    statusBadgeBg = 'rgba(168, 85, 247, 0.15)';
+    headline = `Take Afternoon Half-Day Leave on ${dayName}`;
+    reason = `Your morning subjects (${formatUnsafe(fnSubjects)}) are tight, but you have surplus attendance in afternoon classes (${formatList(anSubjects)}). Attend the morning classes and take the afternoon off!`;
+  } else {
+    leaveType = 'NOT_RECOMMENDED';
+    statusBadge = '⚠️ LEAVE NOT RECOMMENDED (ATTEND CLASSES)';
+    statusBadgeColor = '#EF4444';
+    statusBadgeBg = 'rgba(239, 68, 68, 0.15)';
+    headline = `Attend All Classes on ${dayName}`;
+    reason = `Attendance buffer is tight in (${formatUnsafe(parsedSlots)}). Taking leave on ${dayName} risks pushing your attendance below the mandatory 75% limit. Attending all classes is strongly advised.`;
+  }
+
+  return {
+    day: dayName,
+    date: dateStr,
+    optionLabel,
+    leaveType,
+    statusBadge,
+    statusBadgeColor,
+    statusBadgeBg,
+    headline,
+    reason,
+    vacationDays,
+    subjectBreakdown: parsedSlots,
+    fnSafe,
+    anSafe,
+    hasSlots: true,
+  };
 }
 
 /**
- * Computes an intelligent leave suggestion for an individual holiday.
- * E.g., For Friday (Christmas):
- * Suggests taking Thursday off (for a 4-day weekend Thu–Sun) OR Monday off (for Fri–Mon)
- * or taking both for a 5-day mega vacation!
+ * Computes an intelligent leave suggestion for an individual holiday,
+ * taking into account the student's timetable and real-time subject attendance surplus.
  */
-export function getHolidaySmartTripSuggestion(item: AcademicCalendarItem): SmartTripSuggestion | null {
+export function getHolidaySmartTripSuggestion(
+  item: AcademicCalendarItem,
+  subjects: Subject[] = [],
+  timetable: TimetableSlot[] = []
+): SmartTripSuggestion | null {
   if (item.type !== 'HOLIDAY') return null;
 
-  const dateObj = new Date(item.date + 'T00:00:00');
-  const dayOfWeek = dateObj.getDay(); // 0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
+  const startObj = new Date(item.date + 'T00:00:00');
+  const endObj = new Date((item.endDate || item.date) + 'T00:00:00');
+  const startDay = startObj.getDay(); // 0: Sun, 1: Mon, ... 6: Sat
+  const endDay = endObj.getDay();
 
-  const formatDateHelper = (offsetDays: number) => {
-    const target = new Date(dateObj);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const formatDateHelper = (baseDate: Date, offsetDays: number) => {
+    const target = new Date(baseDate);
     target.setDate(target.getDate() + offsetDays);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return {
       dateStr: `${target.getDate()} ${months[target.getMonth()]}`,
-      dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][target.getDay()],
+      dayName: dayNames[target.getDay()],
     };
   };
 
-  // Friday Holiday (e.g. Christmas on Friday 25 Dec)
-  if (dayOfWeek === 5) {
-    const thu = formatDateHelper(-1);
-    const mon = formatDateHelper(3);
+  const hasPersonalizedAttendance = subjects.length > 0 && timetable.length > 0;
+  const suggestedLeaves: SmartLeaveOption[] = [];
+
+  // 1. Multi-Day Holiday ending on Tuesday (e.g. Saraswathi Pooja & Vijayadashami: Mon 19 - Tue 20 Oct)
+  if (startDay === 1 && endDay === 2) {
+    // Day after: Wednesday
+    const wed = formatDateHelper(endObj, 1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Wednesday', wed.dateStr, 'OPTION 1 • AFTER HOLIDAY', 5, subjects, timetable)
+    );
+
+    // Day before: Friday (preceding the weekend)
+    const fri = formatDateHelper(startObj, -3);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Friday', fri.dateStr, 'OPTION 2 • BEFORE HOLIDAY', 5, subjects, timetable)
+    );
+
     return {
-      tripTitle: '🌟 Long Weekend Vacation Optimizer',
-      suggestedLeaves: [
-        {
-          day: 'Thursday',
-          date: thu.dateStr,
-          reason: `Take Thursday (${thu.dateStr}) off → Enjoy a 4-day extended getaway from Thursday to Sunday!`,
-        },
-        {
-          day: 'Monday',
-          date: mon.dateStr,
-          reason: `Take Monday (${mon.dateStr}) off → Enjoy a 4-day extended break from Friday to Monday!`,
-        },
-      ],
-      totalDaysOff: 4,
-      explanation: `Since ${item.title} is on a Friday, take Thursday or Monday off to transform your standard 3-day weekend into an uninterrupted 4-day trip! (Or take both for a 5-day mega break).`,
+      tripTitle: '🔥 5-Day Mega Vacation Optimizer',
+      suggestedLeaves,
+      totalDaysOff: 5,
+      explanation: `Since ${item.title} covers Monday & Tuesday (4-day weekend with Sat–Tue), bridging Wednesday or the preceding Friday unlocks a massive 5-day holiday trip!`,
+      hasPersonalizedAttendance,
     };
   }
 
-  // Monday Holiday
-  if (dayOfWeek === 1) {
-    const fri = formatDateHelper(-3);
-    const tue = formatDateHelper(1);
+  // 2. Friday Holiday (e.g. Christmas on Friday 25 Dec, Gandhi Jayanti)
+  if (startDay === 5) {
+    // Day before: Thursday
+    const thu = formatDateHelper(startObj, -1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Thursday', thu.dateStr, 'OPTION 1 • BEFORE HOLIDAY', 4, subjects, timetable)
+    );
+
+    // Day after: Monday
+    const mon = formatDateHelper(endObj, 3);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Monday', mon.dateStr, 'OPTION 2 • AFTER HOLIDAY', 4, subjects, timetable)
+    );
+
     return {
       tripTitle: '🌟 Long Weekend Vacation Optimizer',
-      suggestedLeaves: [
-        {
-          day: 'Friday',
-          date: fri.dateStr,
-          reason: `Take Friday (${fri.dateStr}) off → Enjoy a 4-day extended getaway from Friday to Monday!`,
-        },
-        {
-          day: 'Tuesday',
-          date: tue.dateStr,
-          reason: `Take Tuesday (${tue.dateStr}) off → Enjoy a 4-day extended getaway from Saturday to Tuesday!`,
-        },
-      ],
+      suggestedLeaves,
+      totalDaysOff: 4,
+      explanation: `Since ${item.title} is on a Friday, take Thursday or Monday off to transform your standard 3-day weekend into an uninterrupted 4-day trip!`,
+      hasPersonalizedAttendance,
+    };
+  }
+
+  // 3. Monday Holiday
+  if (startDay === 1) {
+    // Day before: Friday
+    const fri = formatDateHelper(startObj, -3);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Friday', fri.dateStr, 'OPTION 1 • BEFORE HOLIDAY', 4, subjects, timetable)
+    );
+
+    // Day after: Tuesday
+    const tue = formatDateHelper(endObj, 1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Tuesday', tue.dateStr, 'OPTION 2 • AFTER HOLIDAY', 4, subjects, timetable)
+    );
+
+    return {
+      tripTitle: '🌟 Long Weekend Vacation Optimizer',
+      suggestedLeaves,
       totalDaysOff: 4,
       explanation: `Since ${item.title} is on a Monday, take Friday or Tuesday off to unlock an easy 4-day vacation!`,
+      hasPersonalizedAttendance,
     };
   }
 
-  // Thursday Holiday
-  if (dayOfWeek === 4) {
-    const fri = formatDateHelper(1);
+  // 4. Thursday Holiday
+  if (startDay === 4) {
+    // Day after: Friday
+    const fri = formatDateHelper(endObj, 1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Friday', fri.dateStr, 'OPTION 1 • AFTER HOLIDAY', 4, subjects, timetable)
+    );
+
+    // Day before: Wednesday
+    const wed = formatDateHelper(startObj, -1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Wednesday', wed.dateStr, 'OPTION 2 • BEFORE HOLIDAY', 3, subjects, timetable)
+    );
+
     return {
       tripTitle: '🚀 4-Day Golden Weekend Opportunity',
-      suggestedLeaves: [
-        {
-          day: 'Friday',
-          date: fri.dateStr,
-          reason: `Take Friday (${fri.dateStr}) off → Connect Thursday holiday with the weekend for 4 full days off!`,
-        },
-      ],
+      suggestedLeaves,
       totalDaysOff: 4,
       explanation: `A single smart bunk/leave on Friday (${fri.dateStr}) connects Thursday's holiday to Saturday & Sunday for a 4-day getaway!`,
+      hasPersonalizedAttendance,
     };
   }
 
-  // Tuesday Holiday
-  if (dayOfWeek === 2) {
-    const mon = formatDateHelper(-1);
+  // 5. Tuesday Holiday (single day)
+  if (startDay === 2 && endDay === 2) {
+    // Day before: Monday
+    const mon = formatDateHelper(startObj, -1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Monday', mon.dateStr, 'OPTION 1 • BEFORE HOLIDAY', 4, subjects, timetable)
+    );
+
+    // Day after: Wednesday
+    const wed = formatDateHelper(endObj, 1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Wednesday', wed.dateStr, 'OPTION 2 • AFTER HOLIDAY', 3, subjects, timetable)
+    );
+
     return {
       tripTitle: '🚀 4-Day Golden Weekend Opportunity',
-      suggestedLeaves: [
-        {
-          day: 'Monday',
-          date: mon.dateStr,
-          reason: `Take Monday (${mon.dateStr}) off → Bridge weekend (Sat–Sun) into Tuesday holiday for 4 full days off!`,
-        },
-      ],
+      suggestedLeaves,
       totalDaysOff: 4,
-      explanation: `A single smart bunk/leave on Monday (${mon.dateStr}) gives you an uninterrupted 4-day weekend trip!`,
+      explanation: `Taking Monday (${mon.dateStr}) off bridges the weekend into Tuesday holiday for 4 full days off!`,
+      hasPersonalizedAttendance,
     };
   }
 
-  // Wednesday Holiday
-  if (dayOfWeek === 3) {
-    const mon = formatDateHelper(-2);
-    const tue = formatDateHelper(-1);
-    const thu = formatDateHelper(1);
-    const fri = formatDateHelper(2);
+  // 6. Wednesday Holiday
+  if (startDay === 3) {
+    const thu = formatDateHelper(endObj, 1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Thursday', thu.dateStr, 'OPTION 1 • THURSDAY BRIDGE', 4, subjects, timetable)
+    );
+
+    const tue = formatDateHelper(startObj, -1);
+    suggestedLeaves.push(
+      evaluateBridgeDay('Tuesday', tue.dateStr, 'OPTION 2 • TUESDAY BRIDGE', 4, subjects, timetable)
+    );
+
     return {
       tripTitle: '🌴 Mid-Week Break Optimizer',
-      suggestedLeaves: [
-        {
-          day: 'Thu & Fri',
-          date: `${thu.dateStr} & ${fri.dateStr}`,
-          reason: `Take Thursday & Friday off → Turn Wednesday into a massive 5-day vacation through Sunday!`,
-        },
-        {
-          day: 'Mon & Tue',
-          date: `${mon.dateStr} & ${tue.dateStr}`,
-          reason: `Take Monday & Tuesday off → Enjoy a 5-day vacation from the previous Saturday through Wednesday!`,
-        },
-      ],
-      totalDaysOff: 5,
-      explanation: `Wednesday holiday splits the week nicely. Taking 2 consecutive days off around it gives you a full 5-day holiday trip!`,
+      suggestedLeaves,
+      totalDaysOff: 4,
+      explanation: `Wednesday holiday splits the week nicely. Taking Thursday or Tuesday off gives you a long weekend opportunity!`,
+      hasPersonalizedAttendance,
     };
   }
 
-  // Weekend Holiday (Sat / Sun)
+  // 7. Weekend Holiday (Saturday or Sunday)
+  const fri = formatDateHelper(startObj, startDay === 6 ? -1 : -2);
+  const mon = formatDateHelper(endObj, endDay === 0 ? 1 : 2);
+  suggestedLeaves.push(
+    evaluateBridgeDay('Friday', fri.dateStr, 'OPTION 1 • FRIDAY OFF', 3, subjects, timetable)
+  );
+  suggestedLeaves.push(
+    evaluateBridgeDay('Monday', mon.dateStr, 'OPTION 2 • MONDAY OFF', 3, subjects, timetable)
+  );
+
   return {
-    tripTitle: '🏖️ Weekend Holiday',
-    suggestedLeaves: [
-      {
-        day: 'Friday or Monday',
-        date: formatDateHelper(dayOfWeek === 6 ? -1 : 1).dateStr,
-        reason: 'Take Friday or Monday off to create a classic 3-day weekend.',
-      },
-    ],
+    tripTitle: '🏖️ Weekend Holiday Optimizer',
+    suggestedLeaves,
     totalDaysOff: 3,
-    explanation: `${item.title} falls on a weekend (${item.day}). Take an adjacent day to recharge!`,
+    explanation: `${item.title} falls on a weekend (${item.day}). Take Friday or Monday off to create a classic 3-day long weekend!`,
+    hasPersonalizedAttendance,
   };
 }
 
