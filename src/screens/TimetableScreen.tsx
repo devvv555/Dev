@@ -75,7 +75,7 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       }
     >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Weekly Timetable</Text>
+        <Text style={styles.headerTitle}>Weekly Period Index</Text>
         <Text style={styles.headerSubtitle}>
           Showing {selectedDay}'s schedule{selectedDay === todayDay ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
         </Text>
@@ -108,8 +108,8 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       <View style={styles.slotsContainer}>
         {daySlots.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>📅</Text>
-            <Text style={styles.emptyTitle}>No classes scheduled for {selectedDay}</Text>
+            <Text style={styles.emptyIcon}>🗂️</Text>
+            <Text style={styles.emptyTitle}>No periods scheduled for {selectedDay}</Text>
             <Text style={styles.emptySub}>Enjoy your day off!</Text>
           </View>
         ) : (

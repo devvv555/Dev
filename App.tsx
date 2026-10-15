@@ -627,9 +627,12 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'TIMETABLE' && styles.tabItemActive]}
           onPress={() => handleTabChange('TIMETABLE')}
         >
-          <Text style={styles.tabIcon}>📋</Text>
-          <Text style={[styles.tabLabel, activeTab === 'TIMETABLE' && styles.tabLabelActive]}>
-            Timetable
+          <Text style={styles.tabIcon}>🗂️</Text>
+          <Text
+            style={[styles.tabLabel, activeTab === 'TIMETABLE' && styles.tabLabelActive]}
+            numberOfLines={1}
+          >
+            Period Index
           </Text>
         </TouchableOpacity>
 
