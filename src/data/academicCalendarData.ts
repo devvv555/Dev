@@ -1,5 +1,6 @@
 import { Subject, TimetableSlot } from '../types';
-import { calculateAttendanceMetrics } from '../services/attendanceEngine';
+import { calculateAttendanceMetrics, getSlotHours } from '../services/attendanceEngine';
+
 
 export type CalendarEventType = 'HOLIDAY' | 'EXAM' | 'EVENT' | 'ACADEMIC';
 
@@ -523,6 +524,7 @@ export interface SubjectLeaveStatus {
   session: 'FN' | 'AN';
   sessionLabel: string;
   timeSlot: string;
+  slotHours: number;
   room?: string;
   attended: number;
   total: number;
@@ -587,7 +589,7 @@ function evaluateBridgeDay(
     };
   }
 
-  // Parse each slot into SubjectLeaveStatus
+  // Parse each slot into SubjectLeaveStatus with exact academic hours
   const parsedSlots: SubjectLeaveStatus[] = daySlots.map((slot) => {
     const sub = subjects.find((s) => s.id === slot.subjectId) || {
       id: slot.subjectId,
@@ -615,6 +617,7 @@ function evaluateBridgeDay(
     const isFN = (h || 0) < 13;
     const session = isFN ? 'FN' : 'AN';
     const sessionLabel = isFN ? '🌅 Forenoon' : '🌇 Afternoon';
+    const slotHours = getSlotHours(slot);
 
     return {
       subjectId: sub.id,
@@ -622,24 +625,42 @@ function evaluateBridgeDay(
       code: sub.code || sub.id,
       session,
       sessionLabel,
-      timeSlot: `${slot.startTime} – ${slot.endTime}`,
+      timeSlot: `${slot.startTime} – ${slot.endTime} (${slotHours} hrs)`,
+      slotHours,
       room: slot.room,
       attended: sub.attended,
       total: sub.total,
       percentage: metrics.percentage,
       safeBunks: metrics.safeBunksAt75,
-      isSafe: metrics.safeBunksAt75 >= 1,
+      isSafe: metrics.safeBunksAt75 >= slotHours,
     };
   });
 
-  const fnSubjects = parsedSlots.filter((s) => s.session === 'FN');
-  const anSubjects = parsedSlots.filter((s) => s.session === 'AN');
+  const fnSlots = parsedSlots.filter((s) => s.session === 'FN');
+  const anSlots = parsedSlots.filter((s) => s.session === 'AN');
 
-  // Forenoon is safe if all FN subjects have safeBunks >= 1
-  const fnSafe = fnSubjects.length === 0 || fnSubjects.every((s) => s.safeBunks >= 1);
-  // Afternoon is safe if all AN subjects have safeBunks >= 1
-  const anSafe = anSubjects.length === 0 || anSubjects.every((s) => s.safeBunks >= 1);
-  const fullDaySafe = fnSafe && anSafe;
+  // Sum required hours per subject in FN, AN, and whole day
+  const fnHoursBySubject: Record<string, number> = {};
+  fnSlots.forEach((s) => {
+    fnHoursBySubject[s.subjectId] = (fnHoursBySubject[s.subjectId] || 0) + s.slotHours;
+  });
+
+  const anHoursBySubject: Record<string, number> = {};
+  anSlots.forEach((s) => {
+    anHoursBySubject[s.subjectId] = (anHoursBySubject[s.subjectId] || 0) + s.slotHours;
+  });
+
+  const dayHoursBySubject: Record<string, number> = {};
+  parsedSlots.forEach((s) => {
+    dayHoursBySubject[s.subjectId] = (dayHoursBySubject[s.subjectId] || 0) + s.slotHours;
+  });
+
+  // Forenoon is safe if every FN subject has safeBunks >= total FN hours of that subject
+  const fnSafe = fnSlots.length === 0 || fnSlots.every((s) => s.safeBunks >= (fnHoursBySubject[s.subjectId] || 1));
+  // Afternoon is safe if every AN subject has safeBunks >= total AN hours of that subject
+  const anSafe = anSlots.length === 0 || anSlots.every((s) => s.safeBunks >= (anHoursBySubject[s.subjectId] || 1));
+  // Full day safe if all subjects have safeBunks >= total day hours of that subject
+  const fullDaySafe = parsedSlots.every((s) => s.safeBunks >= (dayHoursBySubject[s.subjectId] || 1));
 
   let leaveType: SmartLeaveType;
   let statusBadge = '';
@@ -649,10 +670,10 @@ function evaluateBridgeDay(
   let reason = '';
 
   const formatList = (items: SubjectLeaveStatus[]) =>
-    items.map((i) => `${i.code}: +${i.safeBunks} safe`).join(', ');
+    items.map((i) => `${i.code}: +${i.safeBunks} safe hrs`).join(', ');
 
   const formatUnsafe = (items: SubjectLeaveStatus[]) =>
-    items.filter((i) => i.safeBunks < 1).map((i) => `${i.code} (${i.percentage}%)`).join(', ');
+    items.filter((i) => !i.isSafe).map((i) => `${i.code} (${i.percentage}%, buffer: +${i.safeBunks}h vs ${i.slotHours}h)`).join(', ');
 
   if (fullDaySafe) {
     leaveType = 'FULL_DAY';
@@ -660,29 +681,30 @@ function evaluateBridgeDay(
     statusBadgeColor = '#10B981';
     statusBadgeBg = 'rgba(16, 185, 129, 0.15)';
     headline = `Take Full Day ${dayName} Off → ${vacationDays}-Day Mega Vacation!`;
-    reason = `You have surplus attendance in all ${dayName} subjects (${formatList(parsedSlots)}). You can safely take the entire day off to enjoy a ${vacationDays}-day vacation without dropping below 75%!`;
+    reason = `You have surplus attendance hours in all ${dayName} subjects (${formatList(parsedSlots)}). You can safely miss all scheduled hours to enjoy a ${vacationDays}-day vacation without dropping below 75%!`;
   } else if (fnSafe && !anSafe) {
     leaveType = 'FORENOON_HALF_DAY';
     statusBadge = '🌗 FORENOON HALF-DAY LEAVE RECOMMENDED';
     statusBadgeColor = '#38BDF8';
     statusBadgeBg = 'rgba(56, 189, 248, 0.15)';
     headline = `Take Forenoon Half-Day Leave on ${dayName}`;
-    reason = `You have surplus buffer in your morning classes (${formatList(fnSubjects)}), but afternoon class ${formatUnsafe(anSubjects)} has 0 safe bunks. We recommend taking the forenoon off and attending afternoon classes to keep your attendance safe!`;
+    reason = `You have surplus buffer in your morning classes (${formatList(fnSlots)}), but afternoon class ${formatUnsafe(anSlots)} does not have enough safe hours. We recommend taking the forenoon off and attending afternoon classes to keep your attendance safe!`;
   } else if (!fnSafe && anSafe) {
     leaveType = 'AFTERNOON_HALF_DAY';
     statusBadge = '🌓 AFTERNOON HALF-DAY LEAVE RECOMMENDED';
     statusBadgeColor = '#A855F7';
     statusBadgeBg = 'rgba(168, 85, 247, 0.15)';
     headline = `Take Afternoon Half-Day Leave on ${dayName}`;
-    reason = `Your morning subjects (${formatUnsafe(fnSubjects)}) are tight, but you have surplus attendance in afternoon classes (${formatList(anSubjects)}). Attend the morning classes and take the afternoon off!`;
+    reason = `Your morning subjects (${formatUnsafe(fnSlots)}) are tight, but you have surplus attendance in afternoon classes (${formatList(anSlots)}). Attend the morning classes and take the afternoon off!`;
   } else {
     leaveType = 'NOT_RECOMMENDED';
     statusBadge = '⚠️ LEAVE NOT RECOMMENDED (ATTEND CLASSES)';
     statusBadgeColor = '#EF4444';
     statusBadgeBg = 'rgba(239, 68, 68, 0.15)';
     headline = `Attend All Classes on ${dayName}`;
-    reason = `Attendance buffer is tight in (${formatUnsafe(parsedSlots)}). Taking leave on ${dayName} risks pushing your attendance below the mandatory 75% limit. Attending all classes is strongly advised.`;
+    reason = `Attendance buffer is insufficient in (${formatUnsafe(parsedSlots)}). Missing these hours on ${dayName} risks pushing your attendance below the mandatory 75% limit. Attending all classes is strongly advised.`;
   }
+
 
   return {
     day: dayName,

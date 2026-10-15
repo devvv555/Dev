@@ -12,8 +12,9 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder } from '../types';
-import { calculateOverallMetrics } from '../services/attendanceEngine';
+import { calculateOverallMetrics, getSlotHours } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
+
 import { SubjectCard } from '../components/SubjectCard';
 import { PsgimService } from '../services/psgimService';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
@@ -491,7 +492,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View>
             <Text style={styles.summaryTitle}>Overall Attendance</Text>
             <Text style={styles.summarySubtitle}>
-              {overall.totalAttended} of {overall.totalHeld} total classes attended
+              {overall.totalAttended} of {overall.totalHeld} total hours attended
             </Text>
           </View>
           <View style={styles.badgeContainer}>
@@ -527,7 +528,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {currentSubject ? `${currentSubject.name}` : 'No Class in Session'}
         </Text>
         <Text style={styles.simulatorSubDetail}>
-          {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} • ${currentSlot.room || 'Lecture Hall'}` : ''}
+          {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
         </Text>
         <Text style={styles.simulatorSub}>
           {slotStatus.message}
@@ -603,8 +604,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </Text>
               <View style={styles.lockedBannerTextContainer}>
                 <Text style={styles.lockedBannerTitle}>
-                  {currentRecord.status === 'attended' && 'Recorded: Attended (Present)'}
-                  {currentRecord.status === 'bunked' && 'Recorded: Bunked (Absent)'}
+                  {currentRecord.status === 'attended' && `Recorded: Attended (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
+                  {currentRecord.status === 'bunked' && `Recorded: Bunked (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
                   {currentRecord.status === 'cancelled' && 'Recorded: Free / Cancelled'}
                 </Text>
                 <Text style={styles.lockedBannerSub}>
@@ -628,7 +629,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onPress={() => handleAutoRecord('attended')}
           >
             <Text style={styles.promptAttendText}>
-              {currentRecord?.status === 'attended' ? '✅ Attended (Marked)' : '✅ I Attended'}
+              {currentRecord?.status === 'attended'
+                ? `✅ Attended (${getSlotHours(currentSlot)} hrs)`
+                : `✅ I Attended (${getSlotHours(currentSlot)} hrs)`}
             </Text>
           </TouchableOpacity>
 
@@ -643,7 +646,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onPress={() => handleAutoRecord('bunked')}
           >
             <Text style={styles.promptBunkText}>
-              {currentRecord?.status === 'bunked' ? '❌ Bunked (Marked)' : '❌ I Bunked'}
+              {currentRecord?.status === 'bunked'
+                ? `❌ Bunked (${getSlotHours(currentSlot)} hrs)`
+                : `❌ I Bunked (${getSlotHours(currentSlot)} hrs)`}
             </Text>
           </TouchableOpacity>
 
@@ -796,7 +801,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={() => handleRecordFromNotification('attended')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.notifAttendText}>✅ Attended</Text>
+                <Text style={styles.notifAttendText}>
+                  ✅ Attended ({getSlotHours(endedSlotNotification?.slot)} hrs)
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -804,7 +811,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={() => handleRecordFromNotification('bunked')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.notifBunkText}>❌ Bunked</Text>
+                <Text style={styles.notifBunkText}>
+                  ❌ Bunked ({getSlotHours(endedSlotNotification?.slot)} hrs)
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity

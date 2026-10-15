@@ -81,10 +81,10 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Attendance Stats Row */}
       <View style={styles.statsRow}>
         <Text style={styles.classCountsText}>
-          <Text style={styles.attendedCount}>{subject.attended}</Text> / {subject.total} classes attended
+          <Text style={styles.attendedCount}>{subject.attended}</Text> / {subject.total} hrs attended
         </Text>
         <Text style={styles.officialSyncText}>
-          College ERP: {subject.officialAttended}/{subject.officialTotal}
+          College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
         </Text>
       </View>
 

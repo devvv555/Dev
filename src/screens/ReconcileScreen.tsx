@@ -156,7 +156,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     if (isNaN(aAtt) || isNaN(aTot) || aAtt < 0 || aTot < aAtt) {
       Alert.alert(
         'Invalid App Attendance',
-        'App attended classes must be non-negative and cannot exceed total classes held.'
+        'App attended hours must be non-negative and cannot exceed total hours held.'
       );
       return;
     }
@@ -164,7 +164,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     if (isNaN(oAtt) || isNaN(oTot) || oAtt < 0 || oTot < oAtt) {
       Alert.alert(
         'Invalid ERP Baseline',
-        'Official attended classes must be non-negative and cannot exceed total classes held.'
+        'Official attended hours must be non-negative and cannot exceed total hours held.'
       );
       return;
     }
@@ -353,7 +353,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         </View>
 
         <Text style={styles.studzoneDescription}>
-          Automatically pull your official subject-wise attended and total classes directly from your college portal.
+          Automatically pull your official subject-wise attended and total hours directly from your college portal.
         </Text>
 
         {/* Last Updated Live Banner */}
@@ -462,10 +462,10 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                       classDiff > 0 ? styles.deltaPositive : styles.deltaEven,
                     ]}
                   >
-                    {classDiff > 0 ? `+${classDiff} held` : 'In sync'}
+                    {classDiff > 0 ? `+${classDiff} hrs held` : 'In sync'}
                   </Text>
                   <Text style={styles.deltaSub}>
-                    {attendedDiff > 0 ? `+${attendedDiff} present` : 'Matches'}
+                    {attendedDiff > 0 ? `+${attendedDiff} hrs present` : 'Matches'}
                   </Text>
                 </View>
               </View>
@@ -473,7 +473,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               {classDiff > 0 && (
                 <View style={styles.deltaNotice}>
                   <Text style={styles.deltaNoticeText}>
-                    ⚡ {classDiff} class sessions logged in App since portal last updated on{' '}
+                    ⚡ {classDiff} hrs logged in App since portal last updated on{' '}
                     {sub.lastOfficialUpdate || 'last week'}.
                   </Text>
                 </View>
@@ -498,7 +498,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 <Text style={styles.sectionHeader}>📱 Hourly App Attendance</Text>
                 <View style={styles.inputRow}>
                   <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Classes Attended</Text>
+                    <Text style={styles.inputLabel}>Hours Attended</Text>
                     <TextInput
                       style={styles.textInput}
                       keyboardType="numeric"
@@ -509,7 +509,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     />
                   </View>
                   <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Total Held</Text>
+                    <Text style={styles.inputLabel}>Total Hours Held</Text>
                     <TextInput
                       style={styles.textInput}
                       keyboardType="numeric"
@@ -536,7 +536,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 </View>
                 <View style={styles.inputRow}>
                   <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Official Attended</Text>
+                    <Text style={styles.inputLabel}>Official Hours Attended</Text>
                     <TextInput
                       style={styles.textInput}
                       keyboardType="numeric"
@@ -547,7 +547,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     />
                   </View>
                   <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Official Total</Text>
+                    <Text style={styles.inputLabel}>Official Hours Held</Text>
                     <TextInput
                       style={styles.textInput}
                       keyboardType="numeric"
@@ -740,7 +740,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                             <Text style={styles.previewName}>{rec.courseName}</Text>
                           ) : null}
                           <Text style={styles.previewStats}>
-                            Attended: {rec.attendedClasses} / {rec.totalClasses} classes
+                            Attended: {rec.attendedClasses} / {rec.totalClasses} hrs
                           </Text>
                         </View>
                         <View style={styles.previewPctBadge}>

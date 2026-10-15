@@ -24,6 +24,8 @@ import { AnalyticsService } from './src/services/analyticsService';
 import { PsgimService } from './src/services/psgimService';
 import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
 import { CloudSyncService } from './src/services/cloudSyncService';
+import { getSlotHours } from './src/services/attendanceEngine';
+
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC';
 
@@ -172,36 +174,38 @@ export default function App() {
       };
     }
 
-    // Compute delta to correctly adjust attendance totals without duplicate increments
+    // Compute delta based on actual academic hours of the slot (e.g. 2 hrs or 1 hr)
+    const slotHours = getSlotHours(slot);
     let deltaAttended = 0;
     let deltaTotal = 0;
 
     if (!existing) {
       // First time recording this period
       if (newStatus === 'attended') {
-        deltaAttended = 1;
-        deltaTotal = 1;
+        deltaAttended = slotHours;
+        deltaTotal = slotHours;
       } else if (newStatus === 'bunked') {
         deltaAttended = 0;
-        deltaTotal = 1;
+        deltaTotal = slotHours;
       } else if (newStatus === 'cancelled') {
         deltaAttended = 0;
         deltaTotal = 0;
       }
     } else {
       // Correcting/switching previously recorded status
+      const existingHours = existing.hours ?? slotHours;
       if (existing.status === 'attended') {
-        deltaAttended -= 1;
-        deltaTotal -= 1;
+        deltaAttended -= existingHours;
+        deltaTotal -= existingHours;
       } else if (existing.status === 'bunked') {
-        deltaTotal -= 1;
+        deltaTotal -= existingHours;
       }
 
       if (newStatus === 'attended') {
-        deltaAttended += 1;
-        deltaTotal += 1;
+        deltaAttended += slotHours;
+        deltaTotal += slotHours;
       } else if (newStatus === 'bunked') {
-        deltaTotal += 1;
+        deltaTotal += slotHours;
       }
     }
 
@@ -224,6 +228,7 @@ export default function App() {
       slotId: slot.id,
       subjectId: slot.subjectId,
       status: newStatus,
+      hours: slotHours,
       recordedAt: Date.now(),
     };
 
@@ -245,11 +250,12 @@ export default function App() {
     }
 
     const isChange = Boolean(existing);
+    const hoursLabel = `${slotHours} ${slotHours === 1 ? 'hr' : 'hrs'}`;
     return {
       success: true,
       message: isChange
-        ? `Status updated from ${existing?.status.toUpperCase()} to ${newStatus.toUpperCase()}. Totals adjusted accurately.`
-        : `Marked as ${newStatus.toUpperCase()} for ${subject.name}. (Period locked)`,
+        ? `Status updated: Marked ${hoursLabel} as ${newStatus.toUpperCase()} for ${subject.name}.`
+        : `Marked ${hoursLabel} as ${newStatus.toUpperCase()} for ${subject.name}. (Period locked)`,
       isChange,
     };
   };

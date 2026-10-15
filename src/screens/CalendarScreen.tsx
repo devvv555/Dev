@@ -407,7 +407,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                         {leave.subjectBreakdown && leave.subjectBreakdown.length > 0 && (
                           <View style={styles.subjectBreakdownBox}>
                             <Text style={styles.breakdownTitle}>
-                              📚 Scheduled on {leave.day} ({leave.subjectBreakdown.length} classes):
+                              📚 Scheduled on {leave.day} ({leave.subjectBreakdown.reduce((sum, it) => sum + (it.slotHours || 1), 0)} hrs):
                             </Text>
                             {leave.subjectBreakdown.map((item, sIdx) => (
                               <View key={sIdx} style={styles.subjectRowItem}>
@@ -451,11 +451,11 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                                         item.isSafe ? styles.bufferTextSafe : styles.bufferTextTight,
                                       ]}
                                     >
-                                      {item.isSafe ? `+${item.safeBunks} safe` : `0 safe`}
+                                      {item.isSafe ? `+${item.safeBunks} hrs safe` : `Tight (+${item.safeBunks}h)`}
                                     </Text>
                                   </View>
                                   <Text style={styles.subjectPctText}>
-                                    {item.attended}/{item.total} ({item.percentage}%)
+                                    {item.attended}/{item.total} hrs ({item.percentage}%)
                                   </Text>
                                 </View>
                               </View>

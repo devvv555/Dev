@@ -50,8 +50,10 @@ export interface PeriodAttendanceRecord {
   slotId: string;
   subjectId: string;
   status: AttendanceStatus;
+  hours?: number; // Academic hours for this slot (e.g. 1 or 2)
   recordedAt: number;
 }
+
 
 export type MedicalClaimStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED';
 
