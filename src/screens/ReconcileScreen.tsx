@@ -13,17 +13,20 @@ import {
   Switch,
   Vibration,
 } from 'react-native';
-import { Subject } from '../types';
+import { Subject, TimetableSlot, SurplusAttendanceAlert } from '../types';
 import {
   StudzoneService,
   StudzoneAttendanceRecord,
 } from '../services/studzoneService';
 import { CloudSyncService } from '../services/cloudSyncService';
 import { NotificationService } from '../services/notificationService';
+import { StorageService } from '../services/storageService';
+import { findNextSlotForSubject } from '../services/attendanceEngine';
 import { getMasterStudent } from '../data/psgimMasterStudents';
 
 interface ReconcileScreenProps {
   subjects: Subject[];
+  timetable?: TimetableSlot[];
   activeRollNo?: string;
   onUpdateAttendance: (
     subjectId: string,
@@ -39,6 +42,7 @@ interface ReconcileScreenProps {
 
 export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   subjects,
+  timetable = [],
   activeRollNo = '',
   onUpdateAttendance,
   onUpdateSubjectOfficial,
@@ -175,6 +179,45 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       onUpdateSubjectOfficial(editingSubject.id, oAtt, oTot);
     }
 
+    // Check difference between portal (actual) and app (period) attended hours
+    if (oAtt < aAtt) {
+      // Positive difference: actual < period -> 1 notification alerting discrepancy
+      NotificationService.notifyAttendanceDiscrepancy(editingSubject.name, oAtt, aAtt);
+    } else if (oAtt > aAtt) {
+      // Negative difference: actual > period -> 2 notifications: 1st on update, 2nd before next class
+      NotificationService.notifyExtraAttendance(editingSubject.name, oAtt, aAtt);
+
+      if (timetable && timetable.length > 0) {
+        const nextClass = findNextSlotForSubject(editingSubject.id, timetable);
+        if (nextClass) {
+          NotificationService.scheduleUpcomingClassSurplusAlert(
+            editingSubject.name,
+            nextClass.slot,
+            nextClass.classDate,
+            oAtt,
+            aAtt
+          );
+          StorageService.upsertSurplusAlert(activeRollNo, {
+            id: `surplus_${editingSubject.id}_${Date.now()}`,
+            subjectId: editingSubject.id,
+            subjectName: editingSubject.name,
+            rollNo: activeRollNo,
+            officialAttended: oAtt,
+            periodAttended: aAtt,
+            difference: oAtt - aAtt,
+            notifiedOnUpdate: true,
+            notifiedBeforeClass: false,
+            nextSlotId: nextClass.slot.id,
+            nextSlotDay: nextClass.slot.day,
+            nextSlotStartTime: nextClass.slot.startTime,
+            nextSlotEndTime: nextClass.slot.endTime,
+            nextClassDateIso: nextClass.classDate.toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
     setEditingSubject(null);
     Alert.alert('Attendance Updated! 🔄', `Attendance recorded for ${editingSubject.name}.`);
   };
@@ -271,6 +314,55 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       });
       Alert.alert('Studzone Sync Complete! 🚀', `Updated official baseline from Studzone.`);
     }
+
+    // Check difference for each extracted record compared to current app period attendance
+    extractedRecords.forEach((rec) => {
+      const sub = subjects.find(
+        (s) => s.code.toUpperCase() === rec.courseCode.toUpperCase()
+      );
+      if (sub) {
+        const officialAtt = rec.attendedClasses;
+        const periodAtt = sub.attended;
+
+        if (officialAtt < periodAtt) {
+          // Positive difference: actual portal < period attended -> 1 notification
+          NotificationService.notifyAttendanceDiscrepancy(sub.name, officialAtt, periodAtt);
+        } else if (officialAtt > periodAtt) {
+          // Negative difference: actual portal > period attended -> 2 notifications: 1st on update, 2nd before next class
+          NotificationService.notifyExtraAttendance(sub.name, officialAtt, periodAtt);
+
+          if (timetable && timetable.length > 0) {
+            const nextClass = findNextSlotForSubject(sub.id, timetable);
+            if (nextClass) {
+              NotificationService.scheduleUpcomingClassSurplusAlert(
+                sub.name,
+                nextClass.slot,
+                nextClass.classDate,
+                officialAtt,
+                periodAtt
+              );
+              StorageService.upsertSurplusAlert(activeRollNo, {
+                id: `surplus_${sub.id}_${Date.now()}`,
+                subjectId: sub.id,
+                subjectName: sub.name,
+                rollNo: activeRollNo,
+                officialAttended: officialAtt,
+                periodAttended: periodAtt,
+                difference: officialAtt - periodAtt,
+                notifiedOnUpdate: true,
+                notifiedBeforeClass: false,
+                nextSlotId: nextClass.slot.id,
+                nextSlotDay: nextClass.slot.day,
+                nextSlotStartTime: nextClass.slot.startTime,
+                nextSlotEndTime: nextClass.slot.endTime,
+                nextClassDateIso: nextClass.classDate.toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+            }
+          }
+        }
+      }
+    });
 
     const nowIso = new Date().toISOString();
     const student = getMasterStudent(activeRollNo);

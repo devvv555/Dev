@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Subject, TimetableSlot, AttendanceLog, MedicalClaimRecord, PeriodAttendanceRecord, PeriodReminder } from '../types';
+import { Subject, TimetableSlot, AttendanceLog, MedicalClaimRecord, PeriodAttendanceRecord, PeriodReminder, SurplusAttendanceAlert } from '../types';
 
 const STORAGE_KEYS = {
   SUBJECTS: '@attendance_monitor_subjects',
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   AUTH_USER: '@attendance_monitor_auth_user',
   PERIOD_RECORDS: '@attendance_monitor_period_records_',
   PERIOD_REMINDERS: '@attendance_monitor_period_reminders_',
+  SURPLUS_ALERTS: '@attendance_monitor_surplus_alerts_',
 };
 
 // Initial realistic seed data
@@ -249,6 +250,62 @@ export const StorageService = {
       await AsyncStorage.setItem(key, JSON.stringify(reminders));
     } catch (e) {
       console.warn('Error saving period reminders:', e);
+    }
+  },
+
+  async getSurplusAlerts(rollNo: string): Promise<SurplusAttendanceAlert[]> {
+    try {
+      if (!rollNo) return [];
+      const key = `${STORAGE_KEYS.SURPLUS_ALERTS}${rollNo.toUpperCase()}`;
+      const data = await AsyncStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.warn('Error reading surplus alerts:', e);
+      return [];
+    }
+  },
+
+  async saveSurplusAlerts(
+    rollNo: string,
+    alerts: SurplusAttendanceAlert[]
+  ): Promise<void> {
+    try {
+      if (!rollNo) return;
+      const key = `${STORAGE_KEYS.SURPLUS_ALERTS}${rollNo.toUpperCase()}`;
+      await AsyncStorage.setItem(key, JSON.stringify(alerts));
+    } catch (e) {
+      console.warn('Error saving surplus alerts:', e);
+    }
+  },
+
+  async upsertSurplusAlert(
+    rollNo: string,
+    alert: SurplusAttendanceAlert
+  ): Promise<void> {
+    try {
+      if (!rollNo) return;
+      const current = await this.getSurplusAlerts(rollNo);
+      const filtered = current.filter((a) => a.subjectId !== alert.subjectId);
+      filtered.push(alert);
+      await this.saveSurplusAlerts(rollNo, filtered);
+    } catch (e) {
+      console.warn('Error upserting surplus alert:', e);
+    }
+  },
+
+  async markSurplusAlertNotifiedBeforeClass(
+    rollNo: string,
+    alertId: string
+  ): Promise<void> {
+    try {
+      if (!rollNo) return;
+      const current = await this.getSurplusAlerts(rollNo);
+      const updated = current.map((a) =>
+        a.id === alertId ? { ...a, notifiedBeforeClass: true } : a
+      );
+      await this.saveSurplusAlerts(rollNo, updated);
+    } catch (e) {
+      console.warn('Error marking surplus alert notified:', e);
     }
   },
 };

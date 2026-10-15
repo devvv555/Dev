@@ -164,5 +164,119 @@ export const NotificationService = {
       note,
     });
   },
+
+  /**
+   * Positive Difference (official < period): 1 notification alerting of discrepancy
+   * Teacher may have marked student absent or portal didn't record attendance.
+   */
+  async notifyAttendanceDiscrepancy(
+    subjectName: string,
+    officialAttended: number,
+    periodAttended: number
+  ): Promise<string | null> {
+    const diff = periodAttended - officialAttended;
+    const title = `⚠️ Attendance Discrepancy: ${subjectName}`;
+    const body = `Portal marked ${officialAttended} hrs vs your logged ${periodAttended} hrs (${diff} hrs lower). Teacher may have marked you absent!`;
+    return this.sendLocalNotification(title, body, {
+      type: 'ATTENDANCE_DISCREPANCY',
+      subjectName,
+      officialAttended,
+      periodAttended,
+      difference: diff,
+    });
+  },
+
+  /**
+   * Negative Difference (official > period): First notification fired on attendance update
+   * College portal has more attended hours (extra credit, OD, or medical granted).
+   */
+  async notifyExtraAttendance(
+    subjectName: string,
+    officialAttended: number,
+    periodAttended: number
+  ): Promise<string | null> {
+    const surplus = officialAttended - periodAttended;
+    const title = `🎉 Extra Attendance Credited: ${subjectName}`;
+    const body = `Portal shows ${officialAttended} hrs vs your logged ${periodAttended} hrs (+${surplus} hrs extra credited by college)!`;
+    return this.sendLocalNotification(title, body, {
+      type: 'EXTRA_ATTENDANCE_UPDATE',
+      subjectName,
+      officialAttended,
+      periodAttended,
+      surplus,
+    });
+  },
+
+  /**
+   * Negative Difference (official > period): Second notification fired when next class is coming
+   */
+  async notifyUpcomingClassWithSurplus(
+    subjectName: string,
+    slot: TimetableSlot,
+    officialAttended: number,
+    periodAttended: number
+  ): Promise<string | null> {
+    const surplus = officialAttended - periodAttended;
+    const title = `🔔 Upcoming Class: ${subjectName}`;
+    const roomInfo = slot.room ? ` in ${slot.room}` : '';
+    const body = `Class starts at ${slot.startTime} (${slot.day})${roomInfo}. Note: Portal has +${surplus} extra attended hrs. Make sure to log this period!`;
+    return this.sendLocalNotification(title, body, {
+      type: 'UPCOMING_CLASS_SURPLUS',
+      subjectName,
+      slotId: slot.id,
+      officialAttended,
+      periodAttended,
+      surplus,
+    });
+  },
+
+  /**
+   * Schedule upcoming class notification for negative difference (official > period) ahead of time
+   */
+  async scheduleUpcomingClassSurplusAlert(
+    subjectName: string,
+    slot: TimetableSlot,
+    classDate: Date,
+    officialAttended: number,
+    periodAttended: number
+  ): Promise<string | null> {
+    try {
+      const surplus = officialAttended - periodAttended;
+      const title = `🔔 Upcoming Class: ${subjectName}`;
+      const roomInfo = slot.room ? ` in ${slot.room}` : '';
+      const body = `Class starts at ${slot.startTime} (${slot.day})${roomInfo}. Note: Portal has +${surplus} extra attended hrs. Make sure to log this period!`;
+
+      // Trigger 15 minutes before classDate, or immediately if starting within 15 minutes
+      const triggerMs = classDate.getTime() - 15 * 60 * 1000;
+      const diffSeconds = Math.max(1, Math.round((triggerMs - Date.now()) / 1000));
+
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data: {
+            type: 'UPCOMING_CLASS_SURPLUS',
+            subjectName,
+            slotId: slot.id,
+            officialAttended,
+            periodAttended,
+            surplus,
+          },
+          sound: 'default',
+          vibrate: [0, 500, 200, 500],
+          priority: Notifications.AndroidNotificationPriority.MAX,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: diffSeconds,
+          repeats: false,
+        },
+      });
+      return id;
+    } catch (e) {
+      console.warn('Error scheduling upcoming class surplus alert:', e);
+      return null;
+    }
+  },
 };
 

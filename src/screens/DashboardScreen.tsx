@@ -11,7 +11,7 @@ import {
   Vibration,
   RefreshControl,
 } from 'react-native';
-import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder } from '../types';
+import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert } from '../types';
 import { calculateOverallMetrics, getSlotHours } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 
@@ -58,6 +58,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   // Period Reminder state
   const [reminders, setReminders] = useState<PeriodReminder[]>([]);
+  const [surplusAlerts, setSurplusAlerts] = useState<SurplusAttendanceAlert[]>([]);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderNote, setReminderNote] = useState('');
   const [reminderTiming, setReminderTiming] = useState<'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM'>('NEXT_CLASS');
@@ -65,6 +66,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   useEffect(() => {
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
+      StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
     }
   }, [studentRollNo]);
 
@@ -292,12 +294,41 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           weekdayHolidayAlert.daysRemaining
         );
       }
+
+      // Check for upcoming class with pending surplus second notification (actual > period)
+      surplusAlerts.forEach((alert) => {
+        if (!alert.notifiedBeforeClass) {
+          const upcomingSlot = timetable.find((slot) => {
+            if (slot.subjectId !== alert.subjectId) return false;
+            if (slot.day.toLowerCase() !== todayDay) return false;
+            const start = timeToMinutes(slot.startTime);
+            return mins >= start - 30 && mins < start + 30;
+          });
+
+          if (upcomingSlot) {
+            const key = `surplus_pre_${today}_${upcomingSlot.id}`;
+            if (!alertedSlotsRef.current.has(key)) {
+              alertedSlotsRef.current.add(key);
+              NotificationService.notifyUpcomingClassWithSurplus(
+                alert.subjectName,
+                upcomingSlot,
+                alert.officialAttended,
+                alert.periodAttended
+              );
+              StorageService.markSurplusAlertNotifiedBeforeClass(studentRollNo, alert.id);
+              setSurplusAlerts((prev) =>
+                prev.map((a) => (a.id === alert.id ? { ...a, notifiedBeforeClass: true } : a))
+              );
+            }
+          }
+        }
+      });
     };
 
     checkEndedClasses();
     const interval = setInterval(checkEndedClasses, 30000);
     return () => clearInterval(interval);
-  }, [timetable, periodRecords, subjects, weekdayHolidayAlert]);
+  }, [timetable, periodRecords, subjects, weekdayHolidayAlert, surplusAlerts, studentRollNo]);
 
   const handleRecordFromNotification = async (status: AttendanceStatus) => {
     if (!endedSlotNotification) return;
@@ -533,6 +564,35 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <Text style={styles.simulatorSub}>
           {slotStatus.message}
         </Text>
+
+        {/* Discrepancy & Surplus Status Indicators */}
+        {(() => {
+          const slotSurplus = surplusAlerts.find(
+            (a) => a.subjectId === currentSlot?.subjectId && a.difference > 0
+          );
+          const slotDeficit = subjects.find(
+            (s) => s.id === currentSlot?.subjectId && s.officialAttended < s.attended
+          );
+          if (slotSurplus) {
+            return (
+              <View style={styles.surplusNoticeBanner}>
+                <Text style={styles.surplusNoticeText}>
+                  🎉 Portal Extra Attendance: {slotSurplus.officialAttended} hrs vs {slotSurplus.periodAttended} hrs logged (+{slotSurplus.difference} hrs bonus/OD granted).
+                </Text>
+              </View>
+            );
+          }
+          if (slotDeficit) {
+            return (
+              <View style={styles.discrepancyNoticeBanner}>
+                <Text style={styles.discrepancyNoticeText}>
+                  ⚠️ Attendance Discrepancy: Portal marked {slotDeficit.officialAttended} hrs vs {slotDeficit.attended} hrs logged ({slotDeficit.attended - slotDeficit.officialAttended} hrs lower in portal).
+                </Text>
+              </View>
+            );
+          }
+          return null;
+        })()}
 
         {/* Period Selector Pills: Instant 1-tap period switching for Today */}
         {activeDaySlots.length > 1 && (
@@ -1792,6 +1852,36 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
+  },
+  surplusNoticeBanner: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  surplusNoticeText: {
+    color: '#34D399',
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 16,
+  },
+  discrepancyNoticeBanner: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  discrepancyNoticeText: {
+    color: '#F87171',
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 16,
   },
 });
 

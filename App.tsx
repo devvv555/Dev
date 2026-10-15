@@ -601,6 +601,7 @@ export default function App() {
         {activeTab === 'ERP_SYNC' && (
           <ReconcileScreen
             subjects={subjects}
+            timetable={timetable}
             activeRollNo={activeRollNo}
             onUpdateAttendance={handleUpdateAttendance}
             onBatchUpdateSubjects={handleBatchUpdateSubjects}

@@ -1,4 +1,4 @@
-import { AttendanceMetrics, AttendanceStatusCategory, Subject } from '../types';
+import { AttendanceMetrics, AttendanceStatusCategory, Subject, TimetableSlot } from '../types';
 
 /**
  * Calculates academic hours duration for a timetable slot based on startTime and endTime.
@@ -119,3 +119,64 @@ export function calculateOverallMetrics(subjects: Subject[]): AttendanceMetrics 
     totalHeld
   };
 }
+
+const DAY_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * Finds the very next scheduled slot for a given subject in the timetable starting from fromDate.
+ * Returns the matching TimetableSlot and the computed Date of that class.
+ */
+export function findNextSlotForSubject(
+  subjectId: string,
+  timetable: TimetableSlot[],
+  fromDate: Date = new Date()
+): { slot: TimetableSlot; classDate: Date } | null {
+  if (!timetable || timetable.length === 0) return null;
+
+  const currentMinutes = fromDate.getHours() * 60 + fromDate.getMinutes();
+
+  // Search over the next 7 days (day offset 0 to 6)
+  for (let offset = 0; offset < 7; offset++) {
+    const candidateDate = new Date(fromDate);
+    candidateDate.setDate(fromDate.getDate() + offset);
+    const dayName = DAY_ORDER[candidateDate.getDay()];
+
+    const slotsOnDay = timetable
+      .filter(
+        (s) =>
+          s.subjectId === subjectId &&
+          s.day.toLowerCase() === dayName.toLowerCase()
+      )
+      .sort((a, b) => {
+        const [ah, am] = a.startTime.split(':').map(Number);
+        const [bh, bm] = b.startTime.split(':').map(Number);
+        return (ah * 60 + am) - (bh * 60 + bm);
+      });
+
+    for (const slot of slotsOnDay) {
+      const [sh, sm] = slot.startTime.split(':').map(Number);
+      const slotStartMinutes = sh * 60 + sm;
+
+      // If checking today, the slot must be in the future
+      if (offset === 0 && slotStartMinutes <= currentMinutes) {
+        continue;
+      }
+
+      // Found the next slot!
+      const classDate = new Date(candidateDate);
+      classDate.setHours(sh, sm, 0, 0);
+      return { slot, classDate };
+    }
+  }
+
+  // Fallback to any slot for this subject
+  const anySlot = timetable.find((s) => s.subjectId === subjectId);
+  if (!anySlot) return null;
+
+  const fallbackDate = new Date(fromDate);
+  fallbackDate.setDate(fromDate.getDate() + 1);
+  const [fsh, fsm] = anySlot.startTime.split(':').map(Number);
+  fallbackDate.setHours(fsh || 9, fsm || 0, 0, 0);
+  return { slot: anySlot, classDate: fallbackDate };
+}
+

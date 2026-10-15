@@ -134,3 +134,22 @@ export interface PeriodReminder {
   completed: boolean;
 }
 
+export interface SurplusAttendanceAlert {
+  id: string;
+  subjectId: string;
+  subjectName: string;
+  rollNo: string;
+  officialAttended: number;
+  periodAttended: number;
+  difference: number; // officialAttended - periodAttended
+  notifiedOnUpdate: boolean;
+  notifiedBeforeClass: boolean;
+  nextSlotId?: string;
+  nextSlotDay?: string;
+  nextSlotStartTime?: string;
+  nextSlotEndTime?: string;
+  nextClassDateIso?: string;
+  updatedAt: string;
+}
+
+
