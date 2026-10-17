@@ -137,10 +137,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
           <View style={styles.logoBadge}>
             <Text style={styles.logoText}>🏛️</Text>
           </View>
-          <Text style={styles.collegeName}>Attendance Monitor</Text>
-          <Text style={styles.collegeSub}>PSG College of Technology</Text>
+          <Text style={styles.collegeName}>PSGIM One</Text>
+          <Text style={styles.collegeSub}>PSG Institute of Management</Text>
           <View style={styles.badgePill}>
-            <Text style={styles.badgePillText}>I MBA • Batch 2026–28</Text>
+            <Text style={styles.badgePillText}>Campus Super-App • I MBA (2026–28)</Text>
           </View>
         </View>
 

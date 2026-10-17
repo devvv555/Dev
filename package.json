@@ -7,6 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build:web": "npx expo export -p web",
+    "build:pwa": "node scripts/buildPwa.js",
     "test": "node tests/attendanceEngine.test.js",
     "eas-build-pre-install": "npm config set legacy-peer-deps true"
   },

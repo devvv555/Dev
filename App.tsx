@@ -511,7 +511,7 @@ export default function App() {
           <View style={styles.brandContainer}>
             <Text style={styles.appLogo}>🏛️</Text>
             <Text style={styles.appName} numberOfLines={1}>
-              Attendance Monitor
+              PSGIM One
             </Text>
           </View>
 
@@ -536,7 +536,7 @@ export default function App() {
 
         {/* Row 2: Cohort Sub-bar & Logged In Student Identity */}
         <View style={styles.headerSubRow}>
-          <Text style={styles.appTagline}>I MBA (2026–28) • Semester 1</Text>
+          <Text style={styles.appTagline}>PSGIM Campus Super-App • I MBA</Text>
           <View style={styles.studentBadge}>
             <Text style={styles.studentBadgeText} numberOfLines={1}>
               👤 {studentName || 'Student'}
@@ -664,12 +664,12 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'ERP_SYNC' && styles.tabItemActive]}
           onPress={() => handleTabChange('ERP_SYNC')}
         >
-          <Text style={styles.tabIcon}>🔄</Text>
+          <Text style={styles.tabIcon}>🌐</Text>
           <Text
             style={[styles.tabLabel, activeTab === 'ERP_SYNC' && styles.tabLabelActive]}
             numberOfLines={1}
           >
-            Sync
+            Portals
           </Text>
         </TouchableOpacity>
       </View>

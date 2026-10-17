@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Attendance Monitor",
+    "name": "PSGIM One",
     "slug": "aswin",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,6 +21,16 @@
         "SCHEDULE_EXACT_ALARM",
         "POST_NOTIFICATIONS"
       ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "themeColor": "#0F172A",
+      "backgroundColor": "#0F172A",
+      "name": "Attendance Monitor",
+      "shortName": "Attendance",
+      "display": "standalone",
+      "orientation": "portrait"
     },
     "plugins": [
       "expo-status-bar",

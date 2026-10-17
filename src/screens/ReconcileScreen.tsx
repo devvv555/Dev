@@ -529,9 +529,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Attendance Sync</Text>
+        <Text style={styles.headerTitle}>Campus Portals & Sync</Text>
         <Text style={styles.headerSubtitle}>
-          Review, calibrate, and sync your attendance directly from official college portals.
+          Unified access to official PSG systems: Studzone, Moodle LMS & PSGIM Connect.
         </Text>
       </View>
 
