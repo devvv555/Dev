@@ -152,4 +152,50 @@ export interface SurplusAttendanceAlert {
   updatedAt: string;
 }
 
+export type LmsSubmissionStatus = 'NOT_SUBMITTED' | 'SUBMITTED' | 'GRADED';
+
+export interface LmsAssignment {
+  id: string;
+  moodleId: number;
+  courseCode: string;
+  courseName: string;
+  subjectId?: string;
+  title: string;
+  description: string;
+  dueDate: string; // ISO string
+  dueTimestamp: number;
+  allowSubmissionsFromDate?: string;
+  cutoffDate?: string;
+  maxFiles: number;
+  maxFileSizeMb: number;
+  acceptedFileTypes: string[]; // e.g. ['.pdf', '.doc', '.docx']
+  status: LmsSubmissionStatus;
+  submissionDate?: string;
+  submittedFileName?: string;
+  submittedFileSize?: string;
+  submittedFileUrl?: string;
+  grade?: string;
+  feedback?: string;
+  moodleUrl: string; // Direct link to assignment
+}
+
+export interface LmsQuiz {
+  id: string;
+  moodleId: number;
+  courseCode: string;
+  courseName: string;
+  subjectId?: string;
+  title: string;
+  description: string;
+  timeOpen: string; // ISO string
+  timeClose: string; // ISO string
+  timeLimitMinutes: number;
+  attemptsAllowed: number;
+  attemptsUsed: number;
+  highestGrade?: string;
+  status: 'OPEN' | 'UPCOMING' | 'CLOSED';
+  moodleUrl: string; // Direct link to quiz attempt
+}
+
+
 

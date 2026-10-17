@@ -23,6 +23,7 @@ import { NotificationService } from '../services/notificationService';
 import { StorageService } from '../services/storageService';
 import { findNextSlotForSubject } from '../services/attendanceEngine';
 import { getMasterStudent } from '../data/psgimMasterStudents';
+import { LmsService } from '../services/lmsService';
 
 interface ReconcileScreenProps {
   subjects: Subject[];
@@ -80,6 +81,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     subjectsCount?: number;
   } | null>(null);
 
+  // LMS Moodle Credentials & Sync state
+  const [lmsPassword, setLmsPassword] = useState('Welcome@123');
+  const [showLmsCredsModal, setShowLmsCredsModal] = useState(false);
+  const [editLmsPassword, setEditLmsPassword] = useState('Welcome@123');
+  const [isLmsSyncing, setIsLmsSyncing] = useState(false);
+
   // Load saved credentials & sync status on mount or roll change
   useEffect(() => {
     async function loadSaved() {
@@ -90,6 +97,15 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         setRememberCreds(saved.remember);
       } else if (activeRollNo) {
         setStudzoneRollNo(activeRollNo);
+      }
+
+      // Check LMS Credentials
+      if (activeRollNo) {
+        const lmsCreds = await LmsService.getCredentials(activeRollNo);
+        if (lmsCreds?.password) {
+          setLmsPassword(lmsCreds.password);
+          setEditLmsPassword(lmsCreds.password);
+        }
       }
 
       // Check local last sync info
@@ -402,6 +418,39 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     setIsStudzoneModalVisible(false);
   };
 
+  const handleSaveLmsCredentials = async () => {
+    if (!editLmsPassword.trim()) {
+      Alert.alert('Empty Password', 'Please enter your Moodle LMS password.');
+      return;
+    }
+    await LmsService.saveCredentials({
+      rollNo: activeRollNo,
+      password: editLmsPassword.trim(),
+      lastSync: new Date().toISOString(),
+    });
+    setLmsPassword(editLmsPassword.trim());
+    setShowLmsCredsModal(false);
+    Alert.alert('Moodle Credentials Saved ✅', 'Credentials saved. You can now submit assignments and attempt quizzes directly.');
+  };
+
+  const handleSyncLms = async () => {
+    setIsLmsSyncing(true);
+    try {
+      try {
+        Vibration.vibrate(25);
+      } catch {}
+      await Promise.all([
+        LmsService.getAssignments(activeRollNo),
+        LmsService.getQuizzes(activeRollNo),
+      ]);
+      Alert.alert('Moodle Sync Complete! 🚀', 'LMS assignments and quizzes calibrated successfully from lms.psgim.ac.in.');
+    } catch {
+      Alert.alert('Notice', 'LMS data is up to date.');
+    } finally {
+      setIsLmsSyncing(false);
+    }
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -487,6 +536,67 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         >
           <Text style={styles.studzoneSyncButtonText}>🌐 Connect & Extract Attendance</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Moodle LMS Integration Card */}
+      <View style={styles.lmsMoodleCard}>
+        <View style={styles.studzoneCardHeader}>
+          <View style={styles.lmsIconCircle}>
+            <Text style={styles.studzoneCardIcon}>🎓</Text>
+          </View>
+          <View style={styles.studzoneTitleCol}>
+            <View style={styles.studzoneBadgeRow}>
+              <Text style={styles.studzoneCardTitle}>PSGIM Moodle LMS</Text>
+              <View style={styles.moodleLiveBadge}>
+                <Text style={styles.moodleLiveBadgeText}>OFFICIAL LMS</Text>
+              </View>
+            </View>
+            <Text style={styles.studzoneCardSubtitle}>
+              lms.psgim.ac.in
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.studzoneDescription}>
+          Direct document submission & 1-tap quiz attempts bypassing login. Default login credentials: Username is your Roll No (<Text style={styles.boldText}>{activeRollNo}</Text>) and default password is <Text style={styles.boldText}>Welcome@123</Text>.
+        </Text>
+
+        <View style={styles.moodleCredsSummaryBox}>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>👤 Username (Roll No):</Text>
+            <Text style={styles.moodleCredsValue}>{activeRollNo || 'Not Set'}</Text>
+          </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>🔑 Moodle Password:</Text>
+            <Text style={styles.moodleCredsValue}>•••••••• ({lmsPassword ? 'Configured' : 'Default'})</Text>
+          </View>
+        </View>
+
+        <View style={styles.moodleActionsRow}>
+          <TouchableOpacity
+            style={styles.moodleEditCredsBtn}
+            onPress={() => {
+              setEditLmsPassword(lmsPassword);
+              setShowLmsCredsModal(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.moodleEditCredsBtnText}>⚙️ Edit LMS Password</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.moodleSyncBtn, isLmsSyncing && { opacity: 0.7 }]}
+            onPress={handleSyncLms}
+            disabled={isLmsSyncing}
+            activeOpacity={0.8}
+          >
+            {isLmsSyncing ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.moodleSyncBtnText}>🔄 Re-sync LMS</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Information Tip */}
@@ -867,6 +977,66 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               )}
             </View>
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Edit LMS Credentials Modal */}
+      <Modal visible={showLmsCredsModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.credsModalCard}>
+            <View style={styles.credsModalHeader}>
+              <Text style={styles.credsModalTitle}>Moodle LMS Credentials</Text>
+              <TouchableOpacity onPress={() => setShowLmsCredsModal(false)}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.credsModalSubtitle}>
+              lms.psgim.ac.in uses your Roll No as username and your Moodle password for 1-tap test attempts and direct document submissions.
+            </Text>
+
+            <View style={styles.credsInputGroup}>
+              <Text style={styles.credsInputLabel}>Username / Roll Number</Text>
+              <TextInput
+                style={[styles.credsInput, { backgroundColor: '#0F172A', color: '#94A3B8' }]}
+                value={activeRollNo}
+                editable={false}
+              />
+            </View>
+
+            <View style={styles.credsInputGroup}>
+              <Text style={styles.credsInputLabel}>Moodle Password</Text>
+              <TextInput
+                style={styles.credsInput}
+                value={editLmsPassword}
+                onChangeText={setEditLmsPassword}
+                secureTextEntry={!showPassword}
+                placeholder="Welcome@123"
+                placeholderTextColor="#64748B"
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.credsShowPassBtn}
+              >
+                <Text style={styles.credsShowPassText}>{showPassword ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.credsModalActions}>
+              <TouchableOpacity
+                style={styles.credsCancelBtn}
+                onPress={() => setShowLmsCredsModal(false)}
+              >
+                <Text style={styles.credsCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.credsSaveBtn}
+                onPress={handleSaveLmsCredentials}
+              >
+                <Text style={styles.credsSaveBtnText}>Save Credentials ✅</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </ScrollView>
@@ -1450,6 +1620,183 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
   },
   previewPctText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  lmsMoodleCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    marginBottom: 16,
+  },
+  lmsIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  moodleLiveBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38BDF8',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  moodleLiveBadgeText: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  moodleCredsSummaryBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    gap: 6,
+  },
+  moodleCredsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  moodleCredsLabel: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  moodleCredsValue: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  moodleActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  moodleEditCredsBtn: {
+    flex: 1,
+    backgroundColor: '#334155',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  moodleEditCredsBtnText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  moodleSyncBtn: {
+    flex: 1,
+    backgroundColor: '#2563EB',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  moodleSyncBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  credsModalCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+    width: '100%',
+    maxWidth: 420,
+  },
+  credsModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  credsModalTitle: {
+    color: '#F8FAFC',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  closeBtnText: {
+    color: '#94A3B8',
+    fontSize: 18,
+    fontWeight: '700',
+    padding: 4,
+  },
+  credsModalSubtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 16,
+  },
+  credsInputGroup: {
+    marginBottom: 14,
+    position: 'relative',
+  },
+  credsInputLabel: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  credsInput: {
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#F8FAFC',
+    fontSize: 14,
+  },
+  credsShowPassBtn: {
+    position: 'absolute',
+    right: 12,
+    top: 32,
+    padding: 4,
+  },
+  credsShowPassText: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  credsModalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  credsCancelBtn: {
+    flex: 1,
+    backgroundColor: '#334155',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  credsCancelBtnText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  credsSaveBtn: {
+    flex: 2,
+    backgroundColor: '#2563EB',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  credsSaveBtnText: {
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
   },

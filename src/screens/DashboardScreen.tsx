@@ -11,7 +11,7 @@ import {
   Vibration,
   RefreshControl,
 } from 'react-native';
-import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert } from '../types';
+import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert, LmsAssignment, LmsQuiz } from '../types';
 import { calculateOverallMetrics, getSlotHours } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 
@@ -20,6 +20,10 @@ import { PsgimService } from '../services/psgimService';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
 import { NotificationService } from '../services/notificationService';
 import { StorageService } from '../services/storageService';
+import { LmsService } from '../services/lmsService';
+import { LmsAssignmentCard } from '../components/LmsAssignmentCard';
+import { LmsQuizCard } from '../components/LmsQuizCard';
+import { MoodleQuizModal } from '../components/MoodleQuizModal';
 
 
 interface DashboardScreenProps {
@@ -63,10 +67,26 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [reminderNote, setReminderNote] = useState('');
   const [reminderTiming, setReminderTiming] = useState<'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM'>('NEXT_CLASS');
 
+  // LMS Moodle state
+  const [lmsAssignments, setLmsAssignments] = useState<LmsAssignment[]>([]);
+  const [lmsQuizzes, setLmsQuizzes] = useState<LmsQuiz[]>([]);
+  const [lmsActiveTab, setLmsActiveTab] = useState<'ASSIGNMENTS' | 'QUIZZES'>('ASSIGNMENTS');
+  const [moodleModal, setMoodleModal] = useState<{
+    visible: boolean;
+    title: string;
+    url: string;
+  }>({ visible: false, title: '', url: '' });
+  const [lmsPassword, setLmsPassword] = useState('Welcome@123');
+
   useEffect(() => {
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
       StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
+      LmsService.getAssignments(studentRollNo).then(setLmsAssignments);
+      LmsService.getQuizzes(studentRollNo).then(setLmsQuizzes);
+      LmsService.getCredentials(studentRollNo).then((c) => {
+        if (c?.password) setLmsPassword(c.password);
+      });
     }
   }, [studentRollNo]);
 
@@ -402,6 +422,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       try {
         Vibration.vibrate(35);
       } catch {}
+      if (studentRollNo) {
+        const [asg, qz] = await Promise.all([
+          LmsService.getAssignments(studentRollNo),
+          LmsService.getQuizzes(studentRollNo),
+        ]);
+        setLmsAssignments(asg);
+        setLmsQuizzes(qz);
+      }
       if (onRefresh) {
         await onRefresh();
       }
@@ -799,6 +827,106 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         })()}
       </View>
 
+      {/* 🎓 PSGIM LMS Moodle Section: Assignments & 1-Tap Quizzes */}
+      <View style={styles.lmsSection}>
+        <View style={styles.lmsHeaderRow}>
+          <View style={styles.lmsIconCircle}>
+            <Text style={styles.lmsIcon}>🎓</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.lmsSectionTitle}>Moodle LMS Portal</Text>
+              <View style={styles.lmsDirectBadge}>
+                <Text style={styles.lmsDirectBadgeText}>DIRECT SUBMIT & ATTEMPT</Text>
+              </View>
+            </View>
+            <Text style={styles.lmsSectionSub}>
+              lms.psgim.ac.in • In-app submissions & 1-tap test attempts
+            </Text>
+          </View>
+        </View>
+
+        {/* Tab Switcher: Assignments vs Quizzes */}
+        <View style={styles.lmsTabRow}>
+          <TouchableOpacity
+            style={[
+              styles.lmsTabBtn,
+              lmsActiveTab === 'ASSIGNMENTS' && styles.lmsTabBtnActive,
+            ]}
+            onPress={() => setLmsActiveTab('ASSIGNMENTS')}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.lmsTabBtnText,
+                lmsActiveTab === 'ASSIGNMENTS' && styles.lmsTabBtnTextActive,
+              ]}
+            >
+              📝 Assignments ({lmsAssignments.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.lmsTabBtn,
+              lmsActiveTab === 'QUIZZES' && styles.lmsTabBtnActive,
+            ]}
+            onPress={() => setLmsActiveTab('QUIZZES')}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.lmsTabBtnText,
+                lmsActiveTab === 'QUIZZES' && styles.lmsTabBtnTextActive,
+              ]}
+            >
+              ⚡ Quizzes ({lmsQuizzes.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tab Content */}
+        {lmsActiveTab === 'ASSIGNMENTS' ? (
+          <View style={styles.lmsCardsList}>
+            {lmsAssignments.length === 0 ? (
+              <Text style={styles.lmsEmptyText}>No active assignments in Moodle.</Text>
+            ) : (
+              lmsAssignments.map((asg) => (
+                <LmsAssignmentCard
+                  key={asg.id}
+                  assignment={asg}
+                  rollNo={studentRollNo}
+                  onUpdated={(updated) => {
+                    setLmsAssignments((prev) =>
+                      prev.map((a) => (a.id === updated.id ? updated : a))
+                    );
+                  }}
+                  onOpenInMoodle={(title, url) => {
+                    setMoodleModal({ visible: true, title, url });
+                  }}
+                />
+              ))
+            )}
+          </View>
+        ) : (
+          <View style={styles.lmsCardsList}>
+            {lmsQuizzes.length === 0 ? (
+              <Text style={styles.lmsEmptyText}>No active quizzes in Moodle.</Text>
+            ) : (
+              lmsQuizzes.map((quiz) => (
+                <LmsQuizCard
+                  key={quiz.id}
+                  quiz={quiz}
+                  onAttemptQuiz={(title, url) => {
+                    setMoodleModal({ visible: true, title, url });
+                  }}
+                />
+              ))
+            )}
+          </View>
+        )}
+      </View>
+
       {/* Filter Chips */}
       <View style={styles.filterRow}>
         {(['ALL', 'SAFE', 'SHORTAGE', 'MEDICAL'] as const).map((tab) => (
@@ -1013,6 +1141,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
         </View>
       </Modal>
+
+      {/* Moodle Login-Bypassed WebView Modal for Quizzes & Submissions */}
+      <MoodleQuizModal
+        visible={moodleModal.visible}
+        title={moodleModal.title}
+        url={moodleModal.url}
+        rollNo={studentRollNo}
+        password={lmsPassword}
+        onClose={() => setMoodleModal({ visible: false, title: '', url: '' })}
+      />
     </ScrollView>
   );
 };
@@ -1882,6 +2020,94 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 16,
+  },
+  lmsSection: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 16,
+  },
+  lmsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  lmsIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lmsIcon: {
+    fontSize: 22,
+  },
+  lmsSectionTitle: {
+    color: '#F8FAFC',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  lmsDirectBadge: {
+    backgroundColor: '#065F46',
+    borderColor: '#10B981',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  lmsDirectBadgeText: {
+    color: '#34D399',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  lmsSectionSub: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  lmsTabRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  lmsTabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#334155',
+    alignItems: 'center',
+  },
+  lmsTabBtnActive: {
+    backgroundColor: '#1E3A8A',
+    borderColor: '#38BDF8',
+  },
+  lmsTabBtnText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  lmsTabBtnTextActive: {
+    color: '#38BDF8',
+    fontWeight: '800',
+  },
+  lmsCardsList: {
+    gap: 12,
+  },
+  lmsEmptyText: {
+    color: '#64748B',
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
   },
 });
 
