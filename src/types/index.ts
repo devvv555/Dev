@@ -19,6 +19,8 @@ export interface Subject {
   officialAttended: number;
   officialTotal: number;
   lastOfficialUpdate?: string;
+  attendanceFrom?: string;
+  attendanceTo?: string;
   batch?: string;
   faculty?: string;
   room?: string;

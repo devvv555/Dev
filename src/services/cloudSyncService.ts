@@ -173,7 +173,9 @@ export const CloudSyncService = {
     rollNo: string,
     studentName: string,
     subjectsCount: number,
-    portalUpdatedDate?: string
+    portalUpdatedDate?: string,
+    attendanceFrom?: string,
+    attendanceTo?: string
   ): Promise<void> {
     try {
       const globalRef = doc(db, 'system_updates', 'latest_attendance_sync');
@@ -184,6 +186,8 @@ export const CloudSyncService = {
           updatedByName: studentName || rollNo,
           subjectsCount,
           portalUpdatedDate: portalUpdatedDate || null,
+          attendanceFrom: attendanceFrom || null,
+          attendanceTo: attendanceTo || null,
           updatedAt: new Date().toISOString(),
           timestamp: Date.now(),
         },
@@ -202,6 +206,8 @@ export const CloudSyncService = {
     updatedByName: string;
     subjectsCount: number;
     portalUpdatedDate?: string;
+    attendanceFrom?: string;
+    attendanceTo?: string;
     updatedAt: string;
     timestamp: number;
   } | null> {
@@ -228,6 +234,8 @@ export const CloudSyncService = {
       updatedByName: string;
       subjectsCount: number;
       portalUpdatedDate?: string;
+      attendanceFrom?: string;
+      attendanceTo?: string;
       updatedAt: string;
       timestamp: number;
     }) => void

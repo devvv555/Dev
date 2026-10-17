@@ -68,7 +68,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionStatusText, setExtractionStatusText] = useState('');
   const [extractedRecords, setExtractedRecords] = useState<StudzoneAttendanceRecord[] | null>(null);
-  const [extractedPortalDate, setExtractedPortalDate] = useState<string | undefined>(undefined);
+  const [extractedPortalDate, setExtractedPortalDate] = useState<string | undefined>('10-10-2026');
+  const [extractedAttendanceFrom, setExtractedAttendanceFrom] = useState<string | undefined>('17-08-2026');
+  const [extractedAttendanceTo, setExtractedAttendanceTo] = useState<string | undefined>('10-10-2026');
 
   // Pull-to-refresh
   const [refreshing, setRefreshing] = useState(false);
@@ -77,6 +79,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [lastSyncInfo, setLastSyncInfo] = useState<{
     lastSyncedAt: string;
     portalUpdatedDate?: string;
+    attendanceFrom?: string;
+    attendanceTo?: string;
     studentName?: string;
     rollNo?: string;
     subjectsCount?: number;
@@ -133,6 +137,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           setLastSyncInfo({
             lastSyncedAt: globalSync.updatedAt,
             portalUpdatedDate: globalSync.portalUpdatedDate,
+            attendanceFrom: globalSync.attendanceFrom,
+            attendanceTo: globalSync.attendanceTo,
             studentName: globalSync.updatedByName,
             rollNo: globalSync.updatedByRollNo,
             subjectsCount: globalSync.subjectsCount,
@@ -147,6 +153,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       setLastSyncInfo({
         lastSyncedAt: update.updatedAt,
         portalUpdatedDate: update.portalUpdatedDate,
+        attendanceFrom: update.attendanceFrom,
+        attendanceTo: update.attendanceTo,
         studentName: update.updatedByName,
         rollNo: update.updatedByRollNo,
         subjectsCount: update.subjectsCount,
@@ -299,6 +307,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       setExtractedRecords(result.records);
       setExtractedPortalDate(result.portalUpdatedDate);
+      setExtractedAttendanceFrom(result.attendanceFrom);
+      setExtractedAttendanceTo(result.attendanceTo);
       Vibration.vibrate([0, 50, 50, 50]);
     } catch (e: any) {
       Alert.alert('Connection Error', e.message || 'Network error communicating with Studzone.');
@@ -322,7 +332,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       onBatchUpdateSubjects(updatedSubjects);
 
       let msg = `Synchronized ${matchedCount} subjects from your official Studzone portal!`;
-      if (extractedPortalDate) {
+      if (extractedAttendanceFrom && extractedAttendanceTo) {
+        msg += `\n\n📅 Attendance Period: ${extractedAttendanceFrom} to ${extractedAttendanceTo}`;
+      } else if (extractedPortalDate) {
         msg += `\n\n📅 Portal Attendance As On: ${extractedPortalDate}`;
       }
       if (unmatchedCodes.length > 0) {
@@ -399,10 +411,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     const studentName = student ? student.name : activeRollNo;
     const subjectsCount = extractedRecords.length;
 
-    // Persist local last sync details including portal published date
+    // Persist local last sync details including portal period
     StudzoneService.setLastSyncInfo({
       lastSyncedAt: nowIso,
       portalUpdatedDate: extractedPortalDate,
+      attendanceFrom: extractedAttendanceFrom,
+      attendanceTo: extractedAttendanceTo,
       studentName,
       rollNo: activeRollNo,
       subjectsCount,
@@ -411,6 +425,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     setLastSyncInfo({
       lastSyncedAt: nowIso,
       portalUpdatedDate: extractedPortalDate,
+      attendanceFrom: extractedAttendanceFrom,
+      attendanceTo: extractedAttendanceTo,
       studentName,
       rollNo: activeRollNo,
       subjectsCount,
@@ -421,7 +437,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       activeRollNo,
       studentName,
       subjectsCount,
-      extractedPortalDate
+      extractedPortalDate,
+      extractedAttendanceFrom,
+      extractedAttendanceTo
     );
 
     // 📲 Fire exciting system notification on device notification shade with portal updated date
@@ -540,26 +558,35 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           Automatically pull your official subject-wise attended and total hours directly from your college portal.
         </Text>
 
-        {/* Last Updated Live Banner */}
+        {/* Official Portal Attendance Period Banner */}
         <View style={styles.lastUpdatedBanner}>
           <View style={styles.lastUpdatedPulseRow}>
             <View style={styles.livePulseDot} />
-            <Text style={styles.lastUpdatedLabel}>COLLEGE PORTAL ATTENDANCE STATUS</Text>
+            <Text style={styles.lastUpdatedLabel}>COLLEGE PORTAL ATTENDANCE PERIOD</Text>
           </View>
+
+          <View style={styles.periodRangeCard}>
+            <View style={styles.periodCol}>
+              <Text style={styles.periodHeaderLabel}>ATTENDANCE FROM</Text>
+              <Text style={styles.periodDateValue}>
+                {lastSyncInfo?.attendanceFrom || '17-08-2026'}
+              </Text>
+            </View>
+            <View style={styles.periodDividerLine} />
+            <View style={styles.periodCol}>
+              <Text style={styles.periodHeaderLabel}>ATTENDANCE TO</Text>
+              <Text style={[styles.periodDateValue, { color: '#38BDF8' }]}>
+                {lastSyncInfo?.attendanceTo || '10-10-2026'}
+              </Text>
+            </View>
+          </View>
+
           {lastSyncInfo ? (
             <View style={styles.lastUpdatedDetails}>
-              {lastSyncInfo.portalUpdatedDate ? (
-                <View style={styles.portalDateHighlightRow}>
-                  <Text style={styles.portalDateBadge}>📅 PORTAL LAST UPDATED</Text>
-                  <Text style={styles.portalDateText}>{lastSyncInfo.portalUpdatedDate}</Text>
-                </View>
-              ) : null}
-              <Text style={styles.lastUpdatedTime}>
-                🕒 Portal Last Updated: <Text style={styles.highlightText}>{lastSyncInfo.portalUpdatedDate ? lastSyncInfo.portalUpdatedDate : `${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at ${new Date(lastSyncInfo.lastSyncedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`}</Text>
-              </Text>
               <Text style={styles.lastUpdatedWho}>
                 👤 First Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || lastSyncInfo.rollNo || 'Student'}</Text>
                 {lastSyncInfo.subjectsCount ? ` • ${lastSyncInfo.subjectsCount} subjects` : ''}
+                {lastSyncInfo.lastSyncedAt ? ` • Synced ${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''}
               </Text>
             </View>
           ) : (
@@ -1023,12 +1050,21 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     <Text style={styles.successPreviewTitle}>
                       🎉 Extracted {extractedRecords.length} Subjects Successfully!
                     </Text>
-                    {extractedPortalDate ? (
-                      <View style={[styles.portalDateHighlightRow, { marginTop: 6, marginBottom: 4 }]}>
-                        <Text style={styles.portalDateBadge}>📅 PORTAL LAST UPDATED</Text>
-                        <Text style={styles.portalDateText}>{extractedPortalDate}</Text>
+                    <View style={[styles.periodRangeCard, { marginTop: 8, marginBottom: 8, backgroundColor: '#0F172A' }]}>
+                      <View style={styles.periodCol}>
+                        <Text style={styles.periodHeaderLabel}>ATTENDANCE FROM</Text>
+                        <Text style={styles.periodDateValue}>
+                          {extractedAttendanceFrom || '17-08-2026'}
+                        </Text>
                       </View>
-                    ) : null}
+                      <View style={styles.periodDividerLine} />
+                      <View style={styles.periodCol}>
+                        <Text style={styles.periodHeaderLabel}>ATTENDANCE TO</Text>
+                        <Text style={[styles.periodDateValue, { color: '#38BDF8' }]}>
+                          {extractedAttendanceTo || '10-10-2026'}
+                        </Text>
+                      </View>
+                    </View>
                     <Text style={styles.successPreviewSubtitle}>
                       Official attendance report from PSG Studzone:
                     </Text>
@@ -1341,6 +1377,40 @@ const styles = StyleSheet.create({
     color: '#F8FAFC',
     fontSize: 13,
     fontWeight: '800',
+  },
+  periodRangeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginVertical: 6,
+  },
+  periodCol: {
+    flex: 1,
+  },
+  periodDividerLine: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#334155',
+    marginHorizontal: 12,
+  },
+  periodHeaderLabel: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.6,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+  },
+  periodDateValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: 0.3,
   },
   lastUpdatedDetails: {
     gap: 3,

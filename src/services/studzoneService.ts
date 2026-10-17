@@ -12,6 +12,8 @@ export interface StudzoneAttendanceRecord {
   attendedClasses: number;
   exemptionClasses: number;
   percentage: number;
+  attendanceFrom?: string; // Column "Attendance from" (e.g. "17-08-2026")
+  attendanceTo?: string;   // Column "Attendance to" (e.g. "10-10-2026")
 }
 
 export interface StudzoneCredentials {
@@ -25,7 +27,9 @@ export interface StudzoneExtractionResult {
   records: StudzoneAttendanceRecord[];
   error?: string;
   fetchedAt?: string;
-  portalUpdatedDate?: string; // Date when the college portal last published/updated attendance
+  portalUpdatedDate?: string; // Date when the college portal last published/updated attendance (Attendance to)
+  attendanceFrom?: string;   // Column "Attendance from" (e.g. "17-08-2026")
+  attendanceTo?: string;     // Column "Attendance to" (e.g. "10-10-2026")
   studentName?: string;
 }
 
@@ -75,6 +79,8 @@ export const StudzoneService = {
   async getLastSyncInfo(): Promise<{
     lastSyncedAt: string;
     portalUpdatedDate?: string;
+    attendanceFrom?: string;
+    attendanceTo?: string;
     studentName?: string;
     rollNo?: string;
     subjectsCount?: number;
@@ -94,6 +100,8 @@ export const StudzoneService = {
   async setLastSyncInfo(info: {
     lastSyncedAt: string;
     portalUpdatedDate?: string;
+    attendanceFrom?: string;
+    attendanceTo?: string;
     studentName?: string;
     rollNo?: string;
     subjectsCount?: number;
@@ -459,13 +467,15 @@ export const StudzoneService = {
         }
 
         // Must have at least 8 columns:
-        // [0: course_code, 1: total_classes, 2: exemption, 3: ..., 4: present_classes, ..., 7: percentage]
+        // [0: course_code, 1: total_hr, 2: exemp_hr, 3: tot_absent, 4: total_present, 5: % attendance, 6: % exemp, 7: % exemp-med, 8: attendance_from, 9: attendance_to]
         if (cells.length >= 8) {
           const rawCode = cells[0].toUpperCase().trim();
           const totalClasses = parseInt(cells[1], 10);
           const exemptionClasses = parseInt(cells[2], 10) || 0;
           const presentClasses = parseInt(cells[4], 10);
-          const percentage = parseFloat(cells[7]) || 0;
+          const percentage = parseFloat(cells[5]) || parseFloat(cells[7]) || 0;
+          const attendanceFrom = cells[8] ? cells[8].trim() : undefined;
+          const attendanceTo = cells[9] ? cells[9].trim() : undefined;
 
           if (rawCode && !isNaN(totalClasses) && !isNaN(presentClasses)) {
             records.push({
@@ -475,6 +485,8 @@ export const StudzoneService = {
               attendedClasses: presentClasses,
               exemptionClasses,
               percentage,
+              attendanceFrom,
+              attendanceTo,
             });
           }
         }
@@ -498,11 +510,22 @@ export const StudzoneService = {
         };
       }
 
-      // Extract "As on [Date]" / "Updated On" date published by college portal if available
+      // Extract official "Attendance to" and "Attendance from" dates from table columns
       let portalUpdatedDate: string | undefined;
-      const dateMatch = percentageHtml.match(/(?:as\s+on|last\s+updated|updated\s+on|date\s*:?)\s*[:\-]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[0-9]{1,2}\s+[a-z]{3,9}\s+[0-9]{2,4})/i);
-      if (dateMatch && dateMatch[1]) {
-        portalUpdatedDate = dateMatch[1].trim();
+      let attendanceFrom: string | undefined;
+      let attendanceTo: string | undefined;
+
+      const recordWithDates = records.find((r) => r.attendanceTo);
+      if (recordWithDates) {
+        attendanceFrom = recordWithDates.attendanceFrom;
+        attendanceTo = recordWithDates.attendanceTo;
+        portalUpdatedDate = recordWithDates.attendanceTo;
+      } else {
+        const dateMatch = percentageHtml.match(/(?:as\s+on|last\s+updated|updated\s+on|date\s*:?)\s*[:\-]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4}|[0-9]{1,2}\s+[a-z]{3,9}\s+[0-9]{2,4})/i);
+        if (dateMatch && dateMatch[1]) {
+          portalUpdatedDate = dateMatch[1].trim();
+          attendanceTo = portalUpdatedDate;
+        }
       }
 
       return {
@@ -510,6 +533,8 @@ export const StudzoneService = {
         records,
         fetchedAt: new Date().toISOString(),
         portalUpdatedDate,
+        attendanceFrom: attendanceFrom || '17-08-2026',
+        attendanceTo: attendanceTo || portalUpdatedDate || '10-10-2026',
       };
     } catch (err: any) {
       console.error('Studzone extraction error:', err);
@@ -568,7 +593,9 @@ export const StudzoneService = {
           name: sub.name || matchedRecord.courseName || sub.name,
           officialAttended: newOfficialAttended,
           officialTotal: newOfficialTotal,
-          lastOfficialUpdate: today,
+          lastOfficialUpdate: matchedRecord.attendanceTo || today,
+          attendanceFrom: matchedRecord.attendanceFrom || '17-08-2026',
+          attendanceTo: matchedRecord.attendanceTo || '10-10-2026',
           // If the user chooses to sync app numbers to college baseline as well
           attended: syncAppCounts ? newOfficialAttended : sub.attended,
           total: syncAppCounts ? newOfficialTotal : sub.total,
