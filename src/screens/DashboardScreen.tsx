@@ -11,7 +11,7 @@ import {
   Vibration,
   RefreshControl,
 } from 'react-native';
-import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert, LmsAssignment, LmsQuiz } from '../types';
+import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert, LmsAssignment, LmsQuiz, PsgimAnnouncement } from '../types';
 import { calculateOverallMetrics, getSlotHours } from '../services/attendanceEngine';
 import { AttendanceGauge } from '../components/AttendanceGauge';
 
@@ -24,6 +24,9 @@ import { LmsService } from '../services/lmsService';
 import { LmsAssignmentCard } from '../components/LmsAssignmentCard';
 import { LmsQuizCard } from '../components/LmsQuizCard';
 import { MoodleQuizModal } from '../components/MoodleQuizModal';
+import { PsgimConnectService } from '../services/psgimConnectService';
+import { PsgimAnnouncementCard } from '../components/PsgimAnnouncementCard';
+import { PsgimNoticeModal } from '../components/PsgimNoticeModal';
 
 
 interface DashboardScreenProps {
@@ -78,7 +81,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   }>({ visible: false, title: '', url: '' });
   const [lmsPassword, setLmsPassword] = useState('Welcome@123');
 
+  // PSGIM Connect Notices state
+  const [announcements, setAnnouncements] = useState<PsgimAnnouncement[]>([]);
+  const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
+
   useEffect(() => {
+    PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
       StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
@@ -422,6 +430,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       try {
         Vibration.vibrate(35);
       } catch {}
+      PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
       if (studentRollNo) {
         const [asg, qz] = await Promise.all([
           LmsService.getAssignments(studentRollNo),
@@ -927,6 +936,41 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
+      {/* 📢 PSGIM Connect • Official College Notices & Circulars */}
+      <View style={styles.connectSection}>
+        <View style={styles.connectHeaderRow}>
+          <View style={styles.connectIconCircle}>
+            <Text style={styles.connectIcon}>📢</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.connectSectionTitle}>PSGIM Connect Circulars</Text>
+              <View style={styles.connectLiveBadge}>
+                <Text style={styles.connectLiveBadgeText}>OFFICIAL PORTAL</Text>
+              </View>
+            </View>
+            <Text style={styles.connectSectionSub}>
+              tqm.psginstitutions.in • Live notices & circular posters
+            </Text>
+          </View>
+        </View>
+
+        {announcements.length === 0 ? (
+          <Text style={styles.connectEmptyText}>No circulars posted at this time.</Text>
+        ) : (
+          announcements.map((item) => (
+            <PsgimAnnouncementCard
+              key={item.id}
+              announcement={item}
+              onPress={() => {
+                setSelectedNotice(item);
+                PsgimConnectService.markAnnouncementAsRead(item.id);
+              }}
+            />
+          ))
+        )}
+      </View>
+
       {/* Filter Chips */}
       <View style={styles.filterRow}>
         {(['ALL', 'SAFE', 'SHORTAGE', 'MEDICAL'] as const).map((tab) => (
@@ -1150,6 +1194,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         rollNo={studentRollNo}
         password={lmsPassword}
         onClose={() => setMoodleModal({ visible: false, title: '', url: '' })}
+      />
+
+      {/* PSGIM Connect Official Circular & Poster Modal */}
+      <PsgimNoticeModal
+        visible={!!selectedNotice}
+        announcement={selectedNotice}
+        onClose={() => setSelectedNotice(null)}
       />
     </ScrollView>
   );
@@ -2103,6 +2154,64 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   lmsEmptyText: {
+    color: '#64748B',
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
+  },
+  connectSection: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 16,
+  },
+  connectHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  connectIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  connectIcon: {
+    fontSize: 22,
+  },
+  connectSectionTitle: {
+    color: '#F8FAFC',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  connectLiveBadge: {
+    backgroundColor: '#1E3A8A',
+    borderColor: '#38BDF8',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  connectLiveBadgeText: {
+    color: '#38BDF8',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  connectSectionSub: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  connectEmptyText: {
     color: '#64748B',
     fontSize: 13,
     textAlign: 'center',

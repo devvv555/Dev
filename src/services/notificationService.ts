@@ -278,5 +278,32 @@ export const NotificationService = {
       return null;
     }
   },
+
+  /**
+   * Notify when a new official circular / announcement is published on PSGIM Connect
+   */
+  async notifyNewAnnouncement(title: string, author: string): Promise<string | null> {
+    try {
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `📢 New Circular: ${title}`,
+          body: `Published by ${author}. Tap to view circular and details.`,
+          data: {
+            type: 'PSGIM_ANNOUNCEMENT',
+            title,
+            author,
+          },
+          sound: 'default',
+          vibrate: [0, 400, 200, 400],
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+        },
+        trigger: null, // send immediately
+      });
+      return id;
+    } catch (e) {
+      console.warn('Error firing announcement notification:', e);
+      return null;
+    }
+  },
 };
 

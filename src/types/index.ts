@@ -197,5 +197,31 @@ export interface LmsQuiz {
   moodleUrl: string; // Direct link to quiz attempt
 }
 
+export interface PsgimAnnouncement {
+  id: number;
+  title: string;
+  category: string;
+  priority: 'normal' | 'important' | 'urgent';
+  status: string;
+  is_pinned: number;
+  publish_at: string;
+  created_at: string;
+  created_by: string;
+  summary?: string;
+  content?: string;
+  attachmentUrl?: string;
+  venue?: string;
+  eventDate?: string;
+  eventTime?: string;
+  isRead?: boolean;
+}
+
+export interface PsgimConnectCredentials {
+  registerNo: string;
+  password?: string;
+  lastSyncedAt?: string;
+}
+
+
 
 

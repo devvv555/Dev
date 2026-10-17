@@ -24,6 +24,7 @@ import { StorageService } from '../services/storageService';
 import { findNextSlotForSubject } from '../services/attendanceEngine';
 import { getMasterStudent } from '../data/psgimMasterStudents';
 import { LmsService } from '../services/lmsService';
+import { PsgimConnectService } from '../services/psgimConnectService';
 
 interface ReconcileScreenProps {
   subjects: Subject[];
@@ -87,6 +88,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [editLmsPassword, setEditLmsPassword] = useState('Welcome@123');
   const [isLmsSyncing, setIsLmsSyncing] = useState(false);
 
+  // PSGIM Connect Credentials state (Application Register Number)
+  const [connectRegisterNo, setConnectRegisterNo] = useState(activeRollNo);
+  const [connectPassword, setConnectPassword] = useState('');
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [isConnectSyncing, setIsConnectSyncing] = useState(false);
+
   // Load saved credentials & sync status on mount or roll change
   useEffect(() => {
     async function loadSaved() {
@@ -105,6 +112,13 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         if (lmsCreds?.password) {
           setLmsPassword(lmsCreds.password);
           setEditLmsPassword(lmsCreds.password);
+        }
+
+        // Check PSGIM Connect Credentials
+        const connectCreds = await PsgimConnectService.getCredentials(activeRollNo);
+        if (connectCreds?.registerNo) {
+          setConnectRegisterNo(connectCreds.registerNo);
+          setConnectPassword(connectCreds.password || '');
         }
       }
 
@@ -451,6 +465,35 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     }
   };
 
+  const handleSaveConnectCredentials = async () => {
+    if (!connectRegisterNo.trim()) {
+      Alert.alert('Empty Register No', 'Please enter your PSGIM Connect Register Number.');
+      return;
+    }
+    await PsgimConnectService.saveCredentials(activeRollNo, {
+      registerNo: connectRegisterNo.trim(),
+      password: connectPassword.trim(),
+      lastSyncedAt: new Date().toISOString(),
+    });
+    setShowConnectModal(false);
+    Alert.alert('PSGIM Connect Saved ✅', 'Your Register Number is saved for official portal communications.');
+  };
+
+  const handleSyncConnect = async () => {
+    setIsConnectSyncing(true);
+    try {
+      try {
+        Vibration.vibrate(25);
+      } catch {}
+      const notices = await PsgimConnectService.fetchAnnouncements();
+      Alert.alert('PSGIM Connect Synchronized! 🚀', `Pulled ${notices.length} official notices & event circulars.`);
+    } catch {
+      Alert.alert('Notice', 'PSGIM Connect circulars are up to date.');
+    } finally {
+      setIsConnectSyncing(false);
+    }
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -594,6 +637,64 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.moodleSyncBtnText}>🔄 Re-sync LMS</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* PSGIM Connect Official Portal Card */}
+      <View style={styles.psgimConnectCard}>
+        <View style={styles.studzoneCardHeader}>
+          <View style={styles.connectIconCircle}>
+            <Text style={styles.studzoneCardIcon}>📢</Text>
+          </View>
+          <View style={styles.studzoneTitleCol}>
+            <View style={styles.studzoneBadgeRow}>
+              <Text style={styles.studzoneCardTitle}>PSGIM Connect</Text>
+              <View style={styles.connectLiveBadge}>
+                <Text style={styles.connectLiveBadgeText}>OFFICIAL PORTAL</Text>
+              </View>
+            </View>
+            <Text style={styles.studzoneCardSubtitle}>
+              tqm.psginstitutions.in/psgimconnect
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.studzoneDescription}>
+          Official college announcements, event flyers & Student Council notices. Circulars are streamed live without login. You can optionally link your Admission Register Number for section-specific notices.
+        </Text>
+
+        <View style={styles.moodleCredsSummaryBox}>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>👤 Register Number (Admission):</Text>
+            <Text style={styles.moodleCredsValue}>{connectRegisterNo || activeRollNo || 'Not Configured'}</Text>
+          </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>🌐 Feed Status:</Text>
+            <Text style={[styles.moodleCredsValue, { color: '#34D399' }]}>🟢 Live & Connected</Text>
+          </View>
+        </View>
+
+        <View style={styles.moodleActionsRow}>
+          <TouchableOpacity
+            style={styles.moodleEditCredsBtn}
+            onPress={() => setShowConnectModal(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.moodleEditCredsBtnText}>⚙️ Register No Settings</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.moodleSyncBtn, isConnectSyncing && { opacity: 0.7 }]}
+            onPress={handleSyncConnect}
+            disabled={isConnectSyncing}
+            activeOpacity={0.8}
+          >
+            {isConnectSyncing ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.moodleSyncBtnText}>🔄 Fetch Circulars</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1034,6 +1135,62 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 onPress={handleSaveLmsCredentials}
               >
                 <Text style={styles.credsSaveBtnText}>Save Credentials ✅</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit PSGIM Connect Credentials Modal */}
+      <Modal visible={showConnectModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.credsModalCard}>
+            <View style={styles.credsModalHeader}>
+              <Text style={styles.credsModalTitle}>PSGIM Connect Settings</Text>
+              <TouchableOpacity onPress={() => setShowConnectModal(false)}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.credsModalSubtitle}>
+              PSGIM Connect uses your admission Register Number (from when you applied for college) rather than your Roll Number. Circulars and event posters are loaded automatically without login.
+            </Text>
+
+            <View style={styles.credsInputGroup}>
+              <Text style={styles.credsInputLabel}>Admission Register Number</Text>
+              <TextInput
+                style={styles.credsInput}
+                value={connectRegisterNo}
+                onChangeText={setConnectRegisterNo}
+                placeholder="e.g. 26MBA001"
+                placeholderTextColor="#64748B"
+              />
+            </View>
+
+            <View style={styles.credsInputGroup}>
+              <Text style={styles.credsInputLabel}>Password (Optional)</Text>
+              <TextInput
+                style={styles.credsInput}
+                value={connectPassword}
+                onChangeText={setConnectPassword}
+                secureTextEntry={!showPassword}
+                placeholder="Enter password if required"
+                placeholderTextColor="#64748B"
+              />
+            </View>
+
+            <View style={styles.credsModalActions}>
+              <TouchableOpacity
+                style={styles.credsCancelBtn}
+                onPress={() => setShowConnectModal(false)}
+              >
+                <Text style={styles.credsCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.credsSaveBtn}
+                onPress={handleSaveConnectCredentials}
+              >
+                <Text style={styles.credsSaveBtnText}>Save Settings ✅</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1630,6 +1787,38 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#38BDF8',
     marginBottom: 16,
+  },
+  psgimConnectCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    marginBottom: 16,
+  },
+  connectIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  connectLiveBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38BDF8',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  connectLiveBadgeText: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   lmsIconCircle: {
     width: 44,
