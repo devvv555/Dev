@@ -224,6 +224,98 @@ export interface PsgimConnectCredentials {
   lastSyncedAt?: string;
 }
 
+// ── Course Plan & Continuous Assessment (CA) Types ──
+export interface CourseAssessmentComponent {
+  id: string;
+  title: string;
+  type: 'GROUP_ACTIVITY' | 'EXAM' | 'INDIVIDUAL_LAB' | 'CASE_ANALYSIS';
+  scheduledDate: string;
+  sessionsCovered: string;
+  marksAllotted: number;
+  obtainedMarks?: number;
+  description?: string;
+  coTarget?: string;
+  completed?: boolean;
+}
 
+export interface CourseSession {
+  sessionNumber: number;
+  unit: string;
+  topic: string;
+  date?: string;
+  isExam?: boolean;
+  requiresLaptop?: boolean;
+  software?: string;
+}
 
+export interface CoursePlan {
+  subjectCode: string;
+  subjectTitle: string;
+  semester: string;
+  batch: string;
+  mode: string;
+  faculty: string[];
+  courseObjective: string;
+  caMaxMarks: number; // 50
+  feMaxMarks: number; // 50
+  assessments: CourseAssessmentComponent[];
+  sessions: CourseSession[];
+  classroomRules: string[];
+  recommendedBooks: string[];
+  additionalInfo?: {
+    miniProject?: string[];
+    practicalTest?: string[];
+    caseAnalysis?: string[];
+  };
+}
 
+export interface StudentCourseCaRecord {
+  subjectCode: string;
+  marks: Record<string, number>; // assessmentId -> marks
+  targetGrade: 'O' | 'A+' | 'A' | 'B+';
+  updatedAt: string;
+}
+
+// ── Emergency Digital Student ID Types ──
+export interface DigitalStudentId {
+  rollNo: string;
+  name: string;
+  program: string;
+  batch: string;
+  section: string;
+  semester: number;
+  dob?: string;
+  bloodGroup?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  avatarLetter: string;
+  validUntil: string;
+  isPendingApproval: boolean;
+}
+
+// ── Attendance Dispute & Summary Report Types ──
+export interface AttendanceDisputeItem {
+  subjectCode: string;
+  subjectName: string;
+  portalTotal: number;
+  portalAttended: number;
+  portalPercentage: number;
+  appTotal: number;
+  appAttended: number;
+  appPercentage: number;
+  deltaAttended: number; // appAttended - portalAttended
+  hasDiscrepancy: boolean;
+}
+
+export interface AttendanceDisputeReport {
+  generatedAt: string;
+  rollNo: string;
+  studentName: string;
+  section: string;
+  portalFromDate: string;
+  portalToDate: string;
+  items: AttendanceDisputeItem[];
+  totalDiscrepancyHours: number;
+  medicalLeavesCount: number;
+  summaryText: string;
+}

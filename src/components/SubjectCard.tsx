@@ -11,12 +11,14 @@ interface SubjectCardProps {
   onToggleMedicalClaim: (id: string) => void;
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
+  onOpenCoursePlan?: (subjectCode: string, subjectName: string) => void;
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
   subject,
   studentRollNo,
   onToggleMedicalClaim,
+  onOpenCoursePlan,
 }) => {
   const [showSessionsModal, setShowSessionsModal] = useState(false);
 
@@ -104,6 +106,19 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       >
         <Text style={styles.statusBannerText}>{metrics.summaryMessage}</Text>
       </View>
+
+      {/* Course Plan & Continuous Assessment (CA) Pattern */}
+      {onOpenCoursePlan && (
+        <TouchableOpacity
+          style={styles.coursePlanBtn}
+          onPress={() => onOpenCoursePlan(subject.code, subject.name)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.coursePlanBtnText}>
+            📊 Course Plan & CA Marks (50M Target) →
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* Official Session Log Button (when MCOB real data is present) */}
       {mcobData && (
@@ -393,6 +408,21 @@ const styles = StyleSheet.create({
   sessionsBtnText: {
     color: '#38BDF8',
     fontSize: 12,
+    fontWeight: '700',
+  },
+  coursePlanBtn: {
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.35)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  coursePlanBtnText: {
+    color: '#A5B4FC',
+    fontSize: 11.5,
     fontWeight: '700',
   },
   modalOverlay: {

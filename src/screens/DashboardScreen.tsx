@@ -27,6 +27,9 @@ import { MoodleQuizModal } from '../components/MoodleQuizModal';
 import { PsgimConnectService } from '../services/psgimConnectService';
 import { PsgimAnnouncementCard } from '../components/PsgimAnnouncementCard';
 import { PsgimNoticeModal } from '../components/PsgimNoticeModal';
+import { DigitalIdModal } from '../components/DigitalIdModal';
+import { CoursePlanModal } from '../components/CoursePlanModal';
+import { AttendanceDisputeModal } from '../components/AttendanceDisputeModal';
 
 
 interface DashboardScreenProps {
@@ -84,6 +87,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   // PSGIM Connect Notices state
   const [announcements, setAnnouncements] = useState<PsgimAnnouncement[]>([]);
   const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
+
+  // Campus Companion Utility Modals state
+  const [showDigitalIdModal, setShowDigitalIdModal] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
+    visible: boolean;
+    code: string;
+    name: string;
+  }>({ visible: false, code: '24GM14', name: 'Business Statistics' });
 
   useEffect(() => {
     PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
@@ -492,6 +504,51 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
           </View>
         ) : null}
+      </View>
+
+      {/* 🚀 Quick Campus Utilities: Emergency Digital ID, Course Plans & CA Marks, Attendance Proof */}
+      <View style={styles.quickUtilitiesRow}>
+        <TouchableOpacity
+          style={styles.utilityPillBtn}
+          onPress={() => setShowDigitalIdModal(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.utilityPillIcon}>🪪</Text>
+          <View style={styles.utilityPillTextCol}>
+            <Text style={styles.utilityPillTitle}>Digital ID</Text>
+            <Text style={styles.utilityPillSub}>Emergency Pass</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.utilityPillBtn}
+          onPress={() =>
+            setCoursePlanModalInfo({
+              visible: true,
+              code: '24GM14',
+              name: 'Business Statistics',
+            })
+          }
+          activeOpacity={0.8}
+        >
+          <Text style={styles.utilityPillIcon}>📊</Text>
+          <View style={styles.utilityPillTextCol}>
+            <Text style={styles.utilityPillTitle}>Course Plan</Text>
+            <Text style={styles.utilityPillSub}>50M CA Marks</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.utilityPillBtn}
+          onPress={() => setShowDisputeModal(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.utilityPillIcon}>📄</Text>
+          <View style={styles.utilityPillTextCol}>
+            <Text style={styles.utilityPillTitle}>Dispute Proof</Text>
+            <Text style={styles.utilityPillSub}>Official Dossier</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Weekday Holiday 7-Day Notification Alert (Strictly NO notification for weekend holidays) */}
@@ -996,6 +1053,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           subject={subject}
           studentRollNo={studentRollNo}
           onToggleMedicalClaim={onToggleMedicalClaim}
+          onOpenCoursePlan={(code, name) =>
+            setCoursePlanModalInfo({ visible: true, code, name })
+          }
         />
       ))}
 
@@ -1201,6 +1261,32 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         visible={!!selectedNotice}
         announcement={selectedNotice}
         onClose={() => setSelectedNotice(null)}
+      />
+
+      {/* 🪪 Emergency Digital Student ID Modal */}
+      <DigitalIdModal
+        visible={showDigitalIdModal}
+        onClose={() => setShowDigitalIdModal(false)}
+        studentRollNo={studentRollNo}
+      />
+
+      {/* 📊 Course Plan & CA Marks Tracker Modal */}
+      <CoursePlanModal
+        visible={coursePlanModalInfo.visible}
+        onClose={() =>
+          setCoursePlanModalInfo((prev) => ({ ...prev, visible: false }))
+        }
+        subjectCode={coursePlanModalInfo.code}
+        subjectName={coursePlanModalInfo.name}
+        studentRollNo={studentRollNo}
+      />
+
+      {/* 📄 Attendance Dispute & Proof Dossier Modal */}
+      <AttendanceDisputeModal
+        visible={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        studentRollNo={studentRollNo}
+        subjects={subjects}
       />
     </ScrollView>
   );
@@ -2217,6 +2303,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 20,
     fontStyle: 'italic',
+  },
+  quickUtilitiesRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  utilityPillBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    gap: 6,
+  },
+  utilityPillIcon: {
+    fontSize: 20,
+  },
+  utilityPillTextCol: {
+    flex: 1,
+  },
+  utilityPillTitle: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  utilityPillSub: {
+    color: '#94A3B8',
+    fontSize: 9.5,
+    marginTop: 1,
   },
 });
 

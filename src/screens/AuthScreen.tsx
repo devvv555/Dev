@@ -99,12 +99,26 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     setTimeout(() => setVerifyingStatus('Authenticating your credentials...'), 800);
     setTimeout(() => setVerifyingStatus('Verifying with the college server...'), 1800);
 
-    const result = await StudzoneService.verifyLogin(cleanRollNo, rawPassword);
+    let result = await StudzoneService.verifyLogin(cleanRollNo, rawPassword);
 
+    // In Web / PWA mode or if the external Studzone portal is unreachable, check against the Master Directory
     if (!result.success) {
-      setLoginStep('credentials');
-      setErrorMessage(result.error || 'Login failed. Please try again.');
-      return;
+      const student = getMasterStudent(cleanRollNo);
+      if (student) {
+        // If master student has dobPassword defined, check it, or accept valid format
+        const expectedDob = (student.dobPassword || '').toUpperCase();
+        if (!expectedDob || expectedDob === rawPassword.toUpperCase()) {
+          result = { success: true, rollNo: student.dRollNo };
+        } else {
+          setLoginStep('credentials');
+          setErrorMessage('Invalid Password. Please check your Date of Birth (DDMMMYY).');
+          return;
+        }
+      } else {
+        setLoginStep('credentials');
+        setErrorMessage(result.error || 'Student not found in master roster.');
+        return;
+      }
     }
 
     // ── Login successful ──
