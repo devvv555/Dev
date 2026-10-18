@@ -35,9 +35,9 @@ export const INITIAL_SUBJECTS: Subject[] = [
     color: '#10B981', // Emerald
     standardTarget: 75,
     medicalTarget: 65,
-    hasMedicalClaim: true, // Medical Claim Active!
+    hasMedicalClaim: false,
     attended: 28,
-    total: 41, // 68.29% - Safe under Medical (65%), Short under Standard (75%)
+    total: 41,
     officialAttended: 27,
     officialTotal: 40,
     lastOfficialUpdate: '2026-09-12'
@@ -87,20 +87,7 @@ export const INITIAL_TIMETABLE: TimetableSlot[] = [
   { id: 't_mon_2', day: 'Monday', startTime: '10:00', endTime: '11:00', subjectId: 'sub_2', room: 'LH-102' }
 ];
 
-export const INITIAL_MEDICAL_CLAIMS: MedicalClaimRecord[] = [
-  {
-    id: 'med_01',
-    subjectId: 'sub_2', // Database Systems
-    fromDate: '2026-09-02',
-    toDate: '2026-09-06',
-    reason: 'Acute Gastroenteritis & Dehydration',
-    doctorName: 'Dr. V. K. Sharma, MD',
-    hospitalOrClinic: 'City Health Care Clinic',
-    certificateNote: 'Advised strict bed rest for 5 days. Submitted to Department Academic Cell.',
-    status: 'APPROVED',
-    createdAt: '2026-09-07'
-  }
-];
+export const INITIAL_MEDICAL_CLAIMS: MedicalClaimRecord[] = [];
 
 export const StorageService = {
   async getSubjects(): Promise<Subject[]> {

@@ -10,6 +10,7 @@ import {
   Alert,
   Vibration,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert, LmsAssignment, LmsQuiz, PsgimAnnouncement } from '../types';
 import { calculateOverallMetrics, getSlotHours } from '../services/attendanceEngine';
@@ -206,11 +207,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const currentDayName = dayNames[now.getDay()];
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
+  // Selected day for timetable tracker (defaults to today, or Monday if today has no slots)
+  const [selectedDay, setSelectedDay] = useState<string>(
+    currentDayName === 'Sunday' ? 'Sunday' : currentDayName
+  );
+
   // Get slots for today
   const todaySlots = timetable.filter(
     (s) => s.day.toLowerCase() === currentDayName.toLowerCase()
   );
-  const activeDaySlots = todaySlots.length > 0 ? todaySlots : timetable;
+  const isWeekendOrNoClass = todaySlots.length === 0;
+
+  // Selected day's slots
+  const activeDaySlots = timetable.filter(
+    (s) => s.day.toLowerCase() === selectedDay.toLowerCase()
+  );
 
   // Auto-detect which slot is active, just ended, or upcoming
   const autoDetectSlotIndex = (): number => {
@@ -480,11 +491,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Student Welcome Card */}
       <View style={styles.welcomeCard}>
         <View style={styles.welcomeTopRow}>
-          <View style={styles.welcomeAvatar}>
+          <TouchableOpacity
+            style={styles.welcomeAvatar}
+            onPress={() => setShowDigitalIdModal(true)}
+            activeOpacity={0.7}
+          >
             <Text style={styles.welcomeAvatarText}>
               {studentName ? studentName.charAt(0) : '🎓'}
             </Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.welcomeInfo}>
             <Text style={styles.welcomeGreeting}>Welcome,</Text>
             <Text style={styles.welcomeName} numberOfLines={1}>
@@ -636,31 +651,63 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
       </View>
 
-      {/* Live Auto-Class Tracker Card */}
+      {/* Live Auto-Class Tracker Card (Strictly Today's Real-Time Schedule) */}
       <View style={styles.promptSimulatorCard}>
-        <View style={styles.simulatorHeader}>
-          <View style={[styles.statusTagBadge, { borderColor: slotStatus.color }]}>
-            <Text style={[styles.simulatorTag, { color: slotStatus.color }]}>
-              {slotStatus.tag}
-            </Text>
+        {/* Header: Strictly Today's Schedule */}
+        <View style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {isWeekendOrNoClass ? '🌴 WEEKEND RELAX' : `⏰ TODAY'S SCHEDULE (${currentDayName.toUpperCase()})`}
+              </Text>
+            </View>
+            <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#38BDF8' }}>
+                LIVE REAL-TIME
+              </Text>
+            </View>
           </View>
-          <Text style={styles.simulatorTime}>
-            {currentSlot ? `${currentSlot.startTime} - ${currentSlot.endTime}` : ''}
-          </Text>
+
+          {isWeekendOrNoClass ? (
+            <View style={{ backgroundColor: '#1E293B', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#334155', alignItems: 'center', marginTop: 10 }}>
+              <Text style={{ fontSize: 28, marginBottom: 6 }}>🌴</Text>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#F1F5F9', marginBottom: 4 }}>
+                No Classes Scheduled Today ({currentDayName})
+              </Text>
+              <Text style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center' }}>
+                Enjoy your weekend break! Classes resume on Monday as per official college timetable.
+              </Text>
+            </View>
+          ) : null}
         </View>
 
-        <Text style={styles.simulatorTitle}>
-          {currentSubject ? `${currentSubject.name}` : 'No Class in Session'}
-        </Text>
-        <Text style={styles.simulatorSubDetail}>
-          {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
-        </Text>
-        <Text style={styles.simulatorSub}>
-          {slotStatus.message}
-        </Text>
+        {!isWeekendOrNoClass && (
+          <>
+            <View style={styles.simulatorHeader}>
+              <View style={[styles.statusTagBadge, { borderColor: slotStatus.color }]}>
+                <Text style={[styles.simulatorTag, { color: slotStatus.color }]}>
+                  {slotStatus.tag}
+                </Text>
+              </View>
+              <Text style={styles.simulatorTime}>
+                {currentSlot ? `${currentSlot.startTime} - ${currentSlot.endTime}` : ''}
+              </Text>
+            </View>
+
+            <Text style={styles.simulatorTitle}>
+              {currentSubject ? `${currentSubject.name}` : 'No Class in Session'}
+            </Text>
+            <Text style={styles.simulatorSubDetail}>
+              {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
+            </Text>
+            <Text style={styles.simulatorSub}>
+              {slotStatus.message}
+            </Text>
+          </>
+        )}
 
         {/* Discrepancy & Surplus Status Indicators */}
-        {(() => {
+        {!(isWeekendOrNoClass && selectedDay === currentDayName) && (() => {
           const slotSurplus = surplusAlerts.find(
             (a) => a.subjectId === currentSlot?.subjectId && a.difference > 0
           );
@@ -688,8 +735,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           return null;
         })()}
 
-        {/* Period Selector Pills: Instant 1-tap period switching for Today */}
-        {activeDaySlots.length > 1 && (
+        {/* Period Selector Pills: Instant 1-tap period switching for Today's Scheduled Classes */}
+        {!isWeekendOrNoClass && activeDaySlots.length > 1 && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -743,7 +790,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
 
         {/* If this period was already marked, display locked status banner */}
-        {currentRecord && (
+        {!isWeekendOrNoClass && currentRecord && (
           <View
             style={[
               styles.periodLockedBanner,
@@ -771,59 +818,61 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
 
         {/* 1-Tap Attendance Actions */}
-        <View style={styles.promptActionsRow}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[
-              styles.promptActionBtn,
-              styles.promptAttendBtn,
-              currentRecord?.status === 'attended' && styles.promptBtnSelected,
-              currentRecord && currentRecord.status !== 'attended' && styles.promptBtnDimmed,
-            ]}
-            onPress={() => handleAutoRecord('attended')}
-          >
-            <Text style={styles.promptAttendText}>
-              {currentRecord?.status === 'attended'
-                ? `✅ Attended (${getSlotHours(currentSlot)} hrs)`
-                : `✅ I Attended (${getSlotHours(currentSlot)} hrs)`}
-            </Text>
-          </TouchableOpacity>
+        {!isWeekendOrNoClass && (
+          <View style={styles.promptActionsRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.promptActionBtn,
+                styles.promptAttendBtn,
+                currentRecord?.status === 'attended' && styles.promptBtnSelected,
+                currentRecord && currentRecord.status !== 'attended' && styles.promptBtnDimmed,
+              ]}
+              onPress={() => handleAutoRecord('attended')}
+            >
+              <Text style={styles.promptAttendText}>
+                {currentRecord?.status === 'attended'
+                  ? `✅ Attended (${getSlotHours(currentSlot)} hrs)`
+                  : `✅ I Attended (${getSlotHours(currentSlot)} hrs)`}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[
-              styles.promptActionBtn,
-              styles.promptBunkBtn,
-              currentRecord?.status === 'bunked' && styles.promptBtnSelected,
-              currentRecord && currentRecord.status !== 'bunked' && styles.promptBtnDimmed,
-            ]}
-            onPress={() => handleAutoRecord('bunked')}
-          >
-            <Text style={styles.promptBunkText}>
-              {currentRecord?.status === 'bunked'
-                ? `❌ Bunked (${getSlotHours(currentSlot)} hrs)`
-                : `❌ I Bunked (${getSlotHours(currentSlot)} hrs)`}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.promptActionBtn,
+                styles.promptBunkBtn,
+                currentRecord?.status === 'bunked' && styles.promptBtnSelected,
+                currentRecord && currentRecord.status !== 'bunked' && styles.promptBtnDimmed,
+              ]}
+              onPress={() => handleAutoRecord('bunked')}
+            >
+              <Text style={styles.promptBunkText}>
+                {currentRecord?.status === 'bunked'
+                  ? `❌ Bunked (${getSlotHours(currentSlot)} hrs)`
+                  : `❌ I Bunked (${getSlotHours(currentSlot)} hrs)`}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[
-              styles.promptActionBtn,
-              styles.promptCancelBtn,
-              currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
-              currentRecord && currentRecord.status !== 'cancelled' && styles.promptBtnDimmed,
-            ]}
-            onPress={() => handleAutoRecord('cancelled')}
-          >
-            <Text style={styles.promptCancelText}>
-              {currentRecord?.status === 'cancelled' ? '⚪ Free (Marked)' : '⚪ Free / Cancelled'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.promptActionBtn,
+                styles.promptCancelBtn,
+                currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
+                currentRecord && currentRecord.status !== 'cancelled' && styles.promptBtnDimmed,
+              ]}
+              onPress={() => handleAutoRecord('cancelled')}
+            >
+              <Text style={styles.promptCancelText}>
+                {currentRecord?.status === 'cancelled' ? '⚪ Free (Marked)' : '⚪ Free / Cancelled'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Next Class Tasks & Reminders Section */}
-        {(() => {
+        {!(isWeekendOrNoClass && selectedDay === currentDayName) && (() => {
           const slotReminders = reminders.filter(
             (r) => r.slotId === currentSlot?.id || r.subjectId === currentSlot?.subjectId
           );
@@ -893,105 +942,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         })()}
       </View>
 
-      {/* 🎓 PSGIM LMS Moodle Section: Assignments & 1-Tap Quizzes */}
-      <View style={styles.lmsSection}>
-        <View style={styles.lmsHeaderRow}>
-          <View style={styles.lmsIconCircle}>
-            <Text style={styles.lmsIcon}>🎓</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.lmsSectionTitle}>Moodle LMS Portal</Text>
-              <View style={styles.lmsDirectBadge}>
-                <Text style={styles.lmsDirectBadgeText}>DIRECT SUBMIT & ATTEMPT</Text>
-              </View>
-            </View>
-            <Text style={styles.lmsSectionSub}>
-              lms.psgim.ac.in • In-app submissions & 1-tap test attempts
-            </Text>
-          </View>
-        </View>
 
-        {/* Tab Switcher: Assignments vs Quizzes */}
-        <View style={styles.lmsTabRow}>
-          <TouchableOpacity
-            style={[
-              styles.lmsTabBtn,
-              lmsActiveTab === 'ASSIGNMENTS' && styles.lmsTabBtnActive,
-            ]}
-            onPress={() => setLmsActiveTab('ASSIGNMENTS')}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.lmsTabBtnText,
-                lmsActiveTab === 'ASSIGNMENTS' && styles.lmsTabBtnTextActive,
-              ]}
-            >
-              📝 Assignments ({lmsAssignments.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.lmsTabBtn,
-              lmsActiveTab === 'QUIZZES' && styles.lmsTabBtnActive,
-            ]}
-            onPress={() => setLmsActiveTab('QUIZZES')}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.lmsTabBtnText,
-                lmsActiveTab === 'QUIZZES' && styles.lmsTabBtnTextActive,
-              ]}
-            >
-              ⚡ Quizzes ({lmsQuizzes.length})
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tab Content */}
-        {lmsActiveTab === 'ASSIGNMENTS' ? (
-          <View style={styles.lmsCardsList}>
-            {lmsAssignments.length === 0 ? (
-              <Text style={styles.lmsEmptyText}>No active assignments in Moodle.</Text>
-            ) : (
-              lmsAssignments.map((asg) => (
-                <LmsAssignmentCard
-                  key={asg.id}
-                  assignment={asg}
-                  rollNo={studentRollNo}
-                  onUpdated={(updated) => {
-                    setLmsAssignments((prev) =>
-                      prev.map((a) => (a.id === updated.id ? updated : a))
-                    );
-                  }}
-                  onOpenInMoodle={(title, url) => {
-                    setMoodleModal({ visible: true, title, url });
-                  }}
-                />
-              ))
-            )}
-          </View>
-        ) : (
-          <View style={styles.lmsCardsList}>
-            {lmsQuizzes.length === 0 ? (
-              <Text style={styles.lmsEmptyText}>No active quizzes in Moodle.</Text>
-            ) : (
-              lmsQuizzes.map((quiz) => (
-                <LmsQuizCard
-                  key={quiz.id}
-                  quiz={quiz}
-                  onAttemptQuiz={(title, url) => {
-                    setMoodleModal({ visible: true, title, url });
-                  }}
-                />
-              ))
-            )}
-          </View>
-        )}
-      </View>
 
       {/* 📢 PSGIM Connect • Official College Notices & Circulars */}
       <View style={styles.connectSection}>
@@ -1246,15 +1197,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
       </Modal>
 
-      {/* Moodle Login-Bypassed WebView Modal for Quizzes & Submissions */}
-      <MoodleQuizModal
-        visible={moodleModal.visible}
-        title={moodleModal.title}
-        url={moodleModal.url}
-        rollNo={studentRollNo}
-        password={lmsPassword}
-        onClose={() => setMoodleModal({ visible: false, title: '', url: '' })}
-      />
+
 
       {/* PSGIM Connect Official Circular & Poster Modal */}
       <PsgimNoticeModal

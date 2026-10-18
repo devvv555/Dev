@@ -10,6 +10,7 @@ import {
   Alert,
   RefreshControl,
   Vibration,
+  Platform,
 } from 'react-native';
 import { Subject, MedicalClaimRecord, TimetableSlot, PeriodAttendanceRecord, DayOfWeek } from '../types';
 
@@ -320,6 +321,19 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
                     try {
                       Vibration.vibrate(25);
                     } catch {}
+                    const performDelete = () => {
+                      if (onDeleteMedicalClaim) {
+                        onDeleteMedicalClaim(claim.id);
+                      }
+                    };
+
+                    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
+                      if (window.confirm(`Are you sure you want to delete this medical record ("${claim.reason}")? Any 65% condonation applied for this leave period will be removed.`)) {
+                        performDelete();
+                      }
+                      return;
+                    }
+
                     Alert.alert(
                       'Delete Medical Certificate',
                       `Are you sure you want to delete this medical record ("${claim.reason}")? Any 65% condonation applied for this leave period will be removed.`,
@@ -328,11 +342,7 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
                         {
                           text: 'Delete',
                           style: 'destructive',
-                          onPress: () => {
-                            if (onDeleteMedicalClaim) {
-                              onDeleteMedicalClaim(claim.id);
-                            }
-                          },
+                          onPress: performDelete,
                         },
                       ]
                     );

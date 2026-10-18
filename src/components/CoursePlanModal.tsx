@@ -198,45 +198,77 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
 
                 {/* Individual Assessment Cards */}
                 <Text style={styles.sectionHeader}>Assessment Pattern (Total: 50 Marks)</Text>
-                {plan.assessments.map((item, idx) => (
-                  <View key={item.id} style={styles.assessmentCard}>
-                    <View style={styles.assessmentTopRow}>
-                      <View style={{ flex: 1 }}>
-                        <View style={styles.assessmentBadgeRow}>
-                          <Text style={styles.itemNumber}>#{idx + 1}</Text>
-                          {item.coTarget ? (
-                            <View style={styles.coBadge}>
-                              <Text style={styles.coBadgeText}>{item.coTarget}</Text>
-                            </View>
-                          ) : null}
-                          <Text style={styles.assessmentDate}>📅 {item.scheduledDate}</Text>
+                {plan.assessments.map((item, idx) => {
+                  const isMidTerm = item.id.includes('mid') || item.title.toLowerCase().includes('mid term');
+                  return (
+                    <View key={item.id} style={styles.assessmentCard}>
+                      <View style={styles.assessmentTopRow}>
+                        <View style={{ flex: 1 }}>
+                          <View style={styles.assessmentBadgeRow}>
+                            <Text style={styles.itemNumber}>#{idx + 1}</Text>
+                            {item.coTarget ? (
+                              <View style={styles.coBadge}>
+                                <Text style={styles.coBadgeText}>{item.coTarget}</Text>
+                              </View>
+                            ) : null}
+                            <Text style={styles.assessmentDate}>📅 {item.scheduledDate}</Text>
+                          </View>
+                          <Text style={styles.assessmentTitle}>{item.title}</Text>
+                          <Text style={styles.assessmentScope}>Scope: {item.sessionsCovered}</Text>
                         </View>
-                        <Text style={styles.assessmentTitle}>{item.title}</Text>
-                        <Text style={styles.assessmentScope}>Scope: {item.sessionsCovered}</Text>
+
+                        {/* Marks Input Box */}
+                        <View style={styles.marksInputBox}>
+                          <TextInput
+                            style={styles.marksTextInput}
+                            keyboardType="numeric"
+                            placeholder="0"
+                            placeholderTextColor="#64748B"
+                            maxLength={5}
+                            value={caMarks[item.id] || ''}
+                            onChangeText={(val) => {
+                              setCaMarks((prev) => ({ ...prev, [item.id]: val }));
+                            }}
+                          />
+                          <Text style={styles.maxMarksText}>/ {item.marksAllotted}</Text>
+                        </View>
                       </View>
 
-                      {/* Marks Input Box */}
-                      <View style={styles.marksInputBox}>
-                        <TextInput
-                          style={styles.marksTextInput}
-                          keyboardType="numeric"
-                          placeholder="0"
-                          placeholderTextColor="#64748B"
-                          maxLength={4}
-                          value={caMarks[item.id] || ''}
-                          onChangeText={(val) => {
-                            setCaMarks((prev) => ({ ...prev, [item.id]: val }));
-                          }}
-                        />
-                        <Text style={styles.maxMarksText}>/ {item.marksAllotted}</Text>
-                      </View>
+                      {/* 💡 Automatic 50 -> 20 Marks Converter for Mid Term Exam */}
+                      {isMidTerm && (
+                        <View style={styles.midTermConvertBox}>
+                          <View style={styles.convertLeft}>
+                            <Text style={styles.convertLabel}>WROTE FOR 50 MARKS?</Text>
+                            <Text style={styles.convertSub}>Auto-converts to 20 marks weightage: (Score ÷ 50) × 20</Text>
+                          </View>
+                          <View style={styles.quickInputsRow}>
+                            <TextInput
+                              style={styles.rawInputBox}
+                              keyboardType="numeric"
+                              placeholder="e.g. 42"
+                              placeholderTextColor="#64748B"
+                              maxLength={4}
+                              onChangeText={(rawVal) => {
+                                const raw = parseFloat(rawVal);
+                                if (!isNaN(raw) && raw >= 0) {
+                                  // (raw / 50) * 20
+                                  const converted = ((Math.min(raw, 50) / 50) * 20).toFixed(1);
+                                  const finalVal = converted.endsWith('.0') ? converted.slice(0, -2) : converted;
+                                  setCaMarks((prev) => ({ ...prev, [item.id]: finalVal }));
+                                }
+                              }}
+                            />
+                            <Text style={styles.rawMaxText}>/ 50</Text>
+                          </View>
+                        </View>
+                      )}
+
+                      {item.description ? (
+                        <Text style={styles.assessmentDesc}>{item.description}</Text>
+                      ) : null}
                     </View>
-
-                    {item.description ? (
-                      <Text style={styles.assessmentDesc}>{item.description}</Text>
-                    ) : null}
-                  </View>
-                ))}
+                  );
+                })}
 
                 <TouchableOpacity
                   style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
@@ -744,5 +776,56 @@ const styles = StyleSheet.create({
     color: '#CBD5E1',
     fontSize: 11.5,
     lineHeight: 16,
+  },
+  midTermConvertBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#0284C7',
+    padding: 10,
+    marginTop: 10,
+  },
+  convertLeft: {
+    flex: 1,
+    marginRight: 10,
+  },
+  convertLabel: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  convertSub: {
+    color: '#94A3B8',
+    fontSize: 10.5,
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  quickInputsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  rawInputBox: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'center',
+    width: 48,
+    paddingVertical: 2,
+  },
+  rawMaxText: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

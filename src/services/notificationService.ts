@@ -2,16 +2,18 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { Subject, TimetableSlot } from '../types';
 
-// Configure notification behavior for phone notification tray
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Configure notification behavior for phone notification tray (mobile only)
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export const NotificationService = {
   /**
@@ -75,6 +77,17 @@ export const NotificationService = {
     data?: Record<string, any>
   ): Promise<string | null> {
     try {
+      if (Platform.OS === 'web') {
+        // Use Web Notification API if permitted, otherwise silent no-op
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification(title, { body });
+            return 'web-notif';
+          } catch {}
+        }
+        return null;
+      }
+
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title,
@@ -88,7 +101,9 @@ export const NotificationService = {
       });
       return id;
     } catch (e) {
-      console.warn('Send local notification error:', e);
+      if (Platform.OS !== 'web') {
+        console.warn('Send local notification error:', e);
+      }
       return null;
     }
   },

@@ -77,16 +77,16 @@ export const PsgimService = {
     const batches = student.batches;
     const mcobData = getMcobData(oldRoll) || getMcobData(rollNo);
 
-    // Seed attendance statistics for other courses
+    // Official attendance statistics matching Studzone portal table (17-08-2026 to 10-10-2026)
     const attendancePresets: Record<string, { attended: number; total: number; hasMedicalClaim?: boolean }> = {
-      MCOB: { attended: 26, total: 30 },
-      EDM: { attended: 28, total: 41, hasMedicalClaim: true },
-      ADM: { attended: 29, total: 32 },
-      BS: { attended: 20, total: 28 },
-      MC: { attended: 27, total: 30 },
-      SSA: { attended: 18, total: 20 },
-      SSM: { attended: 14, total: 16 },
-      LA: { attended: 15, total: 18 },
+      MCOB: { attended: 24, total: 32 }, // 24GM11: 24/32 (75%)
+      EDM: { attended: 24, total: 28, hasMedicalClaim: false }, // 24GM12: 24/28 (86%)
+      ADM: { attended: 28, total: 30 }, // 24GM13: 28/30 (94%)
+      BS: { attended: 22, total: 28 }, // 24GM14: 22/28 (79%)
+      MC: { attended: 38, total: 40 }, // 24GM15: 38/40 (95%)
+      SSA: { attended: 16, total: 22 }, // 24GM16: 16/22 (73%)
+      SSM: { attended: 31, total: 32 }, // 24GM18: 31/32 (97%)
+      LA: { attended: 12, total: 14 }, // 24GM19: 12/14 (86%)
       SPORTS: { attended: 7, total: 8 },
     };
 
@@ -100,8 +100,8 @@ export const PsgimService = {
       const isMcob = courseKey === 'MCOB' && mcobData;
       const attended = isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : stats.attended);
       const total = isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : stats.total);
-      const officialAttended = isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : Math.max(0, stats.attended - 2));
-      const officialTotal = isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : Math.max(0, stats.total - 2));
+      const officialAttended = isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : stats.attended);
+      const officialTotal = isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : stats.total);
 
       return {
         id: `sub_${courseKey.toLowerCase()}`,

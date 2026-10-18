@@ -86,16 +86,20 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
 
         {/* Thumbnail if attachment poster exists */}
         {announcement.attachmentUrl && (
-          <View style={styles.thumbnailContainer}>
+          <TouchableOpacity
+            style={styles.thumbnailContainer}
+            onPress={onPress}
+            activeOpacity={0.7}
+          >
             <Image
               source={{ uri: announcement.attachmentUrl }}
               style={styles.thumbnail}
               resizeMode="cover"
             />
             <View style={styles.posterOverlay}>
-              <Text style={styles.posterOverlayText}>POSTER</Text>
+              <Text style={styles.posterOverlayText}>POSTER ↗</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       </View>
 
