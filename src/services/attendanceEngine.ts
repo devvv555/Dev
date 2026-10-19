@@ -71,21 +71,9 @@ export function calculateAttendanceMetrics(
     summaryMessage = safeBunksAt75 > 0 
       ? `On track! You can safely miss ${safeBunksAt75} more ${safeBunksAt75 === 1 ? 'hour' : 'hours'}.`
       : `You are right at the ${standardTarget}% boundary. Do not miss any hours.`;
-  } else if (percentage >= medicalTarget) {
-    if (hasMedicalClaim) {
-      status = 'SAFE_MEDICAL';
-      summaryMessage = `🏥 Safe under Medical Claim (65%). ${safeBunksAt65} safe hours left at 65%. (${recoveryNeededAt75} hours to hit standard 75%).`;
-    } else {
-      status = 'SHORTAGE';
-      summaryMessage = `⚠️ Short of 75% target (${percentage}%). Need ${recoveryNeededAt75} consecutive hours to recover. (Claiming medical lowers target to 65%).`;
-    }
   } else {
     status = 'SHORTAGE';
-    if (hasMedicalClaim) {
-      summaryMessage = `🚨 Critical shortage below 65% medical threshold. Need ${recoveryNeededAt65} hours to hit 65%, ${recoveryNeededAt75} for 75%.`;
-    } else {
-      summaryMessage = `🚨 Attendance shortage (${percentage}%). Need ${recoveryNeededAt75} consecutive hours to hit 75%.`;
-    }
+    summaryMessage = `⚠️ Attendance shortage (${percentage}%). Need ${recoveryNeededAt75} consecutive ${recoveryNeededAt75 === 1 ? 'hour' : 'hours'} to hit 75%.`;
   }
 
 

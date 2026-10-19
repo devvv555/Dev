@@ -15,7 +15,6 @@ import { StorageService, INITIAL_MEDICAL_CLAIMS } from './src/services/storageSe
 import { NotificationService } from './src/services/notificationService';
 import { DashboardScreen } from './src/screens/DashboardScreen';
 import { TimetableScreen } from './src/screens/TimetableScreen';
-import { MedicalVaultScreen } from './src/screens/MedicalVaultScreen';
 import { ReconcileScreen } from './src/screens/ReconcileScreen';
 import { CalendarScreen } from './src/screens/CalendarScreen';
 import { AuthScreen } from './src/screens/AuthScreen';
@@ -29,7 +28,7 @@ import { getSlotHours } from './src/services/attendanceEngine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC';
+type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -128,14 +127,13 @@ export default function App() {
 
   const handleTabChange = (newTab: Tab) => {
     setActiveTab(newTab);
-    const featureMap: Record<Tab, 'HOURLY' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC'> = {
+    const featureMap: Record<Tab, 'HOURLY' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC'> = {
       DASHBOARD: 'HOURLY',
       TIMETABLE: 'TIMETABLE',
       CALENDAR: 'CALENDAR',
-      MEDICAL: 'MEDICAL',
       ERP_SYNC: 'ERP_SYNC',
     };
-    AnalyticsService.recordFeatureVisit(featureMap[newTab]);
+    AnalyticsService.recordFeatureVisit(featureMap[newTab] as any);
   };
 
   // Login handler
@@ -615,7 +613,6 @@ export default function App() {
             periodRecords={periodRecords}
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onUpdateFaculty={handleUpdateFaculty}
-            onToggleMedicalClaim={handleToggleMedicalClaim}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
             onRefresh={handleRefresh}
           />
@@ -639,21 +636,6 @@ export default function App() {
             subjects={subjects}
             timetable={timetable}
             onBack={() => handleTabChange('DASHBOARD')}
-            onRefresh={handleRefresh}
-          />
-        )}
-
-        {activeTab === 'MEDICAL' && (
-          <MedicalVaultScreen
-            subjects={subjects}
-            timetable={timetable}
-            medicalClaims={medicalClaims}
-            periodRecords={periodRecords}
-            onToggleMedicalClaim={handleToggleMedicalClaim}
-            onAddMedicalClaim={handleAddMedicalClaim}
-            onUpdateClaimStatus={handleUpdateClaimStatus}
-            onDeleteMedicalClaim={handleDeleteMedicalClaim}
-            onAutoApplyMedicalClaims={handleAutoApplyMedicalClaims}
             onRefresh={handleRefresh}
           />
         )}
@@ -705,17 +687,6 @@ export default function App() {
           <Text style={styles.tabIcon}>🗓️</Text>
           <Text style={[styles.tabLabel, activeTab === 'CALENDAR' && styles.tabLabelActive]}>
             Calendar
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.tabItem, activeTab === 'MEDICAL' && styles.tabItemActive]}
-          onPress={() => handleTabChange('MEDICAL')}
-        >
-          <Text style={styles.tabIcon}>🏥</Text>
-          <Text style={[styles.tabLabel, activeTab === 'MEDICAL' && styles.tabLabelActive]}>
-            Med
           </Text>
         </TouchableOpacity>
 

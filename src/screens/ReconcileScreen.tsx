@@ -1069,14 +1069,6 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     <Text style={styles.successPreviewTitle}>
                       🎉 Extracted {extractedRecords.length} Subjects Successfully!
                     </Text>
-                    {Platform.OS === 'web' && (
-                      <View style={styles.webNoticeCard}>
-                        <Text style={styles.webNoticeIcon}>🌐</Text>
-                        <Text style={styles.webNoticeText}>
-                          <Text style={{ fontWeight: '800', color: '#38BDF8' }}>Web Browser Mode:</Text> Web security blocks direct background scraping from ecampus.psgtech.ac.in. Synced with official verified portal baseline (Oct 10, 2026). Use + / - to fine-tune if your attendance differs.
-                        </Text>
-                      </View>
-                    )}
                     <View style={[styles.periodRangeCard, { marginTop: 8, marginBottom: 8, backgroundColor: '#0F172A' }]}>
                       <View style={styles.periodCol}>
                         <Text style={styles.periodHeaderLabel}>ATTENDANCE FROM</Text>

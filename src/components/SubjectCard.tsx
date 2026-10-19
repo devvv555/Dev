@@ -8,7 +8,6 @@ import { PsgimService } from '../services/psgimService';
 interface SubjectCardProps {
   subject: Subject;
   studentRollNo?: string;
-  onToggleMedicalClaim: (id: string) => void;
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
   onOpenCoursePlan?: (subjectCode: string, subjectName: string) => void;
@@ -18,7 +17,6 @@ interface SubjectCardProps {
 export const SubjectCard: React.FC<SubjectCardProps> = ({
   subject,
   studentRollNo,
-  onToggleMedicalClaim,
   onOpenCoursePlan,
   onEditFaculty,
 }) => {
@@ -27,9 +25,9 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   const metrics = calculateAttendanceMetrics(
     subject.attended,
     subject.total,
-    subject.hasMedicalClaim,
-    subject.standardTarget,
-    subject.medicalTarget
+    false,
+    75,
+    75
   );
 
   const mcobData = studentRollNo && (subject.id === 'sub_mcob' || subject.code === '24GM11')
@@ -64,26 +62,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
             </View>
           )}
         </View>
-
-        {/* Medical Claim Toggle Button */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => onToggleMedicalClaim(subject.id)}
-          style={[
-            styles.medicalToggle,
-            subject.hasMedicalClaim ? styles.medicalToggleActive : styles.medicalToggleInactive,
-          ]}
-        >
-          <Text style={styles.medicalToggleIcon}>🏥</Text>
-          <Text
-            style={[
-              styles.medicalToggleLabel,
-              subject.hasMedicalClaim ? styles.medicalToggleLabelActive : styles.medicalToggleLabelInactive,
-            ]}
-          >
-            {subject.hasMedicalClaim ? 'Med Claim: 65%' : 'Claim Med?'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Attendance Stats Row */}

@@ -43,7 +43,6 @@ interface DashboardScreenProps {
   ) => Promise<{ success: boolean; message: string; isChange: boolean; alreadyMarked?: boolean }>;
   onUpdateSubject?: (subject: Subject) => void;
   onUpdateFaculty?: (subjectId: string, newFaculty: string) => void;
-  onToggleMedicalClaim: (id: string) => void;
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
   onOpenCalendar?: () => void;
@@ -58,11 +57,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   periodRecords,
   onRecordPeriodAttendance,
   onUpdateFaculty,
-  onToggleMedicalClaim,
   onOpenCalendar,
   onRefresh,
 }) => {
-  const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'MEDICAL' | 'SAFE'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
   const [activeSlotIndex, setActiveSlotIndex] = useState(0);
 
@@ -189,11 +187,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   // Filter subjects based on selected tab
   const filteredSubjects = subjects.filter((s) => {
-    if (filter === 'MEDICAL') return s.hasMedicalClaim;
     const pct = s.total === 0 ? 100 : (s.attended / s.total) * 100;
-    const target = s.hasMedicalClaim ? s.medicalTarget : s.standardTarget;
-    if (filter === 'SAFE') return pct >= target;
-    if (filter === 'SHORTAGE') return pct < target;
+    if (filter === 'SAFE') return pct >= 75;
+    if (filter === 'SHORTAGE') return pct < 75;
     return true;
   });
 
@@ -405,35 +401,35 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       if (currentRecord.status === status) {
         Alert.alert(
           'Already Recorded ℹ️',
-          `You have already marked this period as "${status.toUpperCase()}".\n\nA class period cannot be counted twice.`
+          `This period is already marked as "${status.toUpperCase()}".`
         );
         return;
       }
 
-      // Prompt confirmation before changing previous attendance status
+      // Freely switch attendance status anytime today (until 11:59 PM)
+      try {
+        Vibration.vibrate(35);
+      } catch {}
+
       const fromStatus = currentRecord.status.toUpperCase();
       const toStatus = status.toUpperCase();
 
-      Alert.alert(
-        'Change Attendance Status? 🔄',
-        `This period is currently recorded as "${fromStatus}".\n\nDo you want to change it to "${toStatus}"? Your attendance totals will be adjusted accurately.`,
-        [
-          { text: 'Keep As Is', style: 'cancel' },
-          {
-            text: `Switch to ${toStatus}`,
-            onPress: async () => {
-              const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
-              if (res.success) {
-                Alert.alert('Status Updated 🔄', res.message);
-              }
-            },
-          },
-        ]
-      );
+      const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
+      if (res.success) {
+        Alert.alert(
+          'Attendance Updated 🔄',
+          `Changed from "${fromStatus}" to "${toStatus}" (${getSlotHours(currentSlot)} hrs). Your attendance totals and percentages have been recalculated.`
+        );
+      } else {
+        Alert.alert('Notice', res.message);
+      }
       return;
     }
 
     // First time recording this period
+    try {
+      Vibration.vibrate(25);
+    } catch {}
     const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
     if (res.success) {
       Alert.alert(
@@ -633,9 +629,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </Text>
           </View>
           <View style={styles.badgeContainer}>
-            {overall.isMedicalClaimActive && (
-              <View style={styles.activeMedBadge}>
-                <Text style={styles.activeMedBadgeText}>🏥 Med Active</Text>
+            {overall.percentage >= 75 ? (
+              <View style={[styles.activeMedBadge, { backgroundColor: '#064E3B', borderColor: '#059669' }]}>
+                <Text style={[styles.activeMedBadgeText, { color: '#34D399' }]}>✅ Target Safe (≥75%)</Text>
+              </View>
+            ) : (
+              <View style={[styles.activeMedBadge, { backgroundColor: '#450A0A', borderColor: '#DC2626' }]}>
+                <Text style={[styles.activeMedBadgeText, { color: '#F87171' }]}>⚠️ Shortage (&lt;75%)</Text>
               </View>
             )}
           </View>
@@ -789,7 +789,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   {currentRecord.status === 'cancelled' && 'Recorded: Free / Cancelled'}
                 </Text>
                 <Text style={styles.lockedBannerSub}>
-                  Locked for this period to prevent double-counting. Tap any other option below to switch status.
+                  Editable until 11:59 PM today. Tap any other option below to switch status.
                 </Text>
               </View>
             </View>
@@ -977,7 +977,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
       {/* Filter Chips */}
       <View style={styles.filterRow}>
-        {(['ALL', 'SAFE', 'SHORTAGE', 'MEDICAL'] as const).map((tab) => (
+        {(['ALL', 'SAFE', 'SHORTAGE'] as const).map((tab) => (
           <TouchableOpacity
             key={tab}
             onPress={() => setFilter(tab)}
@@ -985,9 +985,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           >
             <Text style={[styles.filterChipText, filter === tab && styles.filterChipTextActive]}>
               {tab === 'ALL' && 'All Subjects'}
-              {tab === 'SAFE' && '✅ Safe'}
-              {tab === 'SHORTAGE' && '⚠️ Shortage'}
-              {tab === 'MEDICAL' && '🏥 Med'}
+              {tab === 'SAFE' && '✅ Safe (≥75%)'}
+              {tab === 'SHORTAGE' && '⚠️ Shortage (<75%)'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -999,7 +998,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           key={subject.id}
           subject={subject}
           studentRollNo={studentRollNo}
-          onToggleMedicalClaim={onToggleMedicalClaim}
           onOpenCoursePlan={(code, name) =>
             setCoursePlanModalInfo({
               visible: true,
@@ -1597,7 +1595,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   promptBtnDimmed: {
-    opacity: 0.6,
+    opacity: 0.85,
   },
   promptAttendBtn: {
     backgroundColor: '#059669',

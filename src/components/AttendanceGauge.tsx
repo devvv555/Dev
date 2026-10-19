@@ -30,19 +30,14 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
           <Text style={[styles.percentText, { color: barColor }, compact && styles.compactPercent]}>
             {percentage.toFixed(1)}%
           </Text>
-          {isMedicalClaimActive && (
-            <View style={styles.medicalPill}>
-              <Text style={styles.medicalPillText}>🏥 65% Med Target</Text>
-            </View>
-          )}
         </View>
 
         <Text style={styles.targetIndicatorText}>
-          Target: {effectiveTarget}% {isMedicalClaimActive ? '(Claim Active)' : '(Normal)'}
+          Target: 75%
         </Text>
       </View>
 
-      {/* The Dual Gauge Track */}
+      {/* The Gauge Track */}
       <View style={styles.trackContainer}>
         {/* Fill Bar */}
         <View 
@@ -51,14 +46,6 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
             { width: `${clampedPct}%`, backgroundColor: barColor }
           ]} 
         />
-
-        {/* 65% Medical Line Marker */}
-        <View style={[styles.marker, { left: '65%' }]}>
-          <View style={[styles.markerLine, { backgroundColor: '#38BDF8' }]} />
-          {!compact && (
-            <Text style={[styles.markerLabel, { color: '#38BDF8' }]}>65%</Text>
-          )}
-        </View>
 
         {/* 75% Standard Line Marker */}
         <View style={[styles.marker, { left: '75%' }]}>
@@ -73,12 +60,8 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
       {!compact && (
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#38BDF8' }]} />
-            <Text style={styles.legendText}>65% Medical Safe Line</Text>
-          </View>
-          <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#FBBF24' }]} />
-            <Text style={styles.legendText}>75% Standard Safe Line</Text>
+            <Text style={styles.legendText}>75% Standard Minimum Safe Line</Text>
           </View>
         </View>
       )}
