@@ -1,7 +1,7 @@
 // PSG Institute of Management - Batch 2026-28 (Semester 1)
 // Master Database: Courses, Faculty, Master Timetable & Dynamic Student Batch Mappings
 
-import { getMasterStudent } from './psgimMasterStudents';
+import { getMasterStudent, toOldRollNo, toNewRollNo } from './psgimMasterStudents';
 
 export interface CourseDetail {
   code: string;
@@ -3842,23 +3842,39 @@ export function resolveExactRoom(course: string, groupNum: number, defaultRoom: 
  */
 export function getTimetableForStudent(rollNo: string) {
   const cleanRoll = (rollNo || '').toUpperCase();
-  const master = getMasterStudent(cleanRoll);
-  const student = STUDENT_REGISTRY[cleanRoll];
+  const oldRoll = toOldRollNo(cleanRoll);
+  const newRoll = toNewRollNo(cleanRoll);
+  const master = getMasterStudent(cleanRoll) || getMasterStudent(newRoll) || getMasterStudent(oldRoll);
+  const student = STUDENT_REGISTRY[cleanRoll] || STUDENT_REGISTRY[oldRoll] || STUDENT_REGISTRY[newRoll];
 
   // Determine section group number (Batch A -> 1, Batch B -> 2, Batch C -> 3, Batch D -> 4)
-  const batchLetter = master?.batch || (cleanRoll.length >= 5 ? cleanRoll.charAt(3) : 'A');
+  const batchLetter = master?.batch || (newRoll.length >= 5 ? newRoll.charAt(3) : 'A');
   const sectionGroupNum = batchLetter === 'B' ? 2 : batchLetter === 'C' ? 3 : batchLetter === 'D' ? 4 : 1;
 
   // Use student's section batches if available
   const studentBatches = student
     ? Object.values(student.batches).filter((b) => b && b.trim() !== '')
-    : [`MCOB${sectionGroupNum}`, `ADM${sectionGroupNum}`, `MC${sectionGroupNum}`, `SSM${sectionGroupNum}`, `BS${sectionGroupNum}`, `EDM${sectionGroupNum}`, `LA${sectionGroupNum}`, `SSA${sectionGroupNum}`, `SPORTS1`];
+    : null;
 
-  return MASTER_SCHEDULE.filter((slot) => {
+  const filtered = MASTER_SCHEDULE.filter((slot) => {
     if (slot.applicableBatches.includes('*')) return true;
+    if (studentBatches && studentBatches.length > 0) {
+      return slot.applicableBatches.some((b) => studentBatches.includes(b));
+    }
     const sectionTargetBatch = `${slot.course}${sectionGroupNum}`;
-    return slot.applicableBatches.includes(sectionTargetBatch) || slot.applicableBatches.some((b) => studentBatches.includes(b));
-  }).map((slot, index) => {
+    return slot.applicableBatches.includes(sectionTargetBatch);
+  });
+
+  // Guard against any accidental duplicate slots for the same day and start time
+  const seenTimes = new Set<string>();
+  const uniqueSlots = filtered.filter((slot) => {
+    const key = `${slot.day}_${slot.startTime}`;
+    if (seenTimes.has(key)) return false;
+    seenTimes.add(key);
+    return true;
+  });
+
+  return uniqueSlots.map((slot, index) => {
     const course = PSGIM_COURSES[slot.course];
     const studentBatch = `${slot.course}${sectionGroupNum}`;
     const facultyName = (course?.faculty[sectionGroupNum]) || (course?.faculty[1] || 'Faculty');
