@@ -22,12 +22,15 @@ if (!fs.existsSync(distAssetsDir)) {
   fs.mkdirSync(distAssetsDir, { recursive: true });
 }
 
-// Copy icon and favicon to dist/assets
+// Copy icon and favicon to dist/assets and root dist
 if (fs.existsSync(path.join(assetsDir, 'icon.png'))) {
   fs.copyFileSync(path.join(assetsDir, 'icon.png'), path.join(distAssetsDir, 'icon.png'));
 }
 if (fs.existsSync(path.join(assetsDir, 'favicon.png'))) {
   fs.copyFileSync(path.join(assetsDir, 'favicon.png'), path.join(distAssetsDir, 'favicon.png'));
+}
+if (fs.existsSync(path.join(publicDir, 'favicon.ico'))) {
+  fs.copyFileSync(path.join(publicDir, 'favicon.ico'), path.join(distDir, 'favicon.ico'));
 }
 
 // Read generated dist/index.html and inject PWA tags if not present

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Image,
 } from 'react-native';
 import { StudzoneService } from '../services/studzoneService';
 import { PsgimService } from '../services/psgimService';
@@ -149,7 +150,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
         {/* ── College Header ── */}
         <View style={styles.header}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>🏛️</Text>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.logoBadgeImg}
+              resizeMode="cover"
+            />
           </View>
           <Text style={styles.collegeName}>PSGIM One</Text>
           <Text style={styles.collegeSub}>PSG Institute of Management</Text>
@@ -316,22 +321,25 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   logoBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#1E293B',
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: '#0F172A',
     borderWidth: 1.5,
-    borderColor: '#334155',
+    borderColor: '#38BDF8',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
     shadowColor: '#38BDF8',
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 6,
+    overflow: 'hidden',
   },
-  logoText: {
-    fontSize: 36,
+  logoBadgeImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 18,
   },
   collegeName: {
     color: '#F8FAFC',

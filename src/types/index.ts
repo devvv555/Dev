@@ -33,6 +33,7 @@ export interface TimetableSlot {
   endTime: string;   // "HH:MM"
   subjectId: string;
   room?: string;
+  faculty?: string;
 }
 
 export type AttendanceStatus = 'attended' | 'bunked' | 'cancelled';

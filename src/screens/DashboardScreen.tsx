@@ -21,16 +21,13 @@ import { PsgimService } from '../services/psgimService';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
 import { NotificationService } from '../services/notificationService';
 import { StorageService } from '../services/storageService';
-import { LmsService } from '../services/lmsService';
-import { LmsAssignmentCard } from '../components/LmsAssignmentCard';
-import { LmsQuizCard } from '../components/LmsQuizCard';
-import { MoodleQuizModal } from '../components/MoodleQuizModal';
 import { PsgimConnectService } from '../services/psgimConnectService';
 import { PsgimAnnouncementCard } from '../components/PsgimAnnouncementCard';
 import { PsgimNoticeModal } from '../components/PsgimNoticeModal';
 import { DigitalIdModal } from '../components/DigitalIdModal';
 import { CoursePlanModal } from '../components/CoursePlanModal';
 import { AttendanceDisputeModal } from '../components/AttendanceDisputeModal';
+import { FacultySelectModal } from '../components/FacultySelectModal';
 
 
 interface DashboardScreenProps {
@@ -45,6 +42,7 @@ interface DashboardScreenProps {
     status: AttendanceStatus
   ) => Promise<{ success: boolean; message: string; isChange: boolean; alreadyMarked?: boolean }>;
   onUpdateSubject?: (subject: Subject) => void;
+  onUpdateFaculty?: (subjectId: string, newFaculty: string) => void;
   onToggleMedicalClaim: (id: string) => void;
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
@@ -59,6 +57,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   studentName,
   periodRecords,
   onRecordPeriodAttendance,
+  onUpdateFaculty,
   onToggleMedicalClaim,
   onOpenCalendar,
   onRefresh,
@@ -74,17 +73,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [reminderNote, setReminderNote] = useState('');
   const [reminderTiming, setReminderTiming] = useState<'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM'>('NEXT_CLASS');
 
-  // LMS Moodle state
-  const [lmsAssignments, setLmsAssignments] = useState<LmsAssignment[]>([]);
-  const [lmsQuizzes, setLmsQuizzes] = useState<LmsQuiz[]>([]);
-  const [lmsActiveTab, setLmsActiveTab] = useState<'ASSIGNMENTS' | 'QUIZZES'>('ASSIGNMENTS');
-  const [moodleModal, setMoodleModal] = useState<{
-    visible: boolean;
-    title: string;
-    url: string;
-  }>({ visible: false, title: '', url: '' });
-  const [lmsPassword, setLmsPassword] = useState('Welcome@123');
-
   // PSGIM Connect Notices state
   const [announcements, setAnnouncements] = useState<PsgimAnnouncement[]>([]);
   const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
@@ -92,22 +80,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   // Campus Companion Utility Modals state
   const [showDigitalIdModal, setShowDigitalIdModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showSubjectPickerModal, setShowSubjectPickerModal] = useState(false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
     code: string;
     name: string;
   }>({ visible: false, code: '24GM14', name: 'Business Statistics' });
+  const [facultyModalSubject, setFacultyModalSubject] = useState<Subject | null>(null);
 
   useEffect(() => {
     PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
       StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
-      LmsService.getAssignments(studentRollNo).then(setLmsAssignments);
-      LmsService.getQuizzes(studentRollNo).then(setLmsQuizzes);
-      LmsService.getCredentials(studentRollNo).then((c) => {
-        if (c?.password) setLmsPassword(c.password);
-      });
     }
   }, [studentRollNo]);
 
@@ -454,14 +439,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         Vibration.vibrate(35);
       } catch {}
       PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
-      if (studentRollNo) {
-        const [asg, qz] = await Promise.all([
-          LmsService.getAssignments(studentRollNo),
-          LmsService.getQuizzes(studentRollNo),
-        ]);
-        setLmsAssignments(asg);
-        setLmsQuizzes(qz);
-      }
       if (onRefresh) {
         await onRefresh();
       }
@@ -537,19 +514,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <TouchableOpacity
           style={styles.utilityPillBtn}
-          onPress={() =>
-            setCoursePlanModalInfo({
-              visible: true,
-              code: '24GM14',
-              name: 'Business Statistics',
-            })
-          }
+          onPress={() => setShowSubjectPickerModal(true)}
           activeOpacity={0.8}
         >
           <Text style={styles.utilityPillIcon}>📊</Text>
           <View style={styles.utilityPillTextCol}>
-            <Text style={styles.utilityPillTitle}>Course Plan</Text>
-            <Text style={styles.utilityPillSub}>50M CA Marks</Text>
+            <Text style={styles.utilityPillTitle}>Course Plans</Text>
+            <Text style={styles.utilityPillSub}>All 8 Subjects</Text>
           </View>
         </TouchableOpacity>
 
@@ -700,94 +671,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <Text style={styles.simulatorSubDetail}>
               {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
             </Text>
+            {currentSlot && (currentSlot.faculty || currentSubject?.faculty) ? (
+              <TouchableOpacity
+                style={styles.hourlyFacultyTouch}
+                activeOpacity={0.7}
+                onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
+              >
+                <Text style={styles.hourlyFacultyText}>
+                  👨‍🏫 Teaching Faculty: <Text style={styles.hourlyFacultyHighlight}>{currentSlot.faculty || currentSubject?.faculty}</Text> ✎
+                </Text>
+              </TouchableOpacity>
+            ) : null}
             <Text style={styles.simulatorSub}>
               {slotStatus.message}
             </Text>
           </>
         )}
 
-        {/* Discrepancy & Surplus Status Indicators */}
-        {!(isWeekendOrNoClass && selectedDay === currentDayName) && (() => {
-          const slotSurplus = surplusAlerts.find(
-            (a) => a.subjectId === currentSlot?.subjectId && a.difference > 0
-          );
-          const slotDeficit = subjects.find(
-            (s) => s.id === currentSlot?.subjectId && s.officialAttended < s.attended
-          );
-          if (slotSurplus) {
-            return (
-              <View style={styles.surplusNoticeBanner}>
-                <Text style={styles.surplusNoticeText}>
-                  🎉 Portal Extra Attendance: {slotSurplus.officialAttended} hrs vs {slotSurplus.periodAttended} hrs logged (+{slotSurplus.difference} hrs bonus/OD granted).
-                </Text>
-              </View>
-            );
-          }
-          if (slotDeficit) {
-            return (
-              <View style={styles.discrepancyNoticeBanner}>
-                <Text style={styles.discrepancyNoticeText}>
-                  ⚠️ Attendance Discrepancy: Portal marked {slotDeficit.officialAttended} hrs vs {slotDeficit.attended} hrs logged ({slotDeficit.attended - slotDeficit.officialAttended} hrs lower in portal).
-                </Text>
-              </View>
-            );
-          }
-          return null;
-        })()}
-
-        {/* Period Selector Pills: Instant 1-tap period switching for Today's Scheduled Classes */}
-        {!isWeekendOrNoClass && activeDaySlots.length > 1 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.periodPillScroll}
-            contentContainerStyle={styles.periodPillContainer}
-          >
-            {activeDaySlots.map((slot, idx) => {
-              const sub = subjects.find((s) => s.id === slot.subjectId);
-              const isSelected = idx === activeIndex;
-              const pKey = `${todayDate}_${slot.id}`;
-              const rec = periodRecords[pKey];
-              const hasPendingReminder = reminders.some(
-                (r) => !r.completed && (r.slotId === slot.id || r.subjectId === slot.subjectId)
-              );
-
-              return (
-                <TouchableOpacity
-                  key={idx}
-                  activeOpacity={0.7}
-                  onPress={() => setSelectedSlotIndex(idx)}
-                  style={[
-                    styles.periodPill,
-                    isSelected ? styles.periodPillActive : styles.periodPillInactive,
-                    rec?.status === 'attended' && !isSelected && styles.periodPillMarkedAttended,
-                    rec?.status === 'bunked' && !isSelected && styles.periodPillMarkedBunked,
-                    rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
-                  ]}
-                >
-                  <View style={styles.pillHeaderRow}>
-                    <Text style={[styles.periodPillTime, isSelected && styles.periodPillTextActive]}>
-                      {slot.startTime}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                      {hasPendingReminder && (
-                        <Text style={styles.pillReminderIndicator}>📌</Text>
-                      )}
-                      {rec && (
-                        <Text style={styles.pillStatusIndicator}>
-                          {rec.status === 'attended' ? '✅' : rec.status === 'bunked' ? '❌' : '⚪'}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                  <Text style={[styles.periodPillCode, isSelected && styles.periodPillTextActive]}>
-                    {sub?.code || slot.subjectId.replace('sub_', '').toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
+        {/* Auto-locked: No manual schedule switching */}
 
         {/* If this period was already marked, display locked status banner */}
         {!isWeekendOrNoClass && currentRecord && (
@@ -1007,6 +908,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           onOpenCoursePlan={(code, name) =>
             setCoursePlanModalInfo({ visible: true, code, name })
           }
+          onEditFaculty={(subj) => setFacultyModalSubject(subj)}
         />
       ))}
 
@@ -1213,6 +1115,67 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         studentRollNo={studentRollNo}
       />
 
+      {/* 📚 Course Plan Subject Selector Modal */}
+      <Modal
+        visible={showSubjectPickerModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowSubjectPickerModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.subjectPickerModalCard}>
+            <View style={styles.subjectPickerHeader}>
+              <View>
+                <Text style={styles.subjectPickerBadge}>ACADEMIC SYLLABUS</Text>
+                <Text style={styles.subjectPickerTitle}>Select Course Plan</Text>
+                <Text style={styles.subjectPickerSub}>Continuous Assessment (50M) & 30-Session Schedule</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowSubjectPickerModal(false)}
+                style={styles.closeTripModalBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.closeTripModalBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+              {subjects.map((sub) => (
+                <TouchableOpacity
+                  key={sub.id}
+                  style={[styles.subjectPickerItem, { borderLeftColor: sub.color || '#38BDF8' }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setShowSubjectPickerModal(false);
+                    setCoursePlanModalInfo({
+                      visible: true,
+                      code: sub.code,
+                      name: sub.name,
+                    });
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <View style={styles.subjectPickerCodeBadge}>
+                        <Text style={styles.subjectPickerCodeText}>{sub.code}</Text>
+                      </View>
+                      {sub.batch ? (
+                        <Text style={styles.subjectPickerBatchText}>Batch {sub.batch}</Text>
+                      ) : null}
+                    </View>
+                    <Text style={styles.subjectPickerItemName} numberOfLines={1}>{sub.name}</Text>
+                    {sub.faculty ? (
+                      <Text style={styles.subjectPickerFacultyText} numberOfLines={1}>👨‍🏫 {sub.faculty}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.subjectPickerChevron}>→</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* 📊 Course Plan & CA Marks Tracker Modal */}
       <CoursePlanModal
         visible={coursePlanModalInfo.visible}
@@ -1230,6 +1193,17 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         onClose={() => setShowDisputeModal(false)}
         studentRollNo={studentRollNo}
         subjects={subjects}
+      />
+
+      {/* 👨‍🏫 Faculty Assignment & Customization Modal */}
+      <FacultySelectModal
+        visible={facultyModalSubject !== null}
+        subject={facultyModalSubject}
+        onClose={() => setFacultyModalSubject(null)}
+        onSaveFaculty={(subId, newFac) => {
+          onUpdateFaculty?.(subId, newFac);
+          setFacultyModalSubject(null);
+        }}
       />
     </ScrollView>
   );
@@ -1338,6 +1312,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
     marginBottom: 4,
+  },
+  hourlyFacultyTouch: {
+    backgroundColor: 'rgba(30, 41, 59, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+  },
+  hourlyFacultyText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  hourlyFacultyHighlight: {
+    color: '#38BDF8',
+    fontWeight: '800',
   },
   simulatorSub: {
     color: '#CBD5E1',
@@ -2101,93 +2095,84 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 16,
   },
-  lmsSection: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
+  subjectPickerModalCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 20,
+    padding: 20,
+    width: '94%',
+    maxWidth: 500,
     borderWidth: 1,
     borderColor: '#334155',
-    marginBottom: 16,
   },
-  lmsHeaderRow: {
+  subjectPickerHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
   },
-  lmsIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#0F172A',
-    borderWidth: 1,
-    borderColor: '#38BDF8',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lmsIcon: {
-    fontSize: 22,
-  },
-  lmsSectionTitle: {
-    color: '#F8FAFC',
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  lmsDirectBadge: {
-    backgroundColor: '#065F46',
-    borderColor: '#10B981',
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  lmsDirectBadgeText: {
-    color: '#34D399',
-    fontSize: 9,
+  subjectPickerBadge: {
+    color: '#38BDF8',
+    fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  lmsSectionSub: {
-    color: '#94A3B8',
-    fontSize: 12,
+  subjectPickerTitle: {
+    color: '#F8FAFC',
+    fontSize: 18,
+    fontWeight: '800',
     marginTop: 2,
   },
-  lmsTabRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
+  subjectPickerSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
   },
-  lmsTabBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
+  subjectPickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#334155',
-    alignItems: 'center',
+    borderLeftWidth: 4,
   },
-  lmsTabBtnActive: {
-    backgroundColor: '#1E3A8A',
-    borderColor: '#38BDF8',
+  subjectPickerCodeBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  lmsTabBtnText: {
-    color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  lmsTabBtnTextActive: {
+  subjectPickerCodeText: {
     color: '#38BDF8',
+    fontSize: 10.5,
     fontWeight: '800',
   },
-  lmsCardsList: {
-    gap: 12,
-  },
-  lmsEmptyText: {
+  subjectPickerBatchText: {
     color: '#64748B',
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: 20,
-    fontStyle: 'italic',
+    fontSize: 10.5,
+    fontWeight: '600',
+  },
+  subjectPickerItemName: {
+    color: '#F1F5F9',
+    fontSize: 13.5,
+    fontWeight: '700',
+    marginTop: 1,
+  },
+  subjectPickerFacultyText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  subjectPickerChevron: {
+    color: '#38BDF8',
+    fontSize: 18,
+    fontWeight: '800',
+    marginLeft: 8,
   },
   connectSection: {
     backgroundColor: '#1E293B',

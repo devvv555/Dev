@@ -1,6 +1,8 @@
 // PSG Institute of Management - Batch 2026-28 (Semester 1)
 // Master Database: Courses, Faculty, Master Timetable & Dynamic Student Batch Mappings
 
+import { getMasterStudent } from './psgimMasterStudents';
+
 export interface CourseDetail {
   code: string;
   title: string;
@@ -3839,20 +3841,28 @@ export function resolveExactRoom(course: string, groupNum: number, defaultRoom: 
  * Returns personalized timetable slots for any specific student roll number
  */
 export function getTimetableForStudent(rollNo: string) {
-  const student = STUDENT_REGISTRY[rollNo.toUpperCase()];
-  if (!student) return [];
+  const cleanRoll = (rollNo || '').toUpperCase();
+  const master = getMasterStudent(cleanRoll);
+  const student = STUDENT_REGISTRY[cleanRoll];
 
-  const studentBatches = Object.values(student.batches).filter(b => b && b.trim() !== '');
+  // Determine section group number (Batch A -> 1, Batch B -> 2, Batch C -> 3, Batch D -> 4)
+  const batchLetter = master?.batch || (cleanRoll.length >= 5 ? cleanRoll.charAt(3) : 'A');
+  const sectionGroupNum = batchLetter === 'B' ? 2 : batchLetter === 'C' ? 3 : batchLetter === 'D' ? 4 : 1;
 
-  return MASTER_SCHEDULE.filter(slot => {
+  // Use student's section batches if available
+  const studentBatches = student
+    ? Object.values(student.batches).filter((b) => b && b.trim() !== '')
+    : [`MCOB${sectionGroupNum}`, `ADM${sectionGroupNum}`, `MC${sectionGroupNum}`, `SSM${sectionGroupNum}`, `BS${sectionGroupNum}`, `EDM${sectionGroupNum}`, `LA${sectionGroupNum}`, `SSA${sectionGroupNum}`, `SPORTS1`];
+
+  return MASTER_SCHEDULE.filter((slot) => {
     if (slot.applicableBatches.includes('*')) return true;
-    return slot.applicableBatches.some(b => studentBatches.includes(b));
+    const sectionTargetBatch = `${slot.course}${sectionGroupNum}`;
+    return slot.applicableBatches.includes(sectionTargetBatch) || slot.applicableBatches.some((b) => studentBatches.includes(b));
   }).map((slot, index) => {
     const course = PSGIM_COURSES[slot.course];
-    const studentBatch = student.batches[slot.course as keyof typeof student.batches];
-    const groupNum = studentBatch ? parseInt(studentBatch.replace(/\D/g, ''), 10) : 0;
-    const facultyName = (groupNum && course?.faculty[groupNum]) || (course?.faculty[1] || 'Faculty');
-    const specificRoom = resolveExactRoom(slot.course, groupNum, slot.defaultRoom);
+    const studentBatch = `${slot.course}${sectionGroupNum}`;
+    const facultyName = (course?.faculty[sectionGroupNum]) || (course?.faculty[1] || 'Faculty');
+    const specificRoom = resolveExactRoom(slot.course, sectionGroupNum, slot.defaultRoom);
 
     return {
       id: `slot_${rollNo}_${slot.day}_${index}`,
@@ -3862,10 +3872,10 @@ export function getTimetableForStudent(rollNo: string) {
       courseCode: course?.code || slot.course,
       courseTitle: course?.title || slot.course,
       shortForm: slot.course,
-      batch: studentBatch || slot.applicableBatches[0],
+      batch: studentBatch,
       faculty: facultyName,
       room: specificRoom,
-      color: course?.color || '#3B82F6'
+      color: course?.color || '#3B82F6',
     };
   });
 }

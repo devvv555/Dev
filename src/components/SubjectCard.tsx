@@ -12,6 +12,7 @@ interface SubjectCardProps {
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
   onOpenCoursePlan?: (subjectCode: string, subjectName: string) => void;
+  onEditFaculty?: (subject: Subject) => void;
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
@@ -19,6 +20,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   studentRollNo,
   onToggleMedicalClaim,
   onOpenCoursePlan,
+  onEditFaculty,
 }) => {
   const [showSessionsModal, setShowSessionsModal] = useState(false);
 
@@ -50,11 +52,15 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                   <Text style={styles.batchPillText}>{subject.batch}</Text>
                 </View>
               )}
-              {subject.faculty && (
+              <TouchableOpacity
+                onPress={() => onEditFaculty && onEditFaculty(subject)}
+                style={styles.facultyTouchBtn}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.facultyText} numberOfLines={1}>
-                  👨‍🏫 {subject.faculty}
+                  👨‍🏫 {subject.faculty || 'Assign Faculty'} ✎
                 </Text>
-              )}
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -178,11 +184,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
+  facultyTouchBtn: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#334155',
+    flexDirection: 'row',
+    alignItems: 'center',
+    maxWidth: '85%',
+  },
   facultyText: {
     color: '#94A3B8',
     fontSize: 12,
     fontWeight: '500',
-    flex: 1,
   },
   medicalToggle: {
     flexDirection: 'row',

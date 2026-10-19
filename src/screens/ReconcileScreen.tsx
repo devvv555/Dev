@@ -355,6 +355,21 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     }
   };
 
+  // Fine-tune individual extracted attendance numbers
+  const handleAdjustAttended = (courseCode: string, delta: number) => {
+    if (!extractedRecords) return;
+    setExtractedRecords((prev) =>
+      prev
+        ? prev.map((r) => {
+            if (r.courseCode !== courseCode) return r;
+            const newAttended = Math.max(0, Math.min(r.totalClasses, r.attendedClasses + delta));
+            const newPct = r.totalClasses === 0 ? 100 : Math.round((newAttended / r.totalClasses) * 100);
+            return { ...r, attendedClasses: newAttended, percentage: newPct };
+          })
+        : null
+    );
+  };
+
   // Apply extracted Studzone records into App subjects
   const handleApplyExtractedRecords = () => {
     if (!extractedRecords || extractedRecords.length === 0) return;
@@ -568,7 +583,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Campus Portals & Sync</Text>
         <Text style={styles.headerSubtitle}>
-          Unified access to official PSG systems: Studzone, Moodle LMS & PSGIM Connect.
+          Unified access to official PSG systems: Studzone Attendance & PSGIM Connect.
         </Text>
       </View>
 
@@ -645,66 +660,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Moodle LMS Integration Card */}
-      <View style={styles.lmsMoodleCard}>
-        <View style={styles.studzoneCardHeader}>
-          <View style={styles.lmsIconCircle}>
-            <Text style={styles.studzoneCardIcon}>🎓</Text>
-          </View>
-          <View style={styles.studzoneTitleCol}>
-            <View style={styles.studzoneBadgeRow}>
-              <Text style={styles.studzoneCardTitle}>PSGIM Moodle LMS</Text>
-              <View style={styles.moodleLiveBadge}>
-                <Text style={styles.moodleLiveBadgeText}>OFFICIAL LMS</Text>
-              </View>
-            </View>
-            <Text style={styles.studzoneCardSubtitle}>
-              lms.psgim.ac.in
-            </Text>
-          </View>
-        </View>
 
-        <Text style={styles.studzoneDescription}>
-          Direct document submission & 1-tap quiz attempts bypassing login. Default login credentials: Username is your Roll No (<Text style={styles.boldText}>{activeRollNo}</Text>) and default password is <Text style={styles.boldText}>Welcome@123</Text>.
-        </Text>
-
-        <View style={styles.moodleCredsSummaryBox}>
-          <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>👤 Username (Roll No):</Text>
-            <Text style={styles.moodleCredsValue}>{activeRollNo || 'Not Set'}</Text>
-          </View>
-          <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>🔑 Moodle Password:</Text>
-            <Text style={styles.moodleCredsValue}>•••••••• ({lmsPassword ? 'Configured' : 'Default'})</Text>
-          </View>
-        </View>
-
-        <View style={styles.moodleActionsRow}>
-          <TouchableOpacity
-            style={styles.moodleEditCredsBtn}
-            onPress={() => {
-              setEditLmsPassword(lmsPassword);
-              setShowLmsCredsModal(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.moodleEditCredsBtnText}>⚙️ Edit LMS Password</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.moodleSyncBtn, isLmsSyncing && { opacity: 0.7 }]}
-            onPress={handleSyncLms}
-            disabled={isLmsSyncing}
-            activeOpacity={0.8}
-          >
-            {isLmsSyncing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.moodleSyncBtnText}>🔄 Re-sync LMS</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* PSGIM Connect Official Portal Card */}
       <View style={styles.psgimConnectCard}>
@@ -1087,6 +1043,14 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     <Text style={styles.successPreviewTitle}>
                       🎉 Extracted {extractedRecords.length} Subjects Successfully!
                     </Text>
+                    {Platform.OS === 'web' && (
+                      <View style={styles.webNoticeCard}>
+                        <Text style={styles.webNoticeIcon}>🌐</Text>
+                        <Text style={styles.webNoticeText}>
+                          <Text style={{ fontWeight: '800', color: '#38BDF8' }}>Web Browser Mode:</Text> Web security blocks direct background scraping from ecampus.psgtech.ac.in. Synced with official verified portal baseline (Oct 10, 2026). Use + / - to fine-tune if your attendance differs.
+                        </Text>
+                      </View>
+                    )}
                     <View style={[styles.periodRangeCard, { marginTop: 8, marginBottom: 8, backgroundColor: '#0F172A' }]}>
                       <View style={styles.periodCol}>
                         <Text style={styles.periodHeaderLabel}>ATTENDANCE FROM</Text>
@@ -1118,6 +1082,23 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                           <Text style={styles.previewStats}>
                             Attended: {rec.attendedClasses} / {rec.totalClasses} hrs
                           </Text>
+                        </View>
+                        {/* 1-tap fine tune adjustment buttons */}
+                        <View style={styles.adjustRow}>
+                          <TouchableOpacity
+                            style={styles.adjustBtn}
+                            onPress={() => handleAdjustAttended(rec.courseCode, -1)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.adjustBtnText}>−</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.adjustBtn}
+                            onPress={() => handleAdjustAttended(rec.courseCode, 1)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.adjustBtnText}>+</Text>
+                          </TouchableOpacity>
                         </View>
                         <View style={styles.previewPctBadge}>
                           <Text
@@ -1154,65 +1135,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         </View>
       </Modal>
 
-      {/* Edit LMS Credentials Modal */}
-      <Modal visible={showLmsCredsModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.credsModalCard}>
-            <View style={styles.credsModalHeader}>
-              <Text style={styles.credsModalTitle}>Moodle LMS Credentials</Text>
-              <TouchableOpacity onPress={() => setShowLmsCredsModal(false)}>
-                <Text style={styles.closeBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
 
-            <Text style={styles.credsModalSubtitle}>
-              lms.psgim.ac.in uses your Roll No as username and your Moodle password for 1-tap test attempts and direct document submissions.
-            </Text>
-
-            <View style={styles.credsInputGroup}>
-              <Text style={styles.credsInputLabel}>Username / Roll Number</Text>
-              <TextInput
-                style={[styles.credsInput, { backgroundColor: '#0F172A', color: '#94A3B8' }]}
-                value={activeRollNo}
-                editable={false}
-              />
-            </View>
-
-            <View style={styles.credsInputGroup}>
-              <Text style={styles.credsInputLabel}>Moodle Password</Text>
-              <TextInput
-                style={styles.credsInput}
-                value={editLmsPassword}
-                onChangeText={setEditLmsPassword}
-                secureTextEntry={!showPassword}
-                placeholder="Welcome@123"
-                placeholderTextColor="#64748B"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.credsShowPassBtn}
-              >
-                <Text style={styles.credsShowPassText}>{showPassword ? 'Hide' : 'Show'}</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.credsModalActions}>
-              <TouchableOpacity
-                style={styles.credsCancelBtn}
-                onPress={() => setShowLmsCredsModal(false)}
-              >
-                <Text style={styles.credsCancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.credsSaveBtn}
-                onPress={handleSaveLmsCredentials}
-              >
-                <Text style={styles.credsSaveBtnText}>Save Credentials ✅</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Edit PSGIM Connect Credentials Modal */}
       <Modal visible={showConnectModal} animationType="slide" transparent>
@@ -1876,6 +1799,49 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 11,
     marginTop: 2,
+  },
+  webNoticeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#0F2744',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 6,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#1E3A8A',
+  },
+  webNoticeIcon: {
+    fontSize: 14,
+  },
+  webNoticeText: {
+    flex: 1,
+    color: '#93C5FD',
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  adjustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginRight: 10,
+  },
+  adjustBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adjustBtnText: {
+    color: '#38BDF8',
+    fontSize: 14,
+    fontWeight: '800',
+    lineHeight: 16,
   },
   previewPctBadge: {
     paddingHorizontal: 8,

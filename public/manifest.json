@@ -1,15 +1,15 @@
 {
-  "short_name": "Attendance",
-  "name": "Attendance Monitor",
+  "short_name": "PSGIM One",
+  "name": "PSGIM One",
   "icons": [
     {
-      "src": "/assets/favicon.png",
+      "src": "/assets/favicon.png?v=5",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/icon.png",
+      "src": "/assets/icon.png?v=5",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

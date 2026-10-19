@@ -40,14 +40,67 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
     portalToDate
   );
 
-  const handleCopyReport = () => {
-    // Show user-friendly copy feedback
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+      console.warn('navigator.clipboard failed, using fallback:', e);
+    }
+
+    try {
+      if (typeof document !== 'undefined') {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        textArea.setAttribute('readonly', '');
+        document.body.appendChild(textArea);
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (successful) return true;
+      }
+    } catch (err) {
+      console.warn('Fallback execCommand failed:', err);
+    }
+    return false;
+  };
+
+  const handleCopyReport = async () => {
+    const success = await copyToClipboard(report.summaryText);
     setCopied(true);
-    Alert.alert(
-      'Dispute Report Ready 📋',
-      'The complete itemized attendance report has been prepared. You can share this text directly with your Faculty Advisor, Tutor, or HOD for verification.'
-    );
+    if (success) {
+      Alert.alert(
+        'Dispute Dossier Copied! 📋✅',
+        'The complete itemized attendance dispute text has been copied to your clipboard. You can now paste and send it directly via WhatsApp, Email, or SMS to your Faculty Advisor / HOD.'
+      );
+    } else {
+      Alert.alert(
+        'Dispute Dossier Ready 📋',
+        'You can select, copy, or share the text directly from the box below.'
+      );
+    }
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleNativeShare = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({
+          title: `Attendance Dispute - ${report.studentName} (${report.rollNo})`,
+          text: report.summaryText,
+        });
+        return;
+      }
+    } catch (e) {
+      // User cancelled share or share unavailable
+    }
+    handleCopyReport();
   };
 
   return (
@@ -196,23 +249,46 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
             ) : null}
 
             {/* Plaintext Dossier Preview Box */}
-            <Text style={[styles.sectionHeader, { marginTop: 14 }]}>
-              Official Dossier Text (For Advisor / HOD)
-            </Text>
-            <View style={styles.previewTextBox}>
-              <Text style={styles.previewTextContent}>{report.summaryText}</Text>
+            <View style={styles.previewHeaderRow}>
+              <Text style={styles.sectionHeader}>
+                Official Dossier Text (For Advisor / HOD)
+              </Text>
+              <TouchableOpacity onPress={handleCopyReport} activeOpacity={0.7}>
+                <Text style={styles.quickCopyLink}>
+                  {copied ? '✅ Copied!' : '📋 Copy Text'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Actions */}
-            <TouchableOpacity
-              style={styles.copyBtn}
-              onPress={handleCopyReport}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.copyBtnText}>
-                {copied ? '✅ Dispute Text Copied!' : '📋 Share / Send Dispute Dossier'}
+            <View style={styles.previewTextBox}>
+              <Text 
+                selectable={true} 
+                style={styles.previewTextContent}
+              >
+                {report.summaryText}
               </Text>
-            </TouchableOpacity>
+            </View>
+
+            {/* Actions: Direct Share + One-click Copy */}
+            <View style={styles.actionsRow}>
+              <TouchableOpacity
+                style={[styles.copyBtn, { flex: 1 }]}
+                onPress={handleCopyReport}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.copyBtnText}>
+                  {copied ? '✅ Copied to Clipboard!' : '📋 Copy Dossier'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.shareBtn, { flex: 1 }]}
+                onPress={handleNativeShare}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.shareBtnText}>📤 Share / Send</Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -489,9 +565,38 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 16,
   },
   copyBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '800',
+  },
+  previewHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    marginTop: 14,
+  },
+  quickCopyLink: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  shareBtn: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+  },
+  shareBtnText: {
     color: '#FFFFFF',
     fontSize: 13.5,
     fontWeight: '800',

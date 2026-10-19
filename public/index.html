@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
-    <title>Attendance Monitor</title>
+    <title>PSGIM One</title>
 
     <!-- PWA & Mobile Web Capabilities -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0284C7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Attendance" />
+    <meta name="apple-mobile-web-app-title" content="PSGIM One" />
     <link rel="apple-touch-icon" href="/assets/icon.png" />
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
 
@@ -27,6 +27,12 @@
         user-select: none;
         -webkit-touch-callout: none;
       }
+      .selectable-text,
+      .selectable-text * {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        -webkit-touch-callout: default !important;
+      }
       body {
         overflow: hidden;
       }
@@ -41,7 +47,7 @@
   <body>
     <noscript>
       <div style="color: #fff; text-align: center; padding: 2rem; font-family: sans-serif;">
-        You need to enable JavaScript to run Attendance Monitor.
+        You need to enable JavaScript to run PSGIM One.
       </div>
     </noscript>
     <div id="root"></div>

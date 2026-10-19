@@ -24,24 +24,36 @@ interface CoursePlanModalProps {
 export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
   visible,
   onClose,
-  subjectCode,
-  subjectName,
+  subjectCode: initialCode,
+  subjectName: initialName,
   studentRollNo,
 }) => {
   const [activeTab, setActiveTab] = useState<'ASSESSMENTS' | 'SESSIONS' | 'RULES'>('ASSESSMENTS');
+  const [currentCode, setCurrentCode] = useState<string>(initialCode || '24GM14');
+  const [currentName, setCurrentName] = useState<string>(initialName || 'Business Statistics');
+
   const [plan, setPlan] = useState<CoursePlan>(() =>
-    getCoursePlanForSubject(subjectCode, subjectName)
+    getCoursePlanForSubject(initialCode || '24GM14', initialName)
   );
   const [caMarks, setCaMarks] = useState<Record<string, string>>({});
   const [targetGrade, setTargetGrade] = useState<'O' | 'A+' | 'A' | 'B+'>('A+');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Sync when prop changes
   useEffect(() => {
-    const loadedPlan = getCoursePlanForSubject(subjectCode, subjectName);
+    if (initialCode) {
+      setCurrentCode(initialCode);
+      setCurrentName(initialName || '');
+    }
+  }, [initialCode, initialName]);
+
+  // Load course plan and CA record when currentCode or studentRollNo changes
+  useEffect(() => {
+    const loadedPlan = getCoursePlanForSubject(currentCode, currentName);
     setPlan(loadedPlan);
 
-    if (studentRollNo && subjectCode) {
-      CoursePlanService.getStudentCaRecord(studentRollNo, subjectCode).then((record) => {
+    if (studentRollNo && currentCode) {
+      CoursePlanService.getStudentCaRecord(studentRollNo, currentCode).then((record) => {
         if (record) {
           const strMarks: Record<string, string> = {};
           Object.entries(record.marks || {}).forEach(([k, v]) => {
@@ -51,10 +63,12 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
           if (record.targetGrade) {
             setTargetGrade(record.targetGrade);
           }
+        } else {
+          setCaMarks({});
         }
       });
     }
-  }, [subjectCode, subjectName, studentRollNo]);
+  }, [currentCode, currentName, studentRollNo]);
 
   // Numeric marks object
   const numericMarks: Record<string, number> = {};
@@ -109,6 +123,48 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Quick Subject Switcher: Tap any subject to switch its course plan directly */}
+          <View style={styles.subjectSwitcherContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subjectSwitcherScroll}>
+              {[
+                { code: '24GM14', label: 'BS (Stats)' },
+                { code: '24GM13', label: 'ADM (Accounting)' },
+                { code: '24GM16', label: 'SSA (Spreadsheet)' },
+                { code: '24GM11', label: 'MCOB (Mgmt & OB)' },
+                { code: '24GM12', label: 'EDM (Economics)' },
+                { code: '24GM15', label: 'MC (Comm)' },
+                { code: '24GM19', label: 'LA (Legal)' },
+                { code: '24GM18', label: 'SSM (Social)' },
+              ].map((sub) => {
+                const isSelected = currentCode.toUpperCase() === sub.code.toUpperCase() ||
+                  plan.subjectCode.toUpperCase() === sub.code.toUpperCase();
+                return (
+                  <TouchableOpacity
+                    key={sub.code}
+                    onPress={() => {
+                      setCurrentCode(sub.code);
+                      setCurrentName('');
+                    }}
+                    style={[
+                      styles.subjectSwitchPill,
+                      isSelected && styles.subjectSwitchPillActive,
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.subjectSwitchPillText,
+                        isSelected && styles.subjectSwitchPillTextActive,
+                      ]}
+                    >
+                      {sub.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
 
           {/* Sub Navigation Tabs */}
@@ -424,6 +480,37 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 15,
     fontWeight: '700',
+  },
+  subjectSwitcherContainer: {
+    backgroundColor: '#0B1120',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+    paddingVertical: 8,
+  },
+  subjectSwitcherScroll: {
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  subjectSwitchPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  subjectSwitchPillActive: {
+    backgroundColor: '#0284C7',
+    borderColor: '#38BDF8',
+  },
+  subjectSwitchPillText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  subjectSwitchPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   tabBar: {
     flexDirection: 'row',

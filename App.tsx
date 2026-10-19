@@ -7,6 +7,7 @@ import {
   StatusBar,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Subject, TimetableSlot, MedicalClaimRecord, PeriodAttendanceRecord, AttendanceStatus } from './src/types';
@@ -25,6 +26,7 @@ import { PsgimService } from './src/services/psgimService';
 import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
 import { CloudSyncService } from './src/services/cloudSyncService';
 import { getSlotHours } from './src/services/attendanceEngine';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'MEDICAL' | 'ERP_SYNC';
@@ -50,8 +52,25 @@ export default function App() {
         if (savedRollNo && PsgimService.getStudent(savedRollNo)) {
           const officialRoll = toNewRollNo(savedRollNo);
           setActiveRollNo(officialRoll);
-          setSubjects(PsgimService.generateSubjectsForStudent(officialRoll));
-          setTimetable(PsgimService.generateTimetableForStudent(officialRoll));
+          const initialSubjects = PsgimService.generateSubjectsForStudent(officialRoll);
+          const initialTimetable = PsgimService.generateTimetableForStudent(officialRoll);
+
+          // Apply saved faculty overrides if any
+          for (const sub of initialSubjects) {
+            const override = await AsyncStorage.getItem(`@user_faculty_override_${officialRoll}_${sub.id}`);
+            if (override) {
+              sub.faculty = override;
+            }
+          }
+          initialTimetable.forEach((slot) => {
+            const matchingSub = initialSubjects.find((s) => s.id === slot.subjectId);
+            if (matchingSub && matchingSub.faculty) {
+              slot.faculty = matchingSub.faculty;
+            }
+          });
+
+          setSubjects(initialSubjects);
+          setTimetable(initialTimetable);
           const storedRecords = await StorageService.getPeriodRecords(officialRoll);
           setPeriodRecords(storedRecords);
           // Sync with latest cloud updates (e.g. from Teacher Google Sheets)
@@ -123,6 +142,21 @@ export default function App() {
   const handleLoginSuccess = async (rollNo: string) => {
     const studentSubjects = PsgimService.generateSubjectsForStudent(rollNo);
     const studentTimetable = PsgimService.generateTimetableForStudent(rollNo);
+
+    // Apply saved faculty overrides if any
+    for (const sub of studentSubjects) {
+      const override = await AsyncStorage.getItem(`@user_faculty_override_${rollNo}_${sub.id}`);
+      if (override) {
+        sub.faculty = override;
+      }
+    }
+    studentTimetable.forEach((slot) => {
+      const matchingSub = studentSubjects.find((s) => s.id === slot.subjectId);
+      if (matchingSub && matchingSub.faculty) {
+        slot.faculty = matchingSub.faculty;
+      }
+    });
+
     const storedRecords = await StorageService.getPeriodRecords(rollNo);
 
     setActiveRollNo(rollNo);
@@ -136,6 +170,27 @@ export default function App() {
     AnalyticsService.recordLogin(rollNo, student?.name || '', student?.batch || 'A');
     CloudSyncService.syncStudentProfile(rollNo, student?.name || '', student?.batch || 'A');
     CloudSyncService.syncSubjects(rollNo, studentSubjects);
+  };
+
+  // Faculty assignment & customization handler
+  const handleUpdateFaculty = async (subjectId: string, newFaculty: string) => {
+    const updatedSubjects = subjects.map((s) => (s.id === subjectId ? { ...s, faculty: newFaculty } : s));
+    setSubjects(updatedSubjects);
+    await StorageService.saveSubjects(updatedSubjects);
+
+    const updatedTimetable = timetable.map((slot) =>
+      slot.subjectId === subjectId ? { ...slot, faculty: newFaculty } : slot
+    );
+    setTimetable(updatedTimetable);
+    await StorageService.saveTimetable(updatedTimetable);
+
+    try {
+      if (activeRollNo) {
+        await AsyncStorage.setItem(`@user_faculty_override_${activeRollNo}_${subjectId}`, newFaculty);
+      }
+    } catch (e) {
+      console.warn('Error saving faculty override:', e);
+    }
   };
 
   // Logout handler
@@ -509,7 +564,11 @@ export default function App() {
         {/* Row 1: Brand Logo & Title + Actions */}
         <View style={styles.headerTopRow}>
           <View style={styles.brandContainer}>
-            <Text style={styles.appLogo}>🏛️</Text>
+            <Image
+              source={require('./assets/icon.png')}
+              style={styles.headerLogoImg}
+              resizeMode="cover"
+            />
             <Text style={styles.appName} numberOfLines={1}>
               PSGIM One
             </Text>
@@ -555,6 +614,7 @@ export default function App() {
             studentName={studentName}
             periodRecords={periodRecords}
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
+            onUpdateFaculty={handleUpdateFaculty}
             onToggleMedicalClaim={handleToggleMedicalClaim}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
             onRefresh={handleRefresh}
@@ -727,8 +787,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  appLogo: {
-    fontSize: 22,
+  headerLogoImg: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
   },
   appName: {
     color: '#F8FAFC',

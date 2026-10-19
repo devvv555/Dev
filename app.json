@@ -27,8 +27,8 @@
       "bundler": "metro",
       "themeColor": "#0F172A",
       "backgroundColor": "#0F172A",
-      "name": "Attendance Monitor",
-      "shortName": "Attendance",
+      "name": "PSGIM One",
+      "shortName": "PSGIM One",
       "display": "standalone",
       "orientation": "portrait"
     },

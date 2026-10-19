@@ -73,28 +73,33 @@ export const PsgimService = {
    */
   generateSubjectsForStudent(rollNo: string): Subject[] {
     const oldRoll = toOldRollNo(rollNo);
+    const newRoll = toNewRollNo(rollNo);
+    const master = getMasterStudent(rollNo) || getMasterStudent(newRoll) || getMasterStudent(oldRoll);
     const student = this.getStudent(oldRoll) || STUDENT_REGISTRY['D26AA01'];
-    const batches = student.batches;
+    const batches = student ? student.batches : STUDENT_REGISTRY['D26AA01'].batches;
     const mcobData = getMcobData(oldRoll) || getMcobData(rollNo);
 
-    // Official attendance statistics matching Studzone portal table (17-08-2026 to 10-10-2026)
+    // Determine section group number (Batch A -> 1, Batch B -> 2, Batch C -> 3, Batch D -> 4)
+    const batchLetter = master?.batch || (newRoll.length >= 5 ? newRoll.charAt(3) : 'A');
+    const sectionGroupNum = batchLetter === 'B' ? 2 : batchLetter === 'C' ? 3 : batchLetter === 'D' ? 4 : 1;
+
+    // Official attendance statistics matching latest verified Studzone portal table (17-08-2026 to 10-10-2026)
     const attendancePresets: Record<string, { attended: number; total: number; hasMedicalClaim?: boolean }> = {
-      MCOB: { attended: 24, total: 32 }, // 24GM11: 24/32 (75%)
-      EDM: { attended: 24, total: 28, hasMedicalClaim: false }, // 24GM12: 24/28 (86%)
-      ADM: { attended: 28, total: 30 }, // 24GM13: 28/30 (94%)
-      BS: { attended: 22, total: 28 }, // 24GM14: 22/28 (79%)
-      MC: { attended: 38, total: 40 }, // 24GM15: 38/40 (95%)
-      SSA: { attended: 16, total: 22 }, // 24GM16: 16/22 (73%)
-      SSM: { attended: 31, total: 32 }, // 24GM18: 31/32 (97%)
-      LA: { attended: 12, total: 14 }, // 24GM19: 12/14 (86%)
-      SPORTS: { attended: 7, total: 8 },
+      MCOB: { attended: 28, total: 28 }, // 24GM11: 28/28 (100%)
+      EDM: { attended: 28, total: 28, hasMedicalClaim: false }, // 24GM12: 28/28 (100%)
+      ADM: { attended: 30, total: 30 }, // 24GM13: 30/30 (100%)
+      BS: { attended: 26, total: 26 }, // 24GM14: 26/26 (100%)
+      MC: { attended: 39, total: 40 }, // 24GM15: 39/40 (98%)
+      SSA: { attended: 24, total: 26 }, // 24GM16: 24/26 (93%)
+      SSM: { attended: 32, total: 32 }, // 24GM18: 32/32 (100%)
+      LA: { attended: 12, total: 12 }, // 24GM19: 12/12 (100%)
+      SPORTS: { attended: 8, total: 8 }, // SPORTS: 8/8 (100%)
     };
 
     return Object.entries(batches).map(([courseKey, batchCode]) => {
       const course = PSGIM_COURSES[courseKey];
       const isBlankBatch = !batchCode || batchCode.trim() === '';
-      const groupNum = isBlankBatch ? 0 : (parseInt(batchCode.replace(/\D/g, ''), 10) || 1);
-      const faculty = isBlankBatch ? '' : (course?.faculty[groupNum] || 'Faculty');
+      const faculty = isBlankBatch ? '' : (course?.faculty[sectionGroupNum] || course?.faculty[1] || 'Faculty');
       const stats = attendancePresets[courseKey] || { attended: 20, total: 24 };
 
       const isMcob = courseKey === 'MCOB' && mcobData;
@@ -115,14 +120,14 @@ export const PsgimService = {
         total,
         officialAttended,
         officialTotal,
-        lastOfficialUpdate: '2026-09-15',
-        batch: isBlankBatch ? '' : batchCode,
+        lastOfficialUpdate: '2026-10-10',
+        batch: isBlankBatch ? '' : `Batch ${batchLetter}`,
         faculty: isBlankBatch ? '' : faculty,
         room: isBlankBatch
           ? ''
           : resolveExactRoom(
               courseKey,
-              parseInt(batchCode.replace(/\D/g, '') || '0', 10),
+              sectionGroupNum,
               course?.halls || 'LH-101'
             ),
       };
@@ -134,16 +139,28 @@ export const PsgimService = {
    */
   generateTimetableForStudent(rollNo: string): TimetableSlot[] {
     const oldRoll = toOldRollNo(rollNo);
+    const newRoll = toNewRollNo(rollNo);
+    const master = getMasterStudent(rollNo) || getMasterStudent(newRoll) || getMasterStudent(oldRoll);
+    const batchLetter = master?.batch || (newRoll.length >= 5 ? newRoll.charAt(3) : 'A');
+    const sectionGroupNum = batchLetter === 'B' ? 2 : batchLetter === 'C' ? 3 : batchLetter === 'D' ? 4 : 1;
+
     const rawSlots = getPsgimTimetable(oldRoll) || getPsgimTimetable(rollNo);
     if (!rawSlots || rawSlots.length === 0) return [];
 
-    return rawSlots.map((slot) => ({
-      id: slot.id,
-      day: slot.day,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      subjectId: `sub_${slot.shortForm.toLowerCase()}`,
-      room: slot.room,
-    }));
+    return rawSlots.map((slot) => {
+      const course = PSGIM_COURSES[slot.shortForm];
+      const faculty = course?.faculty[sectionGroupNum] || slot.faculty || 'Faculty';
+      return {
+        id: slot.id,
+        day: slot.day,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        subjectId: `sub_${slot.shortForm.toLowerCase()}`,
+        room: slot.room,
+        faculty: faculty,
+      };
+    });
   },
 };
+
+

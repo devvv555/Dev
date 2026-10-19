@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  TextInput,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PsgimService } from '../services/psgimService';
 import { getMasterStudent } from '../data/psgimMasterStudents';
 
@@ -16,17 +18,62 @@ interface DigitalIdModalProps {
   studentRollNo: string;
 }
 
+const BLOOD_GROUPS = ['O +ve', 'O -ve', 'A +ve', 'A -ve', 'B +ve', 'B -ve', 'AB +ve', 'AB -ve'];
+
 export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
   visible,
   onClose,
   studentRollNo,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [bloodGroup, setBloodGroup] = useState('O +ve');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [showBloodPicker, setShowBloodPicker] = useState(false);
+  const [tempPhone, setTempPhone] = useState('');
 
   const cleanRoll = studentRollNo.toUpperCase().trim();
   const student = getMasterStudent(cleanRoll);
   const studentName = student ? student.name : cleanRoll;
   const profile = PsgimService.getStudentProfile(cleanRoll);
+
+  // Load saved blood group & emergency phone
+  useEffect(() => {
+    if (!cleanRoll) return;
+    const loadSavedData = async () => {
+      try {
+        const savedBg = await AsyncStorage.getItem(`@student_blood_group_${cleanRoll}`);
+        if (savedBg) setBloodGroup(savedBg);
+
+        const savedPhone = await AsyncStorage.getItem(`@student_emergency_phone_${cleanRoll}`);
+        if (savedPhone) {
+          setEmergencyPhone(savedPhone);
+          setTempPhone(savedPhone);
+        }
+      } catch (e) {
+        console.warn('Error loading blood group data:', e);
+      }
+    };
+    loadSavedData();
+  }, [cleanRoll, visible]);
+
+  const handleSelectBloodGroup = async (bg: string) => {
+    setBloodGroup(bg);
+    try {
+      await AsyncStorage.setItem(`@student_blood_group_${cleanRoll}`, bg);
+    } catch (e) {
+      console.warn('Error saving blood group:', e);
+    }
+  };
+
+  const handleSavePhone = async () => {
+    const trimmed = tempPhone.trim();
+    setEmergencyPhone(trimmed);
+    try {
+      await AsyncStorage.setItem(`@student_emergency_phone_${cleanRoll}`, trimmed);
+    } catch (e) {
+      console.warn('Error saving emergency phone:', e);
+    }
+  };
 
   // Generate stylized barcode lines from Roll No
   const barcodePattern = [
@@ -119,10 +166,18 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                       <Text style={styles.metaColVal}>I (First)</Text>
                     </View>
                     <View style={styles.metaDivider} />
-                    <View style={styles.metaCol}>
-                      <Text style={styles.metaColLabel}>BLOOD GROUP</Text>
-                      <Text style={styles.metaColVal}>O +ve</Text>
-                    </View>
+                    {/* Interactive Blood Group Selector */}
+                    <TouchableOpacity
+                      style={[styles.metaCol, styles.metaColInteractive]}
+                      onPress={() => setShowBloodPicker(true)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.bloodLabelRow}>
+                        <Text style={styles.metaColLabel}>BLOOD GROUP</Text>
+                        <Text style={styles.editPencilIcon}>✎</Text>
+                      </View>
+                      <Text style={[styles.metaColVal, styles.bloodGroupText]}>{bloodGroup}</Text>
+                    </TouchableOpacity>
                   </View>
 
                   {/* Scannable Stylized Barcode */}
@@ -168,6 +223,22 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                     </Text>
                   </View>
 
+                  {/* Personal Emergency Contact */}
+                  <View style={styles.emergencyContactCard}>
+                    <View style={styles.emergencyContactHeader}>
+                      <Text style={styles.emergencyContactTitle}>🚨 Student Emergency Contact:</Text>
+                      <TouchableOpacity
+                        onPress={() => setShowBloodPicker(true)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.emergencyEditLink}>✎ Edit</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.emergencyPhoneDisplay}>
+                      {emergencyPhone || 'Not set • Tap "Edit" to add guardian phone'}
+                    </Text>
+                  </View>
+
                   <View style={styles.backBottomNote}>
                     <Text style={styles.backBottomNoteText}>
                       If found on campus, please return to PSGIM Academic Office (Admin Block, 1st Floor).
@@ -192,6 +263,68 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
               <Text style={styles.doneBtnText}>Close Digital ID</Text>
             </TouchableOpacity>
           </ScrollView>
+
+          {/* Blood Group & Emergency Contact Picker Modal */}
+          <Modal visible={showBloodPicker} animationType="slide" transparent>
+            <View style={styles.pickerOverlay}>
+              <View style={styles.pickerCard}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerTitle}>🩸 Select Your Blood Group</Text>
+                  <TouchableOpacity onPress={() => setShowBloodPicker(false)}>
+                    <Text style={styles.closeBtnText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.pickerSubtitle}>
+                  Studzone only registers Roll Number & Date of Birth. Select your real blood group to display on your Emergency Digital ID:
+                </Text>
+
+                {/* Blood Group Grid */}
+                <View style={styles.bgGrid}>
+                  {BLOOD_GROUPS.map((bg) => {
+                    const isSelected = bloodGroup === bg;
+                    return (
+                      <TouchableOpacity
+                        key={bg}
+                        style={[styles.bgOption, isSelected && styles.bgOptionSelected]}
+                        onPress={() => handleSelectBloodGroup(bg)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.bgOptionText, isSelected && styles.bgOptionTextSelected]}>
+                          {bg}
+                        </Text>
+                        {isSelected && <Text style={styles.bgCheck}>✓</Text>}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Emergency Contact Phone Input */}
+                <View style={styles.phoneInputGroup}>
+                  <Text style={styles.phoneInputLabel}>Parent / Guardian Emergency Phone:</Text>
+                  <TextInput
+                    style={styles.phoneInput}
+                    placeholder="e.g. +91 98765 43210"
+                    placeholderTextColor="#64748B"
+                    value={tempPhone}
+                    onChangeText={setTempPhone}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.savePickerBtn}
+                  onPress={() => {
+                    handleSavePhone();
+                    setShowBloodPicker(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.savePickerBtnText}>Save to ID Card ✅</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </View>
     </Modal>
@@ -201,36 +334,40 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 16,
   },
   modalCard: {
+    width: '100%',
+    maxWidth: 440,
     backgroundColor: '#0F172A',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: '#334155',
-    maxHeight: '90%',
     padding: 16,
+    maxHeight: '92%',
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+    paddingBottom: 10,
   },
   topBarTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
     color: '#F8FAFC',
+    letterSpacing: 0.3,
   },
   closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    padding: 6,
+    borderRadius: 8,
     backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   closeBtnText: {
     color: '#94A3B8',
@@ -238,130 +375,134 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   disclaimerBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.4)',
-    borderRadius: 12,
     padding: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   disclaimerHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 3,
+    marginBottom: 4,
   },
   disclaimerIcon: {
     fontSize: 13,
   },
   disclaimerTitle: {
-    color: '#FCA5A5',
+    color: '#F87171',
     fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   disclaimerText: {
-    color: '#CBD5E1',
-    fontSize: 10.5,
-    lineHeight: 15,
+    color: '#FCA5A5',
+    fontSize: 11,
+    lineHeight: 16,
   },
   boldRed: {
     color: '#EF4444',
-    fontWeight: '800',
+    fontWeight: '900',
+    textDecorationLine: 'underline',
   },
   scrollContent: {
-    alignItems: 'center',
+    paddingBottom: 10,
   },
   idCardContainer: {
-    width: '100%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
     shadowColor: '#000000',
-    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 8,
-    borderWidth: 2,
-    borderColor: '#0284C7',
-    marginBottom: 16,
   },
   idCardTopBrand: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 12,
+    backgroundColor: '#0F2744',
     paddingVertical: 10,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     borderBottomWidth: 3,
-    borderBottomColor: '#0284C7',
+    borderBottomColor: '#F59E0B',
   },
   psgLogoBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#1E293B',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   psgLogoText: {
-    fontSize: 16,
+    fontSize: 18,
   },
   psgCollegeName: {
-    color: '#F8FAFC',
-    fontSize: 11.5,
-    fontWeight: '800',
-    letterSpacing: 0.4,
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   psgCollegeSub: {
     color: '#94A3B8',
     fontSize: 9,
+    fontWeight: '600',
   },
   mbaPill: {
-    backgroundColor: '#0284C7',
+    backgroundColor: '#F59E0B',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   mbaPillText: {
-    color: '#FFFFFF',
+    color: '#0F172A',
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   cardFrontContent: {
     padding: 14,
+    backgroundColor: '#F8FAFC',
   },
   photoAndDetailsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   studentPhotoBox: {
     width: 80,
-    height: 95,
+    height: 96,
+    borderRadius: 10,
     backgroundColor: '#E2E8F0',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderWidth: 2,
+    borderColor: '#94A3B8',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   studentPhotoInitial: {
     fontSize: 34,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontWeight: '900',
+    color: '#334155',
   },
   studentPhotoPill: {
     position: 'absolute',
     bottom: 4,
-    backgroundColor: '#0284C7',
+    backgroundColor: '#0F2744',
     paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingVertical: 2,
     borderRadius: 4,
   },
   studentPhotoPillText: {
     color: '#FFFFFF',
-    fontSize: 7.5,
+    fontSize: 8,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
   primaryInfoCol: {
     flex: 1,
@@ -369,61 +510,81 @@ const styles = StyleSheet.create({
   },
   studentNameLabel: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#0F172A',
     lineHeight: 19,
+    marginBottom: 4,
   },
   rollBadge: {
-    backgroundColor: '#E0F2FE',
-    alignSelf: 'flex-start',
+    backgroundColor: '#1E293B',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 3,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
     marginBottom: 4,
   },
   rollBadgeText: {
-    color: '#0369A1',
+    color: '#38BDF8',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   programText: {
+    color: '#475569',
     fontSize: 11,
     fontWeight: '700',
-    color: '#334155',
   },
   subDetailText: {
-    fontSize: 10,
     color: '#64748B',
+    fontSize: 10,
+    fontWeight: '600',
     marginTop: 2,
   },
   metaTable: {
     flexDirection: 'row',
     backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    alignItems: 'center',
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    paddingVertical: 8,
+    paddingHorizontal: 6,
     marginBottom: 12,
+    alignItems: 'center',
   },
   metaCol: {
     flex: 1,
     alignItems: 'center',
   },
+  metaColInteractive: {
+    backgroundColor: '#E0F2FE',
+    borderRadius: 6,
+    paddingVertical: 2,
+  },
+  bloodLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  editPencilIcon: {
+    fontSize: 9,
+    color: '#0284C7',
+    fontWeight: '900',
+  },
   metaColLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '800',
     color: '#64748B',
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
     marginBottom: 2,
   },
   metaColVal: {
     fontSize: 11,
     fontWeight: '800',
     color: '#0F172A',
+  },
+  bloodGroupText: {
+    color: '#0369A1',
+    fontWeight: '900',
   },
   metaDivider: {
     width: 1,
@@ -432,89 +593,218 @@ const styles = StyleSheet.create({
   },
   barcodeBox: {
     alignItems: 'center',
-    paddingTop: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
   barcodeLinesRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    height: 38,
+    height: 36,
+    marginBottom: 4,
   },
   barcodeBar: {
     height: '100%',
     borderRadius: 1,
   },
   barcodeNumberText: {
-    color: '#64748B',
+    fontFamily: 'monospace',
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginTop: 4,
+    fontWeight: '800',
+    color: '#475569',
+    letterSpacing: 2,
   },
   cardBackContent: {
-    padding: 16,
-    minHeight: 180,
+    padding: 14,
+    backgroundColor: '#F8FAFC',
   },
   backTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#0F2744',
     letterSpacing: 0.5,
     marginBottom: 10,
+    textAlign: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    paddingBottom: 4,
+    paddingBottom: 6,
   },
   backRow: {
-    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   backLabel: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: '700',
     color: '#64748B',
   },
   backVal: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
     color: '#0F172A',
-    marginTop: 1,
+  },
+  emergencyContactCard: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  emergencyContactHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  emergencyContactTitle: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#991B1B',
+  },
+  emergencyEditLink: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#DC2626',
+  },
+  emergencyPhoneDisplay: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#7F1D1D',
   },
   backBottomNote: {
-    backgroundColor: '#F1F5F9',
-    padding: 8,
-    borderRadius: 6,
     marginTop: 8,
+    padding: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
   },
   backBottomNoteText: {
     fontSize: 9,
-    color: '#475569',
-    fontStyle: 'italic',
+    color: '#64748B',
     lineHeight: 13,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   flipCardBtn: {
     backgroundColor: '#0F172A',
-    paddingVertical: 8,
+    paddingVertical: 10,
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
   },
   flipCardBtnText: {
     color: '#38BDF8',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
   },
   doneBtn: {
+    marginTop: 14,
     backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 10,
-    marginTop: 4,
+    alignItems: 'center',
   },
   doneBtnText: {
-    color: '#CBD5E1',
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'flex-end',
+  },
+  pickerCard: {
+    backgroundColor: '#0F172A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pickerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F8FAFC',
+  },
+  pickerSubtitle: {
+    fontSize: 12,
+    color: '#94A3B8',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  bgGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  bgOption: {
+    width: '23%',
+    backgroundColor: '#1E293B',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  bgOptionSelected: {
+    borderColor: '#38BDF8',
+    backgroundColor: '#0F2744',
+  },
+  bgOptionText: {
+    color: '#E2E8F0',
     fontSize: 13,
     fontWeight: '700',
+  },
+  bgOptionTextSelected: {
+    color: '#38BDF8',
+    fontWeight: '900',
+  },
+  bgCheck: {
+    color: '#38BDF8',
+    fontSize: 10,
+    position: 'absolute',
+    top: 4,
+    right: 4,
+  },
+  phoneInputGroup: {
+    marginBottom: 16,
+  },
+  phoneInputLabel: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  phoneInput: {
+    backgroundColor: '#1E293B',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#FFFFFF',
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  savePickerBtn: {
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  savePickerBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
