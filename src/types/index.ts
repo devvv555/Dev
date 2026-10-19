@@ -132,7 +132,9 @@ export interface PeriodReminder {
   subjectName: string;
   rollNo: string;
   note: string;
-  dueTiming: 'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM';
+  dueTiming: 'PREV_NIGHT_8PM' | 'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM' | 'CUSTOM';
+  customTime?: string;
+  scheduledTimeText?: string;
   createdAt: number;
   completed: boolean;
 }

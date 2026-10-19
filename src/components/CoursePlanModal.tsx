@@ -19,6 +19,7 @@ interface CoursePlanModalProps {
   subjectCode: string;
   subjectName?: string;
   studentRollNo: string;
+  allowSubjectSwitching?: boolean;
 }
 
 export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
@@ -27,6 +28,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
   subjectCode: initialCode,
   subjectName: initialName,
   studentRollNo,
+  allowSubjectSwitching = true,
 }) => {
   const [activeTab, setActiveTab] = useState<'ASSESSMENTS' | 'SESSIONS' | 'RULES'>('ASSESSMENTS');
   const [currentCode, setCurrentCode] = useState<string>(initialCode || '24GM14');
@@ -125,47 +127,49 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Quick Subject Switcher: Tap any subject to switch its course plan directly */}
-          <View style={styles.subjectSwitcherContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subjectSwitcherScroll}>
-              {[
-                { code: '24GM14', label: 'BS (Stats)' },
-                { code: '24GM13', label: 'ADM (Accounting)' },
-                { code: '24GM16', label: 'SSA (Spreadsheet)' },
-                { code: '24GM11', label: 'MCOB (Mgmt & OB)' },
-                { code: '24GM12', label: 'EDM (Economics)' },
-                { code: '24GM15', label: 'MC (Comm)' },
-                { code: '24GM19', label: 'LA (Legal)' },
-                { code: '24GM18', label: 'SSM (Social)' },
-              ].map((sub) => {
-                const isSelected = currentCode.toUpperCase() === sub.code.toUpperCase() ||
-                  plan.subjectCode.toUpperCase() === sub.code.toUpperCase();
-                return (
-                  <TouchableOpacity
-                    key={sub.code}
-                    onPress={() => {
-                      setCurrentCode(sub.code);
-                      setCurrentName('');
-                    }}
-                    style={[
-                      styles.subjectSwitchPill,
-                      isSelected && styles.subjectSwitchPillActive,
-                    ]}
-                    activeOpacity={0.7}
-                  >
-                    <Text
+          {/* Quick Subject Switcher: Tap any subject to switch its course plan directly (Shown when browsing all courses) */}
+          {allowSubjectSwitching && (
+            <View style={styles.subjectSwitcherContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subjectSwitcherScroll}>
+                {[
+                  { code: '24GM14', label: 'BS (Stats)' },
+                  { code: '24GM13', label: 'ADM (Accounting)' },
+                  { code: '24GM16', label: 'SSA (Spreadsheet)' },
+                  { code: '24GM11', label: 'MCOB (Mgmt & OB)' },
+                  { code: '24GM12', label: 'EDM (Economics)' },
+                  { code: '24GM15', label: 'MC (Comm)' },
+                  { code: '24GM19', label: 'LA (Legal)' },
+                  { code: '24GM18', label: 'SSM (Social)' },
+                ].map((sub) => {
+                  const isSelected = currentCode.toUpperCase() === sub.code.toUpperCase() ||
+                    plan.subjectCode.toUpperCase() === sub.code.toUpperCase();
+                  return (
+                    <TouchableOpacity
+                      key={sub.code}
+                      onPress={() => {
+                        setCurrentCode(sub.code);
+                        setCurrentName('');
+                      }}
                       style={[
-                        styles.subjectSwitchPillText,
-                        isSelected && styles.subjectSwitchPillTextActive,
+                        styles.subjectSwitchPill,
+                        isSelected && styles.subjectSwitchPillActive,
                       ]}
+                      activeOpacity={0.7}
                     >
-                      {sub.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
+                      <Text
+                        style={[
+                          styles.subjectSwitchPillText,
+                          isSelected && styles.subjectSwitchPillTextActive,
+                        ]}
+                      >
+                        {sub.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Sub Navigation Tabs */}
           <View style={styles.tabBar}>

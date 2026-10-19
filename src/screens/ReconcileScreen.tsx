@@ -95,8 +95,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [isLmsSyncing, setIsLmsSyncing] = useState(false);
 
   // PSGIM Connect Credentials state (Application Register Number)
-  const [connectRegisterNo, setConnectRegisterNo] = useState(activeRollNo);
-  const [connectPassword, setConnectPassword] = useState('');
+  const [connectRegisterNo, setConnectRegisterNo] = useState('');
+  const [connectPassword, setConnectPassword] = useState('Welcome@123');
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [isConnectSyncing, setIsConnectSyncing] = useState(false);
 
@@ -124,7 +124,10 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         const connectCreds = await PsgimConnectService.getCredentials(activeRollNo);
         if (connectCreds?.registerNo) {
           setConnectRegisterNo(connectCreds.registerNo);
-          setConnectPassword(connectCreds.password || '');
+          setConnectPassword(connectCreds.password || 'Welcome@123');
+        } else {
+          setConnectRegisterNo('');
+          setConnectPassword('Welcome@123');
         }
       }
 
@@ -537,16 +540,21 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
   const handleSaveConnectCredentials = async () => {
     if (!connectRegisterNo.trim()) {
-      Alert.alert('Empty Register No', 'Please enter your PSGIM Connect Register Number.');
+      Alert.alert('Register Number Required ⚠️', 'Admission Register Number is mandatory for PSGIM Connect. Please enter your register number.');
       return;
     }
+    const finalPassword = connectPassword.trim() || 'Welcome@123';
     await PsgimConnectService.saveCredentials(activeRollNo, {
       registerNo: connectRegisterNo.trim(),
-      password: connectPassword.trim(),
+      password: finalPassword,
       lastSyncedAt: new Date().toISOString(),
     });
+    setConnectPassword(finalPassword);
     setShowConnectModal(false);
-    Alert.alert('PSGIM Connect Saved ✅', 'Your Register Number is saved for official portal communications.');
+    Alert.alert(
+      'Register Number Linked! ✅',
+      `Your Admission Register Number (${connectRegisterNo.trim()}) is now officially linked with default password (${finalPassword}).`
+    );
   };
 
   const handleSyncConnect = async () => {
@@ -636,7 +644,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           {lastSyncInfo ? (
             <View style={styles.lastUpdatedDetails}>
               <Text style={styles.lastUpdatedWho}>
-                👤 First Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || lastSyncInfo.rollNo || 'Student'}</Text>
+                👤 Last Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || lastSyncInfo.rollNo || 'Student'}</Text>
                 {lastSyncInfo.subjectsCount ? ` • ${lastSyncInfo.subjectsCount} subjects` : ''}
                 {lastSyncInfo.lastSyncedAt ? ` • Synced ${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''}
               </Text>
@@ -682,13 +690,31 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         </View>
 
         <Text style={styles.studzoneDescription}>
-          Official college announcements, event flyers & Student Council notices. Circulars are streamed live without login. You can optionally link your Admission Register Number for section-specific notices.
+          Official college announcements, event flyers & Student Council notices. Circulars are streamed live. Register Number linking is mandatory for official records and section notices.
         </Text>
+
+        {!connectRegisterNo && (
+          <TouchableOpacity
+            style={styles.mandatoryWarningBanner}
+            onPress={() => setShowConnectModal(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.mandatoryWarningBannerText}>
+              ⚠️ Register Number Not Configured (Mandatory). Tap here to link your Admission Register Number now. Default Password: Welcome@123
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.moodleCredsSummaryBox}>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>👤 Register Number (Admission):</Text>
-            <Text style={styles.moodleCredsValue}>{connectRegisterNo || activeRollNo || 'Not Configured'}</Text>
+            <Text style={styles.moodleCredsLabel}>👤 Register Number (Mandatory):</Text>
+            <Text style={[styles.moodleCredsValue, !connectRegisterNo && { color: '#F87171' }]}>
+              {connectRegisterNo || '⚠️ Not Linked (Mandatory)'}
+            </Text>
+          </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>🔑 Portal Password:</Text>
+            <Text style={styles.moodleCredsValue}>•••••••• ({connectPassword || 'Welcome@123'})</Text>
           </View>
           <View style={styles.moodleCredsRow}>
             <Text style={styles.moodleCredsLabel}>🌐 Feed Status:</Text>
@@ -1149,11 +1175,11 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             </View>
 
             <Text style={styles.credsModalSubtitle}>
-              PSGIM Connect uses your admission Register Number (from when you applied for college) rather than your Roll Number. Circulars and event posters are loaded automatically without login.
+              PSGIM Connect uses your admission Register Number (distinct from your Roll Number). Linking your Register Number is mandatory for official circulars and verified section notices.
             </Text>
 
             <View style={styles.credsInputGroup}>
-              <Text style={styles.credsInputLabel}>Admission Register Number</Text>
+              <Text style={styles.credsInputLabel}>Admission Register Number (Mandatory)</Text>
               <TextInput
                 style={styles.credsInput}
                 value={connectRegisterNo}
@@ -1164,13 +1190,13 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             </View>
 
             <View style={styles.credsInputGroup}>
-              <Text style={styles.credsInputLabel}>Password (Optional)</Text>
+              <Text style={styles.credsInputLabel}>Password (Default: Welcome@123)</Text>
               <TextInput
                 style={styles.credsInput}
                 value={connectPassword}
                 onChangeText={setConnectPassword}
                 secureTextEntry={!showPassword}
-                placeholder="Enter password if required"
+                placeholder="Welcome@123"
                 placeholderTextColor="#64748B"
               />
             </View>
@@ -2061,5 +2087,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
+  },
+  mandatoryWarningBanner: {
+    backgroundColor: '#451A03',
+    borderColor: '#D97706',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  mandatoryWarningBannerText: {
+    color: '#FDE68A',
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
   },
 });

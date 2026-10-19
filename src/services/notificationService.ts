@@ -111,13 +111,16 @@ export const NotificationService = {
   /**
    * Trigger phone system notification when a class has ended
    */
-  async notifyClassEnded(slot: TimetableSlot, subject: Subject): Promise<string | null> {
+  async notifyClassEnded(slot: TimetableSlot, subject: Subject, status?: string): Promise<string | null> {
     const title = `🔔 Class Ended: ${subject.name}`;
-    const body = `${slot.startTime} – ${slot.endTime} has concluded. Open app to record your attendance!`;
+    const body = status
+      ? `${slot.startTime} – ${slot.endTime} has concluded. Recorded as ${status.toUpperCase()}. Tap to review or update.`
+      : `${slot.startTime} – ${slot.endTime} has concluded. Open app to record your attendance!`;
     return this.sendLocalNotification(title, body, {
       type: 'CLASS_ENDED',
       slotId: slot.id,
       subjectId: subject.id,
+      status,
     });
   },
 

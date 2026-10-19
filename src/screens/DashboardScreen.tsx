@@ -71,11 +71,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [surplusAlerts, setSurplusAlerts] = useState<SurplusAttendanceAlert[]>([]);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderNote, setReminderNote] = useState('');
-  const [reminderTiming, setReminderTiming] = useState<'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM'>('NEXT_CLASS');
+  const [reminderTiming, setReminderTiming] = useState<
+    'PREV_NIGHT_8PM' | 'NEXT_CLASS' | 'TONIGHT_8PM' | 'TOMORROW_8AM' | 'CUSTOM'
+  >('PREV_NIGHT_8PM');
+  const [reminderCustomTime, setReminderCustomTime] = useState('');
 
-  // PSGIM Connect Notices state
+  // PSGIM Connect Notices state & Register No check
   const [announcements, setAnnouncements] = useState<PsgimAnnouncement[]>([]);
   const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
+  const [hasConnectRegisterNo, setHasConnectRegisterNo] = useState<boolean>(true);
 
   // Campus Companion Utility Modals state
   const [showDigitalIdModal, setShowDigitalIdModal] = useState(false);
@@ -84,8 +88,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
     code: string;
-    name: string;
-  }>({ visible: false, code: '24GM14', name: 'Business Statistics' });
+    name?: string;
+    allowSubjectSwitching?: boolean;
+  }>({ visible: false, code: '24GM11', name: 'Management & Organisational Behaviour', allowSubjectSwitching: true });
   const [facultyModalSubject, setFacultyModalSubject] = useState<Subject | null>(null);
 
   useEffect(() => {
@@ -93,6 +98,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
       StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
+      PsgimConnectService.getCredentials(studentRollNo).then((creds) => {
+        setHasConnectRegisterNo(!!creds?.registerNo);
+      });
     }
   }, [studentRollNo]);
 
@@ -101,16 +109,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       Alert.alert('Empty Reminder', 'Please enter a reminder or task note.');
       return;
     }
+    if (reminderTiming === 'CUSTOM' && !reminderCustomTime.trim()) {
+      Alert.alert('Enter Time', 'Please specify the custom time for your reminder.');
+      return;
+    }
     try {
       Vibration.vibrate(25);
     } catch {}
 
     const timingDesc =
-      reminderTiming === 'NEXT_CLASS'
-        ? 'Before Next Class'
+      reminderTiming === 'PREV_NIGHT_8PM'
+        ? 'Previous Night at 8:00 PM'
+        : reminderTiming === 'NEXT_CLASS'
+        ? '30 Mins Before Class'
         : reminderTiming === 'TONIGHT_8PM'
         ? 'Tonight at 8:00 PM'
-        : 'Tomorrow at 8:00 AM';
+        : reminderTiming === 'TOMORROW_8AM'
+        ? 'Tomorrow at 8:00 AM'
+        : reminderCustomTime.trim();
 
     const newReminder: PeriodReminder = {
       id: `rem_${Date.now()}`,
@@ -120,6 +136,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       rollNo: studentRollNo,
       note: reminderNote.trim(),
       dueTiming: reminderTiming,
+      customTime: reminderTiming === 'CUSTOM' ? reminderCustomTime.trim() : undefined,
+      scheduledTimeText: timingDesc,
       createdAt: Date.now(),
       completed: false,
     };
@@ -136,6 +154,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
     setShowReminderModal(false);
     setReminderNote('');
+    setReminderCustomTime('');
     Alert.alert(
       'Reminder Set! ⏰',
       `Reminder saved: "${newReminder.note}" (${timingDesc}).`
@@ -298,12 +317,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       const today = currentTime.toISOString().split('T')[0];
       const todayDay = dayNames[currentTime.getDay()].toLowerCase();
 
-      // Find any class from today that has reached its endTime and is not yet marked
+      // Find any class from today that has reached its endTime (notify even if already marked)
       const endedSlot = timetable.find((slot) => {
         if (slot.day.toLowerCase() !== todayDay) return false;
         const end = timeToMinutes(slot.endTime);
-        const periodKey = `${today}_${slot.id}`;
-        return mins >= end && mins <= end + 180 && !periodRecords[periodKey];
+        return mins >= end && mins <= end + 180;
       });
 
       if (endedSlot) {
@@ -316,7 +334,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               Vibration.vibrate([0, 500, 200, 500]);
             } catch {}
             // Send system notification directly to phone's notification tab/shade
-            NotificationService.notifyClassEnded(endedSlot, sub);
+            const recorded = periodRecords[periodKey];
+            NotificationService.notifyClassEnded(endedSlot, sub, recorded?.status);
           }
         }
       }
@@ -514,7 +533,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <TouchableOpacity
           style={styles.utilityPillBtn}
-          onPress={() => setShowSubjectPickerModal(true)}
+          onPress={() =>
+            setCoursePlanModalInfo({
+              visible: true,
+              code: '24GM11',
+              name: 'Management & Organisational Behaviour',
+              allowSubjectSwitching: true,
+            })
+          }
           activeOpacity={0.8}
         >
           <Text style={styles.utilityPillIcon}>📊</Text>
@@ -629,7 +655,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {isWeekendOrNoClass ? '🌴 WEEKEND RELAX' : `⏰ TODAY'S SCHEDULE (${currentDayName.toUpperCase()})`}
+                {isWeekendOrNoClass ? '🌴 WEEKEND RELAX' : "⏰ TODAY'S SCHEDULE"}
               </Text>
             </View>
             <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
@@ -688,7 +714,59 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </>
         )}
 
-        {/* Auto-locked: No manual schedule switching */}
+        {/* Horizontal Period Selector: All today's periods with live status badges */}
+        {!isWeekendOrNoClass && activeDaySlots.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.periodPillScroll}
+            contentContainerStyle={styles.periodPillContainer}
+          >
+            {activeDaySlots.map((slot, index) => {
+              const slotSub = subjects.find((s) => s.id === slot.subjectId);
+              const pKey = `${todayDate}_${slot.id}`;
+              const rec = periodRecords[pKey];
+              const isSelected = activeIndex === index;
+
+              return (
+                <TouchableOpacity
+                  key={slot.id}
+                  style={[
+                    styles.periodPill,
+                    isSelected ? styles.periodPillActive : styles.periodPillInactive,
+                    rec?.status === 'attended' && !isSelected && styles.periodPillMarkedAttended,
+                    rec?.status === 'bunked' && !isSelected && styles.periodPillMarkedBunked,
+                    rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
+                  ]}
+                  onPress={() => setSelectedSlotIndex(index)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.periodPillTime,
+                      isSelected && styles.periodPillTextActive,
+                    ]}
+                  >
+                    {slot.startTime}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.periodPillCode,
+                      isSelected && styles.periodPillTextActive,
+                    ]}
+                  >
+                    {slotSub?.code || 'CLASS'}
+                  </Text>
+                  {rec && (
+                    <Text style={styles.periodPillStatus}>
+                      {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✗ Bunked' : '○ Free'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
 
         {/* If this period was already marked, display locked status banner */}
         {!isWeekendOrNoClass && currentRecord && (
@@ -807,7 +885,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                           {rem.note}
                         </Text>
                         <Text style={styles.reminderTimingText}>
-                          ⏰ {rem.dueTiming === 'NEXT_CLASS' ? 'Before Next Class' : rem.dueTiming === 'TONIGHT_8PM' ? 'Tonight at 8:00 PM' : 'Tomorrow at 8:00 AM'}
+                          ⏰ {rem.dueTiming === 'PREV_NIGHT_8PM'
+                            ? 'Previous Night at 8:00 PM'
+                            : rem.dueTiming === 'NEXT_CLASS'
+                            ? '30 Mins Before Class'
+                            : rem.dueTiming === 'TONIGHT_8PM'
+                            ? 'Tonight at 8:00 PM'
+                            : rem.dueTiming === 'TOMORROW_8AM'
+                            ? 'Tomorrow at 8:00 AM'
+                            : (rem.customTime || rem.scheduledTimeText || 'Custom Time')}
                           {rem.completed ? ' • Done' : ''}
                         </Text>
                       </View>
@@ -828,7 +914,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 style={styles.addReminderTriggerBtn}
                 onPress={() => {
                   setReminderNote('');
-                  setReminderTiming('NEXT_CLASS');
+                  setReminderTiming('PREV_NIGHT_8PM');
+                  setReminderCustomTime('');
                   setShowReminderModal(true);
                 }}
                 activeOpacity={0.8}
@@ -863,6 +950,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </Text>
           </View>
         </View>
+
+        {!hasConnectRegisterNo && (
+          <View style={styles.connectUnlinkedNotice}>
+            <Text style={styles.connectUnlinkedText}>
+              ⚠️ Register Number Not Configured (Mandatory). Please link your Admission Register Number in Portal & Sync. Default Password: Welcome@123
+            </Text>
+          </View>
+        )}
 
         {announcements.length === 0 ? (
           <Text style={styles.connectEmptyText}>No circulars posted at this time.</Text>
@@ -906,7 +1001,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           studentRollNo={studentRollNo}
           onToggleMedicalClaim={onToggleMedicalClaim}
           onOpenCoursePlan={(code, name) =>
-            setCoursePlanModalInfo({ visible: true, code, name })
+            setCoursePlanModalInfo({
+              visible: true,
+              code,
+              name,
+              allowSubjectSwitching: false,
+            })
           }
           onEditFaculty={(subj) => setFacultyModalSubject(subj)}
         />
@@ -1029,6 +1129,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <TouchableOpacity
                 style={[
                   styles.timingChip,
+                  reminderTiming === 'PREV_NIGHT_8PM' && styles.timingChipActive,
+                ]}
+                onPress={() => setReminderTiming('PREV_NIGHT_8PM')}
+              >
+                <Text
+                  style={[
+                    styles.timingChipText,
+                    reminderTiming === 'PREV_NIGHT_8PM' && styles.timingChipTextActive,
+                  ]}
+                >
+                  🌙 Prev Night (8 PM)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.timingChip,
                   reminderTiming === 'NEXT_CLASS' && styles.timingChipActive,
                 ]}
                 onPress={() => setReminderTiming('NEXT_CLASS')}
@@ -1039,24 +1156,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     reminderTiming === 'NEXT_CLASS' && styles.timingChipTextActive,
                   ]}
                 >
-                  ⏰ Before Next Class
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.timingChip,
-                  reminderTiming === 'TONIGHT_8PM' && styles.timingChipActive,
-                ]}
-                onPress={() => setReminderTiming('TONIGHT_8PM')}
-              >
-                <Text
-                  style={[
-                    styles.timingChipText,
-                    reminderTiming === 'TONIGHT_8PM' && styles.timingChipTextActive,
-                  ]}
-                >
-                  🌙 Tonight (8 PM)
+                  ⏰ 30m Before Class
                 </Text>
               </TouchableOpacity>
 
@@ -1073,10 +1173,44 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     reminderTiming === 'TOMORROW_8AM' && styles.timingChipTextActive,
                   ]}
                 >
-                  🌅 Tomorrow (8 AM)
+                  🌅 Morning (8 AM)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.timingChip,
+                  reminderTiming === 'CUSTOM' && styles.timingChipActive,
+                ]}
+                onPress={() => setReminderTiming('CUSTOM')}
+              >
+                <Text
+                  style={[
+                    styles.timingChipText,
+                    reminderTiming === 'CUSTOM' && styles.timingChipTextActive,
+                  ]}
+                >
+                  ⏱️ Custom Time
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {reminderTiming === 'CUSTOM' && (
+              <View style={{ marginTop: 10 }}>
+                <Text style={styles.reminderInputLabel}>Specify Custom Alert Time:</Text>
+                <TextInput
+                  style={styles.reminderTextInput}
+                  placeholder="e.g. Tonight 9:00 PM, Tomorrow 6:30 PM"
+                  placeholderTextColor="#64748B"
+                  value={reminderCustomTime}
+                  onChangeText={setReminderCustomTime}
+                />
+              </View>
+            )}
+
+            <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 8, fontStyle: 'italic' }}>
+              💡 "Prev Night (8 PM)" alerts you at 8:00 PM the evening before this class so you can prepare readings or assignments.
+            </Text>
 
             <View style={styles.reminderModalActions}>
               <TouchableOpacity
@@ -1185,6 +1319,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         subjectCode={coursePlanModalInfo.code}
         subjectName={coursePlanModalInfo.name}
         studentRollNo={studentRollNo}
+        allowSubjectSwitching={coursePlanModalInfo.allowSubjectSwitching}
       />
 
       {/* 📄 Attendance Dispute & Proof Dossier Modal */}
@@ -1382,6 +1517,12 @@ const styles = StyleSheet.create({
   },
   pillStatusIndicator: {
     fontSize: 9,
+  },
+  periodPillStatus: {
+    color: '#E2E8F0',
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 2,
   },
   periodPillMarkedAttended: {
     borderColor: '#059669',
@@ -2264,6 +2405,20 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 9.5,
     marginTop: 1,
+  },
+  connectUnlinkedNotice: {
+    backgroundColor: '#451A03',
+    borderColor: '#D97706',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+  },
+  connectUnlinkedText: {
+    color: '#FDE68A',
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
   },
 });
 
