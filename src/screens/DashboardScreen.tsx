@@ -28,6 +28,7 @@ import { DigitalIdModal } from '../components/DigitalIdModal';
 import { CoursePlanModal } from '../components/CoursePlanModal';
 import { AttendanceDisputeModal } from '../components/AttendanceDisputeModal';
 import { FacultySelectModal } from '../components/FacultySelectModal';
+import { LmsService } from '../services/lmsService';
 
 
 interface DashboardScreenProps {
@@ -79,6 +80,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
   const [hasConnectRegisterNo, setHasConnectRegisterNo] = useState<boolean>(true);
 
+  // Moodle Assignments state
+  const [assignments, setAssignments] = useState<LmsAssignment[]>([]);
+  const [selectedAssignment, setSelectedAssignment] = useState<LmsAssignment | null>(null);
+
   // Campus Companion Utility Modals state
   const [showDigitalIdModal, setShowDigitalIdModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
@@ -96,6 +101,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
       StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
+      LmsService.getAssignments(studentRollNo).then(setAssignments);
       PsgimConnectService.getCredentials(studentRollNo).then((creds) => {
         setHasConnectRegisterNo(!!creds?.registerNo);
       });
@@ -931,6 +937,84 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       </View>
 
 
+
+      {/* 📚 PSGIM Moodle • Upcoming Course Assignments & Deadlines */}
+      <View style={styles.connectSection}>
+        <View style={styles.connectHeaderRow}>
+          <View style={[styles.connectIconCircle, { backgroundColor: '#F59E0B' }]}>
+            <Text style={styles.connectIcon}>📚</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.connectSectionTitle}>Moodle Course Assignments</Text>
+              <View style={[styles.connectLiveBadge, { backgroundColor: '#D97706' }]}>
+                <Text style={styles.connectLiveBadgeText}>LMS DEADLINES</Text>
+              </View>
+            </View>
+            <Text style={styles.connectSectionSub}>
+              lms.psgim.ac.in • Active faculty coursework submissions
+            </Text>
+          </View>
+        </View>
+
+        {assignments.length === 0 ? (
+          <Text style={styles.connectEmptyText}>No pending assignments on Moodle.</Text>
+        ) : (
+          assignments.slice(0, 3).map((asg) => {
+            const isSubmitted = asg.status === 'SUBMITTED';
+            const dueDateFormatted = new Date(asg.dueDate).toLocaleDateString([], {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+
+            return (
+              <View
+                key={asg.id}
+                style={[
+                  styles.assignmentCard,
+                  isSubmitted && { borderColor: '#10B981', backgroundColor: '#064E3B15' },
+                ]}
+              >
+                <View style={styles.assignmentHeaderRow}>
+                  <View style={styles.asgCodeBadge}>
+                    <Text style={styles.asgCodeText}>{asg.courseCode}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.asgTitle} numberOfLines={2}>
+                      {asg.title}
+                    </Text>
+                    <Text style={styles.asgCourseName}>{asg.courseName}</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.asgStatusBadge,
+                      { backgroundColor: isSubmitted ? '#05966920' : '#EF444420' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.asgStatusText,
+                        { color: isSubmitted ? '#10B981' : '#F87171' },
+                      ]}
+                    >
+                      {isSubmitted ? 'SUBMITTED' : 'DUE SOON'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.asgFooterRow}>
+                  <Text style={styles.asgDueText}>⏰ Due: {dueDateFormatted}</Text>
+                  <Text style={styles.asgFilesText}>
+                    📎 Max {asg.maxFiles} files ({asg.acceptedFileTypes.join(', ')})
+                  </Text>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
 
       {/* 📢 PSGIM Connect • Official College Notices & Circulars */}
       <View style={styles.connectSection}>
@@ -2417,6 +2501,72 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '700',
+  },
+  assignmentCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  assignmentHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 8,
+  },
+  asgCodeBadge: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#475569',
+  },
+  asgCodeText: {
+    color: '#F59E0B',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  asgTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  asgCourseName: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  asgStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  asgStatusText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  asgFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
+    paddingTop: 8,
+    marginTop: 4,
+  },
+  asgDueText: {
+    color: '#FBBF24',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  asgFilesText: {
+    color: '#64748B',
+    fontSize: 10,
   },
 });
 
