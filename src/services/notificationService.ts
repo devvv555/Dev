@@ -298,6 +298,38 @@ export const NotificationService = {
   },
 
   /**
+   * Notify when a faculty/teacher posts an assignment, deadline change, or update on Moodle
+   * Sends directly to the phone's native system notification tray with high priority and vibration.
+   */
+  async notifyMoodleCourseUpdate(
+    courseName: string,
+    updateTitle: string,
+    details: string
+  ): Promise<string | null> {
+    try {
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `📚 Moodle Update: ${courseName}`,
+          body: `${updateTitle}: ${details}`,
+          data: {
+            type: 'MOODLE_UPDATE',
+            courseName,
+            updateTitle,
+          },
+          sound: 'default',
+          vibrate: [0, 600, 250, 600],
+          priority: Notifications.AndroidNotificationPriority.MAX,
+        },
+        trigger: null, // deliver immediately to phone notification bar
+      });
+      return id;
+    } catch (e) {
+      console.warn('Error firing Moodle phone notification:', e);
+      return null;
+    }
+  },
+
+  /**
    * Notify when a new official circular / announcement is published on PSGIM Connect
    */
   async notifyNewAnnouncement(title: string, author: string): Promise<string | null> {

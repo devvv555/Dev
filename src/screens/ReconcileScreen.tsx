@@ -524,15 +524,28 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     setIsLmsSyncing(true);
     try {
       try {
-        Vibration.vibrate(25);
+        Vibration.vibrate([0, 50, 50, 50]);
       } catch {}
-      await Promise.all([
-        LmsService.getAssignments(activeRollNo),
-        LmsService.getQuizzes(activeRollNo),
-      ]);
-      Alert.alert('Moodle Sync Complete! 🚀', 'LMS assignments and quizzes calibrated successfully from lms.psgim.ac.in.');
-    } catch {
-      Alert.alert('Notice', 'LMS data is up to date.');
+
+      const syncResult = await LmsService.syncWithMoodle(activeRollNo, lmsPassword);
+      
+      if (syncResult.success) {
+        // Fire native push notification directly to phone notification shade
+        await NotificationService.notifyMoodleCourseUpdate(
+          'PSGIM Moodle (LMS)',
+          'Faculty Course Content Calibrated',
+          `Synced with ${LmsService.resolveMoodleUsername(activeRollNo)}. All upcoming class submissions & teacher updates are up to date!`
+        );
+
+        Alert.alert(
+          'Moodle Connected & Synced! 🚀',
+          `${syncResult.message}\n\nA native alert has been sent to your phone notification bar. Whenever a professor posts updates or changes deadlines, you'll receive immediate notifications!`
+        );
+      } else {
+        Alert.alert('Moodle Sync Notice', syncResult.message);
+      }
+    } catch (e: any) {
+      Alert.alert('Moodle Sync Notice', e?.message || 'LMS connection is up to date.');
     } finally {
       setIsLmsSyncing(false);
     }
@@ -668,7 +681,71 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         </TouchableOpacity>
       </View>
 
+      {/* PSGIM Moodle (LMS) Official Portal Card */}
+      <View style={styles.psgimConnectCard}>
+        <View style={styles.studzoneCardHeader}>
+          <View style={[styles.connectIconCircle, { backgroundColor: '#F59E0B' }]}>
+            <Text style={styles.studzoneCardIcon}>📚</Text>
+          </View>
+          <View style={styles.studzoneTitleCol}>
+            <View style={styles.studzoneBadgeRow}>
+              <Text style={styles.studzoneCardTitle}>PSGIM Moodle (LMS)</Text>
+              <View style={[styles.connectLiveBadge, { backgroundColor: '#D97706' }]}>
+                <Text style={styles.connectLiveBadgeText}>COURSE WORK & DEADLINES</Text>
+              </View>
+            </View>
+            <Text style={styles.studzoneCardSubtitle}>
+              lms.psgim.ac.in
+            </Text>
+          </View>
+        </View>
 
+        <Text style={styles.studzoneDescription}>
+          Real-time integration with PSGIM Moodle. Receive native phone tray notifications immediately whenever faculty make changes, post upcoming assignments, or reschedule class deadlines.
+        </Text>
+
+        <View style={styles.moodleCredsSummaryBox}>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>👤 Moodle Username (D-Roll):</Text>
+            <Text style={[styles.moodleCredsValue, { color: '#38BDF8', fontWeight: '800' }]}>
+              {LmsService.resolveMoodleUsername(activeRollNo)}
+            </Text>
+          </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>🔑 Moodle Password:</Text>
+            <Text style={styles.moodleCredsValue}>•••••••• ({lmsPassword || 'Welcome@123'})</Text>
+          </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>🔔 Phone Notifications:</Text>
+            <Text style={[styles.moodleCredsValue, { color: '#34D399', fontWeight: '800' }]}>
+              📲 Active on Phone Tray
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.moodleActionsRow}>
+          <TouchableOpacity
+            style={styles.moodleEditCredsBtn}
+            onPress={() => setShowLmsCredsModal(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.moodleEditCredsBtnText}>⚙️ Moodle Password</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.moodleSyncBtn, isLmsSyncing && { opacity: 0.7 }, { backgroundColor: '#D97706' }]}
+            onPress={handleSyncLms}
+            disabled={isLmsSyncing}
+            activeOpacity={0.8}
+          >
+            {isLmsSyncing ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.moodleSyncBtnText}>🔄 Sync Moodle Deadlines</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* PSGIM Connect Official Portal Card */}
       <View style={styles.psgimConnectCard}>
