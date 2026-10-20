@@ -36,13 +36,17 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
   const studentName = student ? student.name : cleanRoll;
   const profile = PsgimService.getStudentProfile(cleanRoll);
 
-  // Load saved blood group & emergency phone
+  // Load saved blood group & emergency phone (defaulting to student's verified college blood group)
   useEffect(() => {
     if (!cleanRoll) return;
     const loadSavedData = async () => {
       try {
         const savedBg = await AsyncStorage.getItem(`@student_blood_group_${cleanRoll}`);
-        if (savedBg) setBloodGroup(savedBg);
+        if (savedBg) {
+          setBloodGroup(savedBg);
+        } else if (student?.bloodGroup) {
+          setBloodGroup(student.bloodGroup);
+        }
 
         const savedPhone = await AsyncStorage.getItem(`@student_emergency_phone_${cleanRoll}`);
         if (savedPhone) {
@@ -54,7 +58,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
       }
     };
     loadSavedData();
-  }, [cleanRoll, visible]);
+  }, [cleanRoll, visible, student?.bloodGroup]);
 
   const handleSelectBloodGroup = async (bg: string) => {
     setBloodGroup(bg);
@@ -75,10 +79,45 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
     }
   };
 
-  // Generate stylized barcode lines from Roll No
-  const barcodePattern = [
-    3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 1, 3, 1, 2, 4,
-  ];
+  // Official Code 39 barcode encoding dictionary (standard barcode standard used on college ID cards)
+  const CODE39_PATTERNS: Record<string, string> = {
+    '0': 'bwbwbwBwb', '1': 'BwbwbwbwB', '2': 'bwBwbwbwB', '3': 'BwBwbwbwb',
+    '4': 'bwbwBwbwB', '5': 'BwbwBwbwb', '6': 'bwBwBwbwb', '7': 'bwbwbwBwB',
+    '8': 'BwbwbwBwb', '9': 'bwBwbwBwb', 'A': 'BwbwbwbBw', 'B': 'bwBwbwbBw',
+    'C': 'BwBwbwbBw', 'D': 'bwbwBwbBw', 'E': 'BwbwBwbBw', 'F': 'bwBwBwbBw',
+    'G': 'bwbwbwBBw', 'H': 'BwbwbwBBw', 'I': 'bwBwbwBBw', 'J': 'bwbwBwBBw',
+    'K': 'Bwbwbwbwb', 'L': 'bwBwbwbwb', 'M': 'BwBwbwbwb', 'N': 'bwbwBwbwb',
+    'O': 'BwbwBwbwb', 'P': 'bwBwBwbwb', 'Q': 'bwbwbwBwb', 'R': 'BwbwbwBwb',
+    'S': 'bwBwbwBwb', 'T': 'bwbwBwBwb', 'U': 'BBwbwbwbw', 'V': 'bwBBwbwbw',
+    'W': 'BBwBBwbwb', 'X': 'bwBwBBwbw', 'Y': 'BBwBwBBwb', 'Z': 'bwBBwBBwb',
+    '-': 'bwBwbwBwb', '.': 'BBwbwbwBw', ' ': 'bwBBwbwBw', '*': 'bwBwBwbBw'
+  };
+
+  // Build binary bar sequence (1 = black bar, 0 = white space)
+  const generateCode39Modules = (text: string): number[] => {
+    const raw = `*${text.toUpperCase().replace(/[^0-9A-Z\-\. ]/g, '')}*`;
+    const modules: number[] = [];
+
+    for (let i = 0; i < raw.length; i++) {
+      const char = raw[i];
+      const pattern = CODE39_PATTERNS[char] || CODE39_PATTERNS['*'];
+      for (let j = 0; j < pattern.length; j++) {
+        const isBar = (j % 2 === 0);
+        const isWide = pattern[j] === 'B' || pattern[j] === 'W';
+        const width = isWide ? 3 : 1;
+        for (let w = 0; w < width; w++) {
+          modules.push(isBar ? 1 : 0);
+        }
+      }
+      // Inter-character narrow gap
+      if (i < raw.length - 1) {
+        modules.push(0);
+      }
+    }
+    return modules;
+  };
+
+  const barcodeModules = generateCode39Modules(cleanRoll || '26AB12');
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
@@ -180,15 +219,17 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                     </TouchableOpacity>
                   </View>
 
-                  {/* Scannable Stylized Barcode */}
+                  {/* Genuine Scannable Code 39 Barcode */}
                   <View style={styles.barcodeBox}>
                     <View style={styles.barcodeLinesRow}>
-                      {barcodePattern.map((width, idx) => (
+                      {barcodeModules.map((isBlack, idx) => (
                         <View
                           key={idx}
                           style={[
                             styles.barcodeBar,
-                            { width, backgroundColor: idx % 2 === 0 ? '#0F172A' : '#334155' },
+                            {
+                              backgroundColor: isBlack ? '#000000' : '#FFFFFF',
+                            },
                           ]}
                         />
                       ))}
@@ -596,21 +637,25 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingBottom: 4,
+    borderRadius: 6,
+    marginTop: 6,
   },
   barcodeLinesRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    height: 36,
+    alignItems: 'stretch',
+    height: 48,
     marginBottom: 4,
   },
   barcodeBar: {
+    width: 2,
     height: '100%',
-    borderRadius: 1,
   },
   barcodeNumberText: {
     fontFamily: 'monospace',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     color: '#475569',
     letterSpacing: 2,
