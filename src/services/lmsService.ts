@@ -102,23 +102,72 @@ const DEFAULT_QUIZZES: LmsQuiz[] = [
   },
 ];
 
+import { getMasterStudent, toOldRollNo } from '../data/psgimMasterStudents';
+import { CLOUDFLARE_WORKER_URL } from './studzoneService';
+
 export const LmsService = {
+  /**
+   * Resolves the student's official Moodle username (the Dummy D-Roll number, e.g. D26AB05)
+   */
+  resolveMoodleUsername(rollNo: string): string {
+    const clean = rollNo.trim().toUpperCase();
+    if (clean.startsWith('D26')) return clean;
+    const master = getMasterStudent(clean);
+    if (master?.dRollNo) return master.dRollNo;
+    const oldRoll = toOldRollNo(clean);
+    return oldRoll || clean;
+  },
+
   /**
    * Get stored LMS credentials for student
    */
   async getCredentials(rollNo: string): Promise<LmsCredentials | null> {
     try {
       if (!rollNo) return null;
+      const moodleUser = this.resolveMoodleUsername(rollNo);
       const key = `${STORAGE_KEYS.LMS_CREDS}${rollNo.toUpperCase()}`;
       const data = await AsyncStorage.getItem(key);
       if (data) return JSON.parse(data);
-      // Default initial credentials (roll.no + Welcome@123)
+      // Default initial credentials (Dummy roll.no e.g. D26AB05 + Welcome@123)
       return {
-        rollNo: rollNo.toUpperCase(),
+        rollNo: moodleUser,
         password: 'Welcome@123',
       };
     } catch {
       return null;
+    }
+  },
+
+  /**
+   * Sync upcoming assignments and events from live PSGIM Moodle
+   */
+  async syncWithMoodle(rollNo: string, password: string = 'Welcome@123'): Promise<{ success: boolean; message: string }> {
+    try {
+      const moodleUser = this.resolveMoodleUsername(rollNo);
+      const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/moodle/deadlines`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollNo: moodleUser, password }),
+      });
+
+      if (!res.ok) {
+        return { success: false, message: `Moodle server error (${res.status}).` };
+      }
+
+      const data = await res.json();
+      if (!data.success) {
+        return { success: false, message: 'Invalid Moodle password or account issue.' };
+      }
+
+      return {
+        success: true,
+        message: `Successfully connected to PSGIM Moodle as ${moodleUser}!`,
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        message: e?.message || 'Failed connecting to Moodle via Cloudflare bridge.',
+      };
     }
   },
 
