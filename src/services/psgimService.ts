@@ -99,7 +99,12 @@ export const PsgimService = {
     return Object.entries(batches).map(([courseKey, batchCode]) => {
       const course = PSGIM_COURSES[courseKey];
       const isBlankBatch = !batchCode || batchCode.trim() === '';
-      const faculty = isBlankBatch ? '' : (course?.faculty[sectionGroupNum] || course?.faculty[1] || 'Faculty');
+      
+      // Extract exact course group number from batch code (e.g., "MCOB1" -> 1, "ADM2" -> 2, "SSA3" -> 3)
+      const batchNumMatch = (batchCode || '').match(/\d+/);
+      const courseGroupNum = batchNumMatch ? parseInt(batchNumMatch[0], 10) : sectionGroupNum;
+      
+      const faculty = isBlankBatch ? '' : (course?.faculty[courseGroupNum] || course?.faculty[sectionGroupNum] || course?.faculty[1] || 'Faculty');
       const stats = attendancePresets[courseKey] || { attended: 20, total: 24 };
 
       const isMcob = courseKey === 'MCOB' && mcobData;
