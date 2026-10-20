@@ -4,6 +4,7 @@ import { getMasterStudent } from '../data/psgimMasterStudents';
 
 const STUDZONE_CREDS_KEY = '@attendance_monitor_studzone_credentials';
 const STUDZONE_BASE_URL = 'https://ecampus.psgtech.ac.in/studzone';
+export const CLOUDFLARE_WORKER_URL = 'https://yellow-firefly-42f4psg-attendance-worker.devdarshanv2005.workers.dev';
 
 export interface StudzoneAttendanceRecord {
   courseCode: string;
@@ -140,6 +141,76 @@ export const StudzoneService = {
     }
     const altMatch = html.match(/value=["']([^"']+)["']\s+name=["']__RequestVerificationToken["']/i);
     return altMatch ? altMatch[1] : null;
+  },
+
+  /**
+   * Parses official attendance HTML table into structured attendance records
+   */
+  _parseAttendanceHtml(html: string): StudzoneExtractionResult {
+    const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+
+    const records: StudzoneAttendanceRecord[] = [];
+    let rowMatch;
+
+    while ((rowMatch = rowRegex.exec(html)) !== null) {
+      const cells: string[] = [];
+      let tdMatch;
+      while ((tdMatch = tdRegex.exec(rowMatch[1])) !== null) {
+        cells.push(tdMatch[1].replace(/<[^>]+>/g, '').trim());
+      }
+
+      if (cells.length >= 8) {
+        const rawCode = cells[0].toUpperCase().trim();
+        const totalClasses = parseInt(cells[1], 10);
+        const exemptionClasses = parseInt(cells[2], 10) || 0;
+        const presentClasses = parseInt(cells[4], 10);
+        const percentage = parseFloat(cells[5]) || parseFloat(cells[7]) || 0;
+        const attendanceFrom = cells[8] ? cells[8].trim() : undefined;
+        const attendanceTo = cells[9] ? cells[9].trim() : undefined;
+
+        if (rawCode && !isNaN(totalClasses) && !isNaN(presentClasses)) {
+          records.push({
+            courseCode: rawCode,
+            courseName: '',
+            totalClasses,
+            attendedClasses: presentClasses,
+            exemptionClasses,
+            percentage,
+            attendanceFrom,
+            attendanceTo,
+          });
+        }
+      }
+    }
+
+    if (records.length === 0) {
+      return {
+        success: false,
+        records: [],
+        error: 'No attendance records could be parsed from the portal response.',
+      };
+    }
+
+    let portalUpdatedDate: string | undefined;
+    let attendanceFrom: string | undefined;
+    let attendanceTo: string | undefined;
+
+    const recordWithDates = records.find((r) => r.attendanceTo);
+    if (recordWithDates) {
+      attendanceFrom = recordWithDates.attendanceFrom;
+      attendanceTo = recordWithDates.attendanceTo;
+      portalUpdatedDate = recordWithDates.attendanceTo;
+    }
+
+    return {
+      success: true,
+      records,
+      fetchedAt: new Date().toISOString(),
+      portalUpdatedDate,
+      attendanceFrom: attendanceFrom || '17-08-2026',
+      attendanceTo: attendanceTo || portalUpdatedDate || '10-10-2026',
+    };
   },
 
   /**
@@ -316,6 +387,29 @@ export const StudzoneService = {
         records: [],
         error: 'Please enter your DOB Password in DDMMMYY format (e.g. 13AUG05 for 13th August 2005).',
       };
+    }
+
+    // Try Cloudflare Worker Proxy first (bypasses browser CORS & DNS timeouts)
+    try {
+      const proxyRes = await fetch(`${CLOUDFLARE_WORKER_URL}/api/studzone/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollNo: cleanRollNo, password: cleanPassword }),
+      });
+
+      if (proxyRes.ok) {
+        const proxyData = await proxyRes.json();
+        if (proxyData.success && proxyData.rawHtml) {
+          const parsed = this._parseAttendanceHtml(proxyData.rawHtml);
+          if (parsed.success && parsed.records.length > 0) {
+            return parsed;
+          }
+        } else if (proxyData.error) {
+          console.warn('Cloudflare proxy returned error:', proxyData.error);
+        }
+      }
+    } catch (proxyErr) {
+      console.warn('Cloudflare proxy connection attempt skipped/failed:', proxyErr);
     }
 
     try {
