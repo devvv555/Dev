@@ -79,45 +79,61 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
     }
   };
 
-  // Official Code 39 barcode encoding dictionary (standard barcode standard used on college ID cards)
-  const CODE39_PATTERNS: Record<string, string> = {
-    '0': 'bwbwbwBwb', '1': 'BwbwbwbwB', '2': 'bwBwbwbwB', '3': 'BwBwbwbwb',
-    '4': 'bwbwBwbwB', '5': 'BwbwBwbwb', '6': 'bwBwBwbwb', '7': 'bwbwbwBwB',
-    '8': 'BwbwbwBwb', '9': 'bwBwbwBwb', 'A': 'BwbwbwbBw', 'B': 'bwBwbwbBw',
-    'C': 'BwBwbwbBw', 'D': 'bwbwBwbBw', 'E': 'BwbwBwbBw', 'F': 'bwBwBwbBw',
-    'G': 'bwbwbwBBw', 'H': 'BwbwbwBBw', 'I': 'bwBwbwBBw', 'J': 'bwbwBwBBw',
-    'K': 'Bwbwbwbwb', 'L': 'bwBwbwbwb', 'M': 'BwBwbwbwb', 'N': 'bwbwBwbwb',
-    'O': 'BwbwBwbwb', 'P': 'bwBwBwbwb', 'Q': 'bwbwbwBwb', 'R': 'BwbwbwBwb',
-    'S': 'bwBwbwBwb', 'T': 'bwbwBwBwb', 'U': 'BBwbwbwbw', 'V': 'bwBBwbwbw',
-    'W': 'BBwBBwbwb', 'X': 'bwBwBBwbw', 'Y': 'BBwBwBBwb', 'Z': 'bwBBwBBwb',
-    '-': 'bwBwbwBwb', '.': 'BBwbwbwBw', ' ': 'bwBBwbwBw', '*': 'bwBwBwbBw'
-  };
+  // Official Code 128 barcode patterns (ISO/IEC 15417) - universal across all laser scanners and camera apps
+  const CODE128_PATTERNS = [
+    '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
+    '221312', '231212', '112232', '122132', '122231', '113222', '123122', '123221', '223211', '221132',
+    '221231', '213212', '223112', '312131', '311222', '321122', '321221', '312212', '322112', '322211',
+    '212123', '212321', '232121', '111323', '131123', '131321', '112313', '132113', '132311', '211313',
+    '231113', '231311', '112133', '112331', '132131', '113123', '113321', '133121', '313121', '211331',
+    '231131', '213113', '213311', '213131', '311123', '311321', '331121', '312113', '312311', '332111',
+    '314111', '221411', '431111', '111224', '111422', '121124', '121421', '141122', '141221', '112214',
+    '112412', '122114', '122411', '142112', '142211', '241211', '221114', '413111', '241112', '134111',
+    '111242', '121142', '121241', '114212', '124112', '124211', '411212', '421112', '421211', '212141',
+    '214121', '412121', '111143', '111341', '131141', '114113', '114311', '411113', '411311', '113141',
+    '114131', '311141', '411131', '211412', '211214', '211232', '2331112'
+  ];
 
-  // Build binary bar sequence (1 = black bar, 0 = white space)
-  const generateCode39Modules = (text: string): number[] => {
-    const raw = `*${text.toUpperCase().replace(/[^0-9A-Z\-\. ]/g, '')}*`;
-    const modules: number[] = [];
+  const generateCode128Modules = (text: string): number[] => {
+    const raw = text.trim().toUpperCase() || '26AB12';
+    const startB = 104; // Code 128 Set B
+    const values: number[] = [startB];
 
     for (let i = 0; i < raw.length; i++) {
-      const char = raw[i];
-      const pattern = CODE39_PATTERNS[char] || CODE39_PATTERNS['*'];
+      values.push(raw.charCodeAt(i) - 32);
+    }
+
+    let checksum = startB;
+    for (let i = 1; i < values.length; i++) {
+      checksum += values[i] * i;
+    }
+    checksum %= 103;
+    values.push(checksum);
+    values.push(106); // Stop sequence
+
+    const modules: number[] = [];
+    // 10 modules Quiet Zone on the left
+    for (let q = 0; q < 10; q++) modules.push(0);
+
+    for (const val of values) {
+      const pattern = CODE128_PATTERNS[val];
+      if (!pattern) continue;
       for (let j = 0; j < pattern.length; j++) {
-        const isBar = (j % 2 === 0);
-        const isWide = pattern[j] === 'B' || pattern[j] === 'W';
-        const width = isWide ? 3 : 1;
+        const width = parseInt(pattern[j], 10);
+        const isBar = j % 2 === 0;
         for (let w = 0; w < width; w++) {
           modules.push(isBar ? 1 : 0);
         }
       }
-      // Inter-character narrow gap
-      if (i < raw.length - 1) {
-        modules.push(0);
-      }
     }
+
+    // 10 modules Quiet Zone on the right
+    for (let q = 0; q < 10; q++) modules.push(0);
+
     return modules;
   };
 
-  const barcodeModules = generateCode39Modules(cleanRoll || '26AB12');
+  const barcodeModules = generateCode128Modules(cleanRoll || '26AB12');
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
