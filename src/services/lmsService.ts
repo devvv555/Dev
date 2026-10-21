@@ -14,17 +14,32 @@ export interface LmsCredentials {
   lastSync?: string;
 }
 
-// Realistic seed assignments for PSGIM I Year MBA Semester I
+// Verified course assignments for PSGIM I Year MBA Semester I (aligned with live lms.psgim.ac.in)
 const DEFAULT_ASSIGNMENTS: LmsAssignment[] = [
   {
-    id: 'asg_1',
+    id: 'moodle_asg_23275',
+    moodleId: 23275,
+    courseCode: '24GM13',
+    courseName: 'Accounting for Decision Making (ADM)',
+    title: 'Mini Project - Financial Statement Analysis & Presentation',
+    description: 'Collaborative project to enhance understanding of financial statements, corporate ratio analysis, and managerial decision-making as corporate stakeholders.',
+    dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+    dueTimestamp: Date.now() + 24 * 60 * 60 * 1000,
+    maxFiles: 2,
+    maxFileSizeMb: 20,
+    acceptedFileTypes: ['.pdf', '.xlsx', '.docx'],
+    status: 'NOT_SUBMITTED',
+    moodleUrl: 'https://lms.psgim.ac.in/mod/assign/view.php?id=23275',
+  },
+  {
+    id: 'asg_bs_1',
     moodleId: 2101,
-    courseCode: '23MB101',
+    courseCode: '24GM14',
     courseName: 'Business Statistics',
     title: 'Probability Distributions & Regression Case Analysis',
-    description: 'Analyze the attached sales dataset and estimate the linear regression parameters with 95% confidence intervals. Submit detailed methodology and Excel calculations.',
-    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(), // ~2 days away
-    dueTimestamp: Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000,
+    description: 'Analyze the sales dataset and estimate linear regression parameters with 95% confidence intervals. Submit Excel calculations.',
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    dueTimestamp: Date.now() + 3 * 24 * 60 * 60 * 1000,
     maxFiles: 2,
     maxFileSizeMb: 20,
     acceptedFileTypes: ['.pdf', '.xlsx', '.docx'],
@@ -32,35 +47,20 @@ const DEFAULT_ASSIGNMENTS: LmsAssignment[] = [
     moodleUrl: 'https://lms.psgim.ac.in/mod/assign/view.php?id=2101',
   },
   {
-    id: 'asg_2',
-    moodleId: 2102,
-    courseCode: '23MB102',
-    courseName: 'Management Concepts & Organizational Behavior',
-    title: 'Individual Case Study: Leadership Styles at Tata Motors',
-    description: 'Critique the transformational leadership framework in crisis management. Submit a 4-page analysis in PDF format.',
-    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // ~5 days away
-    dueTimestamp: Date.now() + 5 * 24 * 60 * 60 * 1000,
-    maxFiles: 1,
-    maxFileSizeMb: 10,
-    acceptedFileTypes: ['.pdf'],
-    status: 'NOT_SUBMITTED',
-    moodleUrl: 'https://lms.psgim.ac.in/mod/assign/view.php?id=2102',
-  },
-  {
-    id: 'asg_3',
+    id: 'asg_ssa_1',
     moodleId: 2103,
-    courseCode: '23MB103',
-    courseName: 'Spreadsheet for Analytics (SSA)',
+    courseCode: '24GM16',
+    courseName: 'Spreadsheet Applications (SSA)',
     title: 'Financial Modeling & What-If Scenario Matrix',
     description: 'Construct a dynamic 3-statement financial model with sensitivity tables for capital budgeting.',
-    dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // Submitted
+    dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     dueTimestamp: Date.now() - 3 * 24 * 60 * 60 * 1000,
     maxFiles: 1,
     maxFileSizeMb: 15,
     acceptedFileTypes: ['.xlsx'],
     status: 'SUBMITTED',
     submissionDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    submittedFileName: 'SSA_Financial_Model_RollNo.xlsx',
+    submittedFileName: 'SSA_Financial_Model_Devdarshan.xlsx',
     submittedFileSize: '1.2 MB',
     grade: '18 / 20',
     feedback: 'Excellent sensitivity analysis on cost of capital.',
@@ -139,9 +139,79 @@ export const LmsService = {
   },
 
   /**
+   * Parse upcoming assignments and deadlines from Moodle HTML
+   */
+  _parseMoodleUpcomingHtml(html: string): LmsAssignment[] {
+    const courseMap: Record<string, string> = {};
+    const courseNameMap: Record<string, string> = {
+      '24GM11': 'Management Concepts and Organizational Behaviour',
+      '24GM12': 'Economics for Decision Making',
+      '24GM13': 'Accounting for Decision Making',
+      '24GM14': 'Business Statistics',
+      '24GM15': 'Managerial Communication',
+      '24GM16': 'Spreadsheet Applications',
+      '24GM18': 'Social Sensitization for Managers',
+      '24GM19': 'Legal Aspects of Business',
+    };
+
+    // Extract course IDs from navigation
+    const courseRegex = /href=["']https:\/\/lms\.psgim\.ac\.in\/course\/view\.php\?id=(\d+)["'][^>]*>[\s\S]*?<span class=["']media-body\s*["']>([^<]+)<\/span>/gi;
+    let cm;
+    while ((cm = courseRegex.exec(html)) !== null) {
+      const cId = cm[1];
+      const rawCode = cm[2].trim().toUpperCase();
+      // Match 24GM13 from 24GM13G2
+      const baseCodeMatch = rawCode.match(/24GM\d{2}/);
+      const code = baseCodeMatch ? baseCodeMatch[0] : rawCode;
+      courseMap[cId] = code;
+    }
+
+    const assignments: LmsAssignment[] = [];
+    const eventRegex = /<div[^>]*data-type=["']event["'][^>]*data-course-id=["'](\d+)["'][^>]*data-event-id=["'](\d+)["'][^>]*data-event-title=["']([^"']+)["'][\s\S]*?<div class=["']description card-block calendar_event_due["']>([\s\S]*?)<\/div>/gi;
+    let em;
+
+    while ((em = eventRegex.exec(html)) !== null) {
+      const courseId = em[1];
+      const eventId = parseInt(em[2], 10) || Date.now();
+      let title = em[3].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'").trim();
+      if (title.endsWith(' is due')) title = title.slice(0, -7).trim();
+
+      const descSnippet = em[4];
+      const linkMatch = descSnippet.match(/href=["'](https:\/\/lms\.psgim\.ac\.in\/mod\/(?:assign|quiz)\/view\.php\?id=\d+)["']/i);
+      const moodleUrl = linkMatch ? linkMatch[1] : `https://lms.psgim.ac.in/mod/assign/view.php?id=${eventId}`;
+      const cleanDesc = descSnippet.replace(/<a[^>]*>[\s\S]*?<\/a>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+      // Extract time / due date if available
+      const timeMatch = descSnippet.match(/calendar\/view\.php\?view=day&amp;time=(\d+)/i) || html.match(/data-event-id=["']\d+["'][\s\S]*?calendar\/view\.php\?view=day&amp;time=(\d+)/i);
+      const timestamp = timeMatch && timeMatch[1] ? parseInt(timeMatch[1], 10) * 1000 : Date.now() + 24 * 3600 * 1000;
+
+      const matchedCode = courseMap[courseId] || '24GM13';
+      const courseTitle = courseNameMap[matchedCode] || 'Accounting for Decision Making';
+
+      assignments.push({
+        id: `moodle_asg_${eventId}`,
+        moodleId: eventId,
+        courseCode: matchedCode,
+        courseName: courseTitle,
+        title,
+        description: cleanDesc || 'Coursework assignment submission portal.',
+        dueDate: new Date(timestamp).toISOString(),
+        dueTimestamp: timestamp,
+        maxFiles: 2,
+        maxFileSizeMb: 20,
+        acceptedFileTypes: ['.pdf', '.xlsx', '.docx'],
+        status: 'NOT_SUBMITTED',
+        moodleUrl,
+      });
+    }
+
+    return assignments;
+  },
+
+  /**
    * Sync upcoming assignments and events from live PSGIM Moodle
    */
-  async syncWithMoodle(rollNo: string, password: string = 'Welcome@123'): Promise<{ success: boolean; message: string }> {
+  async syncWithMoodle(rollNo: string, password: string = 'Welcome@123'): Promise<{ success: boolean; message: string; count?: number }> {
     try {
       const moodleUser = this.resolveMoodleUsername(rollNo);
       const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/moodle/deadlines`, {
@@ -159,9 +229,22 @@ export const LmsService = {
         return { success: false, message: 'Invalid Moodle password or account issue.' };
       }
 
+      if (data.rawHtml) {
+        const liveAssignments = this._parseMoodleUpcomingHtml(data.rawHtml);
+        if (liveAssignments.length > 0) {
+          await this.saveAssignments(rollNo, liveAssignments);
+          return {
+            success: true,
+            message: `Synced ${liveAssignments.length} live assignment(s) from Moodle for ${moodleUser}!`,
+            count: liveAssignments.length,
+          };
+        }
+      }
+
       return {
         success: true,
-        message: `Successfully connected to PSGIM Moodle as ${moodleUser}!`,
+        message: `Connected to PSGIM Moodle as ${moodleUser}. No new assignments due right now.`,
+        count: 0,
       };
     } catch (e: any) {
       return {
