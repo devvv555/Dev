@@ -18,6 +18,7 @@ import { AttendanceGauge } from '../components/AttendanceGauge';
 
 import { SubjectCard } from '../components/SubjectCard';
 import { PsgimService } from '../services/psgimService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
 import { NotificationService } from '../services/notificationService';
 import { StorageService } from '../services/storageService';
@@ -317,81 +318,63 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   } | null>(null);
   const alertedSlotsRef = useRef<Set<string>>(new Set());
 
-  // Automatic detector that fires notification & vibration when class ends
+  // Restore already alerted class starts for today from AsyncStorage on mount
   useEffect(() => {
-    const checkEndedClasses = () => {
+    const today = new Date().toISOString().split('T')[0];
+    AsyncStorage.getItem(`@alerted_slots_${today}`).then((val) => {
+      if (val) {
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((k: string) => alertedSlotsRef.current.add(k));
+          }
+        } catch {}
+      }
+    });
+  }, []);
+
+  // Automatic detector that fires notification strictly ONCE at the beginning of every class
+  useEffect(() => {
+    const checkClassBeginning = () => {
       const currentTime = new Date();
       const mins = currentTime.getHours() * 60 + currentTime.getMinutes();
       const today = currentTime.toISOString().split('T')[0];
       const todayDay = dayNames[currentTime.getDay()].toLowerCase();
 
-      // Find any class from today that has reached its endTime (notify even if already marked)
-      const endedSlot = timetable.find((slot) => {
+      // Find active class that has started and is currently ongoing
+      const currentSlot = timetable.find((slot) => {
         if (slot.day.toLowerCase() !== todayDay) return false;
+        const start = timeToMinutes(slot.startTime);
         const end = timeToMinutes(slot.endTime);
-        return mins >= end && mins <= end + 180;
+        return mins >= start && mins < end;
       });
 
-      if (endedSlot) {
-        const periodKey = `${today}_${endedSlot.id}`;
-        if (!alertedSlotsRef.current.has(periodKey)) {
-          alertedSlotsRef.current.add(periodKey);
-          const sub = subjects.find((s) => s.id === endedSlot.subjectId);
+      if (currentSlot) {
+        const periodStartKey = `start_${today}_${currentSlot.id}`;
+        if (!alertedSlotsRef.current.has(periodStartKey)) {
+          alertedSlotsRef.current.add(periodStartKey);
+          AsyncStorage.setItem(
+            `@alerted_slots_${today}`,
+            JSON.stringify(Array.from(alertedSlotsRef.current))
+          ).catch(() => {});
+
+          const sub = subjects.find((s) => s.id === currentSlot.subjectId);
           if (sub) {
             try {
-              Vibration.vibrate([0, 500, 200, 500]);
+              Vibration.vibrate(200);
             } catch {}
-            // Send system notification directly to phone's notification tab/shade
+            const periodKey = `${today}_${currentSlot.id}`;
             const recorded = periodRecords[periodKey];
-            NotificationService.notifyClassEnded(endedSlot, sub, recorded?.status);
+            NotificationService.notifyClassStarted(currentSlot, sub, recorded?.status);
           }
         }
       }
-
-      // Check upcoming weekday holiday and notify system notification tray
-      if (weekdayHolidayAlert && !alertedSlotsRef.current.has(`holiday_${today}_${weekdayHolidayAlert.holiday.id}`)) {
-        alertedSlotsRef.current.add(`holiday_${today}_${weekdayHolidayAlert.holiday.id}`);
-        NotificationService.notifyUpcomingHoliday(
-          weekdayHolidayAlert.holiday.title,
-          weekdayHolidayAlert.holiday.day,
-          weekdayHolidayAlert.daysRemaining
-        );
-      }
-
-      // Check for upcoming class with pending surplus second notification (actual > period)
-      surplusAlerts.forEach((alert) => {
-        if (!alert.notifiedBeforeClass) {
-          const upcomingSlot = timetable.find((slot) => {
-            if (slot.subjectId !== alert.subjectId) return false;
-            if (slot.day.toLowerCase() !== todayDay) return false;
-            const start = timeToMinutes(slot.startTime);
-            return mins >= start - 30 && mins < start + 30;
-          });
-
-          if (upcomingSlot) {
-            const key = `surplus_pre_${today}_${upcomingSlot.id}`;
-            if (!alertedSlotsRef.current.has(key)) {
-              alertedSlotsRef.current.add(key);
-              NotificationService.notifyUpcomingClassWithSurplus(
-                alert.subjectName,
-                upcomingSlot,
-                alert.officialAttended,
-                alert.periodAttended
-              );
-              StorageService.markSurplusAlertNotifiedBeforeClass(studentRollNo, alert.id);
-              setSurplusAlerts((prev) =>
-                prev.map((a) => (a.id === alert.id ? { ...a, notifiedBeforeClass: true } : a))
-              );
-            }
-          }
-        }
-      });
     };
 
-    checkEndedClasses();
-    const interval = setInterval(checkEndedClasses, 30000);
+    checkClassBeginning();
+    const interval = setInterval(checkClassBeginning, 30000);
     return () => clearInterval(interval);
-  }, [timetable, periodRecords, subjects, weekdayHolidayAlert, surplusAlerts, studentRollNo]);
+  }, [timetable, periodRecords, subjects]);
 
   const handleRecordFromNotification = async (status: AttendanceStatus) => {
     if (!endedSlotNotification) return;

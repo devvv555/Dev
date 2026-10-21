@@ -126,7 +126,7 @@ export default function App() {
       }
     });
 
-    // 🔔 Lock Screen Interactive Notification Action Listener (Native Android & iOS)
+    // Lock Screen Interactive Notification Action Listener (Native Android & iOS)
     let notifSub: any = null;
     if (Platform.OS !== 'web') {
       notifSub = NotificationService.addNotificationResponseListener((actionId, data) => {
@@ -137,6 +137,7 @@ export default function App() {
           const slot = timetableRef.current.find((s) => s.id === slotId);
           if (slot) {
             handleRecordPeriodAttendanceRef.current(slot, today, status);
+            NotificationService.dismissAllNotifications();
           }
         }
       });
@@ -152,6 +153,7 @@ export default function App() {
             const slot = timetableRef.current.find((s) => s.id === slotId);
             if (slot) {
               handleRecordPeriodAttendanceRef.current(slot, today, status);
+              NotificationService.dismissAllNotifications();
             }
           }
         }

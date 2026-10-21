@@ -28,6 +28,13 @@ export const FacultySelectModal: React.FC<FacultySelectModalProps> = ({
   const [customFaculty, setCustomFaculty] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState<string>('');
 
+  React.useEffect(() => {
+    if (subject) {
+      setSelectedFaculty(subject.faculty || '');
+      setCustomFaculty('');
+    }
+  }, [subject?.id, subject?.faculty]);
+
   if (!subject) return null;
 
   // Gather all known faculty options for this course
