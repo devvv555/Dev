@@ -43,7 +43,12 @@ export default function App() {
   const [medicalClaims, setMedicalClaims] = useState<MedicalClaimRecord[]>(INITIAL_MEDICAL_CLAIMS);
   const [periodRecords, setPeriodRecords] = useState<Record<string, PeriodAttendanceRecord>>({});
 
-  // Check saved session on launch
+  // Keep active refs so listeners always access latest state without re-triggering useEffect
+  const timetableRef = React.useRef(timetable);
+  timetableRef.current = timetable;
+  const handleRecordPeriodAttendanceRef = React.useRef<any>(null);
+
+  // 1. Initial session check (MOUNT ONLY)
   useEffect(() => {
     async function initSession() {
       try {
@@ -61,6 +66,7 @@ export default function App() {
               sub.faculty = override;
             }
           }
+
           initialTimetable.forEach((slot) => {
             const matchingSub = initialSubjects.find((s) => s.id === slot.subjectId);
             if (matchingSub && matchingSub.faculty) {
@@ -72,6 +78,7 @@ export default function App() {
           setTimetable(initialTimetable);
           const storedRecords = await StorageService.getPeriodRecords(officialRoll);
           setPeriodRecords(storedRecords);
+
           // Sync with latest cloud updates (e.g. from Teacher Google Sheets)
           const cloudSubjects = await CloudSyncService.fetchCloudSubjects(officialRoll);
           if (cloudSubjects && cloudSubjects.length > 0) {
@@ -106,7 +113,7 @@ export default function App() {
     }
     initSession();
 
-    // 🌟 Global Real-time Listener:
+    // 🌟 Global Real-time Listener (Mount once):
     let lastKnownSyncTime = Date.now();
     const unsubGlobal = CloudSyncService.listenToGlobalAttendanceUpdates((update) => {
       if (update && update.timestamp && update.timestamp > lastKnownSyncTime) {
@@ -127,10 +134,9 @@ export default function App() {
           const slotId = data.slotId;
           const status = actionId === 'present' ? 'attended' : 'bunked';
           const today = new Date().toISOString().split('T')[0];
-          // Find slot
-          const slot = timetable.find((s) => s.id === slotId);
+          const slot = timetableRef.current.find((s) => s.id === slotId);
           if (slot) {
-            handleRecordPeriodAttendance(slot, today, status);
+            handleRecordPeriodAttendanceRef.current(slot, today, status);
           }
         }
       });
@@ -143,9 +149,9 @@ export default function App() {
             const slotId = data.slotId;
             const status = action === 'present' ? 'attended' : 'bunked';
             const today = new Date().toISOString().split('T')[0];
-            const slot = timetable.find((s) => s.id === slotId);
+            const slot = timetableRef.current.find((s) => s.id === slotId);
             if (slot) {
-              handleRecordPeriodAttendance(slot, today, status);
+              handleRecordPeriodAttendanceRef.current(slot, today, status);
             }
           }
         }
@@ -157,7 +163,7 @@ export default function App() {
       unsubGlobal();
       if (notifSub && notifSub.remove) notifSub.remove();
     };
-  }, [timetable, subjects, periodRecords, activeRollNo]);
+  }, []);
 
   const handleTabChange = (newTab: Tab) => {
     setActiveTab(newTab);
@@ -346,6 +352,7 @@ export default function App() {
       isChange,
     };
   };
+  handleRecordPeriodAttendanceRef.current = handleRecordPeriodAttendance;
 
   // Update subject helper
   const handleUpdateSubject = (updated: Subject) => {
