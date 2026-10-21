@@ -739,7 +739,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.moodleSyncBtn, isLmsSyncing && { opacity: 0.7 }, { backgroundColor: '#D97706' }]}
+            style={[styles.moodleSyncBtn, isLmsSyncing && { opacity: 0.7 }, { backgroundColor: '#0284C7' }]}
             onPress={handleSyncLms}
             disabled={isLmsSyncing}
             activeOpacity={0.8}

@@ -48,6 +48,23 @@ export const NotificationService = {
   },
 
   /**
+   * Dismiss all current notifications so the user never sees more than one
+   */
+  async dismissAllNotifications(): Promise<void> {
+    try {
+      if (Platform.OS !== 'web') {
+        await Notifications.dismissAllNotificationsAsync();
+      } else if (typeof window !== 'undefined' && 'serviceWorker' in navigator && Notification.permission === 'granted') {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && reg.getNotifications) {
+          const list = await reg.getNotifications();
+          list.forEach((n) => n.close());
+        }
+      }
+    } catch {}
+  },
+
+  /**
    * Set up notification action categories for quick actions if needed
    */
   async setupNotificationCategories(): Promise<void> {
@@ -69,12 +86,12 @@ export const NotificationService = {
         await Notifications.setNotificationCategoryAsync('ATTENDANCE_LOCKSCREEN_ACTIONS', [
           {
             identifier: 'present',
-            buttonTitle: '✅ Mark Present',
+            buttonTitle: 'Mark Present',
             options: { opensAppToForeground: false },
           },
           {
             identifier: 'absent',
-            buttonTitle: '❌ Mark Absent',
+            buttonTitle: 'Mark Absent',
             options: { opensAppToForeground: false },
           },
         ]);
@@ -102,7 +119,8 @@ export const NotificationService = {
   },
 
   /**
-   * Send a system status bar / notification shade alert to the phone
+   * Send a system status bar / notification shade alert to the phone.
+   * Dismisses any prior notifications first to guarantee no more than 1 notification is visible.
    */
   async sendLocalNotification(
     title: string,
@@ -111,6 +129,9 @@ export const NotificationService = {
     actions?: Array<{ action: string; title: string }>
   ): Promise<string | null> {
     try {
+      // Clear any prior notification so only one notification is active
+      await this.dismissAllNotifications();
+
       if (Platform.OS === 'web') {
         // Try ServiceWorkerRegistration showNotification for rich lock-screen action buttons
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator && Notification.permission === 'granted') {
@@ -121,6 +142,8 @@ export const NotificationService = {
                 body,
                 icon: '/assets/icon.png',
                 badge: '/assets/favicon.png',
+                tag: 'attendance_single_alert',
+                renotify: true,
                 data: data || {},
                 vibrate: [200, 100, 200],
                 requireInteraction: true,
@@ -137,7 +160,7 @@ export const NotificationService = {
         // Fallback to basic window Notification
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           try {
-            new Notification(title, { body });
+            new Notification(title, { body, tag: 'attendance_single_alert' });
             return 'web-notif';
           } catch {}
         }
@@ -166,17 +189,46 @@ export const NotificationService = {
   },
 
   /**
+   * Trigger phone system notification once at the beginning of a class with interactive lock screen action buttons
+   */
+  async notifyClassStarted(slot: TimetableSlot, subject: Subject, status?: string): Promise<string | null> {
+    const title = `Class Started: ${subject.name}`;
+    const roomPart = slot.room ? ` (${slot.room})` : '';
+    const body = status
+      ? `${slot.startTime} - ${slot.endTime}${roomPart} - Recorded: ${status.toUpperCase()}. Tap to change:`
+      : `${slot.startTime} - ${slot.endTime}${roomPart}. Mark attendance:`;
+    
+    const actions = [
+      { action: 'present', title: 'Mark Present' },
+      { action: 'absent', title: 'Mark Absent' },
+    ];
+
+    return this.sendLocalNotification(
+      title,
+      body,
+      {
+        type: 'CLASS_STARTED',
+        slotId: slot.id,
+        subjectId: subject.id,
+        status,
+      },
+      actions
+    );
+  },
+
+  /**
    * Trigger phone system notification when a class has ended with interactive lock screen action buttons
    */
   async notifyClassEnded(slot: TimetableSlot, subject: Subject, status?: string): Promise<string | null> {
-    const title = `🔔 Class Ended: ${subject.name}`;
+    const title = `Class Ended: ${subject.name}`;
+    const roomPart = slot.room ? ` (${slot.room})` : '';
     const body = status
-      ? `${slot.startTime} – ${slot.endTime} concluded (Recorded: ${status.toUpperCase()}). Tap below to change:`
-      : `${slot.startTime} – ${slot.endTime} concluded. Record attendance directly below:`;
+      ? `${slot.startTime} - ${slot.endTime}${roomPart} concluded (Recorded: ${status.toUpperCase()}). Tap to change:`
+      : `${slot.startTime} - ${slot.endTime}${roomPart} concluded. Mark attendance:`;
     
     const actions = [
-      { action: 'present', title: '✅ Mark Present' },
-      { action: 'absent', title: '❌ Mark Absent' },
+      { action: 'present', title: 'Mark Present' },
+      { action: 'absent', title: 'Mark Absent' },
     ];
 
     return this.sendLocalNotification(
@@ -197,8 +249,8 @@ export const NotificationService = {
    */
   async notifyUpcomingHoliday(holidayTitle: string, day: string, daysRemaining: number): Promise<string | null> {
     const timeText = daysRemaining === 0 ? 'Today' : daysRemaining === 1 ? 'Tomorrow' : `In ${daysRemaining} days (${day})`;
-    const title = `🎉 Upcoming Holiday: ${holidayTitle}`;
-    const body = `${timeText} is an official holiday. Enjoy your time off!`;
+    const title = `Upcoming Holiday: ${holidayTitle}`;
+    const body = `${timeText} is an official holiday.`;
     return this.sendLocalNotification(title, body, {
       type: 'HOLIDAY',
       holidayTitle,
@@ -210,7 +262,7 @@ export const NotificationService = {
    */
   async scheduleClassAlert(slot: TimetableSlot, subject: Subject): Promise<string | null> {
     try {
-      const title = `📚 Upcoming Class: ${subject.name}`;
+      const title = `Upcoming Class: ${subject.name}`;
       const body = `Class starts at ${slot.startTime} in ${slot.room || 'classroom'}.`;
       return await this.sendLocalNotification(title, body, { slotId: slot.id });
     } catch {
@@ -219,18 +271,18 @@ export const NotificationService = {
   },
 
   /**
-   * Exciting broadcast notification to phone notification tray when attendance is refreshed / extracted
+   * Broadcast notification to phone notification tray when attendance is refreshed / extracted
    */
   async notifyAttendanceUpdated(
     updatedByName?: string,
     subjectsCount?: number,
     portalUpdatedDate?: string
   ): Promise<string | null> {
-    const who = updatedByName ? `${updatedByName} just extracted fresh attendance!` : 'Fresh attendance uploaded!';
+    const who = updatedByName ? `${updatedByName} extracted fresh attendance.` : 'Fresh attendance uploaded.';
     const asOnInfo = portalUpdatedDate ? ` Portal updated as on ${portalUpdatedDate}.` : '';
     const countInfo = subjectsCount ? ` (${subjectsCount} subjects)` : '';
-    const title = `🔥 COLLEGE UPDATED ATTENDANCE!`;
-    const body = `⚡ ${who}${asOnInfo}${countInfo} Tap to view your latest official percentages! 📊`;
+    const title = `College Updated Attendance`;
+    const body = `${who}${asOnInfo}${countInfo} Tap to view your latest official percentages.`;
     return this.sendLocalNotification(title, body, {
       type: 'ATTENDANCE_UPDATED',
       portalUpdatedDate,
@@ -242,8 +294,8 @@ export const NotificationService = {
    * Schedule or send period task reminder
    */
   async notifyPeriodReminder(subjectName: string, note: string, dueTimingDesc: string): Promise<string | null> {
-    const title = `⏰ Reminder for ${subjectName}`;
-    const body = `📌 ${note} (${dueTimingDesc})`;
+    const title = `Reminder: ${subjectName}`;
+    const body = `${note} (${dueTimingDesc})`;
     return this.sendLocalNotification(title, body, {
       type: 'PERIOD_REMINDER',
       subjectName,
@@ -253,7 +305,6 @@ export const NotificationService = {
 
   /**
    * Positive Difference (official < period): 1 notification alerting of discrepancy
-   * Teacher may have marked student absent or portal didn't record attendance.
    */
   async notifyAttendanceDiscrepancy(
     subjectName: string,
@@ -261,8 +312,8 @@ export const NotificationService = {
     periodAttended: number
   ): Promise<string | null> {
     const diff = periodAttended - officialAttended;
-    const title = `⚠️ Attendance Discrepancy: ${subjectName}`;
-    const body = `Portal marked ${officialAttended} hrs vs your logged ${periodAttended} hrs (${diff} hrs lower). Teacher may have marked you absent!`;
+    const title = `Attendance Discrepancy: ${subjectName}`;
+    const body = `Portal marked ${officialAttended} hrs vs your logged ${periodAttended} hrs (${diff} hrs lower). Teacher may have marked you absent.`;
     return this.sendLocalNotification(title, body, {
       type: 'ATTENDANCE_DISCREPANCY',
       subjectName,
@@ -274,7 +325,6 @@ export const NotificationService = {
 
   /**
    * Negative Difference (official > period): First notification fired on attendance update
-   * College portal has more attended hours (extra credit, OD, or medical granted).
    */
   async notifyExtraAttendance(
     subjectName: string,
@@ -282,8 +332,8 @@ export const NotificationService = {
     periodAttended: number
   ): Promise<string | null> {
     const surplus = officialAttended - periodAttended;
-    const title = `🎉 Extra Attendance Credited: ${subjectName}`;
-    const body = `Portal shows ${officialAttended} hrs vs your logged ${periodAttended} hrs (+${surplus} hrs extra credited by college)!`;
+    const title = `Extra Attendance Credited: ${subjectName}`;
+    const body = `Portal shows ${officialAttended} hrs vs your logged ${periodAttended} hrs (+${surplus} hrs extra credited by college).`;
     return this.sendLocalNotification(title, body, {
       type: 'EXTRA_ATTENDANCE_UPDATE',
       subjectName,
@@ -303,9 +353,9 @@ export const NotificationService = {
     periodAttended: number
   ): Promise<string | null> {
     const surplus = officialAttended - periodAttended;
-    const title = `🔔 Upcoming Class: ${subjectName}`;
+    const title = `Upcoming Class: ${subjectName}`;
     const roomInfo = slot.room ? ` in ${slot.room}` : '';
-    const body = `Class starts at ${slot.startTime} (${slot.day})${roomInfo}. Note: Portal has +${surplus} extra attended hrs. Make sure to log this period!`;
+    const body = `Class starts at ${slot.startTime} (${slot.day})${roomInfo}. Note: Portal has +${surplus} extra attended hrs.`;
     return this.sendLocalNotification(title, body, {
       type: 'UPCOMING_CLASS_SURPLUS',
       subjectName,
@@ -328,9 +378,9 @@ export const NotificationService = {
   ): Promise<string | null> {
     try {
       const surplus = officialAttended - periodAttended;
-      const title = `🔔 Upcoming Class: ${subjectName}`;
+      const title = `Upcoming Class: ${subjectName}`;
       const roomInfo = slot.room ? ` in ${slot.room}` : '';
-      const body = `Class starts at ${slot.startTime} (${slot.day})${roomInfo}. Note: Portal has +${surplus} extra attended hrs. Make sure to log this period!`;
+      const body = `Class starts at ${slot.startTime} (${slot.day})${roomInfo}. Note: Portal has +${surplus} extra attended hrs.`;
 
       // Trigger 15 minutes before classDate, or immediately if starting within 15 minutes
       const triggerMs = classDate.getTime() - 15 * 60 * 1000;
@@ -367,7 +417,6 @@ export const NotificationService = {
 
   /**
    * Notify when a faculty/teacher posts an assignment, deadline change, or update on Moodle
-   * Sends directly to the phone's native system notification tray with high priority and vibration.
    */
   async notifyMoodleCourseUpdate(
     courseName: string,
@@ -377,7 +426,7 @@ export const NotificationService = {
     try {
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: `📚 Moodle Update: ${courseName}`,
+          title: `Moodle Update: ${courseName}`,
           body: `${updateTitle}: ${details}`,
           data: {
             type: 'MOODLE_UPDATE',
@@ -404,7 +453,7 @@ export const NotificationService = {
     try {
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: `📢 New Circular: ${title}`,
+          title: `New Circular: ${title}`,
           body: `Published by ${author}. Tap to view circular and details.`,
           data: {
             type: 'PSGIM_ANNOUNCEMENT',
