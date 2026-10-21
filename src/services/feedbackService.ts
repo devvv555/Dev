@@ -114,20 +114,27 @@ export const FeedbackService = {
    */
   async getAllFeedbacks(): Promise<StudentFeedback[]> {
     try {
-      // 1. Fetch cloud feedbacks from Firebase
-      const cloudList = await CloudSyncService.fetchCloudFeedback();
+      // 1. First retrieve local cache for instant resilience
+      const localData = await AsyncStorage.getItem(STORAGE_KEY_FEEDBACKS);
+      const localFeedbacks: StudentFeedback[] = localData ? JSON.parse(localData) : INITIAL_FEEDBACKS;
+
+      // 2. Fetch cloud feedbacks with 3-second timeout so it never hangs
+      const cloudListPromise = CloudSyncService.fetchCloudFeedback();
+      const timeoutPromise = new Promise<StudentFeedback[]>((resolve) => setTimeout(() => resolve([]), 3000));
+      const cloudList = await Promise.race([cloudListPromise, timeoutPromise]);
+
       if (cloudList && cloudList.length > 0) {
-        return cloudList;
+        // Merge without duplicates
+        const map = new Map<string, StudentFeedback>();
+        [...cloudList, ...localFeedbacks].forEach((f) => map.set(f.id, f));
+        return Array.from(map.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
 
-      // 2. Fallback to local storage if offline
-      const data = await AsyncStorage.getItem(STORAGE_KEY_FEEDBACKS);
-      if (!data) {
-        await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(INITIAL_FEEDBACKS));
-        return INITIAL_FEEDBACKS;
-      }
-      const parsed = JSON.parse(data) as StudentFeedback[];
-      return parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return localFeedbacks.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     } catch (e) {
       console.warn('Error reading feedbacks:', e);
       return INITIAL_FEEDBACKS;
@@ -142,7 +149,16 @@ export const FeedbackService = {
   async submitFeedback(
     entry: Omit<StudentFeedback, 'id' | 'createdAt' | 'status'>
   ): Promise<StudentFeedback> {
-    const feedbacks = await this.getAllFeedbacks();
+    // Read local cache first to ensure immediate responsiveness
+    let existingFeedbacks: StudentFeedback[] = INITIAL_FEEDBACKS;
+    try {
+      const localData = await AsyncStorage.getItem(STORAGE_KEY_FEEDBACKS);
+      if (localData) {
+        existingFeedbacks = JSON.parse(localData);
+      }
+    } catch (e) {
+      console.warn('[FeedbackService] Error reading existing local feedbacks:', e);
+    }
 
     // Resolve student's real Roll No and DOB
     const realRollNo = entry.studentRollNo || '';
@@ -188,7 +204,7 @@ export const FeedbackService = {
 
     const newFeedback: StudentFeedback = {
       ...entry,
-      id: `fb_${Date.now()}`,
+      id: `fb_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       createdAt: new Date().toISOString(),
       status: 'NEW',
       studentName: realName || entry.studentName,
@@ -196,28 +212,40 @@ export const FeedbackService = {
       studentDob: realDob,
     };
 
-    const updated = [newFeedback, ...feedbacks];
-    await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(updated));
+    const updated = [newFeedback, ...existingFeedbacks];
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(updated));
+    } catch (err) {
+      console.warn('[FeedbackService] Error saving to AsyncStorage:', err);
+    }
 
-    // 1. Sync to Firestore in the background
-    CloudSyncService.syncFeedback(newFeedback).catch((err) => {
-      console.warn('Firebase feedback sync warning:', err);
-    });
+    // 1. Sync to Firestore completely asynchronously
+    try {
+      CloudSyncService.syncFeedback(newFeedback).catch((err) => {
+        console.warn('[FeedbackService] Firebase feedback sync warning:', err);
+      });
+    } catch (err) {
+      console.warn('[FeedbackService] Firebase feedback invocation failed:', err);
+    }
 
     // 2. Dispatch email to devdarshanv2005@gmail.com with Roll No and DOB
-    sendFeedbackEmail({
-      rollNo: realRollNo,
-      name: realName || entry.studentName,
-      dob: realDob,
-      batch: entry.batch,
-      category: entry.category,
-      rating: entry.rating,
-      message: entry.message,
-      isAnonymous: entry.isAnonymous,
-      submittedAt: newFeedback.createdAt,
-    }).catch((err) => {
-      console.warn('Email dispatch warning:', err);
-    });
+    try {
+      sendFeedbackEmail({
+        rollNo: realRollNo,
+        name: realName || entry.studentName,
+        dob: realDob,
+        batch: entry.batch,
+        category: entry.category,
+        rating: entry.rating,
+        message: entry.message,
+        isAnonymous: entry.isAnonymous,
+        submittedAt: newFeedback.createdAt,
+      }).catch((err) => {
+        console.warn('[FeedbackService] Email dispatch warning:', err);
+      });
+    } catch (err) {
+      console.warn('[FeedbackService] Email dispatch invocation failed:', err);
+    }
 
     return newFeedback;
   },

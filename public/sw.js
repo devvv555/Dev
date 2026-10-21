@@ -45,3 +45,36 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// 🔔 Lock Screen Interactive Notification Action Handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const action = event.action; // 'present' | 'absent' | ''
+  const notifData = event.notification.data || {};
+
+  event.waitUntil(
+    (async () => {
+      // Broadcast action to all open windows/tabs if any
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      if (clientList.length > 0) {
+        for (const client of clientList) {
+          client.postMessage({
+            type: 'NOTIFICATION_ATTENDANCE_ACTION',
+            action: action || 'open',
+            data: notifData,
+          });
+        }
+        if (!action) {
+          // Normal tap opens the app
+          return clientList[0].focus();
+        }
+      } else {
+        // If app isn't open, open window or quick link
+        if (!action) {
+          return self.clients.openWindow('/');
+        }
+      }
+    })()
+  );
+});

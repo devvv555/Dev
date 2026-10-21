@@ -107,13 +107,10 @@ export default function App() {
     initSession();
 
     // 🌟 Global Real-time Listener:
-    // When ANY student is the first to extract attendance from Studzone,
-    // everyone running the app receives an immediate exciting notification!
     let lastKnownSyncTime = Date.now();
     const unsubGlobal = CloudSyncService.listenToGlobalAttendanceUpdates((update) => {
       if (update && update.timestamp && update.timestamp > lastKnownSyncTime) {
         lastKnownSyncTime = update.timestamp;
-        // Trigger notification to user's phone notification tray
         NotificationService.notifyAttendanceUpdated(
           update.updatedByName,
           update.subjectsCount,
@@ -122,8 +119,45 @@ export default function App() {
       }
     });
 
-    return () => unsubGlobal();
-  }, []);
+    // 🔔 Lock Screen Interactive Notification Action Listener (Native Android & iOS)
+    let notifSub: any = null;
+    if (Platform.OS !== 'web') {
+      notifSub = NotificationService.addNotificationResponseListener((actionId, data) => {
+        if (data && (actionId === 'present' || actionId === 'absent')) {
+          const slotId = data.slotId;
+          const status = actionId === 'present' ? 'attended' : 'bunked';
+          const today = new Date().toISOString().split('T')[0];
+          // Find slot
+          const slot = timetable.find((s) => s.id === slotId);
+          if (slot) {
+            handleRecordPeriodAttendance(slot, today, status);
+          }
+        }
+      });
+    } else if (typeof window !== 'undefined' && 'navigator' in window && 'serviceWorker' in navigator) {
+      // PWA Web / Android Chrome service worker message listener
+      const onSwMessage = (e: MessageEvent) => {
+        if (e.data && e.data.type === 'NOTIFICATION_ATTENDANCE_ACTION') {
+          const { action, data } = e.data;
+          if (data && (action === 'present' || action === 'absent')) {
+            const slotId = data.slotId;
+            const status = action === 'present' ? 'attended' : 'bunked';
+            const today = new Date().toISOString().split('T')[0];
+            const slot = timetable.find((s) => s.id === slotId);
+            if (slot) {
+              handleRecordPeriodAttendance(slot, today, status);
+            }
+          }
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', onSwMessage);
+    }
+
+    return () => {
+      unsubGlobal();
+      if (notifSub && notifSub.remove) notifSub.remove();
+    };
+  }, [timetable, subjects, periodRecords, activeRollNo]);
 
   const handleTabChange = (newTab: Tab) => {
     setActiveTab(newTab);

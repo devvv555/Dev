@@ -261,5 +261,41 @@ export const CloudSyncService = {
       return () => {};
     }
   },
+
+  /**
+   * Broadcasts the latest Moodle course assignments for a batch into Firestore
+   */
+  async syncMoodleDeadlines(batch: string, assignments: any[]): Promise<void> {
+    if (!assignments || assignments.length === 0) return;
+    try {
+      const moodleDocRef = doc(db, 'moodle_deadlines', `batch_${batch.toUpperCase()}`);
+      await setDoc(moodleDocRef, {
+        batch: batch.toUpperCase(),
+        assignments,
+        updatedAt: new Date().toISOString(),
+        timestamp: Date.now(),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('[CloudSync] syncMoodleDeadlines warning:', e);
+    }
+  },
+
+  /**
+   * Fetches the latest broadcast Moodle deadlines for a batch from Firestore
+   */
+  async fetchMoodleDeadlines(batch: string): Promise<any[] | null> {
+    try {
+      const moodleDocRef = doc(db, 'moodle_deadlines', `batch_${batch.toUpperCase()}`);
+      const snap = await getDoc(moodleDocRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        return (data.assignments as any[]) || null;
+      }
+      return null;
+    } catch (e) {
+      console.warn('[CloudSync] fetchMoodleDeadlines warning:', e);
+      return null;
+    }
+  },
 };
 

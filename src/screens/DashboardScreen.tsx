@@ -105,6 +105,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       PsgimConnectService.getCredentials(studentRollNo).then((creds) => {
         setHasConnectRegisterNo(!!creds?.registerNo);
       });
+
+      // Refetch assignments after 4 seconds to pick up live background sync from Moodle
+      const timer = setTimeout(() => {
+        LmsService.getAssignments(studentRollNo).then(setAssignments);
+      }, 4000);
+      return () => clearTimeout(timer);
     }
   }, [studentRollNo]);
 

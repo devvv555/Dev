@@ -46,7 +46,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   const handleSubmit = async () => {
     if (!message.trim()) {
-      Alert.alert('Message Required', 'Please enter your feedback or improvement suggestion.');
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+        window.alert('Message Required: Please enter your feedback or improvement suggestion.');
+      } else {
+        Alert.alert('Message Required', 'Please enter your feedback or improvement suggestion.');
+      }
       return;
     }
 
@@ -63,16 +67,24 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         message: message.trim(),
       });
 
-      Alert.alert(
-        'Thank You! 🙌',
-        'Your feedback has been received and will help improve future updates for the batch.',
-        [{ text: 'OK', onPress: () => {
-          setMessage('');
-          onClose();
-        }}]
-      );
-    } catch {
-      Alert.alert('Error', 'Could not submit feedback. Please try again.');
+      setMessage('');
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+        window.alert('Thank You! 🙌 Your feedback has been received and will help improve future updates for the batch.');
+        onClose();
+      } else {
+        Alert.alert(
+          'Thank You! 🙌',
+          'Your feedback has been received and will help improve future updates for the batch.',
+          [{ text: 'OK', onPress: onClose }]
+        );
+      }
+    } catch (err) {
+      console.warn('[FeedbackModal] Error submitting feedback:', err);
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+        window.alert('Could not submit feedback. Please try again.');
+      } else {
+        Alert.alert('Error', 'Could not submit feedback. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -102,8 +102,9 @@ const DEFAULT_QUIZZES: LmsQuiz[] = [
   },
 ];
 
-import { getMasterStudent, toOldRollNo } from '../data/psgimMasterStudents';
+import { getMasterStudent, toOldRollNo, ALL_COLLEGE_ROLL_NUMBERS } from '../data/psgimMasterStudents';
 import { CLOUDFLARE_WORKER_URL } from './studzoneService';
+import { CloudSyncService } from './cloudSyncService';
 
 export const LmsService = {
   /**
@@ -173,7 +174,17 @@ export const LmsService = {
     while ((em = eventRegex.exec(html)) !== null) {
       const courseId = em[1];
       const eventId = parseInt(em[2], 10) || Date.now();
-      let title = em[3].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'").trim();
+      let title = em[3];
+      // Repeatedly unescape HTML entities like &amp;amp; -> &
+      while (title.includes('&amp;') || title.includes('&quot;') || title.includes('&#039;') || title.includes('&lt;') || title.includes('&gt;')) {
+        title = title
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'")
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
+      }
+      title = title.trim();
       if (title.endsWith(' is due')) title = title.slice(0, -7).trim();
 
       const descSnippet = em[4];
@@ -182,7 +193,7 @@ export const LmsService = {
       const cleanDesc = descSnippet.replace(/<a[^>]*>[\s\S]*?<\/a>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
       // Extract time / due date if available
-      const timeMatch = descSnippet.match(/calendar\/view\.php\?view=day&amp;time=(\d+)/i) || html.match(/data-event-id=["']\d+["'][\s\S]*?calendar\/view\.php\?view=day&amp;time=(\d+)/i);
+      const timeMatch = descSnippet.match(/calendar\/view\.php\?view=day&amp;time=(\d+)/i) || html.match(/calendar\/view\.php\?view=day&amp;time=(\d+)/i);
       const timestamp = timeMatch && timeMatch[1] ? parseInt(timeMatch[1], 10) * 1000 : Date.now() + 24 * 3600 * 1000;
 
       const matchedCode = courseMap[courseId] || '24GM13';
@@ -206,6 +217,61 @@ export const LmsService = {
     }
 
     return assignments;
+  },
+
+  /**
+   * Calculates the exact, deterministic off-peak window time slot (01:30 AM – 05:30 AM)
+   * for this student. Over 4 hours (14,400s), 252 students are spaced by ~57.14 seconds
+   * with a subtle ±5s jitter to guarantee normal organic traffic.
+   */
+  getOffPeakSlotForStudent(rollNo: string): {
+    slotIndex: number;
+    targetHour: number;
+    targetMinute: number;
+    targetSecond: number;
+    timeString: string;
+    delayMsFromNow: number;
+  } {
+    const clean = rollNo.trim().toUpperCase();
+    let idx = ALL_COLLEGE_ROLL_NUMBERS.indexOf(clean);
+    if (idx === -1) {
+      // Deterministic fallback hash if rollNo format differs
+      let hash = 0;
+      for (let i = 0; i < clean.length; i++) hash = (hash << 5) - hash + clean.charCodeAt(i);
+      idx = Math.abs(hash) % 252;
+    }
+
+    // 01:30 AM is 1 hour 30 mins = 5400 seconds from midnight
+    const baseWindowStartSeconds = 1.5 * 3600; // 5400s (01:30 AM)
+    const spacingSeconds = 57.1428; // 14,400s / 252 students ≈ 57.14s per student
+    // Add ±5s deterministic micro-jitter based on char codes
+    const jitter = ((clean.charCodeAt(clean.length - 1) || 0) % 11) - 5;
+    const studentSecondOfDay = Math.floor(baseWindowStartSeconds + idx * spacingSeconds + jitter);
+
+    const targetHour = Math.floor(studentSecondOfDay / 3600);
+    const targetMinute = Math.floor((studentSecondOfDay % 3600) / 60);
+    const targetSecond = studentSecondOfDay % 60;
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const timeString = `${pad(targetHour)}:${pad(targetMinute)}:${pad(targetSecond)} AM`;
+
+    // Compute delay in ms from current time
+    const now = new Date();
+    const scheduled = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, targetSecond);
+    if (scheduled.getTime() <= now.getTime()) {
+      // If today's slot already passed, schedule for next morning
+      scheduled.setDate(scheduled.getDate() + 1);
+    }
+    const delayMsFromNow = scheduled.getTime() - now.getTime();
+
+    return {
+      slotIndex: idx,
+      targetHour,
+      targetMinute,
+      targetSecond,
+      timeString,
+      delayMsFromNow,
+    };
   },
 
   /**
@@ -233,6 +299,12 @@ export const LmsService = {
         const liveAssignments = this._parseMoodleUpcomingHtml(data.rawHtml);
         if (liveAssignments.length > 0) {
           await this.saveAssignments(rollNo, liveAssignments);
+
+          // Broadcast to Firestore so classmates get updated without their own Moodle hit
+          const master = getMasterStudent(rollNo);
+          const batch = master?.batch || 'A';
+          CloudSyncService.syncMoodleDeadlines(batch, liveAssignments).catch(() => {});
+
           return {
             success: true,
             message: `Synced ${liveAssignments.length} live assignment(s) from Moodle for ${moodleUser}!`,
@@ -255,6 +327,35 @@ export const LmsService = {
   },
 
   /**
+   * Load active assignments for student.
+   * Priority: Local Storage -> Shared Cloud Broadcast -> Safe-window background sync.
+   */
+  async getAssignments(rollNo: string): Promise<LmsAssignment[]> {
+    try {
+      if (!rollNo) return DEFAULT_ASSIGNMENTS;
+      const key = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${rollNo.toUpperCase()}`;
+      const data = await AsyncStorage.getItem(key);
+      let assignments = data ? (JSON.parse(data) as LmsAssignment[]) : DEFAULT_ASSIGNMENTS;
+
+      // Check cloud Firestore broadcast if local data is default
+      const master = getMasterStudent(rollNo);
+      const batch = master?.batch || 'A';
+      CloudSyncService.fetchMoodleDeadlines(batch).then((cloudDeadlines: LmsAssignment[] | null) => {
+        if (cloudDeadlines && cloudDeadlines.length > 0) {
+          this.saveAssignments(rollNo, cloudDeadlines);
+        }
+      }).catch(() => {});
+
+      if (!data) {
+        await this.saveAssignments(rollNo, DEFAULT_ASSIGNMENTS);
+      }
+      return assignments;
+    } catch {
+      return DEFAULT_ASSIGNMENTS;
+    }
+  },
+
+  /**
    * Save / update LMS credentials
    */
   async saveCredentials(creds: LmsCredentials): Promise<void> {
@@ -264,25 +365,6 @@ export const LmsService = {
       await AsyncStorage.setItem(key, JSON.stringify(creds));
     } catch (e) {
       console.warn('Error saving LMS credentials:', e);
-    }
-  },
-
-  /**
-   * Load active assignments for student
-   */
-  async getAssignments(rollNo: string): Promise<LmsAssignment[]> {
-    try {
-      if (!rollNo) return DEFAULT_ASSIGNMENTS;
-      const key = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${rollNo.toUpperCase()}`;
-      const data = await AsyncStorage.getItem(key);
-      if (data) {
-        return JSON.parse(data);
-      }
-      // Seed default assignments
-      await this.saveAssignments(rollNo, DEFAULT_ASSIGNMENTS);
-      return DEFAULT_ASSIGNMENTS;
-    } catch {
-      return DEFAULT_ASSIGNMENTS;
     }
   },
 

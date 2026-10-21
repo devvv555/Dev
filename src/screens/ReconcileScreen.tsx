@@ -721,6 +721,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               📲 Active on Phone Tray
             </Text>
           </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>🕒 Night Auto-Sync Window:</Text>
+            <Text style={[styles.moodleCredsValue, { color: '#FBBF24', fontWeight: '700' }]}>
+              {LmsService.getOffPeakSlotForStudent(activeRollNo).timeString} (57s Stagger)
+            </Text>
+          </View>
         </View>
 
         <View style={styles.moodleActionsRow}>

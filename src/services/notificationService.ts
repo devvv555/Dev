@@ -61,10 +61,43 @@ export const NotificationService = {
           sound: 'default',
           enableVibrate: true,
           showBadge: true,
+          lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         });
+      }
+
+      if (Platform.OS !== 'web') {
+        await Notifications.setNotificationCategoryAsync('ATTENDANCE_LOCKSCREEN_ACTIONS', [
+          {
+            identifier: 'present',
+            buttonTitle: '✅ Mark Present',
+            options: { opensAppToForeground: false },
+          },
+          {
+            identifier: 'absent',
+            buttonTitle: '❌ Mark Absent',
+            options: { opensAppToForeground: false },
+          },
+        ]);
       }
     } catch (e) {
       console.warn('Setup notification categories error:', e);
+    }
+  },
+
+  /**
+   * Listen to notification button actions (e.g. Present / Absent from lock screen)
+   */
+  addNotificationResponseListener(callback: (actionId: string, data: any) => void): { remove: () => void } | null {
+    if (Platform.OS === 'web') return null;
+    try {
+      const sub = Notifications.addNotificationResponseReceivedListener((response: Notifications.NotificationResponse) => {
+        const actionId = response.actionIdentifier;
+        const data = response.notification.request.content.data;
+        callback(actionId, data);
+      });
+      return sub;
+    } catch {
+      return null;
     }
   },
 
@@ -74,11 +107,34 @@ export const NotificationService = {
   async sendLocalNotification(
     title: string,
     body: string,
-    data?: Record<string, any>
+    data?: Record<string, any>,
+    actions?: Array<{ action: string; title: string }>
   ): Promise<string | null> {
     try {
       if (Platform.OS === 'web') {
-        // Use Web Notification API if permitted, otherwise silent no-op
+        // Try ServiceWorkerRegistration showNotification for rich lock-screen action buttons
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && Notification.permission === 'granted') {
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            if (reg && reg.showNotification) {
+              const options: any = {
+                body,
+                icon: '/assets/icon.png',
+                badge: '/assets/favicon.png',
+                data: data || {},
+                vibrate: [200, 100, 200],
+                requireInteraction: true,
+              };
+              if (actions && actions.length > 0) {
+                options.actions = actions;
+              }
+              await reg.showNotification(title, options);
+              return 'sw-notif';
+            }
+          } catch {}
+        }
+
+        // Fallback to basic window Notification
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           try {
             new Notification(title, { body });
@@ -96,6 +152,7 @@ export const NotificationService = {
           sound: 'default',
           vibrate: [0, 500, 200, 500],
           priority: Notifications.AndroidNotificationPriority.MAX,
+          categoryIdentifier: actions && actions.length > 0 ? 'ATTENDANCE_LOCKSCREEN_ACTIONS' : undefined,
         },
         trigger: null, // trigger immediately
       });
@@ -109,19 +166,30 @@ export const NotificationService = {
   },
 
   /**
-   * Trigger phone system notification when a class has ended
+   * Trigger phone system notification when a class has ended with interactive lock screen action buttons
    */
   async notifyClassEnded(slot: TimetableSlot, subject: Subject, status?: string): Promise<string | null> {
     const title = `🔔 Class Ended: ${subject.name}`;
     const body = status
-      ? `${slot.startTime} – ${slot.endTime} has concluded. Recorded as ${status.toUpperCase()}. Tap to review or update.`
-      : `${slot.startTime} – ${slot.endTime} has concluded. Open app to record your attendance!`;
-    return this.sendLocalNotification(title, body, {
-      type: 'CLASS_ENDED',
-      slotId: slot.id,
-      subjectId: subject.id,
-      status,
-    });
+      ? `${slot.startTime} – ${slot.endTime} concluded (Recorded: ${status.toUpperCase()}). Tap below to change:`
+      : `${slot.startTime} – ${slot.endTime} concluded. Record attendance directly below:`;
+    
+    const actions = [
+      { action: 'present', title: '✅ Mark Present' },
+      { action: 'absent', title: '❌ Mark Absent' },
+    ];
+
+    return this.sendLocalNotification(
+      title,
+      body,
+      {
+        type: 'CLASS_ENDED',
+        slotId: slot.id,
+        subjectId: subject.id,
+        status,
+      },
+      actions
+    );
   },
 
   /**
