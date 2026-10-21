@@ -930,13 +930,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* 📚 PSGIM Moodle • Upcoming Course Assignments & Deadlines */}
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
-          <View style={[styles.connectIconCircle, { backgroundColor: '#F59E0B' }]}>
+          <View style={styles.connectIconCircle}>
             <Text style={styles.connectIcon}>📚</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={styles.connectSectionTitle}>Moodle Course Assignments</Text>
-              <View style={[styles.connectLiveBadge, { backgroundColor: '#D97706' }]}>
+              <View style={styles.connectLiveBadge}>
                 <Text style={styles.connectLiveBadgeText}>LMS DEADLINES</Text>
               </View>
             </View>
@@ -2478,15 +2478,15 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   connectUnlinkedNotice: {
-    backgroundColor: '#451A03',
-    borderColor: '#D97706',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderColor: '#0284C7',
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
     marginBottom: 12,
   },
   connectUnlinkedText: {
-    color: '#FDE68A',
+    color: '#38BDF8',
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '700',
