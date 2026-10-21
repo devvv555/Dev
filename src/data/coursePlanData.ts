@@ -36,7 +36,7 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
         marksAllotted: 20,
         coTarget: 'CO1, CO2',
         description:
-          'Summative examination: 3 comprehensive questions covering descriptive statistics, probability distributions, decision trees, and inferential hypothesis basics (Wrote for 50 marks, converted to 20 marks).',
+          'Summative examination: 3 comprehensive questions covering descriptive statistics, probability distributions, decision trees, and inferential hypothesis basics (Wrote for 40 marks, converted to 20 marks).',
       },
       {
         id: 'ca_bs_practical_spss',
@@ -131,7 +131,7 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
         sessionsCovered: 'Unit 1 & 2 (Sessions 1–7)',
         marksAllotted: 20,
         coTarget: 'CO1, CO2',
-        description: 'Summative written examination covering accounting principles, balance sheet, P&L, cash flows, and IND AS/IFRS basics (Wrote for 50 marks, converted to 20 marks).',
+        description: 'Summative written examination covering accounting principles, balance sheet, P&L, cash flows, and IND AS/IFRS basics (Wrote for 40 marks, converted to 20 marks).',
       },
       {
         id: 'ca_adm_excel_dashboard',
@@ -347,7 +347,7 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
         sessionsCovered: 'Unit 1 & 2 (Foundations of Management & Individual Behavior)',
         marksAllotted: 20,
         coTarget: 'CO1, CO2',
-        description: 'Summative written examination covering management functions, planning, delegation, attitudes, personality frameworks, and motivation theories (Wrote for 50 marks, converted to 20 marks).',
+        description: 'Summative written examination covering management functions, planning, delegation, attitudes, personality frameworks, and motivation theories (Wrote for 40 marks, converted to 20 marks).',
       },
       {
         id: 'ca_mcob_group_proj',
@@ -449,7 +449,7 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
         sessionsCovered: 'Unit 1 & 2 (Demand, Supply & Production)',
         marksAllotted: 20,
         coTarget: 'CO1, CO2, CO3',
-        description: 'Summative written examination covering elasticity, consumer surplus, producer equilibrium, returns to scale, and cost functions (Wrote for 50 marks, converted to 20 marks).',
+        description: 'Summative written examination covering elasticity, consumer surplus, producer equilibrium, returns to scale, and cost functions (Wrote for 40 marks, converted to 20 marks).',
       },
       {
         id: 'ca_edm_market_study',
@@ -895,7 +895,7 @@ export function getCoursePlanForSubject(subjectCode: string, subjectName?: strin
         scheduledDate: 'September 21–23, 2026',
         sessionsCovered: 'Unit 1 & 2',
         marksAllotted: 20,
-        description: 'Summative written examination evaluating conceptual grasp (Wrote for 50 marks, converted to 20 marks).',
+        description: 'Summative written examination evaluating conceptual grasp (Wrote for 40 marks, converted to 20 marks).',
       },
       {
         id: `ca_${cleanCode.toLowerCase()}_2`,
