@@ -211,15 +211,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   pinnedBadge: {
-    backgroundColor: '#78350F',
-    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38BDF8',
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   pinnedText: {
-    color: '#FDE68A',
+    color: '#38BDF8',
     fontSize: 10,
     fontWeight: '800',
   },

@@ -50,7 +50,7 @@ export const PSGIM_COURSES: Record<string, CourseDetail> = {
       4: 'Dr. Aiswarya D Pillai'
     },
     halls: '101 / 109 / 401 / 405',
-    color: '#F59E0B'
+    color: '#3B82F6'
   },
   BS: {
     code: '24GM14',
@@ -115,7 +115,7 @@ export const PSGIM_COURSES: Record<string, CourseDetail> = {
       4: 'Dr. Firdaus Bashir'
     },
     halls: '101 / 109 / 401 / 405',
-    color: '#F97316'
+    color: '#6366F1'
   },
   SPORTS: {
     code: 'SPORTS',

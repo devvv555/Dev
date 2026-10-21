@@ -82,8 +82,23 @@ export default function App() {
           // Sync with latest cloud updates (e.g. from Teacher Google Sheets)
           const cloudSubjects = await CloudSyncService.fetchCloudSubjects(officialRoll);
           if (cloudSubjects && cloudSubjects.length > 0) {
+            // Preserve student's saved faculty assignment overrides
+            for (const sub of cloudSubjects) {
+              const override = await AsyncStorage.getItem(`@user_faculty_override_${officialRoll}_${sub.id}`);
+              if (override) {
+                sub.faculty = override;
+              }
+            }
+            initialTimetable.forEach((slot) => {
+              const matchingSub = cloudSubjects.find((s) => s.id === slot.subjectId);
+              if (matchingSub && matchingSub.faculty) {
+                slot.faculty = matchingSub.faculty;
+              }
+            });
             setSubjects(cloudSubjects);
+            setTimetable([...initialTimetable]);
             await StorageService.saveSubjects(cloudSubjects);
+            await StorageService.saveTimetable(initialTimetable);
           }
 
           const cloudPeriods = await CloudSyncService.fetchCloudPeriodRecords(officialRoll);
@@ -227,6 +242,7 @@ export default function App() {
     try {
       if (activeRollNo) {
         await AsyncStorage.setItem(`@user_faculty_override_${activeRollNo}_${subjectId}`, newFaculty);
+        await CloudSyncService.syncSubjects(activeRollNo, updatedSubjects);
       }
     } catch (e) {
       console.warn('Error saving faculty override:', e);
@@ -537,6 +553,20 @@ export default function App() {
         const storedRecords = await StorageService.getPeriodRecords(activeRollNo);
         const storedMed = await StorageService.getMedicalClaims();
 
+        // Apply saved faculty overrides if any
+        for (const sub of studentSubjects) {
+          const override = await AsyncStorage.getItem(`@user_faculty_override_${activeRollNo}_${sub.id}`);
+          if (override) {
+            sub.faculty = override;
+          }
+        }
+        studentTimetable.forEach((slot) => {
+          const matchingSub = studentSubjects.find((s) => s.id === slot.subjectId);
+          if (matchingSub && matchingSub.faculty) {
+            slot.faculty = matchingSub.faculty;
+          }
+        });
+
         setSubjects(studentSubjects);
         setTimetable(studentTimetable);
         setPeriodRecords(storedRecords);
@@ -545,8 +575,22 @@ export default function App() {
         // Fetch cloud-persisted subjects if available
         const cloudSubjects = await CloudSyncService.fetchCloudSubjects(activeRollNo);
         if (cloudSubjects && cloudSubjects.length > 0) {
+          for (const sub of cloudSubjects) {
+            const override = await AsyncStorage.getItem(`@user_faculty_override_${activeRollNo}_${sub.id}`);
+            if (override) {
+              sub.faculty = override;
+            }
+          }
+          studentTimetable.forEach((slot) => {
+            const matchingSub = cloudSubjects.find((s) => s.id === slot.subjectId);
+            if (matchingSub && matchingSub.faculty) {
+              slot.faculty = matchingSub.faculty;
+            }
+          });
           setSubjects(cloudSubjects);
+          setTimetable([...studentTimetable]);
           await StorageService.saveSubjects(cloudSubjects);
+          await StorageService.saveTimetable(studentTimetable);
         }
 
         // Fetch cloud-persisted period attendance records (marked by teacher from Google Sheets)
@@ -845,15 +889,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   feedbackHeaderBtn: {
-    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
     borderWidth: 1,
-    borderColor: '#EAB308',
+    borderColor: '#38BDF8',
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 8,
   },
   feedbackHeaderBtnText: {
-    color: '#FDE047',
+    color: '#38BDF8',
     fontSize: 11,
     fontWeight: '700',
   },

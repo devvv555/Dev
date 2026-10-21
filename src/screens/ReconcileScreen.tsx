@@ -723,7 +723,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           </View>
           <View style={styles.moodleCredsRow}>
             <Text style={styles.moodleCredsLabel}>🕒 Night Auto-Sync Window:</Text>
-            <Text style={[styles.moodleCredsValue, { color: '#FBBF24', fontWeight: '700' }]}>
+            <Text style={[styles.moodleCredsValue, { color: '#38BDF8', fontWeight: '700' }]}>
               {LmsService.getOffPeakSlotForStudent(activeRollNo).timeString} (57s Stagger)
             </Text>
           </View>

@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     borderBottomWidth: 3,
-    borderBottomColor: '#F59E0B',
+    borderBottomColor: '#38BDF8',
   },
   psgLogoBox: {
     width: 34,
@@ -512,13 +512,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   mbaPill: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#0284C7',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   mbaPillText: {
-    color: '#0F172A',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '900',
   },

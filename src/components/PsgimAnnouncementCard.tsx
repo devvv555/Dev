@@ -140,15 +140,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   pinnedBadge: {
-    backgroundColor: '#78350F',
-    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38BDF8',
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   pinnedText: {
-    color: '#FDE68A',
+    color: '#38BDF8',
     fontSize: 9,
     fontWeight: '800',
   },
