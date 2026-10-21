@@ -194,8 +194,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   const overall = calculateOverallMetrics(subjects);
   const profile = PsgimService.getStudentProfile(studentRollNo);
-  const nextHolidayInfo = getNextHoliday();
-  const weekdayHolidayAlert = getUpcomingWeekdayHolidayNotification();
+  const nextHolidayInfo = React.useMemo(() => getNextHoliday(), []);
+  const weekdayHolidayAlert = React.useMemo(() => getUpcomingWeekdayHolidayNotification(), []);
 
   // Filter subjects based on selected tab
   const filteredSubjects = subjects.filter((s) => {
