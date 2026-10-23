@@ -34,6 +34,9 @@ export interface TimetableSlot {
   subjectId: string;
   room?: string;
   faculty?: string;
+  isRescheduled?: boolean;
+  rescheduledDate?: string; // "YYYY-MM-DD"
+  originalHolidayTitle?: string;
 }
 
 export type AttendanceStatus = 'attended' | 'bunked' | 'cancelled';
@@ -57,7 +60,9 @@ export interface PeriodAttendanceRecord {
   recordedAt: number;
   cloudSyncedAt?: string;
   lockedUntilPortalUpdate?: boolean;
+  isRescheduled?: boolean;
 }
+
 
 
 
@@ -109,6 +114,39 @@ export interface StudentFeedback {
   message: string;
   createdAt: string; // ISO string
   status: 'NEW' | 'REVIEWED' | 'RESOLVED';
+  adminReply?: string;
+  repliedAt?: string; // ISO string
+}
+
+export type AppFeature = 
+  | 'HOURLY_TRACK' 
+  | 'TIMETABLE' 
+  | 'CALENDAR' 
+  | 'ERP_SYNC' 
+  | 'MEDICAL_VAULT' 
+  | 'DIGITAL_ID' 
+  | 'COURSE_PLAN' 
+  | 'NOTICES_CONNECT';
+
+export interface StudentActivityRecord {
+  rollNo: string;
+  name: string;
+  batch: string;
+  totalTimeMinutes: number;
+  todayTimeMinutes: number;
+  lastActiveAt: string; // ISO String
+  lastActiveDate: string; // YYYY-MM-DD
+  featureUsage: {
+    hourlyTrack: number;
+    timetable: number;
+    calendar: number;
+    erpSync: number;
+    medicalVault: number;
+    digitalId: number;
+    coursePlan: number;
+    notices: number;
+  };
+  totalSessions: number;
 }
 
 export interface FeatureUsageStats {
@@ -127,6 +165,7 @@ export interface FeatureUsageStats {
     D: number;
   };
 }
+
 
 export interface PeriodReminder {
   id: string;

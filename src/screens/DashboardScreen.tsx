@@ -23,6 +23,8 @@ import { PsgimService } from '../services/psgimService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getNextHoliday, getUpcomingWeekdayHolidayNotification } from '../data/academicCalendarData';
 import { NotificationService } from '../services/notificationService';
+import { AnalyticsService } from '../services/analyticsService';
+
 import { StorageService } from '../services/storageService';
 import { PsgimConnectService } from '../services/psgimConnectService';
 import { PsgimAnnouncementCard } from '../components/PsgimAnnouncementCard';
@@ -50,6 +52,7 @@ interface DashboardScreenProps {
   onQuickAttend?: (id: string) => void;
   onQuickBunk?: (id: string) => void;
   onOpenCalendar?: () => void;
+  onOpenAdmin?: () => void;
   onRefresh?: () => Promise<void> | void;
 }
 
@@ -62,6 +65,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onRecordPeriodAttendance,
   onUpdateFaculty,
   onOpenCalendar,
+  onOpenAdmin,
   onRefresh,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'SAFE'>('ALL');
@@ -98,6 +102,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     allowSubjectSwitching?: boolean;
   }>({ visible: false, code: '24GM11', name: 'Management & Organisational Behaviour', allowSubjectSwitching: true });
   const [facultyModalSubject, setFacultyModalSubject] = useState<Subject | null>(null);
+  const [showRescheduledModal, setShowRescheduledModal] = useState(false);
+  const [selectedRescheduleSubjectId, setSelectedRescheduleSubjectId] = useState<string>('');
+  const [rescheduleDate, setRescheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [rescheduleTime, setRescheduleTime] = useState<string>('16:45 - 17:45');
+
+
 
   useEffect(() => {
     PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
@@ -198,7 +208,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const overall = calculateOverallMetrics(subjects);
   const profile = PsgimService.getStudentProfile(studentRollNo);
   const nextHolidayInfo = React.useMemo(() => getNextHoliday(), []);
-  const weekdayHolidayAlert = React.useMemo(() => getUpcomingWeekdayHolidayNotification(), []);
+  const weekdayHolidayAlert = React.useMemo(
+    () => getUpcomingWeekdayHolidayNotification(undefined, timetable, subjects),
+    [timetable, subjects]
+  );
+
 
   // Filter subjects based on selected tab
   const filteredSubjects = subjects.filter((s) => {
@@ -273,7 +287,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   // Status badge calculation
   const getSlotStatus = () => {
-    if (!currentSlot) return { tag: '📅 SCHEDULED', color: '#818CF8', message: 'No classes scheduled.' };
+    if (!currentSlot) return { tag: 'SCHEDULED', color: '#818CF8', message: 'No classes scheduled.' };
     const start = timeToMinutes(currentSlot.startTime);
     const end = timeToMinutes(currentSlot.endTime);
     const isToday = currentSlot.day.toLowerCase() === currentDayName.toLowerCase();
@@ -281,14 +295,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (isToday && currentMinutes >= start && currentMinutes < end) {
       const left = end - currentMinutes;
       return {
-        tag: `🔴 LIVE NOW (${left}m left)`,
+        tag: `LIVE NOW (${left}m left)`,
         color: '#EF4444',
         message: 'This class is currently in session. Mark your attendance when completed:',
       };
     }
     if (isToday && currentMinutes >= end && currentMinutes <= end + 60) {
       return {
-        tag: '🔔 CLASS JUST ENDED',
+        tag: 'CLASS JUST ENDED',
         color: '#F59E0B',
         message: 'This class has just ended. Did you attend or bunk?',
       };
@@ -296,13 +310,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (isToday && currentMinutes < start) {
       const startsIn = start - currentMinutes;
       return {
-        tag: `⏳ STARTS IN ${startsIn}m`,
+        tag: `STARTS IN ${startsIn}m`,
         color: '#38BDF8',
         message: `Upcoming class today at ${currentSlot.startTime}. Pre-log or plan your attendance:`,
       };
     }
     return {
-      tag: `📅 ${currentSlot.day.toUpperCase()} SCHEDULE`,
+      tag: `${currentSlot.day.toUpperCase()} SCHEDULE`,
       color: '#818CF8',
       message: 'Automatic slot tracker based on your weekly timetable:',
     };
@@ -337,7 +351,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   // Automatic detector that fires notification strictly ONCE at the beginning of every class
   useEffect(() => {
-    const checkClassBeginning = () => {
+    let isSubscribed = true;
+
+    const checkClassBeginning = async () => {
+      if (!isSubscribed) return;
       const currentTime = new Date();
       const mins = currentTime.getHours() * 60 + currentTime.getMinutes();
       const today = currentTime.toISOString().split('T')[0];
@@ -351,32 +368,51 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         return mins >= start && mins < end;
       });
 
-      if (currentSlot) {
-        const periodStartKey = `start_${today}_${currentSlot.id}`;
-        if (!alertedSlotsRef.current.has(periodStartKey)) {
-          alertedSlotsRef.current.add(periodStartKey);
-          AsyncStorage.setItem(
-            `@alerted_slots_${today}`,
-            JSON.stringify(Array.from(alertedSlotsRef.current))
-          ).catch(() => {});
+      if (!currentSlot) return;
 
-          const sub = subjects.find((s) => s.id === currentSlot.subjectId);
-          if (sub) {
-            try {
-              Vibration.vibrate(200);
-            } catch {}
-            const periodKey = `${today}_${currentSlot.id}`;
-            const recorded = periodRecords[periodKey];
-            NotificationService.notifyClassStarted(currentSlot, sub, recorded?.status);
-          }
+      const periodStartKey = `start_${today}_${currentSlot.id}`;
+
+      // Check in-memory ref first
+      if (alertedSlotsRef.current.has(periodStartKey)) {
+        return;
+      }
+
+      // Check persistent storage to prevent duplicate notifications across re-renders or reloads
+      try {
+        const storedAlertsRaw = await AsyncStorage.getItem(`@alerted_slots_${today}`);
+        const storedAlerts: string[] = storedAlertsRaw ? JSON.parse(storedAlertsRaw) : [];
+        if (storedAlerts.includes(periodStartKey)) {
+          alertedSlotsRef.current.add(periodStartKey);
+          return;
         }
+
+        // Mark as alerted immediately before async notification call
+        alertedSlotsRef.current.add(periodStartKey);
+        storedAlerts.push(periodStartKey);
+        await AsyncStorage.setItem(`@alerted_slots_${today}`, JSON.stringify(storedAlerts));
+      } catch (e) {
+        alertedSlotsRef.current.add(periodStartKey);
+      }
+
+      const sub = subjects.find((s) => s.id === currentSlot.subjectId);
+      if (sub && isSubscribed) {
+        try {
+          Vibration.vibrate(200);
+        } catch {}
+        const periodKey = `${today}_${currentSlot.id}`;
+        const recorded = periodRecords[periodKey];
+        NotificationService.notifyClassStarted(currentSlot, sub, recorded?.status);
       }
     };
 
     checkClassBeginning();
     const interval = setInterval(checkClassBeginning, 30000);
-    return () => clearInterval(interval);
-  }, [timetable, periodRecords, subjects]);
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [timetable, subjects]);
+
 
   // Calculate if the currently selected slot is locked
   const lockInfo = currentSlot
@@ -572,7 +608,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             activeOpacity={0.7}
           >
             <Text style={styles.welcomeAvatarText}>
-              {studentName ? studentName.charAt(0) : '🎓'}
+              {studentName ? studentName.charAt(0) : 'S'}
             </Text>
           </TouchableOpacity>
           <View style={styles.welcomeInfo}>
@@ -584,62 +620,25 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {profile.section ? `${profile.section} • ` : ''}MBA (2026–28)
             </Text>
           </View>
+          {onOpenAdmin && (
+            <TouchableOpacity
+              style={styles.welcomeAdminBadge}
+              onPress={onOpenAdmin}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.welcomeAdminBadgeText}>Admin</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Verified Student Email if available */}
         {profile.email ? (
           <View style={styles.profileDetailsRow}>
             <View style={styles.profilePill}>
-              <Text style={styles.profilePillText} numberOfLines={1}>✉️ {profile.email}</Text>
+              <Text style={styles.profilePillText} numberOfLines={1}>{profile.email}</Text>
             </View>
           </View>
         ) : null}
-      </View>
-
-      {/* 🚀 Quick Campus Utilities: Emergency Digital ID, Course Plans & CA Marks, Attendance Proof */}
-      <View style={styles.quickUtilitiesRow}>
-        <TouchableOpacity
-          style={styles.utilityPillBtn}
-          onPress={() => setShowDigitalIdModal(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.utilityPillIcon}>🪪</Text>
-          <View style={styles.utilityPillTextCol}>
-            <Text style={styles.utilityPillTitle}>Digital ID</Text>
-            <Text style={styles.utilityPillSub}>Emergency Pass</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.utilityPillBtn}
-          onPress={() =>
-            setCoursePlanModalInfo({
-              visible: true,
-              code: '24GM11',
-              name: 'Management & Organisational Behaviour',
-              allowSubjectSwitching: true,
-            })
-          }
-          activeOpacity={0.8}
-        >
-          <Text style={styles.utilityPillIcon}>📊</Text>
-          <View style={styles.utilityPillTextCol}>
-            <Text style={styles.utilityPillTitle}>Course Plans</Text>
-            <Text style={styles.utilityPillSub}>All 8 Subjects</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.utilityPillBtn}
-          onPress={() => setShowDisputeModal(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.utilityPillIcon}>📄</Text>
-          <View style={styles.utilityPillTextCol}>
-            <Text style={styles.utilityPillTitle}>Dispute Proof</Text>
-            <Text style={styles.utilityPillSub}>Official Dossier</Text>
-          </View>
-        </TouchableOpacity>
       </View>
 
       {/* Weekday Holiday 7-Day Notification Alert (Strictly NO notification for weekend holidays) */}
@@ -652,14 +651,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.weekdayNotifTop}>
             <View style={styles.weekdayNotifBadge}>
               <Text style={styles.weekdayNotifBadgeText}>
-                🔔 HOLIDAY ALERT • {weekdayHolidayAlert.daysRemaining === 0 ? 'TODAY' : weekdayHolidayAlert.daysRemaining === 1 ? 'TOMORROW' : `IN ${weekdayHolidayAlert.daysRemaining} DAYS`}
+                HOLIDAY ALERT • {weekdayHolidayAlert.daysRemaining === 0 ? 'TODAY' : weekdayHolidayAlert.daysRemaining === 1 ? 'TOMORROW' : `IN ${weekdayHolidayAlert.daysRemaining} DAYS`}
               </Text>
             </View>
             <Text style={styles.weekdayNotifLink}>View Calendar →</Text>
           </View>
 
           <Text style={styles.weekdayNotifTitle}>
-            🌴 {weekdayHolidayAlert.holiday.title} ({weekdayHolidayAlert.holiday.day})
+            {weekdayHolidayAlert.holiday.title} ({weekdayHolidayAlert.holiday.day})
           </Text>
 
           {/* Academic calendar pre-accounted message */}
@@ -668,7 +667,50 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               ✓ {weekdayHolidayAlert.accountingNote}
             </Text>
           </View>
+
+          {/* Expected After-College Rescheduled / Makeup Classes breakdown */}
+          {weekdayHolidayAlert.expectedMakeupClasses && weekdayHolidayAlert.expectedMakeupClasses.length > 0 && (
+            <View style={styles.makeupClassesBox}>
+              <View style={styles.makeupClassesHeader}>
+                <Text style={styles.makeupClassesBadge}>
+                  {weekdayHolidayAlert.totalExpectedHours} {weekdayHolidayAlert.totalExpectedHours === 1 ? 'HOUR' : 'HOURS'} EXPECTED AFTER COLLEGE
+                </Text>
+                <Text style={styles.makeupClassesSub}>
+                  {weekdayHolidayAlert.expectedMakeupClasses.length} regular periods will be compensated:
+                </Text>
+              </View>
+
+              <View style={styles.makeupClassesList}>
+                {weekdayHolidayAlert.expectedMakeupClasses.map((item, idx) => (
+                  <View key={idx} style={styles.makeupClassItem}>
+                    <View style={styles.makeupClassItemInfo}>
+                      <Text style={styles.makeupClassCode}>{item.code}</Text>
+                      <Text style={styles.makeupClassName} numberOfLines={1}>
+                        {item.subjectName}
+                      </Text>
+                      <Text style={styles.makeupClassTime}>
+                        Original slot: {item.originalTime} • {item.hours} {item.hours === 1 ? 'hr' : 'hrs'}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.makeupMarkBtn}
+                      activeOpacity={0.8}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedRescheduleSubjectId(item.subjectId);
+                        setShowRescheduledModal(true);
+                      }}
+                    >
+                      <Text style={styles.makeupMarkBtnText}>Mark Attendance</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </TouchableOpacity>
+
       ) : nextHolidayInfo ? (
         /* Regular calendar access card when no weekday holiday is within 7 days */
         <TouchableOpacity
@@ -677,9 +719,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           activeOpacity={0.8}
         >
           <View style={styles.holidayBannerLeft}>
-            <View style={styles.holidayBannerIconCircle}>
-              <Text style={styles.holidayBannerIcon}>🌴</Text>
-            </View>
             <View style={styles.holidayBannerTextCol}>
               <View style={styles.holidayBadgeRow}>
                 <Text style={styles.holidayCountdownBadge}>
@@ -714,11 +753,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.badgeContainer}>
             {overall.percentage >= 75 ? (
               <View style={[styles.activeMedBadge, { backgroundColor: '#064E3B', borderColor: '#059669' }]}>
-                <Text style={[styles.activeMedBadgeText, { color: '#34D399' }]}>✅ Target Safe (≥75%)</Text>
+                <Text style={[styles.activeMedBadgeText, { color: '#34D399' }]}>Target Safe (≥75%)</Text>
               </View>
             ) : (
               <View style={[styles.activeMedBadge, { backgroundColor: '#450A0A', borderColor: '#DC2626' }]}>
-                <Text style={[styles.activeMedBadgeText, { color: '#F87171' }]}>⚠️ Shortage (&lt;75%)</Text>
+                <Text style={[styles.activeMedBadgeText, { color: '#F87171' }]}>Shortage (&lt;75%)</Text>
               </View>
             )}
           </View>
@@ -738,7 +777,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {isWeekendOrNoClass ? '🌴 WEEKEND RELAX' : "⏰ TODAY'S SCHEDULE"}
+                {isWeekendOrNoClass ? 'WEEKEND RELAX' : "TODAY'S SCHEDULE"}
               </Text>
             </View>
             <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
@@ -750,7 +789,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
           {isWeekendOrNoClass ? (
             <View style={{ backgroundColor: '#1E293B', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#334155', alignItems: 'center', marginTop: 10 }}>
-              <Text style={{ fontSize: 28, marginBottom: 6 }}>🌴</Text>
               <Text style={{ fontSize: 16, fontWeight: '800', color: '#F1F5F9', marginBottom: 4 }}>
                 No Classes Scheduled Today ({currentDayName})
               </Text>
@@ -787,7 +825,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
               >
                 <Text style={styles.hourlyFacultyText}>
-                  👨‍🏫 Teaching Faculty: <Text style={styles.hourlyFacultyHighlight}>{currentSlot.faculty || currentSubject?.faculty}</Text> ✎
+                  Teaching Faculty: <Text style={styles.hourlyFacultyHighlight}>{currentSlot.faculty || currentSubject?.faculty}</Text> ✎
                 </Text>
               </TouchableOpacity>
             ) : null}
@@ -878,7 +916,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       Class timer completed. Attendance has been synced to the cloud and locked. It cannot be altered until the college updates portal attendance.
                     </Text>
                     <Text style={styles.lockedCloudBadge}>
-                      ☁️ Synced to Cloud • Portal Update Pending
+                      Synced to Cloud • Portal Update Pending
                     </Text>
                   </>
                 ) : (
@@ -963,7 +1001,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {slotReminders.length > 0 && (
                 <View style={styles.activeRemindersBox}>
                   <Text style={styles.activeRemindersTitle}>
-                    📌 Tasks / Instructions for this Class:
+                    Tasks / Instructions for this Class:
                   </Text>
                   {slotReminders.map((rem) => (
                     <View key={rem.id} style={styles.reminderRowItem}>
@@ -973,7 +1011,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         activeOpacity={0.7}
                       >
                         <Text style={styles.reminderCheckIcon}>
-                          {rem.completed ? '✅' : '⭕'}
+                          {rem.completed ? '✓' : '○'}
                         </Text>
                       </TouchableOpacity>
 
@@ -987,7 +1025,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                           {rem.note}
                         </Text>
                         <Text style={styles.reminderTimingText}>
-                          ⏰ {rem.dueTiming === 'PREV_NIGHT_8PM'
+                          {rem.dueTiming === 'PREV_NIGHT_8PM'
                             ? 'Previous Night at 8:00 PM'
                             : rem.dueTiming === 'NEXT_CLASS'
                             ? '30 Mins Before Class'
@@ -1022,7 +1060,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.addReminderTriggerIcon}>⏰</Text>
                 <Text style={styles.addReminderTriggerText}>
                   + Set Task / Reminder for Next Class
                 </Text>
@@ -1101,9 +1138,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </View>
 
                 <View style={styles.asgFooterRow}>
-                  <Text style={styles.asgDueText}>⏰ Due: {dueDateFormatted}</Text>
+                  <Text style={styles.asgDueText}>Due: {dueDateFormatted}</Text>
                   <Text style={styles.asgFilesText}>
-                    📎 Max {asg.maxFiles} files ({asg.acceptedFileTypes.join(', ')})
+                    Max {asg.maxFiles} files ({asg.acceptedFileTypes.join(', ')})
                   </Text>
                 </View>
               </View>
@@ -1112,7 +1149,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
-      {/* 📢 PSGIM Connect • Official College Notices & Circulars */}
+      {/* PSGIM Connect • Official College Notices & Circulars */}
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
           <View style={styles.connectIconCircle}>
@@ -1134,7 +1171,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {!hasConnectRegisterNo && (
           <View style={styles.connectUnlinkedNotice}>
             <Text style={styles.connectUnlinkedText}>
-              ⚠️ Register Number Not Configured (Mandatory). Please link your Admission Register Number in Portal & Sync. Default Password: Welcome@123
+              Register Number Not Configured (Mandatory). Please link your Admission Register Number in Portal & Sync. Default Password: Welcome@123
             </Text>
           </View>
         )}
@@ -1317,7 +1354,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     reminderTiming === 'PREV_NIGHT_8PM' && styles.timingChipTextActive,
                   ]}
                 >
-                  🌙 Prev Night (8 PM)
+                  Prev Night (8 PM)
                 </Text>
               </TouchableOpacity>
 
@@ -1334,7 +1371,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     reminderTiming === 'NEXT_CLASS' && styles.timingChipTextActive,
                   ]}
                 >
-                  ⏰ 30m Before Class
+                  30m Before Class
                 </Text>
               </TouchableOpacity>
 
@@ -1351,7 +1388,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     reminderTiming === 'TOMORROW_8AM' && styles.timingChipTextActive,
                   ]}
                 >
-                  🌅 Morning (8 AM)
+                  Morning (8 AM)
                 </Text>
               </TouchableOpacity>
 
@@ -1368,7 +1405,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     reminderTiming === 'CUSTOM' && styles.timingChipTextActive,
                   ]}
                 >
-                  ⏱️ Custom Time
+                  Custom Time
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1387,7 +1424,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             )}
 
             <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 8, fontStyle: 'italic' }}>
-              💡 "Prev Night (8 PM)" alerts you at 8:00 PM the evening before this class so you can prepare readings or assignments.
+              "Prev Night (8 PM)" alerts you at 8:00 PM the evening before this class so you can prepare readings or assignments.
             </Text>
 
             <View style={styles.reminderModalActions}>
@@ -1404,7 +1441,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={handleSaveReminder}
                 activeOpacity={0.8}
               >
-                <Text style={styles.saveReminderBtnText}>Set Reminder 🔔</Text>
+                <Text style={styles.saveReminderBtnText}>Set Reminder</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1477,7 +1514,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     </View>
                     <Text style={styles.subjectPickerItemName} numberOfLines={1}>{sub.name}</Text>
                     {sub.faculty ? (
-                      <Text style={styles.subjectPickerFacultyText} numberOfLines={1}>👨‍🏫 {sub.faculty}</Text>
+                      <Text style={styles.subjectPickerFacultyText} numberOfLines={1}>{sub.faculty}</Text>
                     ) : null}
                   </View>
                   <Text style={styles.subjectPickerChevron}>→</Text>
@@ -1518,9 +1555,116 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           setFacultyModalSubject(null);
         }}
       />
+
+      {/* ⚡ Rescheduled / After-College Makeup Class Attendance Modal */}
+      <Modal
+        visible={showRescheduledModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRescheduledModal(false)}
+      >
+        <View style={styles.rescheduledModalOverlay}>
+          <View style={styles.rescheduledModalCard}>
+            <View style={styles.rescheduledModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rescheduledBadge}>AFTER-COLLEGE COMPENSATION CLASS</Text>
+                <Text style={styles.rescheduledModalTitle}>Mark Rescheduled Attendance</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowRescheduledModal(false)}
+                style={styles.closeRescheduledBtn}
+              >
+                <Text style={styles.closeRescheduledText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {(() => {
+              const targetSub = subjects.find((s) => s.id === selectedRescheduleSubjectId) || subjects[0];
+              const slotHours = 1; // 1 hour compensation
+
+              const handleMarkRescheduled = async (status: AttendanceStatus) => {
+                if (!targetSub) return;
+                const tempSlot: TimetableSlot = {
+                  id: `resched_${targetSub.id}_${rescheduleDate}_${Date.now()}`,
+                  day: (dayNames[new Date(rescheduleDate).getDay()] || 'Friday') as any,
+                  startTime: rescheduleTime.split('-')[0]?.trim() || '16:45',
+                  endTime: rescheduleTime.split('-')[1]?.trim() || '17:45',
+                  subjectId: targetSub.id,
+                  isRescheduled: true,
+                  rescheduledDate: rescheduleDate,
+                  originalHolidayTitle: weekdayHolidayAlert?.holiday.title,
+                };
+
+                const res = await onRecordPeriodAttendance(tempSlot, rescheduleDate, status);
+                setShowRescheduledModal(false);
+                if (res.success) {
+                  Alert.alert(
+                    status === 'attended'
+                      ? 'Marked Attended ✅'
+                      : status === 'bunked'
+                      ? 'Marked Bunked ❌'
+                      : 'Free / Cancelled ⚪',
+                    `Rescheduled class attendance recorded for ${targetSub.name} (${slotHours} hr).`
+                  );
+                } else {
+                  Alert.alert('Notice', res.message);
+                }
+              };
+
+              return (
+                <View style={styles.rescheduledModalBody}>
+                  <View style={styles.rescheduledSubjectCard}>
+                    <Text style={styles.rescheduledSubCode}>{targetSub?.code || 'COURSE'}</Text>
+                    <Text style={styles.rescheduledSubName}>{targetSub?.name || 'Class'}</Text>
+                    <Text style={styles.rescheduledMeta}>
+                      Date: {rescheduleDate} • Time: {rescheduleTime} (1 hr)
+                    </Text>
+                    {weekdayHolidayAlert && (
+                      <Text style={styles.rescheduledHolidayRef}>
+                        Compensating for: {weekdayHolidayAlert.holiday.title}
+                      </Text>
+                    )}
+                  </View>
+
+                  <Text style={styles.rescheduledPromptQuestion}>
+                    Did you attend this after-college rescheduled class?
+                  </Text>
+
+                  <View style={styles.rescheduledActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.rescheduledActionBtn, styles.rescheduledAttendBtn]}
+                      activeOpacity={0.8}
+                      onPress={() => handleMarkRescheduled('attended')}
+                    >
+                      <Text style={styles.rescheduledBtnText}>✅ I Attended (1 hr)</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.rescheduledActionBtn, styles.rescheduledBunkBtn]}
+                      activeOpacity={0.8}
+                      onPress={() => handleMarkRescheduled('bunked')}
+                    >
+                      <Text style={styles.rescheduledBtnText}>❌ I Bunked (1 hr)</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.rescheduledActionBtn, styles.rescheduledCancelBtn]}
+                      activeOpacity={0.8}
+                      onPress={() => handleMarkRescheduled('cancelled')}
+                    >
+                      <Text style={styles.rescheduledBtnText}>⚪ Not Conducted</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -1874,6 +2018,20 @@ const styles = StyleSheet.create({
   },
   welcomeInfo: {
     flex: 1,
+  },
+  welcomeAdminBadge: {
+    backgroundColor: 'rgba(99, 102, 241, 0.18)',
+    borderWidth: 1,
+    borderColor: '#6366F1',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  welcomeAdminBadgeText: {
+    color: '#818CF8',
+    fontSize: 12,
+    fontWeight: '800',
   },
   welcomeGreeting: {
     color: '#94A3B8',
@@ -2680,5 +2838,183 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 10,
   },
+
+  // ── Makeup / Rescheduled Classes Alert Card Styles ──────────────
+  makeupClassesBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  makeupClassesHeader: {
+    marginBottom: 10,
+  },
+  makeupClassesBadge: {
+    color: '#F59E0B',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  makeupClassesSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  makeupClassesList: {
+    gap: 8,
+  },
+  makeupClassItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E293B',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  makeupClassItemInfo: {
+    flex: 1,
+  },
+  makeupClassCode: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  makeupClassName: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 1,
+  },
+  makeupClassTime: {
+    color: '#64748B',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  makeupMarkBtn: {
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  makeupMarkBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+
+  // ── Rescheduled Modal Styles ───────────────────────────────────
+  rescheduledModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.82)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 18,
+  },
+  rescheduledModalCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 480,
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+  },
+  rescheduledModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  rescheduledBadge: {
+    color: '#F59E0B',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  rescheduledModalTitle: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  closeRescheduledBtn: {
+    padding: 6,
+  },
+  closeRescheduledText: {
+    color: '#94A3B8',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  rescheduledModalBody: {
+    marginTop: 4,
+  },
+  rescheduledSubjectCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 14,
+  },
+  rescheduledSubCode: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  rescheduledSubName: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  rescheduledMeta: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 4,
+  },
+  rescheduledHolidayRef: {
+    color: '#FBBF24',
+    fontSize: 10.5,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  rescheduledPromptQuestion: {
+    color: '#E2E8F0',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  rescheduledActionsRow: {
+    gap: 8,
+  },
+  rescheduledActionBtn: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rescheduledAttendBtn: {
+    backgroundColor: '#059669',
+  },
+  rescheduledBunkBtn: {
+    backgroundColor: '#DC2626',
+  },
+  rescheduledCancelBtn: {
+    backgroundColor: '#475569',
+  },
+  rescheduledBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
 });
+
 

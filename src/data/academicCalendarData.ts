@@ -910,20 +910,32 @@ export function getHolidaySmartTripSuggestion(
   };
 }
 
+export interface ExpectedMakeupClass {
+  subjectId: string;
+  subjectName: string;
+  code: string;
+  hours: number;
+  originalTime: string;
+}
+
 export interface WeekdayHolidayNotification {
   holiday: AcademicCalendarItem;
   daysRemaining: number;
   message: string;
   accountingNote: string;
+  expectedMakeupClasses: ExpectedMakeupClass[];
+  totalExpectedHours: number;
 }
 
 /**
  * Returns upcoming weekday holidays occurring within 7 days (a week ago).
  * Strictly excludes weekend holidays (Saturday and Sunday - NO notification).
- * Explicitly mentions that it is already counted in the academic calendar.
+ * Explicitly calculates how many classes and hours are expected to be rescheduled after college hours.
  */
 export function getUpcomingWeekdayHolidayNotification(
-  referenceDateStr?: string
+  referenceDateStr?: string,
+  timetable: TimetableSlot[] = [],
+  subjects: Subject[] = []
 ): WeekdayHolidayNotification | null {
   const today = referenceDateStr ? new Date(referenceDateStr) : new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -954,13 +966,38 @@ export function getUpcomingWeekdayHolidayNotification(
         ? 'Tomorrow is a weekday holiday!'
         : `Upcoming weekday holiday in ${daysRemaining} days (${next.day})!`;
 
+    // Calculate which classes are missed on this holiday day from timetable
+    const holidayDayName = next.day.trim().toLowerCase();
+    const missedSlots = timetable.filter(
+      (s) => s.day.toLowerCase() === holidayDayName
+    );
+
+    const expectedMakeupClasses: ExpectedMakeupClass[] = [];
+    let totalExpectedHours = 0;
+
+    missedSlots.forEach((slot) => {
+      const sub = subjects.find((s) => s.id === slot.subjectId);
+      const hours = getSlotHours(slot);
+      totalExpectedHours += hours;
+      expectedMakeupClasses.push({
+        subjectId: slot.subjectId,
+        subjectName: sub?.name || 'Class',
+        code: sub?.code || 'COURSE',
+        hours,
+        originalTime: `${slot.startTime} - ${slot.endTime}`,
+      });
+    });
+
     return {
       holiday: next,
       daysRemaining,
       message: `${countdownText} ${next.title}`,
-      accountingNote: 'This holiday is already counted in your academic calendar schedule.',
+      accountingNote: 'This holiday is accounted in your academic calendar.',
+      expectedMakeupClasses,
+      totalExpectedHours,
     };
   }
 
   return null;
 }
+

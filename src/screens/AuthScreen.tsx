@@ -299,6 +299,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
           <Text style={styles.footerSub}>
             Your credentials are verified directly against the official PSG Studzone portal. We never store your password.
           </Text>
+          {onAdminLogin && (
+            <TouchableOpacity
+              style={styles.adminAuthBtn}
+              onPress={onAdminLogin}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.adminAuthBtnText}>🛡️ Open Admin Analytics Dashboard</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -643,5 +652,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 15,
     paddingHorizontal: 10,
+  },
+  adminAuthBtn: {
+    marginTop: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    borderWidth: 1,
+    borderColor: '#6366F1',
+  },
+  adminAuthBtnText: {
+    color: '#818CF8',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

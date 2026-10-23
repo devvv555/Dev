@@ -8,7 +8,9 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  AppState,
 } from 'react-native';
+
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Subject, TimetableSlot, MedicalClaimRecord, PeriodAttendanceRecord, AttendanceStatus } from './src/types';
 import { StorageService, INITIAL_MEDICAL_CLAIMS } from './src/services/storageService';
@@ -26,6 +28,9 @@ import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
 import { CloudSyncService } from './src/services/cloudSyncService';
 import { getSlotHours, isPeriodLocked } from './src/services/attendanceEngine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DigitalIdModal } from './src/components/DigitalIdModal';
+import { CoursePlanModal } from './src/components/CoursePlanModal';
+import { AttendanceDisputeModal } from './src/components/AttendanceDisputeModal';
 
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC';
@@ -38,6 +43,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('DASHBOARD');
   const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
+  const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false);
+  const [showDigitalIdModal, setShowDigitalIdModal] = useState<boolean>(false);
+  const [showCoursePlanModal, setShowCoursePlanModal] = useState<boolean>(false);
+  const [showDisputeModal, setShowDisputeModal] = useState<boolean>(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
   const [medicalClaims, setMedicalClaims] = useState<MedicalClaimRecord[]>(INITIAL_MEDICAL_CLAIMS);
@@ -182,16 +191,56 @@ export default function App() {
     };
   }, []);
 
+  // ⏱️ Active Foreground Time Tracking (Increments active time per minute while student uses the app)
+  useEffect(() => {
+    if (!isAuthenticated || !activeRollNo) return;
+
+    let timer: any = null;
+
+    const startTimer = () => {
+      if (!timer) {
+        timer = setInterval(() => {
+          if (AppState.currentState === 'active') {
+            AnalyticsService.trackActiveMinutes(activeRollNo, 1);
+          }
+        }, 60000);
+      }
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    startTimer();
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+    });
+
+    return () => {
+      stopTimer();
+      subscription.remove();
+    };
+  }, [isAuthenticated, activeRollNo]);
+
   const handleTabChange = (newTab: Tab) => {
     setActiveTab(newTab);
-    const featureMap: Record<Tab, 'HOURLY' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC'> = {
-      DASHBOARD: 'HOURLY',
+    const featureMap: Record<Tab, any> = {
+      DASHBOARD: 'HOURLY_TRACK',
       TIMETABLE: 'TIMETABLE',
       CALENDAR: 'CALENDAR',
       ERP_SYNC: 'ERP_SYNC',
     };
-    AnalyticsService.recordFeatureVisit(featureMap[newTab] as any);
+    AnalyticsService.trackFeatureEvent(activeRollNo, featureMap[newTab]);
   };
+
 
   // Login handler
   const handleLoginSuccess = async (rollNo: string) => {
@@ -702,11 +751,20 @@ export default function App() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={styles.adminHeaderBtn}
+              onPress={() => setShowAdminModal(true)}
+              activeOpacity={0.7}
+              accessibilityLabel="Admin Dashboard"
+            >
+              <Text style={styles.adminHeaderBtnText}>Admin</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.feedbackHeaderBtn}
               onPress={() => setShowFeedbackModal(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.feedbackHeaderBtnText}>💡 Feedback</Text>
+              <Text style={styles.feedbackHeaderBtnText}>Feedback</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -722,12 +780,63 @@ export default function App() {
         {/* Row 2: Cohort Sub-bar & Logged In Student Identity */}
         <View style={styles.headerSubRow}>
           <Text style={styles.appTagline}>PSGIM Campus Super-App • I MBA</Text>
-          <View style={styles.studentBadge}>
+          <TouchableOpacity
+            style={styles.studentBadge}
+            onPress={() => setShowProfileMenu((prev) => !prev)}
+            activeOpacity={0.7}
+          >
             <Text style={styles.studentBadgeText} numberOfLines={1}>
-              👤 {studentName || 'Student'}
+              Profile {showProfileMenu ? '▲' : '▼'}
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
+
+        {/* Profile Dropdown Menu */}
+        {showProfileMenu && (
+          <View style={styles.profileDropdownMenu}>
+            <TouchableOpacity
+              style={styles.profileDropdownItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                AnalyticsService.trackFeatureEvent(activeRollNo, 'DIGITAL_ID');
+                setShowDigitalIdModal(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.profileDropdownTitle}>Digital ID</Text>
+              <Text style={styles.profileDropdownSub}>Emergency Pass</Text>
+            </TouchableOpacity>
+
+            <View style={styles.profileDropdownDivider} />
+
+            <TouchableOpacity
+              style={styles.profileDropdownItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                AnalyticsService.trackFeatureEvent(activeRollNo, 'COURSE_PLAN');
+                setShowCoursePlanModal(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.profileDropdownTitle}>Course Plans</Text>
+              <Text style={styles.profileDropdownSub}>All 8 Subjects & CA Marks</Text>
+            </TouchableOpacity>
+
+            <View style={styles.profileDropdownDivider} />
+
+            <TouchableOpacity
+              style={styles.profileDropdownItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                setShowDisputeModal(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.profileDropdownTitle}>Attendance Dispute & Proof Report</Text>
+              <Text style={styles.profileDropdownSub}>Official Dossier & Discrepancies</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Main Content View */}
@@ -742,6 +851,7 @@ export default function App() {
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onUpdateFaculty={handleUpdateFaculty}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
+            onOpenAdmin={() => setShowAdminModal(true)}
             onRefresh={handleRefresh}
           />
         )}
@@ -848,6 +958,32 @@ export default function App() {
         visible={showAdminModal}
         onClose={() => setShowAdminModal(false)}
       />
+
+      {/* Emergency Digital Student ID Modal */}
+      <DigitalIdModal
+        visible={showDigitalIdModal}
+        onClose={() => setShowDigitalIdModal(false)}
+        studentRollNo={activeRollNo}
+      />
+
+      {/* Academic Syllabus & Course Plan Modal */}
+      <CoursePlanModal
+        visible={showCoursePlanModal}
+        onClose={() => setShowCoursePlanModal(false)}
+        subjectCode="24GM11"
+        subjectName="Management & Organisational Behaviour"
+        studentRollNo={activeRollNo}
+        allowSubjectSwitching={true}
+      />
+
+      {/* Attendance Dispute & Proof Report Dossier Modal */}
+      <AttendanceDisputeModal
+        visible={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        studentRollNo={activeRollNo}
+        subjects={subjects}
+        medicalClaims={medicalClaims}
+      />
     </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -942,6 +1078,19 @@ const styles = StyleSheet.create({
   refreshHeaderBtnText: {
     fontSize: 12,
   },
+  adminHeaderBtn: {
+    backgroundColor: 'rgba(99, 102, 241, 0.18)',
+    borderWidth: 1,
+    borderColor: '#6366F1',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  adminHeaderBtnText: {
+    color: '#818CF8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   feedbackHeaderBtn: {
     backgroundColor: 'rgba(56, 189, 248, 0.15)',
     borderWidth: 1,
@@ -1000,5 +1149,36 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     color: '#38BDF8',
     fontWeight: '700',
+  },
+  profileDropdownMenu: {
+    marginTop: 10,
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingVertical: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  profileDropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  profileDropdownTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  profileDropdownSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  profileDropdownDivider: {
+    height: 1,
+    backgroundColor: '#334155',
+    marginHorizontal: 10,
   },
 });

@@ -1,6 +1,6 @@
 import { doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from './firebase';
-import { Subject, PeriodAttendanceRecord, MedicalClaimRecord, StudentFeedback } from '../types';
+import { Subject, PeriodAttendanceRecord, MedicalClaimRecord, StudentFeedback, StudentActivityRecord } from '../types';
 
 export const CloudSyncService = {
   /**
@@ -297,5 +297,43 @@ export const CloudSyncService = {
       return null;
     }
   },
+
+  /**
+   * Syncs active time and feature telemetry for an individual student to Firestore
+   */
+  async syncStudentActivity(activity: StudentActivityRecord): Promise<void> {
+    if (!activity || !activity.rollNo) return;
+    try {
+      const activityDocRef = doc(db, 'students_activity', activity.rollNo.toUpperCase());
+      await setDoc(activityDocRef, {
+        ...activity,
+        syncedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('[CloudSync] syncStudentActivity warning:', e);
+    }
+  },
+
+  /**
+   * Fetches telemetry & time-spent records for all students for the Admin Dashboard
+   */
+  async fetchAllStudentActivities(): Promise<StudentActivityRecord[]> {
+    try {
+      const activityCol = collection(db, 'students_activity');
+      const snap = await getDocs(activityCol);
+      const list: StudentActivityRecord[] = [];
+      snap.forEach((d) => {
+        const rec = d.data() as StudentActivityRecord;
+        if (rec && rec.rollNo) {
+          list.push(rec);
+        }
+      });
+      return list;
+    } catch (e) {
+      console.warn('[CloudSync] fetchAllStudentActivities warning:', e);
+      return [];
+    }
+  },
 };
+
 

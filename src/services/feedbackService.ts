@@ -255,10 +255,43 @@ export const FeedbackService = {
    */
   async updateFeedbackStatus(id: string, status: 'NEW' | 'REVIEWED' | 'RESOLVED'): Promise<void> {
     const feedbacks = await this.getAllFeedbacks();
-    const updated = feedbacks.map((item) =>
-      item.id === id ? { ...item, status } : item
-    );
+    let updatedItem: StudentFeedback | undefined;
+    const updated = feedbacks.map((item) => {
+      if (item.id === id) {
+        updatedItem = { ...item, status };
+        return updatedItem;
+      }
+      return item;
+    });
     await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(updated));
+    if (updatedItem) {
+      CloudSyncService.syncFeedback(updatedItem).catch(() => {});
+    }
+  },
+
+  /**
+   * Sends an admin reply to a feedback item and marks it as REVIEWED / RESOLVED.
+   */
+  async replyToFeedback(id: string, replyText: string, markResolved = false): Promise<void> {
+    const feedbacks = await this.getAllFeedbacks();
+    let updatedItem: StudentFeedback | undefined;
+    const nowIso = new Date().toISOString();
+    const updated = feedbacks.map((item) => {
+      if (item.id === id) {
+        updatedItem = {
+          ...item,
+          adminReply: replyText.trim(),
+          repliedAt: nowIso,
+          status: (markResolved ? 'RESOLVED' : 'REVIEWED') as 'NEW' | 'REVIEWED' | 'RESOLVED',
+        };
+        return updatedItem;
+      }
+      return item;
+    });
+    await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(updated));
+    if (updatedItem) {
+      CloudSyncService.syncFeedback(updatedItem).catch(() => {});
+    }
   },
 
   /**

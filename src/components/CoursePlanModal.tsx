@@ -294,31 +294,31 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                         </View>
                       </View>
 
-                      {/* 💡 Automatic 50 -> 20 Marks Converter for Mid Term Exam */}
+                      {/* 💡 Automatic 40 -> 20 Marks Converter for Mid Term Exam */}
                       {isMidTerm && (
                         <View style={styles.midTermConvertBox}>
                           <View style={styles.convertLeft}>
-                            <Text style={styles.convertLabel}>WROTE FOR 50 MARKS?</Text>
-                            <Text style={styles.convertSub}>Auto-converts to 20 marks weightage: (Score ÷ 50) × 20</Text>
+                            <Text style={styles.convertLabel}>WROTE FOR 40 MARKS?</Text>
+                            <Text style={styles.convertSub}>Auto-converts to 20 marks weightage: (Score ÷ 40) × 20</Text>
                           </View>
                           <View style={styles.quickInputsRow}>
                             <TextInput
                               style={styles.rawInputBox}
                               keyboardType="numeric"
-                              placeholder="e.g. 42"
+                              placeholder="e.g. 34"
                               placeholderTextColor="#64748B"
                               maxLength={4}
                               onChangeText={(rawVal) => {
                                 const raw = parseFloat(rawVal);
                                 if (!isNaN(raw) && raw >= 0) {
-                                  // (raw / 50) * 20
-                                  const converted = ((Math.min(raw, 50) / 50) * 20).toFixed(1);
+                                  // (raw / 40) * 20
+                                  const converted = ((Math.min(raw, 40) / 40) * 20).toFixed(1);
                                   const finalVal = converted.endsWith('.0') ? converted.slice(0, -2) : converted;
                                   setCaMarks((prev) => ({ ...prev, [item.id]: finalVal }));
                                 }
                               }}
                             />
-                            <Text style={styles.rawMaxText}>/ 50</Text>
+                            <Text style={styles.rawMaxText}>/ 40</Text>
                           </View>
                         </View>
                       )}
