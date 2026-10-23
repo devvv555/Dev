@@ -856,14 +856,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View
             style={[
               styles.periodLockedBanner,
-              currentRecord.status === 'attended' && styles.lockedBannerAttended,
-              currentRecord.status === 'bunked' && styles.lockedBannerBunked,
-              currentRecord.status === 'cancelled' && styles.lockedBannerCancelled,
+              isCurrentSlotLocked && styles.lockedBannerCloudSync,
+              !isCurrentSlotLocked && currentRecord.status === 'attended' && styles.lockedBannerAttended,
+              !isCurrentSlotLocked && currentRecord.status === 'bunked' && styles.lockedBannerBunked,
+              !isCurrentSlotLocked && currentRecord.status === 'cancelled' && styles.lockedBannerCancelled,
             ]}
           >
             <View style={styles.lockedBannerRow}>
               <Text style={styles.lockedBannerIcon}>
-                {currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
+                {isCurrentSlotLocked ? '🔒' : currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
               </Text>
               <View style={styles.lockedBannerTextContainer}>
                 <Text style={styles.lockedBannerTitle}>
@@ -871,9 +872,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   {currentRecord.status === 'bunked' && `Recorded: Bunked (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
                   {currentRecord.status === 'cancelled' && 'Recorded: Free / Cancelled'}
                 </Text>
-                <Text style={styles.lockedBannerSub}>
-                  Editable until 11:59 PM today. Tap any other option below to switch status.
-                </Text>
+                {isCurrentSlotLocked ? (
+                  <>
+                    <Text style={styles.lockedBannerSub}>
+                      Class timer completed. Attendance has been synced to the cloud and locked. It cannot be altered until the college updates portal attendance.
+                    </Text>
+                    <Text style={styles.lockedCloudBadge}>
+                      ☁️ Synced to Cloud • Portal Update Pending
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.lockedBannerSub}>
+                    Live class session. Editable until the class timer ends. Tap any option below to change status.
+                  </Text>
+                )}
               </View>
             </View>
           </View>
@@ -883,55 +895,62 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {!isWeekendOrNoClass && (
           <View style={styles.promptActionsRow}>
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
+              disabled={isCurrentSlotLocked}
               style={[
                 styles.promptActionBtn,
                 styles.promptAttendBtn,
                 currentRecord?.status === 'attended' && styles.promptBtnSelected,
-                currentRecord && currentRecord.status !== 'attended' && styles.promptBtnDimmed,
+                (currentRecord && currentRecord.status !== 'attended') && styles.promptBtnDimmed,
+                isCurrentSlotLocked && styles.promptActionBtnDisabled,
               ]}
               onPress={() => handleAutoRecord('attended')}
             >
               <Text style={styles.promptAttendText}>
                 {currentRecord?.status === 'attended'
-                  ? `✅ Attended (${getSlotHours(currentSlot)} hrs)`
-                  : `✅ I Attended (${getSlotHours(currentSlot)} hrs)`}
+                  ? `Attended (${getSlotHours(currentSlot)} hrs)`
+                  : `I Attended (${getSlotHours(currentSlot)} hrs)`}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
+              disabled={isCurrentSlotLocked}
               style={[
                 styles.promptActionBtn,
                 styles.promptBunkBtn,
                 currentRecord?.status === 'bunked' && styles.promptBtnSelected,
-                currentRecord && currentRecord.status !== 'bunked' && styles.promptBtnDimmed,
+                (currentRecord && currentRecord.status !== 'bunked') && styles.promptBtnDimmed,
+                isCurrentSlotLocked && styles.promptActionBtnDisabled,
               ]}
               onPress={() => handleAutoRecord('bunked')}
             >
               <Text style={styles.promptBunkText}>
                 {currentRecord?.status === 'bunked'
-                  ? `❌ Bunked (${getSlotHours(currentSlot)} hrs)`
-                  : `❌ I Bunked (${getSlotHours(currentSlot)} hrs)`}
+                  ? `Bunked (${getSlotHours(currentSlot)} hrs)`
+                  : `I Bunked (${getSlotHours(currentSlot)} hrs)`}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
+              disabled={isCurrentSlotLocked}
               style={[
                 styles.promptActionBtn,
                 styles.promptCancelBtn,
                 currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
-                currentRecord && currentRecord.status !== 'cancelled' && styles.promptBtnDimmed,
+                (currentRecord && currentRecord.status !== 'cancelled') && styles.promptBtnDimmed,
+                isCurrentSlotLocked && styles.promptActionBtnDisabled,
               ]}
               onPress={() => handleAutoRecord('cancelled')}
             >
               <Text style={styles.promptCancelText}>
-                {currentRecord?.status === 'cancelled' ? '⚪ Free (Marked)' : '⚪ Free / Cancelled'}
+                {currentRecord?.status === 'cancelled' ? 'Free (Marked)' : 'Free / Cancelled'}
               </Text>
             </TouchableOpacity>
           </View>
         )}
+
 
         {/* Next Class Tasks & Reminders Section */}
         {!(isWeekendOrNoClass && selectedDay === currentDayName) && (() => {
