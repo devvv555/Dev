@@ -24,7 +24,7 @@ import { AnalyticsService } from './src/services/analyticsService';
 import { PsgimService } from './src/services/psgimService';
 import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
 import { CloudSyncService } from './src/services/cloudSyncService';
-import { getSlotHours } from './src/services/attendanceEngine';
+import { getSlotHours, isPeriodLocked } from './src/services/attendanceEngine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
@@ -285,6 +285,23 @@ export default function App() {
       };
     }
 
+    // Check if the timer has completed and period is locked pending college portal update
+    if (existing) {
+      const lockCheck = isPeriodLocked({
+        slot,
+        recordDate: date,
+        subject,
+      });
+
+      if (lockCheck.isLocked) {
+        return {
+          success: false,
+          message: lockCheck.reason || 'This period timer has ended and attendance is uploaded to the cloud. It cannot be altered until the college updates the portal.',
+          isChange: false,
+        };
+      }
+    }
+
     // Compute delta based on actual academic hours of the slot (e.g. 2 hrs or 1 hr)
     const slotHours = getSlotHours(slot);
     let deltaAttended = 0;
@@ -333,6 +350,12 @@ export default function App() {
       return s;
     });
 
+    const lockCheck = isPeriodLocked({
+      slot,
+      recordDate: date,
+      subject,
+    });
+
     const newRecord: PeriodAttendanceRecord = {
       periodKey,
       date,
@@ -341,7 +364,10 @@ export default function App() {
       status: newStatus,
       hours: slotHours,
       recordedAt: Date.now(),
+      cloudSyncedAt: new Date().toISOString(),
+      lockedUntilPortalUpdate: lockCheck.isLocked,
     };
+
 
     const updatedRecords = {
       ...periodRecords,
@@ -661,6 +687,21 @@ export default function App() {
 
           <View style={styles.headerActionsRow}>
             <TouchableOpacity
+              style={styles.refreshHeaderBtn}
+              onPress={() => {
+                if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                  window.location.reload();
+                } else {
+                  handleRefresh();
+                }
+              }}
+              activeOpacity={0.7}
+              accessibilityLabel="Reload App"
+            >
+              <Text style={styles.refreshHeaderBtnText}>🔄</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.feedbackHeaderBtn}
               onPress={() => setShowFeedbackModal(true)}
               activeOpacity={0.7}
@@ -887,6 +928,19 @@ const styles = StyleSheet.create({
     color: '#93C5FD',
     fontSize: 11,
     fontWeight: '700',
+  },
+  refreshHeaderBtn: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  refreshHeaderBtnText: {
+    fontSize: 12,
   },
   feedbackHeaderBtn: {
     backgroundColor: 'rgba(56, 189, 248, 0.15)',

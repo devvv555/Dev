@@ -27,9 +27,9 @@
         margin: 0;
         padding: 0;
         background-color: #0F172A;
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
+        /* Allow browser pull-to-refresh & normal gestures */
+        overscroll-behavior-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .selectable-text,
       .selectable-text * {
@@ -37,13 +37,12 @@
         user-select: text !important;
         -webkit-touch-callout: default !important;
       }
-      body {
-        overflow: hidden;
-      }
       #root {
         display: flex;
         height: 100%;
         flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
     </style>
   </head>
@@ -76,10 +75,34 @@
             navigator.serviceWorker.register('/sw.js')
               .then(function (registration) {
                 console.log('[PWA] Service Worker registered with scope: ', registration.scope);
+                // Check for updates on every page load
+                registration.update();
+
+                registration.onupdatefound = () => {
+                  const installingWorker = registration.installing;
+                  if (installingWorker) {
+                    installingWorker.onstatechange = () => {
+                      if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New content is available; auto-reload
+                        console.log('[PWA] New version detected! Reloading cleanly...');
+                        window.location.reload();
+                      }
+                    };
+                  }
+                };
               })
               .catch(function (error) {
                 console.warn('[PWA] Service Worker registration failed: ', error);
               });
+          });
+
+          // Ensure page reloads when new SW takes control
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
           });
         }
       }

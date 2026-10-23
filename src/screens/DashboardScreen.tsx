@@ -13,7 +13,9 @@ import {
   Platform,
 } from 'react-native';
 import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert, LmsAssignment, LmsQuiz, PsgimAnnouncement } from '../types';
-import { calculateOverallMetrics, getSlotHours } from '../services/attendanceEngine';
+import { calculateOverallMetrics, getSlotHours, isPeriodLocked } from '../services/attendanceEngine';
+import { CloudSyncService } from '../services/cloudSyncService';
+
 import { AttendanceGauge } from '../components/AttendanceGauge';
 
 import { SubjectCard } from '../components/SubjectCard';
@@ -376,9 +378,73 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     return () => clearInterval(interval);
   }, [timetable, periodRecords, subjects]);
 
+  // Calculate if the currently selected slot is locked
+  const lockInfo = currentSlot
+    ? isPeriodLocked({
+        slot: currentSlot,
+        recordDate: todayDate,
+        subject: currentSubject,
+        now,
+      })
+    : { isLocked: false };
+  const isCurrentSlotLocked = lockInfo.isLocked;
+
+  // Auto-sync completed slot attendance to the cloud once timer completes
+  useEffect(() => {
+    if (!studentRollNo || !timetable || timetable.length === 0) return;
+
+    const checkAndUploadCompletedSlots = async () => {
+      const nowCheck = new Date();
+      const currentMins = nowCheck.getHours() * 60 + nowCheck.getMinutes();
+      const todayStr = nowCheck.toISOString().split('T')[0];
+      const todayDayStr = dayNames[nowCheck.getDay()].toLowerCase();
+
+      // Find slots for today whose timer has completed
+      const todaySlotsList = timetable.filter(
+        (s) => s.day.toLowerCase() === todayDayStr
+      );
+
+      for (const slot of todaySlotsList) {
+        const endMins = timeToMinutes(slot.endTime);
+        if (currentMins >= endMins) {
+          const pKey = `${todayStr}_${slot.id}`;
+          const existingRec = periodRecords[pKey];
+          if (existingRec && !existingRec.cloudSyncedAt) {
+            // Auto-upload to cloud
+            const syncedRec: PeriodAttendanceRecord = {
+              ...existingRec,
+              cloudSyncedAt: new Date().toISOString(),
+              lockedUntilPortalUpdate: true,
+            };
+            try {
+              await CloudSyncService.syncPeriodRecord(studentRollNo, syncedRec);
+              await CloudSyncService.syncSubjects(studentRollNo, subjects);
+            } catch (err) {
+              console.warn('[AutoUpload] Failed to sync completed class to cloud:', err);
+            }
+          }
+        }
+      }
+    };
+
+    checkAndUploadCompletedSlots();
+    const uploadInterval = setInterval(checkAndUploadCompletedSlots, 60000);
+    return () => clearInterval(uploadInterval);
+  }, [studentRollNo, timetable, periodRecords, subjects]);
+
   const handleRecordFromNotification = async (status: AttendanceStatus) => {
     if (!endedSlotNotification) return;
     const { slot, subject } = endedSlotNotification;
+    const lockCheck = isPeriodLocked({
+      slot,
+      recordDate: todayDate,
+      subject,
+    });
+    if (lockCheck.isLocked) {
+      Alert.alert('Attendance Locked', lockCheck.reason || 'This period is locked until the college updates portal attendance.');
+      setEndedSlotNotification(null);
+      return;
+    }
     const res = await onRecordPeriodAttendance(slot, todayDate, status);
     setEndedSlotNotification(null);
     if (res.success) {
@@ -392,6 +458,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const handleAutoRecord = async (status: AttendanceStatus) => {
     if (!currentSlot || !currentSubject) return;
 
+    if (isCurrentSlotLocked) {
+      Alert.alert(
+        'Attendance Locked 🔒',
+        lockInfo.reason || 'The class timer has completed and attendance has been synced to the cloud. You cannot modify it until the college updates the portal.'
+      );
+      return;
+    }
+
     if (currentRecord) {
       if (currentRecord.status === status) {
         Alert.alert(
@@ -401,7 +475,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         return;
       }
 
-      // Freely switch attendance status anytime today (until 11:59 PM)
+      // Check if locked before switching
+      const check = isPeriodLocked({
+        slot: currentSlot,
+        recordDate: todayDate,
+        subject: currentSubject,
+      });
+      if (check.isLocked) {
+        Alert.alert(
+          'Attendance Locked 🔒',
+          check.reason || 'The class timer has completed and attendance has been uploaded to the cloud. It cannot be altered until the college updates the portal.'
+        );
+        return;
+      }
+
       try {
         Vibration.vibrate(35);
       } catch {}
@@ -439,6 +526,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       Alert.alert('Notice', res.message);
     }
   };
+
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -1625,6 +1713,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(100, 116, 139, 0.15)',
     borderColor: '#64748B',
   },
+  lockedBannerCloudSync: {
+    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+    borderColor: '#38BDF8',
+    borderWidth: 1.5,
+  },
   lockedBannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1647,6 +1740,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: 15,
   },
+  lockedCloudBadge: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 3,
+    letterSpacing: 0.3,
+  },
   promptActionsRow: {
     flexDirection: 'row',
     gap: 8,
@@ -1659,6 +1759,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  promptActionBtnDisabled: {
+    opacity: 0.45,
+  },
+
   promptBtnSelected: {
     borderWidth: 2,
     borderColor: '#F8FAFC',

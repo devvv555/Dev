@@ -172,6 +172,34 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     return () => unsub();
   }, [activeRollNo]);
 
+  // Silently auto-extract attendance & Moodle in the background without UI cards or popups
+  useEffect(() => {
+    if (activeRollNo) {
+      const silentBackgroundSync = async () => {
+        try {
+          const cleanRoll = activeRollNo.trim().toUpperCase();
+          const cleanPass = studzonePassword?.trim().toUpperCase() || '13AUG05';
+          const [studzoneResult] = await Promise.allSettled([
+            StudzoneService.loginAndExtractAttendance(cleanRoll, cleanPass),
+            LmsService.syncWithMoodle(cleanRoll, lmsPassword || 'Welcome@123'),
+          ]);
+          if (
+            studzoneResult.status === 'fulfilled' &&
+            studzoneResult.value.success &&
+            studzoneResult.value.records.length > 0 &&
+            onBatchUpdateSubjects
+          ) {
+            const { updatedSubjects } = StudzoneService.applyToSubjects(studzoneResult.value.records, subjects, true);
+            onBatchUpdateSubjects(updatedSubjects);
+          }
+        } catch {
+          // Silent background operation
+        }
+      };
+      silentBackgroundSync();
+    }
+  }, [activeRollNo]);
+
   const handlePullRefresh = async () => {
     if (!onRefresh) return;
     setRefreshing(true);
@@ -781,84 +809,6 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         <Text style={styles.headerSubtitle}>
           Unified access to official PSG systems: Studzone Attendance, Moodle & Overlap Verification.
         </Text>
-      </View>
-
-      {/* Unified Auto-Extractor & Attendance Overlap Card */}
-      <View style={styles.autoExtractHeroCard}>
-        <View style={styles.autoExtractHeroHeader}>
-          <View style={styles.autoExtractIconCircle}>
-            <Text style={styles.autoExtractIconText}>⚡</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.autoExtractHeroTitle}>Unified Auto-Extractor</Text>
-              <View style={styles.liveBadge}>
-                <Text style={styles.liveBadgeText}>ATTENDANCE + MOODLE</Text>
-              </View>
-            </View>
-            <Text style={styles.autoExtractHeroSubtitle}>
-              Simultaneously auto-extracts official Studzone attendance & Moodle coursework in 1 click.
-            </Text>
-          </View>
-        </View>
-
-        {/* Real-time Overlap Status Banner */}
-        {(() => {
-          const overlap = DisputeReportService.checkAttendanceOverlap(subjects);
-          const profile = PsgimService.getStudentProfile(activeRollNo);
-          const studentEmail = profile?.email || `${activeRollNo.toLowerCase()}@psgim.ac.in`;
-
-          if (overlap.hasOverlap) {
-            return (
-              <View style={styles.overlapAlertBanner}>
-                <View style={styles.overlapAlertTopRow}>
-                  <Text style={styles.overlapAlertTitle}>
-                    Attendance Overlap: {overlap.totalOverlapHours} hrs Discrepancy
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.overlapEmailActionBtn}
-                    onPress={() => DisputeReportService.sendOverlapEmail(activeRollNo, subjects)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.overlapEmailActionBtnText}>✉️ Email Student</Text>
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.overlapAlertDetailText}>
-                  {overlap.summaryDetail}
-                </Text>
-                <Text style={styles.overlapAlertRecipientText}>
-                  Target: {studentEmail} • Tap "Email Student" to send breakdown
-                </Text>
-              </View>
-            );
-          } else {
-            return (
-              <View style={styles.overlapSafeBanner}>
-                <Text style={styles.overlapSafeTitle}>
-                  ✓ 100% Reconciled — 0 Hours Overlap
-                </Text>
-                <Text style={styles.overlapSafeDetailText}>
-                  Your logged class attendance matches the official college portal baseline perfectly.
-                </Text>
-              </View>
-            );
-          }
-        })()}
-
-        <TouchableOpacity
-          style={[styles.autoExtractHeroButton, isAutoExtractingAll && { opacity: 0.7 }]}
-          onPress={handleAutoExtractAll}
-          disabled={isAutoExtractingAll}
-          activeOpacity={0.8}
-        >
-          {isAutoExtractingAll ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.autoExtractHeroButtonText}>
-              ⚡ Auto Extract Attendance & Moodle
-            </Text>
-          )}
-        </TouchableOpacity>
       </View>
 
       {/* Hero: Studzone Live Sync Banner */}

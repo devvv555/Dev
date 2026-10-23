@@ -168,3 +168,77 @@ export function findNextSlotForSubject(
   return { slot: anySlot, classDate: fallbackDate };
 }
 
+
+/**
+ * Normalizes a date string (YYYY-MM-DD or DD-MM-YYYY) into a comparable timestamp / Date
+ */
+export function normalizeDateToTimestamp(dateStr?: string): number | null {
+  if (!dateStr) return null;
+  const clean = dateStr.trim();
+  // Format: YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split('-').map(Number);
+    return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+  }
+  // Format: DD-MM-YYYY
+  if (/^\d{2}-\d{2}-\d{4}$/.test(clean)) {
+    const [d, m, y] = clean.split('-').map(Number);
+    return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+  }
+  // Try standard parse
+  const parsed = Date.parse(clean);
+  return isNaN(parsed) ? null : parsed;
+}
+
+/**
+ * Checks if a live attendance period has completed its timer and is locked
+ * until the college updates the portal attendance.
+ */
+export function isPeriodLocked(params: {
+  slot: { startTime: string; endTime: string; day?: string };
+  recordDate: string; // YYYY-MM-DD
+  subject?: Subject;
+  now?: Date;
+}): { isLocked: boolean; reason?: string } {
+  const { slot, recordDate, subject, now = new Date() } = params;
+  if (!slot || !slot.endTime || !recordDate) {
+    return { isLocked: false };
+  }
+
+  const todayStr = now.toISOString().split('T')[0];
+  const [eh, em] = slot.endTime.split(':').map(Number);
+  const endMinutes = (eh || 0) * 60 + (em || 0);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // If the record is for today, timer must have finished (currentMinutes >= endMinutes)
+  // If the record is from a past date, the timer is definitely finished
+  const isPastDay = recordDate < todayStr;
+  const isToday = recordDate === todayStr;
+  const isFutureDay = recordDate > todayStr;
+
+  if (isFutureDay) {
+    return { isLocked: false };
+  }
+
+  const timerCompleted = isPastDay || (isToday && currentMinutes >= endMinutes);
+  if (!timerCompleted) {
+    return { isLocked: false };
+  }
+
+  // Timer has completed. Has the college updated the portal for this or subsequent dates?
+  const portalUpdateTime = normalizeDateToTimestamp(subject?.lastOfficialUpdate);
+  const recordDateTime = normalizeDateToTimestamp(recordDate);
+
+  // If college portal update date is strictly on or after this record's date, it is unlocked/reconciled
+  if (portalUpdateTime && recordDateTime && portalUpdateTime >= recordDateTime) {
+    return {
+      isLocked: false,
+      reason: 'College portal has updated attendance for this date.',
+    };
+  }
+
+  return {
+    isLocked: true,
+    reason: 'Class timer has ended and attendance has been uploaded to the cloud. Locked until college updates portal attendance.',
+  };
+}
