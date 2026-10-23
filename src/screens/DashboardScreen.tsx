@@ -486,9 +486,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     };
 
     checkAndUploadCompletedSlots();
-    const uploadInterval = setInterval(checkAndUploadCompletedSlots, 60000);
     return () => clearInterval(uploadInterval);
   }, [studentRollNo, timetable, periodRecords, subjects]);
+
+  // Periodic active student heartbeat tracker (syncs online presence & active minutes to cloud)
+  useEffect(() => {
+    if (!studentRollNo) return;
+    // Initial ping on load
+    AnalyticsService.initStudentActivity(studentRollNo, studentName, profile.batch || profile.section || 'B');
+    AnalyticsService.trackActiveMinutes(studentRollNo, 1);
+
+    // Heartbeat every 60 seconds while app is in foreground
+    const heartbeatTimer = setInterval(() => {
+      AnalyticsService.trackActiveMinutes(studentRollNo, 1);
+    }, 60000);
+
+    return () => clearInterval(heartbeatTimer);
+  }, [studentRollNo, studentName, profile.batch, profile.section]);
 
   const handleRecordFromNotification = async (status: AttendanceStatus) => {
     if (!endedSlotNotification) return;

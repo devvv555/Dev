@@ -37,11 +37,13 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   const [analytics, setAnalytics] = useState<FeatureUsageStats | null>(null);
   const [feedbacks, setFeedbacks] = useState<StudentFeedback[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<'ALL' | FeedbackCategory>('ALL');
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<'ALL' | 'REPLIED' | 'PENDING'>('ALL');
 
   // Student Telemetry & Time Spent State
   const [studentActivities, setStudentActivities] = useState<StudentActivityRecord[]>([]);
   const [studentSearch, setStudentSearch] = useState<string>('');
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<'ALL' | 'A' | 'B' | 'C' | 'D'>('ALL');
+  const [liveOnlyFilter, setLiveOnlyFilter] = useState<boolean>(false);
   const [selectedStudentDrilldown, setSelectedStudentDrilldown] = useState<StudentActivityRecord | null>(null);
   const [replyingFeedback, setReplyingFeedback] = useState<StudentFeedback | null>(null);
   const [replyInput, setReplyInput] = useState<string>('');
@@ -188,8 +190,15 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   };
 
   const filteredFeedbacks = feedbacks.filter((fb) => {
-    if (feedbackFilter === 'ALL') return true;
-    return fb.category === feedbackFilter;
+    const matchCategory = feedbackFilter === 'ALL' || fb.category === feedbackFilter;
+    const isReplied = Boolean(fb.adminReply && fb.adminReply.trim().length > 0);
+    const matchStatus =
+      feedbackStatusFilter === 'ALL'
+        ? true
+        : feedbackStatusFilter === 'REPLIED'
+        ? isReplied
+        : !isReplied;
+    return matchCategory && matchStatus;
   });
 
   return (
@@ -403,6 +412,63 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
               {activeTab === 'FEEDBACK' && (
                 <>
+                  {/* Reply Status Segment Bar */}
+                  <View style={styles.replyStatusRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.replyStatusPill,
+                        feedbackStatusFilter === 'ALL' && styles.replyStatusPillActive,
+                      ]}
+                      onPress={() => setFeedbackStatusFilter('ALL')}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.replyStatusPillText,
+                          feedbackStatusFilter === 'ALL' && styles.replyStatusPillTextActive,
+                        ]}
+                      >
+                        All ({feedbacks.length})
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.replyStatusPill,
+                        feedbackStatusFilter === 'REPLIED' && styles.replyStatusPillRepliedActive,
+                      ]}
+                      onPress={() => setFeedbackStatusFilter('REPLIED')}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.replyStatusPillText,
+                          feedbackStatusFilter === 'REPLIED' && styles.replyStatusPillRepliedTextActive,
+                        ]}
+                      >
+                        Replied ({feedbacks.filter((f) => Boolean(f.adminReply && f.adminReply.trim())).length})
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.replyStatusPill,
+                        feedbackStatusFilter === 'PENDING' && styles.replyStatusPillPendingActive,
+                      ]}
+                      onPress={() => setFeedbackStatusFilter('PENDING')}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.replyStatusPillText,
+                          feedbackStatusFilter === 'PENDING' && styles.replyStatusPillPendingTextActive,
+                        ]}
+                      >
+                        Needs Reply ({feedbacks.filter((f) => !f.adminReply || !f.adminReply.trim()).length})
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
                   {/* Category Filter Chips */}
                   <View style={styles.filterRow}>
                     {(['ALL', 'FEATURE', 'SCHEDULE', 'BUG', 'GENERAL'] as const).map((filter) => (
@@ -421,7 +487,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                           ]}
                         >
                           {filter === 'ALL'
-                            ? 'All Feedback'
+                            ? 'All Types'
                             : filter === 'FEATURE'
                             ? 'Features'
                             : filter === 'SCHEDULE'
@@ -542,14 +608,24 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
               {/* Student Activity & Feature Usage Tab */}
               {activeTab === 'STUDENTS' && (() => {
+                const nowMs = Date.now();
+                const isStudentLive = (st: StudentActivityRecord) => {
+                  if (!st.lastActiveAt) return false;
+                  const diffMins = (nowMs - new Date(st.lastActiveAt).getTime()) / (1000 * 60);
+                  return diffMins <= 5;
+                };
+
+                const liveStudentsCount = studentActivities.filter(isStudentLive).length;
+
                 const filteredList = studentActivities.filter((rec) => {
                   const matchBatch = selectedBatchFilter === 'ALL' || rec.batch === selectedBatchFilter;
+                  const matchLive = !liveOnlyFilter || isStudentLive(rec);
                   const query = studentSearch.trim().toLowerCase();
                   const matchSearch =
                     !query ||
                     rec.rollNo.toLowerCase().includes(query) ||
                     rec.name.toLowerCase().includes(query);
-                  return matchBatch && matchSearch;
+                  return matchBatch && matchLive && matchSearch;
                 });
 
                 const totalMinutesCohort = studentActivities.reduce(
@@ -569,6 +645,16 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                         </Text>
                         <View style={styles.metricBadge}>
                           <Text style={styles.metricBadgeText}>Cohort Foreground Usage</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>Live In App Now</Text>
+                        <Text style={[styles.metricValue, { color: '#10B981' }]}>
+                          {liveStudentsCount} <Text style={styles.metricSubValue}>online</Text>
+                        </Text>
+                        <View style={styles.metricBadgeGreen}>
+                          <Text style={styles.metricBadgeGreenText}>Active in last 5m</Text>
                         </View>
                       </View>
 
@@ -601,6 +687,26 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                       </View>
 
                       <View style={styles.batchFiltersRow}>
+                        {/* Live Now Filter Pill */}
+                        <TouchableOpacity
+                          style={[
+                            styles.liveFilterPill,
+                            liveOnlyFilter && styles.liveFilterPillActive,
+                          ]}
+                          onPress={() => setLiveOnlyFilter(!liveOnlyFilter)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.liveIndicatorDot} />
+                          <Text
+                            style={[
+                              styles.liveFilterText,
+                              liveOnlyFilter && styles.liveFilterTextActive,
+                            ]}
+                          >
+                            Live Now ({liveStudentsCount})
+                          </Text>
+                        </TouchableOpacity>
+
                         {(['ALL', 'A', 'B', 'C', 'D'] as const).map((b) => (
                           <TouchableOpacity
                             key={b}
@@ -691,6 +797,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                                 <View style={styles.batchBadgeSmall}>
                                   <Text style={styles.batchBadgeTextSmall}>Batch {st.batch}</Text>
                                 </View>
+                                {isStudentLive(st) && (
+                                  <View style={styles.liveNowBadge}>
+                                    <View style={styles.liveNowDot} />
+                                    <Text style={styles.liveNowBadgeText}>LIVE</Text>
+                                  </View>
+                                )}
                               </View>
                               <Text style={styles.studentCardRoll}>{st.rollNo}</Text>
 
@@ -1238,6 +1350,48 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
+  replyStatusRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 10,
+  },
+  replyStatusPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  replyStatusPillActive: {
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
+  },
+  replyStatusPillRepliedActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.25)',
+    borderColor: '#10B981',
+  },
+  replyStatusPillPendingActive: {
+    backgroundColor: 'rgba(234, 179, 8, 0.25)',
+    borderColor: '#EAB308',
+  },
+  replyStatusPillText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  replyStatusPillTextActive: {
+    color: '#0F172A',
+    fontWeight: '800',
+  },
+  replyStatusPillRepliedTextActive: {
+    color: '#34D399',
+    fontWeight: '800',
+  },
+  replyStatusPillPendingTextActive: {
+    color: '#FDE047',
+    fontWeight: '800',
+  },
   filterRow: {
     flexDirection: 'row',
     gap: 6,
@@ -1458,6 +1612,59 @@ const styles = StyleSheet.create({
   },
   batchFilterTextActive: {
     color: '#0F172A',
+  },
+  liveFilterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: '#059669',
+  },
+  liveFilterPillActive: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  liveFilterText: {
+    color: '#34D399',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  liveFilterTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  liveIndicatorDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+  },
+  liveNowBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  liveNowDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  liveNowBadgeText: {
+    color: '#34D399',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   studentListHeaderRow: {
     flexDirection: 'row',
