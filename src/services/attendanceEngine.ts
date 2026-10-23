@@ -199,10 +199,16 @@ export function isPeriodLocked(params: {
   recordDate: string; // YYYY-MM-DD
   subject?: Subject;
   now?: Date;
+  isWindowOpen?: boolean;
 }): { isLocked: boolean; reason?: string } {
-  const { slot, recordDate, subject, now = new Date() } = params;
+  const { slot, recordDate, subject, now = new Date(), isWindowOpen = false } = params;
   if (!slot || !slot.endTime || !recordDate) {
     return { isLocked: false };
+  }
+
+  // If live attendance window is currently OPEN for today, allow editing
+  if (isWindowOpen) {
+    return { isLocked: false, reason: 'Live attendance window is currently open.' };
   }
 
   const todayStr = now.toISOString().split('T')[0];

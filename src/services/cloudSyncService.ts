@@ -225,6 +225,69 @@ export const CloudSyncService = {
   },
 
   /**
+   * Broadcasts the 5-minute final attendance window signal across all students.
+   */
+  async broadcastAttendanceWindow(params: {
+    status: 'OPEN' | 'LOCKED';
+    durationSeconds: number;
+    openedAt?: string;
+    expiresAt?: string;
+    date: string;
+    message?: string;
+  }): Promise<void> {
+    try {
+      const windowRef = doc(db, 'system_updates', 'attendance_window');
+      await setDoc(
+        windowRef,
+        {
+          ...params,
+          timestamp: Date.now(),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] broadcastAttendanceWindow failed:', e);
+    }
+  },
+
+  /**
+   * Subscribes to real-time 5-minute final attendance window signals from Firestore.
+   */
+  listenToAttendanceWindow(
+    callback: (windowData: {
+      status: 'OPEN' | 'LOCKED';
+      durationSeconds: number;
+      openedAt?: string;
+      expiresAt?: string;
+      date: string;
+      timestamp: number;
+      message?: string;
+    }) => void
+  ): Unsubscribe {
+    try {
+      const windowRef = doc(db, 'system_updates', 'attendance_window');
+      return onSnapshot(
+        windowRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (data && data.status) {
+              callback(data as any);
+            }
+          }
+        },
+        (error) => {
+          console.warn('[CloudSync] listenToAttendanceWindow error:', error);
+        }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] listenToAttendanceWindow setup failed:', e);
+      return () => {};
+    }
+  },
+
+  /**
    * Fetches the latest global attendance update metadata
    */
   async getLatestGlobalAttendanceUpdate(): Promise<{

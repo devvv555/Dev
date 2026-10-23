@@ -224,6 +224,47 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   // Auto-detect ongoing or recently ended class based on real-time clock
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [attendanceWindow, setAttendanceWindow] = useState<{
+    status: 'OPEN' | 'LOCKED';
+    durationSeconds?: number;
+    durationMinutes?: number;
+    expiresAt?: string;
+    date?: string;
+  } | null>(null);
+
+  // Subscribe to live 5-minute attendance window
+  useEffect(() => {
+    const unsub = CloudSyncService.listenToAttendanceWindow((data) => {
+      if (data && data.status) {
+        setAttendanceWindow(data as any);
+        // Automatically trigger push notification on device when window opens
+        if (data.status === 'OPEN' && data.expiresAt && new Date(data.expiresAt).getTime() > Date.now()) {
+          NotificationService.sendLocalNotification(
+            "Attendance Window Open: Today's Final Attendance",
+            "Today's live attendance is open now. Tap to record or change your attendance before the countdown ends.",
+            { windowOpen: true }
+          );
+        }
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Real-time second-by-second countdown timer for the open window
+  const [windowRemainingSeconds, setWindowRemainingSeconds] = useState<number>(0);
+  useEffect(() => {
+    if (!attendanceWindow || attendanceWindow.status !== 'OPEN' || !attendanceWindow.expiresAt) {
+      setWindowRemainingSeconds(0);
+      return;
+    }
+    const calcRemaining = () => {
+      const diff = Math.max(0, Math.floor((new Date(attendanceWindow.expiresAt!).getTime() - Date.now()) / 1000));
+      setWindowRemainingSeconds(diff);
+    };
+    calcRemaining();
+    const timer = setInterval(calcRemaining, 1000);
+    return () => clearInterval(timer);
+  }, [attendanceWindow]);
 
   const timeToMinutes = (timeStr: string): number => {
     if (!timeStr) return 0;
@@ -436,6 +477,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   }, [timetable, subjects]);
 
 
+  // Check if today's 5-minute live attendance window is active
+  const isAttendanceWindowActive = Boolean(
+    attendanceWindow &&
+    attendanceWindow.status === 'OPEN' &&
+    (!attendanceWindow.date || attendanceWindow.date === todayDate) &&
+    (!attendanceWindow.expiresAt || new Date(attendanceWindow.expiresAt).getTime() > Date.now())
+  );
+
   // Calculate if the currently selected slot is locked
   const lockInfo = currentSlot
     ? isPeriodLocked({
@@ -443,6 +492,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         recordDate: todayDate,
         subject: currentSubject,
         now,
+        isWindowOpen: isAttendanceWindowActive,
       })
     : { isLocked: false };
   const isCurrentSlotLocked = lockInfo.isLocked;
@@ -486,6 +536,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     };
 
     checkAndUploadCompletedSlots();
+    const uploadInterval = setInterval(checkAndUploadCompletedSlots, 60000);
     return () => clearInterval(uploadInterval);
   }, [studentRollNo, timetable, periodRecords, subjects]);
 
@@ -493,7 +544,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   useEffect(() => {
     if (!studentRollNo) return;
     // Initial ping on load
-    AnalyticsService.initStudentActivity(studentRollNo, studentName, profile.batch || profile.section || 'B');
+    const userBatch = (profile as any)?.batch || profile?.section || 'B';
+    AnalyticsService.initStudentActivity(studentRollNo, studentName, userBatch);
     AnalyticsService.trackActiveMinutes(studentRollNo, 1);
 
     // Heartbeat every 60 seconds while app is in foreground
@@ -502,7 +554,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     }, 60000);
 
     return () => clearInterval(heartbeatTimer);
-  }, [studentRollNo, studentName, profile.batch, profile.section]);
+  }, [studentRollNo, studentName, (profile as any)?.batch, profile?.section]);
 
   const handleRecordFromNotification = async (status: AttendanceStatus) => {
     if (!endedSlotNotification) return;
@@ -552,6 +604,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         slot: currentSlot,
         recordDate: todayDate,
         subject: currentSubject,
+        isWindowOpen: isAttendanceWindowActive,
       });
       if (check.isLocked) {
         Alert.alert(
@@ -956,6 +1009,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     </Text>
                     <Text style={styles.lockedCloudBadge}>
                       Synced to Cloud • Portal Update Pending
+                    </Text>
+                  </>
+                ) : isAttendanceWindowActive ? (
+                  <>
+                    <Text style={[styles.lockedBannerSub, { color: '#6ee7b7', fontWeight: '700' }]}>
+                      Live attendance window open. Closes in {Math.floor(windowRemainingSeconds / 60)}:{String(windowRemainingSeconds % 60).padStart(2, '0')}. You can mark or change your attendance now.
+                    </Text>
+                    <Text style={[styles.lockedCloudBadge, { color: '#34d399', backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                      Window Active • Closes in {Math.floor(windowRemainingSeconds / 60)}m {windowRemainingSeconds % 60}s
                     </Text>
                   </>
                 ) : (

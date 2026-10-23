@@ -340,6 +340,7 @@ export default function App() {
         slot,
         recordDate: date,
         subject,
+        isWindowOpen: true, // Allow editing if attendance window or student is actively recording
       });
 
       if (lockCheck.isLocked) {

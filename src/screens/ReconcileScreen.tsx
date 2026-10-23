@@ -134,23 +134,23 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         }
       }
 
-      // Check local last sync info
-      const localSync = await StudzoneService.getLastSyncInfo();
-      if (localSync) {
-        setLastSyncInfo(localSync);
+      // Check latest global sync info from Firestore first
+      const globalSync = await CloudSyncService.getLatestGlobalAttendanceUpdate();
+      if (globalSync) {
+        setLastSyncInfo({
+          lastSyncedAt: globalSync.updatedAt,
+          portalUpdatedDate: globalSync.portalUpdatedDate,
+          attendanceFrom: globalSync.attendanceFrom,
+          attendanceTo: globalSync.attendanceTo,
+          studentName: globalSync.updatedByName,
+          rollNo: globalSync.updatedByRollNo,
+          subjectsCount: globalSync.subjectsCount,
+          status: globalSync.status,
+        } as any);
       } else {
-        // Fallback to latest global sync info from Firestore
-        const globalSync = await CloudSyncService.getLatestGlobalAttendanceUpdate();
-        if (globalSync) {
-          setLastSyncInfo({
-            lastSyncedAt: globalSync.updatedAt,
-            portalUpdatedDate: globalSync.portalUpdatedDate,
-            attendanceFrom: globalSync.attendanceFrom,
-            attendanceTo: globalSync.attendanceTo,
-            studentName: globalSync.updatedByName,
-            rollNo: globalSync.updatedByRollNo,
-            subjectsCount: globalSync.subjectsCount,
-          });
+        const localSync = await StudzoneService.getLastSyncInfo();
+        if (localSync) {
+          setLastSyncInfo(localSync);
         }
       }
     }
@@ -166,7 +166,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         studentName: update.updatedByName,
         rollNo: update.updatedByRollNo,
         subjectsCount: update.subjectsCount,
-      });
+        status: (update as any).status,
+      } as any);
     });
 
     return () => unsub();
@@ -864,6 +865,13 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 {lastSyncInfo.subjectsCount ? ` • ${lastSyncInfo.subjectsCount} subjects` : ''}
                 {lastSyncInfo.lastSyncedAt ? ` • Synced ${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''}
               </Text>
+              {(lastSyncInfo as any)?.status === 'COMPLETED_AND_LOCKED' && (
+                <View style={{ marginTop: 8, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6, backgroundColor: 'rgba(56, 189, 248, 0.15)', borderWidth: 1, borderColor: '#38BDF8', alignSelf: 'flex-start' }}>
+                  <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '700' }}>
+                    Cloud Sync Complete • Attendance Locked Until Next Portal Update
+                  </Text>
+                </View>
+              )}
             </View>
           ) : (
             <Text style={styles.lastUpdatedEmpty}>
