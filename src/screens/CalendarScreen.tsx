@@ -99,21 +99,17 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
     const parse = (d: string) => {
       const parts = d.split('-');
       const year = parts[0];
-      const monthIndex = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return { day, month: months[monthIndex], year };
+      const month = parts[1]?.padStart(2, '0') || '01';
+      const day = parts[2]?.padStart(2, '0') || '01';
+      return { day, month, year };
     };
 
     const start = parse(dateStr);
     if (!endDateStr) {
-      return `${start.day} ${start.month} ${start.year}`;
+      return `${start.day}/${start.month}/${start.year}`;
     }
     const end = parse(endDateStr);
-    if (start.month === end.month) {
-      return `${start.day}–${end.day} ${start.month} ${start.year}`;
-    }
-    return `${start.day} ${start.month} – ${end.day} ${end.month} ${start.year}`;
+    return `${start.day}/${start.month}/${start.year} – ${end.day}/${end.month}/${end.year}`;
   };
 
   const getTypeBadge = (type: CalendarEventType) => {
@@ -347,7 +343,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                       {selectedHoliday.title}
                     </Text>
                     <Text style={styles.tripModalDate}>
-                      📅 {selectedHoliday.date} ({selectedHoliday.day})
+                      📅 {formatDisplayDate(selectedHoliday.date, selectedHoliday.endDate)} ({selectedHoliday.day})
                     </Text>
                   </View>
                   <TouchableOpacity

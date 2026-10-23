@@ -449,14 +449,14 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                           <View>
                             <View style={styles.fbAuthorRow}>
                               <Text style={styles.fbAuthorName}>
-                                {fb.studentName}
+                                {fb.studentName || 'Student'}
                               </Text>
                               {fb.studentRollNo ? (
                                 <Text style={styles.fbRollNo}>({fb.studentRollNo})</Text>
                               ) : null}
                               {fb.isAnonymous && (
                                 <View style={styles.anonymousBadge}>
-                                  <Text style={styles.anonymousBadgeText}>Anonymous</Text>
+                                  <Text style={styles.anonymousBadgeText}>Posted Anonymously</Text>
                                 </View>
                               )}
                               <View style={styles.fbBatchBadge}>
@@ -464,7 +464,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                               </View>
                             </View>
                             <Text style={styles.fbDate}>
-                              {fb.studentDob ? `DOB: ${fb.studentDob} • ` : ''}{new Date(fb.createdAt).toLocaleDateString()} • {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {fb.studentDob ? `DOB: ${fb.studentDob} • ` : ''}{new Date(fb.createdAt).toLocaleDateString('en-GB')} • {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </Text>
                           </View>
 
@@ -514,7 +514,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                               <Text style={styles.adminReplyLabel}>Admin Official Reply</Text>
                               {fb.repliedAt && (
                                 <Text style={styles.adminReplyDate}>
-                                  {new Date(fb.repliedAt).toLocaleDateString()}
+                                  {new Date(fb.repliedAt).toLocaleDateString('en-GB')}
                                 </Text>
                               )}
                             </View>

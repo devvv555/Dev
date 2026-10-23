@@ -236,6 +236,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const currentDayName = dayNames[now.getDay()];
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
+  // Date formatted as DD/MM/YYYY
+  const todayFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  const formatDateDMY = (dateStr?: string): string => {
+    if (!dateStr) return '';
+    const clean = dateStr.trim();
+    if (clean.includes('-')) {
+      const parts = clean.split('-');
+      if (parts[0].length === 4) {
+        // YYYY-MM-DD -> DD/MM/YYYY
+        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      } else if (parts[2].length === 4) {
+        // DD-MM-YYYY -> DD/MM/YYYY
+        return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+      }
+    }
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    }
+    return dateStr;
+  };
+
   // Selected day for timetable tracker (defaults to today, or Monday if today has no slots)
   const [selectedDay, setSelectedDay] = useState<string>(
     currentDayName === 'Sunday' ? 'Sunday' : currentDayName
@@ -658,7 +680,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
 
           <Text style={styles.weekdayNotifTitle}>
-            {weekdayHolidayAlert.holiday.title} ({weekdayHolidayAlert.holiday.day})
+            {weekdayHolidayAlert.holiday.title} ({formatDateDMY(weekdayHolidayAlert.holiday.date)} • {weekdayHolidayAlert.holiday.day})
           </Text>
 
           {/* Academic calendar pre-accounted message */}
@@ -733,7 +755,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 )}
               </View>
               <Text style={styles.holidayBannerTitle} numberOfLines={1}>
-                Next: {nextHolidayInfo.holiday.title} ({nextHolidayInfo.holiday.day})
+                Next: {nextHolidayInfo.holiday.title} ({formatDateDMY(nextHolidayInfo.holiday.date)} • {nextHolidayInfo.holiday.day})
               </Text>
             </View>
           </View>
@@ -778,6 +800,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {isWeekendOrNoClass ? 'WEEKEND RELAX' : "TODAY'S SCHEDULE"}
+              </Text>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748B' }}>
+                • {todayFormatted}
               </Text>
             </View>
             <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
@@ -1617,7 +1642,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     <Text style={styles.rescheduledSubCode}>{targetSub?.code || 'COURSE'}</Text>
                     <Text style={styles.rescheduledSubName}>{targetSub?.name || 'Class'}</Text>
                     <Text style={styles.rescheduledMeta}>
-                      Date: {rescheduleDate} • Time: {rescheduleTime} (1 hr)
+                      Date: {formatDateDMY(rescheduleDate)} • Time: {rescheduleTime} (1 hr)
                     </Text>
                     {weekdayHolidayAlert && (
                       <Text style={styles.rescheduledHolidayRef}>

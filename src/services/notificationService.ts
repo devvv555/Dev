@@ -1,6 +1,9 @@
-import { Platform } from 'react-native';
+import { Platform, Vibration } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { Subject, TimetableSlot } from '../types';
+
+// Distinct vibration pattern: Buzz (400ms) - Pause (150ms) - Buzz (400ms)
+export const ALERT_VIBRATION_PATTERN = [0, 400, 150, 400];
 
 // Configure notification behavior for phone notification tray (mobile only)
 if (Platform.OS !== 'web') {
@@ -29,14 +32,15 @@ export const NotificationService = {
       }
 
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('attendance-channel', {
+        await Notifications.setNotificationChannelAsync('attendance-channel-v2', {
           name: 'Attendance & Timetable Alerts',
           importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 500, 200, 500],
+          vibrationPattern: ALERT_VIBRATION_PATTERN,
           lightColor: '#0284C7',
           sound: 'default',
           enableVibrate: true,
           showBadge: true,
+          lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         });
       }
 
@@ -70,10 +74,10 @@ export const NotificationService = {
   async setupNotificationCategories(): Promise<void> {
     try {
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('attendance-channel', {
+        await Notifications.setNotificationChannelAsync('attendance-channel-v2', {
           name: 'Attendance & Timetable Alerts',
           importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 500, 200, 500],
+          vibrationPattern: ALERT_VIBRATION_PATTERN,
           lightColor: '#0284C7',
           sound: 'default',
           enableVibrate: true,
@@ -132,6 +136,11 @@ export const NotificationService = {
       // Clear any prior notification so only one notification is active
       await this.dismissAllNotifications();
 
+      // Trigger immediate physical hardware vibration on the device
+      try {
+        Vibration.vibrate(ALERT_VIBRATION_PATTERN);
+      } catch {}
+
       if (Platform.OS === 'web') {
         // Try ServiceWorkerRegistration showNotification for rich lock-screen action buttons
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator && Notification.permission === 'granted') {
@@ -145,7 +154,8 @@ export const NotificationService = {
                 tag: 'attendance_single_alert',
                 renotify: true,
                 data: data || {},
-                vibrate: [200, 100, 200],
+                vibrate: [400, 150, 400],
+                silent: false,
                 requireInteraction: true,
               };
               if (actions && actions.length > 0) {
@@ -173,7 +183,7 @@ export const NotificationService = {
           body,
           data: data || {},
           sound: 'default',
-          vibrate: [0, 500, 200, 500],
+          vibrate: ALERT_VIBRATION_PATTERN,
           priority: Notifications.AndroidNotificationPriority.MAX,
           categoryIdentifier: actions && actions.length > 0 ? 'ATTENDANCE_LOCKSCREEN_ACTIONS' : undefined,
         },

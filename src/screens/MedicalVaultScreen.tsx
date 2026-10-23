@@ -114,12 +114,21 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
     else setPickerMonth(m => m + 1);
   };
 
-  /** Format YYYY-MM-DD to "DD MMM YYYY" for display */
+  /** Format date to "DD/MM/YYYY" for display */
   const formatDisplay = (dateStr: string) => {
     if (!dateStr) return 'Tap to select';
+    const clean = dateStr.trim();
+    if (clean.includes('-')) {
+      const parts = clean.split('-');
+      if (parts[0].length === 4) {
+        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      } else if (parts[2].length === 4) {
+        return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+      }
+    }
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getFullYear()}`;
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
   };
 
   /** Returns set of day-of-week names covered by the date range */
@@ -269,7 +278,7 @@ export const MedicalVaultScreen: React.FC<MedicalVaultScreenProps> = ({
                 <View>
                   <Text style={styles.claimReason}>{claim.reason}</Text>
                   <Text style={styles.claimDates}>
-                    📅 {claim.fromDate} to {claim.toDate}
+                    📅 {formatDisplay(claim.fromDate)} to {formatDisplay(claim.toDate)}
                   </Text>
                 </View>
                 <TouchableOpacity

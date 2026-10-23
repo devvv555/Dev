@@ -79,7 +79,7 @@ export const INITIAL_TIMETABLE: TimetableSlot[] = [
   { id: 't_thu_3', day: 'Thursday', startTime: '11:15', endTime: '12:15', subjectId: 'sub_3', room: 'Network Lab' },
   { id: 't_thu_4', day: 'Thursday', startTime: '13:30', endTime: '14:30', subjectId: 'sub_4', room: 'LH-203' },
   // Friday
-  { id: 't_fri_1', day: 'Friday', startTime: '09:00', endTime: '10:00', subjectId: 'sub_2', room: 'LH-102' },
+  { id: 't_fri_1', day: 'Friday', startTime: '09:00', endTime: '10:00', subjectId: 'sub_2', room: 'LH-104' },
   { id: 't_fri_2', day: 'Friday', startTime: '10:00', endTime: '11:00', subjectId: 'sub_4', room: 'LH-203' },
   { id: 't_fri_3', day: 'Friday', startTime: '11:15', endTime: '12:15', subjectId: 'sub_1', room: 'LH-101' },
   // Monday
