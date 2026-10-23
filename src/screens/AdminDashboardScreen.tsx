@@ -37,17 +37,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   const [analytics, setAnalytics] = useState<FeatureUsageStats | null>(null);
   const [feedbacks, setFeedbacks] = useState<StudentFeedback[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<'ALL' | FeedbackCategory>('ALL');
-  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<'ALL' | 'REPLIED' | 'PENDING'>('ALL');
-
   // Student Telemetry & Time Spent State
   const [studentActivities, setStudentActivities] = useState<StudentActivityRecord[]>([]);
   const [studentSearch, setStudentSearch] = useState<string>('');
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<'ALL' | 'A' | 'B' | 'C' | 'D'>('ALL');
   const [liveOnlyFilter, setLiveOnlyFilter] = useState<boolean>(false);
   const [selectedStudentDrilldown, setSelectedStudentDrilldown] = useState<StudentActivityRecord | null>(null);
-  const [replyingFeedback, setReplyingFeedback] = useState<StudentFeedback | null>(null);
-  const [replyInput, setReplyInput] = useState<string>('');
-  const [isSendingReply, setIsSendingReply] = useState<boolean>(false);
 
   const loadData = async () => {
     const stats = await AnalyticsService.getAnalyticsSummary();
@@ -77,41 +72,6 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
     } else {
       setPinError('Invalid Admin PIN. Access denied.');
       setPinInput('');
-    }
-  };
-
-  const handleOpenReplyModal = (feedback: StudentFeedback) => {
-    setReplyingFeedback(feedback);
-    setReplyInput(feedback.adminReply || '');
-  };
-
-  const handleSendReply = async (markResolved = false) => {
-    if (!replyingFeedback) return;
-    if (!replyInput.trim()) {
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
-        window.alert('Please enter a reply message.');
-      } else {
-        Alert.alert('Message Required', 'Please enter a reply message.');
-      }
-      return;
-    }
-
-    setIsSendingReply(true);
-    try {
-      await FeedbackService.replyToFeedback(replyingFeedback.id, replyInput.trim(), markResolved);
-      setReplyingFeedback(null);
-      setReplyInput('');
-      await loadData();
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
-        window.alert('Reply saved and sent successfully!');
-      } else {
-        Alert.alert('Success', 'Reply saved and sent successfully!');
-      }
-    } catch (err) {
-      console.warn('Failed to save reply:', err);
-      Alert.alert('Error', 'Failed to save reply. Please try again.');
-    } finally {
-      setIsSendingReply(false);
     }
   };
 
@@ -208,15 +168,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   };
 
   const filteredFeedbacks = feedbacks.filter((fb) => {
-    const matchCategory = feedbackFilter === 'ALL' || fb.category === feedbackFilter;
-    const isReplied = Boolean(fb.adminReply && fb.adminReply.trim().length > 0);
-    const matchStatus =
-      feedbackStatusFilter === 'ALL'
-        ? true
-        : feedbackStatusFilter === 'REPLIED'
-        ? isReplied
-        : !isReplied;
-    return matchCategory && matchStatus;
+    return feedbackFilter === 'ALL' || fb.category === feedbackFilter;
   });
 
   return (
@@ -430,63 +382,6 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
               {activeTab === 'FEEDBACK' && (
                 <>
-                  {/* Reply Status Segment Bar */}
-                  <View style={styles.replyStatusRow}>
-                    <TouchableOpacity
-                      style={[
-                        styles.replyStatusPill,
-                        feedbackStatusFilter === 'ALL' && styles.replyStatusPillActive,
-                      ]}
-                      onPress={() => setFeedbackStatusFilter('ALL')}
-                      activeOpacity={0.7}
-                    >
-                      <Text
-                        style={[
-                          styles.replyStatusPillText,
-                          feedbackStatusFilter === 'ALL' && styles.replyStatusPillTextActive,
-                        ]}
-                      >
-                        All ({feedbacks.length})
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.replyStatusPill,
-                        feedbackStatusFilter === 'REPLIED' && styles.replyStatusPillRepliedActive,
-                      ]}
-                      onPress={() => setFeedbackStatusFilter('REPLIED')}
-                      activeOpacity={0.7}
-                    >
-                      <Text
-                        style={[
-                          styles.replyStatusPillText,
-                          feedbackStatusFilter === 'REPLIED' && styles.replyStatusPillRepliedTextActive,
-                        ]}
-                      >
-                        Replied ({feedbacks.filter((f) => Boolean(f.adminReply && f.adminReply.trim())).length})
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.replyStatusPill,
-                        feedbackStatusFilter === 'PENDING' && styles.replyStatusPillPendingActive,
-                      ]}
-                      onPress={() => setFeedbackStatusFilter('PENDING')}
-                      activeOpacity={0.7}
-                    >
-                      <Text
-                        style={[
-                          styles.replyStatusPillText,
-                          feedbackStatusFilter === 'PENDING' && styles.replyStatusPillPendingTextActive,
-                        ]}
-                      >
-                        Needs Reply ({feedbacks.filter((f) => !f.adminReply || !f.adminReply.trim()).length})
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
                   {/* Category Filter Chips */}
                   <View style={styles.filterRow}>
                     {(['ALL', 'FEATURE', 'SCHEDULE', 'BUG', 'GENERAL'] as const).map((filter) => (
@@ -590,34 +485,6 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
                         {/* Message Body */}
                         <Text style={styles.fbMessage}>{fb.message}</Text>
-
-                        {/* Admin Reply Section */}
-                        {fb.adminReply ? (
-                          <View style={styles.adminReplyCard}>
-                            <View style={styles.adminReplyHeader}>
-                              <Text style={styles.adminReplyLabel}>Admin Official Reply</Text>
-                              {fb.repliedAt && (
-                                <Text style={styles.adminReplyDate}>
-                                  {new Date(fb.repliedAt).toLocaleDateString('en-GB')}
-                                </Text>
-                              )}
-                            </View>
-                            <Text style={styles.adminReplyBody}>{fb.adminReply}</Text>
-                          </View>
-                        ) : null}
-
-                        {/* Action Row */}
-                        <View style={styles.fbCardActionsRow}>
-                          <TouchableOpacity
-                            style={styles.replyActionBtn}
-                            onPress={() => handleOpenReplyModal(fb)}
-                            activeOpacity={0.7}
-                          >
-                            <Text style={styles.replyActionBtnText}>
-                              {fb.adminReply ? 'Edit Reply' : 'Reply to Student'}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
                       </View>
                     ))
                   )}
@@ -950,83 +817,6 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                       </>
                     );
                   })()}
-                </View>
-              </View>
-            </Modal>
-
-            {/* Admin Reply Modal */}
-            <Modal
-              visible={!!replyingFeedback}
-              transparent
-              animationType="fade"
-              onRequestClose={() => setReplyingFeedback(null)}
-            >
-              <View style={styles.drilldownOverlay}>
-                <View style={styles.replyModalCard}>
-                  {replyingFeedback && (
-                    <>
-                      <View style={styles.drilldownHeader}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.drilldownName}>
-                            Reply to {replyingFeedback.studentName}
-                          </Text>
-                          <Text style={styles.drilldownSub}>
-                            {replyingFeedback.studentRollNo ? `Roll No: ${replyingFeedback.studentRollNo} • ` : ''}Batch {replyingFeedback.batch} • {replyingFeedback.category}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => setReplyingFeedback(null)}
-                          style={styles.closeDrilldownBtn}
-                        >
-                          <Text style={styles.closeDrilldownText}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Original Feedback Quote */}
-                      <View style={styles.feedbackQuoteBox}>
-                        <Text style={styles.feedbackQuoteLabel}>Student Feedback:</Text>
-                        <Text style={styles.feedbackQuoteText}>{replyingFeedback.message}</Text>
-                      </View>
-
-                      {/* Reply Input */}
-                      <Text style={styles.replyInputLabel}>YOUR OFFICIAL REPLY</Text>
-                      <TextInput
-                        style={styles.replyTextInput}
-                        placeholder="Type your official response to this student..."
-                        placeholderTextColor="#64748B"
-                        value={replyInput}
-                        onChangeText={setReplyInput}
-                        multiline
-                        numberOfLines={4}
-                        textAlignVertical="top"
-                      />
-
-                      {/* Send Actions */}
-                      <View style={styles.replyModalActions}>
-                        <TouchableOpacity
-                          style={[styles.replyBtnSecondary, isSendingReply && styles.btnDisabled]}
-                          onPress={() => handleSendReply(false)}
-                          disabled={isSendingReply}
-                          activeOpacity={0.8}
-                        >
-                          <Text style={styles.replyBtnSecondaryText}>
-                            {isSendingReply ? 'Saving...' : 'Send as Reviewed'}
-                          </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={[styles.replyBtnPrimary, isSendingReply && styles.btnDisabled]}
-                          onPress={() => handleSendReply(true)}
-                          disabled={isSendingReply}
-                          activeOpacity={0.8}
-                        >
-                          <Text style={styles.replyBtnPrimaryText}>
-                            {isSendingReply ? 'Saving...' : 'Send & Mark Resolved'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  )}
                 </View>
               </View>
             </Modal>
@@ -1372,48 +1162,6 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 4,
-  },
-  replyStatusRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 10,
-  },
-  replyStatusPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  replyStatusPillActive: {
-    backgroundColor: '#38BDF8',
-    borderColor: '#38BDF8',
-  },
-  replyStatusPillRepliedActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.25)',
-    borderColor: '#10B981',
-  },
-  replyStatusPillPendingActive: {
-    backgroundColor: 'rgba(234, 179, 8, 0.25)',
-    borderColor: '#EAB308',
-  },
-  replyStatusPillText: {
-    color: '#94A3B8',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  replyStatusPillTextActive: {
-    color: '#0F172A',
-    fontWeight: '800',
-  },
-  replyStatusPillRepliedTextActive: {
-    color: '#34D399',
-    fontWeight: '800',
-  },
-  replyStatusPillPendingTextActive: {
-    color: '#FDE047',
-    fontWeight: '800',
   },
   filterRow: {
     flexDirection: 'row',
@@ -1896,136 +1644,6 @@ const styles = StyleSheet.create({
   featureProgressBarFill: {
     height: '100%',
     borderRadius: 3,
-  },
-  adminReplyCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#38BDF8',
-  },
-  adminReplyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  adminReplyLabel: {
-    color: '#38BDF8',
-    fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  adminReplyDate: {
-    color: '#64748B',
-    fontSize: 10,
-  },
-  adminReplyBody: {
-    color: '#E2E8F0',
-    fontSize: 12.5,
-    lineHeight: 17,
-  },
-  fbCardActionsRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  replyActionBtn: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-    borderWidth: 1,
-    borderColor: '#38BDF8',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  replyActionBtnText: {
-    color: '#38BDF8',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  replyModalCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 16,
-    padding: 20,
-    width: '92%',
-    maxWidth: 540,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  feedbackQuoteBox: {
-    backgroundColor: '#1E293B',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: '#64748B',
-  },
-  feedbackQuoteLabel: {
-    color: '#94A3B8',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  feedbackQuoteText: {
-    color: '#CBD5E1',
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  replyInputLabel: {
-    color: '#94A3B8',
-    fontSize: 10.5,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  replyTextInput: {
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: 10,
-    padding: 12,
-    color: '#F8FAFC',
-    fontSize: 13,
-    minHeight: 100,
-    marginBottom: 16,
-  },
-  replyModalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'flex-end',
-  },
-  replyBtnSecondary: {
-    backgroundColor: '#334155',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  replyBtnSecondaryText: {
-    color: '#F1F5F9',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  replyBtnPrimary: {
-    backgroundColor: '#0284C7',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  replyBtnPrimaryText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  btnDisabled: {
-    opacity: 0.5,
   },
 });
 
