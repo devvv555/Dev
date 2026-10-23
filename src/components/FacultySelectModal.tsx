@@ -102,7 +102,7 @@ export const FacultySelectModal: React.FC<FacultySelectModalProps> = ({
           <View style={styles.currentBox}>
             <Text style={styles.currentLabel}>CURRENTLY MENTIONED:</Text>
             <Text style={styles.currentValue}>
-              👨‍🏫 {subject.faculty || 'No faculty assigned yet'}
+              {subject.faculty || 'No faculty assigned yet'}
             </Text>
           </View>
 
@@ -124,7 +124,7 @@ export const FacultySelectModal: React.FC<FacultySelectModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <View style={styles.optionRadio}>
-                    <Text style={styles.radioIcon}>{isSelected ? '🔘' : '⚪'}</Text>
+                    <Text style={styles.radioIcon}>{isSelected ? '●' : '○'}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.facultyNameText, isSelected && styles.facultyNameTextSelected]}>
@@ -165,7 +165,7 @@ export const FacultySelectModal: React.FC<FacultySelectModalProps> = ({
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
-              <Text style={styles.saveBtnText}>Save Faculty ✅</Text>
+              <Text style={styles.saveBtnText}>Save Faculty</Text>
             </TouchableOpacity>
           </View>
         </View>

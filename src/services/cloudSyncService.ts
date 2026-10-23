@@ -27,6 +27,32 @@ export const CloudSyncService = {
   },
 
   /**
+   * Fetches all registered student profiles from Firestore
+   */
+  async fetchAllRegisteredStudents(): Promise<{ rollNo: string; name: string; batch: string; lastActiveAt?: string }[]> {
+    try {
+      const col = collection(db, 'students');
+      const snap = await getDocs(col);
+      const list: { rollNo: string; name: string; batch: string; lastActiveAt?: string }[] = [];
+      snap.forEach((d) => {
+        const data = d.data();
+        if (data && data.rollNo) {
+          list.push({
+            rollNo: data.rollNo,
+            name: data.name || data.rollNo,
+            batch: data.batch || 'A',
+            lastActiveAt: data.lastActiveAt,
+          });
+        }
+      });
+      return list;
+    } catch (e) {
+      console.warn('[CloudSync] fetchAllRegisteredStudents error:', e);
+      return [];
+    }
+  },
+
+  /**
    * Syncs current subjects & attendance totals for a student
    */
   async syncSubjects(rollNo: string, subjects: Subject[]): Promise<void> {

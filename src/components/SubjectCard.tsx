@@ -56,7 +56,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                 activeOpacity={0.7}
               >
                 <Text style={styles.facultyText} numberOfLines={1}>
-                  👨‍🏫 {subject.faculty || 'Assign Faculty'} ✎
+                  {subject.faculty || 'Assign Faculty'} ✎
                 </Text>
               </TouchableOpacity>
             </View>
@@ -99,7 +99,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           activeOpacity={0.7}
         >
           <Text style={styles.coursePlanBtnText}>
-            📊 Course Plan & CA Marks (50M Target) →
+            Course Plan & CA Marks (50M Target) →
           </Text>
         </TouchableOpacity>
       )}

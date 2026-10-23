@@ -92,7 +92,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
         updatedAt: new Date().toISOString(),
       };
       await CoursePlanService.saveStudentCaRecord(studentRollNo, record);
-      Alert.alert('CA Marks Saved 💾', `Your continuous assessment marks for ${plan.subjectCode} have been saved.`);
+      Alert.alert('CA Marks Saved', `Your continuous assessment marks for ${plan.subjectCode} have been saved.`);
     } catch {
       Alert.alert('Error', 'Could not save CA marks.');
     } finally {
@@ -119,7 +119,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                 {plan.subjectTitle}
               </Text>
               <Text style={styles.facultySub} numberOfLines={1}>
-                👨‍🏫 {plan.faculty.join(', ')}
+                {plan.faculty.join(', ')}
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
@@ -178,7 +178,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
               onPress={() => setActiveTab('ASSESSMENTS')}
             >
               <Text style={[styles.tabBtnText, activeTab === 'ASSESSMENTS' && styles.tabBtnTextActive]}>
-                🎯 CA Marks ({caStats.obtainedTotal}/50)
+                CA Marks ({caStats.obtainedTotal}/50)
               </Text>
             </TouchableOpacity>
 
@@ -187,7 +187,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
               onPress={() => setActiveTab('SESSIONS')}
             >
               <Text style={[styles.tabBtnText, activeTab === 'SESSIONS' && styles.tabBtnTextActive]}>
-                📚 30 Sessions
+                30 Sessions
               </Text>
             </TouchableOpacity>
 
@@ -196,7 +196,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
               onPress={() => setActiveTab('RULES')}
             >
               <Text style={[styles.tabBtnText, activeTab === 'RULES' && styles.tabBtnTextActive]}>
-                📖 Rules & Books
+                Rules & Books
               </Text>
             </TouchableOpacity>
           </View>
@@ -271,7 +271,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                                 <Text style={styles.coBadgeText}>{item.coTarget}</Text>
                               </View>
                             ) : null}
-                            <Text style={styles.assessmentDate}>📅 {item.scheduledDate}</Text>
+                            <Text style={styles.assessmentDate}>{item.scheduledDate}</Text>
                           </View>
                           <Text style={styles.assessmentTitle}>{item.title}</Text>
                           <Text style={styles.assessmentScope}>Scope: {item.sessionsCovered}</Text>
@@ -337,7 +337,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                   activeOpacity={0.8}
                 >
                   <Text style={styles.saveBtnText}>
-                    {isSaving ? 'Saving...' : '💾 Save CA Marks & Forecast'}
+                    {isSaving ? 'Saving...' : 'Save CA Marks & Forecast'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -362,12 +362,12 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                         ) : null}
                         {sess.requiresLaptop ? (
                           <View style={styles.laptopPill}>
-                            <Text style={styles.laptopPillText}>💻 {sess.software || 'Laptop'}</Text>
+                            <Text style={styles.laptopPillText}>{sess.software || 'Laptop'}</Text>
                           </View>
                         ) : null}
                         {sess.isExam ? (
                           <View style={styles.examPill}>
-                            <Text style={styles.examPillText}>📝 EXAM</Text>
+                            <Text style={styles.examPillText}>EXAM</Text>
                           </View>
                         ) : null}
                       </View>
@@ -394,7 +394,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                 <View style={styles.booksCard}>
                   {plan.recommendedBooks.map((book, idx) => (
                     <View key={idx} style={styles.bookItem}>
-                      <Text style={styles.bookBullet}>📘</Text>
+                      <Text style={styles.bookBullet}>•</Text>
                       <Text style={styles.bookText}>{book}</Text>
                     </View>
                   ))}

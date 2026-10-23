@@ -197,12 +197,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
       <View style={styles.container}>
         {/* Top Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Admin Control Center</Text>
-            <Text style={styles.headerSubtitle}>
-              Cohort analytics, feature usage breakdown & student feedback.
-            </Text>
-          </View>
+          <Text style={styles.headerTitle}>Admin Control Center</Text>
           <TouchableOpacity
             onPress={() => {
               setIsAuthenticated(false);

@@ -26,17 +26,40 @@ const BASELINE_ANALYTICS: FeatureUsageStats = {
 
 export const AnalyticsService = {
   /**
-   * Retrieves aggregated usage statistics from local storage.
-   * Initializes with baseline analytics if no data is present.
+   * Retrieves aggregated usage statistics from local storage & live Cloud Firestore.
    */
   async getAnalyticsSummary(): Promise<FeatureUsageStats> {
     try {
+      // 1. Fetch live registered students from Firestore
+      const realStudents = await CloudSyncService.fetchAllRegisteredStudents();
+      
       const data = await AsyncStorage.getItem(STORAGE_KEY_ANALYTICS);
-      if (!data) {
-        await AsyncStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(BASELINE_ANALYTICS));
-        return BASELINE_ANALYTICS;
+      let stats: FeatureUsageStats = data ? JSON.parse(data) : { ...BASELINE_ANALYTICS };
+
+      // If we have live Firestore students, reflect their exact counts
+      if (realStudents && realStudents.length > 0) {
+        const batchCounts = { A: 0, B: 0, C: 0, D: 0 };
+        const todayStr = new Date().toISOString().split('T')[0];
+        let todayActive = 0;
+
+        realStudents.forEach((st) => {
+          const b = (st.batch || 'A').toUpperCase() as 'A' | 'B' | 'C' | 'D';
+          if (batchCounts[b] !== undefined) {
+            batchCounts[b] += 1;
+          }
+          if (st.lastActiveAt && st.lastActiveAt.startsWith(todayStr)) {
+            todayActive += 1;
+          }
+        });
+
+        stats.uniqueStudentsCount = realStudents.length;
+        stats.batchBreakdown = batchCounts;
+        if (todayActive > 0) {
+          stats.activeTodayCount = todayActive;
+        }
       }
-      return JSON.parse(data) as FeatureUsageStats;
+
+      return stats;
     } catch (e) {
       console.warn('Error reading analytics:', e);
       return BASELINE_ANALYTICS;
