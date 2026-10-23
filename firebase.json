@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "attendance-tracker-9e4f7",
     "public": "dist",
     "ignore": [
       "firebase.json",

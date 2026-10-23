@@ -324,6 +324,24 @@ export const NotificationService = {
   },
 
   /**
+   * Alert student when their logged attendance overlaps / conflicts with college portal records.
+   * Strictly no emojis.
+   */
+  async notifyAttendanceOverlap(
+    totalOverlapHours: number,
+    subjectsDetail: string
+  ): Promise<string | null> {
+    const title = `Attendance Overlap Alert: ${totalOverlapHours} hrs Discrepancy`;
+    const body = `Attendance overlap with college records: ${subjectsDetail}. Check your email for details.`;
+    return this.sendLocalNotification(title, body, {
+      type: 'ATTENDANCE_OVERLAP',
+      totalOverlapHours,
+      subjectsDetail,
+      timestamp: Date.now(),
+    });
+  },
+
+  /**
    * Negative Difference (official > period): First notification fired on attendance update
    */
   async notifyExtraAttendance(

@@ -39,46 +39,16 @@ if (fs.existsSync(path.join(publicDir, 'favicon.ico'))) {
   fs.copyFileSync(path.join(publicDir, 'favicon.ico'), path.join(distDir, 'favicon.ico'));
 }
 
-// Read generated dist/index.html and inject PWA tags if not present
+// Read generated dist/index.html to extract the bundled Expo script tag
 const indexPath = path.join(distDir, 'index.html');
-let indexHtml = fs.readFileSync(indexPath, 'utf8');
+const distHtml = fs.readFileSync(indexPath, 'utf8');
+const scriptMatches = distHtml.match(/<script[^>]+src=["'][^"']+["'][^>]*><\/script>/gi) || [];
 
-const pwaHeadTags = `
-    <!-- PWA Capabilities -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0284C7" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Attendance" />
-    <link rel="apple-touch-icon" href="/assets/icon.png" />
-    <link rel="icon" type="image/png" href="/assets/favicon.png" />
-`;
+// Use public/index.html as template and inject the Expo bundle script
+let finalHtml = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+const scriptsToInject = scriptMatches.join('\n  ');
+finalHtml = finalHtml.replace('</body>', `  ${scriptsToInject}\n  </body>`);
 
-const swScript = `
-    <!-- Register PWA Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js')
-            .then(function (reg) {
-              console.log('[PWA] Service Worker registered:', reg.scope);
-            })
-            .catch(function (err) {
-              console.warn('[PWA] Service Worker failed:', err);
-            });
-        });
-      }
-    </script>
-`;
-
-if (!indexHtml.includes('manifest.json')) {
-  indexHtml = indexHtml.replace('</head>', `${pwaHeadTags}\n  </head>`);
-}
-
-if (!indexHtml.includes('serviceWorker.register')) {
-  indexHtml = indexHtml.replace('</body>', `${swScript}\n  </body>`);
-}
-
-fs.writeFileSync(indexPath, indexHtml, 'utf8');
+fs.writeFileSync(indexPath, finalHtml, 'utf8');
 
 console.log('✅ PWA Build Complete! Dist folder ready at:', distDir);
