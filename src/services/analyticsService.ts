@@ -327,11 +327,36 @@ export const AnalyticsService = {
   },
 
   /**
-   * Resets all analytics back to baseline values (both local and cloud).
+   * Resets all feature view counts to zero.
+   */
+  async resetFeatureStats(): Promise<void> {
+    try {
+      const stats = await this.getAnalyticsSummary();
+      stats.hourlyTrackerViews = 0;
+      stats.timetableViews = 0;
+      stats.calendarViews = 0;
+      stats.medicalVaultViews = 0;
+      stats.erpSyncViews = 0;
+      await AsyncStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(stats));
+    } catch (e) {
+      console.warn('Error resetting feature stats:', e);
+    }
+  },
+
+  /**
+   * Resets all analytics back to initial zeroed values (both local and cloud).
    */
   async resetAnalytics(): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(BASELINE_ANALYTICS));
+      const cleanStats: FeatureUsageStats = {
+        ...BASELINE_ANALYTICS,
+        hourlyTrackerViews: 0,
+        timetableViews: 0,
+        calendarViews: 0,
+        medicalVaultViews: 0,
+        erpSyncViews: 0,
+      };
+      await AsyncStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(cleanStats));
       await AsyncStorage.removeItem(STORAGE_KEY_ACTIVE_STUDENTS);
       await AsyncStorage.removeItem(STORAGE_KEY_STUDENTS_ACTIVITY);
       await CloudSyncService.resetAllStudentActivities();

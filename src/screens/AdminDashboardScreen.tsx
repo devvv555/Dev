@@ -133,9 +133,9 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
         await AnalyticsService.resetAnalytics();
         await loadData();
         if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
-          window.alert('Telemetry statistics have been reset successfully.');
+          window.alert('Most Used Features view counts and telemetry stats have been reset to 0.');
         } else {
-          Alert.alert('Success', 'Telemetry statistics have been reset successfully.');
+          Alert.alert('Success', 'Most Used Features view counts and telemetry stats have been reset to 0.');
         }
       } catch (e) {
         console.error('Error resetting telemetry:', e);
@@ -143,19 +143,19 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
     };
 
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
-      if (window.confirm('Reset Telemetry Data?\n\nThis will reset the feature view counts and student foreground usage back to baseline numbers.')) {
+      if (window.confirm('Reset Most Used Features & Telemetry?\n\nThis will reset all feature view counts to 0 and clear student foreground activity.')) {
         doReset();
       }
       return;
     }
 
     Alert.alert(
-      'Reset Telemetry Data?',
-      'This will reset the feature view counts back to initial baseline numbers.',
+      'Reset Most Used Features & Telemetry?',
+      'This will reset all feature view counts to 0 and clear student foreground activity.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset',
+          text: 'Reset to 0',
           style: 'destructive',
           onPress: doReset,
         },
