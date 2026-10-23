@@ -327,13 +327,14 @@ export const AnalyticsService = {
   },
 
   /**
-   * Resets all analytics back to baseline values.
+   * Resets all analytics back to baseline values (both local and cloud).
    */
   async resetAnalytics(): Promise<void> {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(BASELINE_ANALYTICS));
       await AsyncStorage.removeItem(STORAGE_KEY_ACTIVE_STUDENTS);
       await AsyncStorage.removeItem(STORAGE_KEY_STUDENTS_ACTIVITY);
+      await CloudSyncService.resetAllStudentActivities();
     } catch (e) {
       console.warn('Error resetting analytics:', e);
     }

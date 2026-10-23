@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, getDocs, query, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, query, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from './firebase';
 import { Subject, PeriodAttendanceRecord, MedicalClaimRecord, StudentFeedback, StudentActivityRecord } from '../types';
 
@@ -358,6 +358,23 @@ export const CloudSyncService = {
     } catch (e) {
       console.warn('[CloudSync] fetchAllStudentActivities warning:', e);
       return [];
+    }
+  },
+
+  /**
+   * Resets all student activity telemetry from Firestore
+   */
+  async resetAllStudentActivities(): Promise<void> {
+    try {
+      const activityCol = collection(db, 'students_activity');
+      const snap = await getDocs(activityCol);
+      const batch = writeBatch(db);
+      snap.forEach((d) => {
+        batch.delete(d.ref);
+      });
+      await batch.commit();
+    } catch (e) {
+      console.warn('[CloudSync] resetAllStudentActivities warning:', e);
     }
   },
 };

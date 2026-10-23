@@ -128,6 +128,27 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   };
 
   const handleResetAnalytics = () => {
+    const doReset = async () => {
+      try {
+        await AnalyticsService.resetAnalytics();
+        await loadData();
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+          window.alert('Telemetry statistics have been reset successfully.');
+        } else {
+          Alert.alert('Success', 'Telemetry statistics have been reset successfully.');
+        }
+      } catch (e) {
+        console.error('Error resetting telemetry:', e);
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm('Reset Telemetry Data?\n\nThis will reset the feature view counts and student foreground usage back to baseline numbers.')) {
+        doReset();
+      }
+      return;
+    }
+
     Alert.alert(
       'Reset Telemetry Data?',
       'This will reset the feature view counts back to initial baseline numbers.',
@@ -136,10 +157,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
         {
           text: 'Reset',
           style: 'destructive',
-          onPress: async () => {
-            await AnalyticsService.resetAnalytics();
-            loadData();
-          },
+          onPress: doReset,
         },
       ]
     );
@@ -734,7 +752,12 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                       <Text style={styles.studentListTitle}>
                         Student Leaderboard ({filteredList.length})
                       </Text>
-                      <Text style={styles.studentListSubTitle}>Tap for feature breakdown</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <TouchableOpacity onPress={handleResetAnalytics} style={styles.resetBtn}>
+                          <Text style={styles.resetBtnText}>Reset Stats</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.studentListSubTitle}>Tap for feature breakdown</Text>
+                      </View>
                     </View>
 
                     {filteredList.length === 0 ? (
