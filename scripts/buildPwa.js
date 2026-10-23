@@ -22,7 +22,13 @@ if (!fs.existsSync(distAssetsDir)) {
   fs.mkdirSync(distAssetsDir, { recursive: true });
 }
 
-// Copy icon and favicon to dist/assets and root dist
+// Copy icons to dist
+if (fs.existsSync(path.join(publicDir, 'icon-192.png'))) {
+  fs.copyFileSync(path.join(publicDir, 'icon-192.png'), path.join(distDir, 'icon-192.png'));
+}
+if (fs.existsSync(path.join(publicDir, 'icon-512.png'))) {
+  fs.copyFileSync(path.join(publicDir, 'icon-512.png'), path.join(distDir, 'icon-512.png'));
+}
 if (fs.existsSync(path.join(assetsDir, 'icon.png'))) {
   fs.copyFileSync(path.join(assetsDir, 'icon.png'), path.join(distAssetsDir, 'icon.png'));
 }
