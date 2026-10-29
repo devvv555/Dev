@@ -103,7 +103,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           ]}
         >
           <Text style={[styles.statusBannerText, { color: '#C7D2FE' }]}>
-            Sports has no attendance requirement. Attendance is not graded or tracked in ERP.
+            Sports has no attendance requirement. Not tracked in the ERP.
           </Text>
         </View>
       ) : (

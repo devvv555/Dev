@@ -1130,7 +1130,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               {isSports ? (
                 <View style={{ backgroundColor: 'rgba(168, 85, 247, 0.08)', borderRadius: 8, padding: 10, marginTop: 8, borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)' }}>
                   <Text style={{ color: '#E9D5FF', fontSize: 12, fontWeight: '600' }}>
-                    Physical Education & Sports has no attendance requirement. Attendance is not marked or tracked in ERP.
+                    Physical Education & Sports has no attendance requirement. Not tracked in the ERP.
                   </Text>
                 </View>
               ) : (
@@ -1366,7 +1366,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               {(editingSubject?.noAttendance || editingSubject?.code === 'SPORTS' || editingSubject?.id === 'sub_sports') ? (
                 <View style={{ backgroundColor: 'rgba(168, 85, 247, 0.12)', padding: 14, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: '#A855F7' }}>
                   <Text style={{ color: '#E9D5FF', fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 18 }}>
-                    Sports has no attendance requirement. Physical Education & Sports is not graded or tracked in ERP.
+                    Sports has no attendance requirement. Not tracked in the ERP.
                   </Text>
                 </View>
               ) : (

@@ -1135,7 +1135,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <View style={styles.sportsNoAttendanceBox}>
               <Text style={styles.sportsNoAttendanceTitle}>Sports has no attendance</Text>
               <Text style={styles.sportsNoAttendanceSub}>
-                Physical Education & Sports is a physical activity session. Attendance is not marked or tracked on the official portal.
+                Physical Education & Sports is a physical activity session. Not tracked in the ERP.
               </Text>
             </View>
           ) : (
