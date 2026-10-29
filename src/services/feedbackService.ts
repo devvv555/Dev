@@ -3,63 +3,8 @@ import { StudentFeedback, FeedbackCategory } from '../types';
 
 const STORAGE_KEY_FEEDBACKS = '@attendance_monitor_student_feedbacks';
 
-const INITIAL_FEEDBACKS: StudentFeedback[] = [
-  {
-    id: 'fb_1',
-    studentName: 'Karthik S',
-    studentRollNo: 'D26AB24',
-    studentDob: '14/11/2004',
-    batch: 'B',
-    isAnonymous: true,
-    category: 'FEATURE',
-    rating: 5,
-    message: 'Love the hourly period tracker and Safe Bunk calculator! Can we also get a GPA / CGPA projection tool for Semester 1 internals?',
-    createdAt: '2026-09-27T10:15:00.000Z',
-    status: 'NEW',
-  },
-  {
-    id: 'fb_2',
-    studentName: 'Mithun K',
-    studentRollNo: '26AA27',
-    studentDob: '05/08/2004',
-    batch: 'A',
-    isAnonymous: false,
-    category: 'SCHEDULE',
-    rating: 4,
-    message: 'On Friday, Period 3 (Business Analytics) has been shifted to LH-104 instead of LH-102 due to computer lab session.',
-    createdAt: '2026-09-26T14:30:00.000Z',
-    status: 'RESOLVED',
-    adminReply: 'Updated! Friday Period 3 (Business Analytics / Lab) has been shifted to LH-104.',
-    repliedAt: '2026-10-23T20:13:00.000Z',
-  },
-  {
-    id: 'fb_3',
-    studentName: 'Sneha M',
-    studentRollNo: 'D26AC42',
-    studentDob: '22/03/2005',
-    batch: 'C',
-    isAnonymous: true,
-    category: 'BUG',
-    rating: 4,
-    message: 'The holiday notification for Miladi Nabi worked perfectly, but could you add a vibration when an alert fires so I don\'t miss it?',
-    createdAt: '2026-09-25T09:45:00.000Z',
-    status: 'RESOLVED',
-    adminReply: 'Added dual-pulse hardware vibration pattern ([400ms buzz, 150ms pause, 400ms buzz]) and upgraded Android notification channel to high-priority so you will never miss holiday or class alerts.',
-    repliedAt: '2026-10-23T14:35:00.000Z',
-  },
-  {
-    id: 'fb_4',
-    studentName: 'Pooja R',
-    studentRollNo: '26AA33',
-    batch: 'A',
-    isAnonymous: false,
-    category: 'GENERAL',
-    rating: 5,
-    message: 'The medical 65% claim tracker is a lifesaver. Saved me from being debarred when I had dengue fever.',
-    createdAt: '2026-09-24T16:20:00.000Z',
-    status: 'RESOLVED',
-  },
-];
+const INITIAL_FEEDBACKS: StudentFeedback[] = [];
+const LEGACY_MOCK_IDS = new Set(['fb_1', 'fb_2', 'fb_3', 'fb_4']);
 
 import { CloudSyncService } from './cloudSyncService';
 import { getMasterStudent } from '../data/psgimMasterStudents';
@@ -123,12 +68,15 @@ export const FeedbackService = {
     try {
       // 1. First retrieve local cache for instant resilience
       const localData = await AsyncStorage.getItem(STORAGE_KEY_FEEDBACKS);
-      const localFeedbacks: StudentFeedback[] = localData ? JSON.parse(localData) : INITIAL_FEEDBACKS;
+      let localFeedbacks: StudentFeedback[] = localData ? JSON.parse(localData) : [];
+      // Strip any legacy mock feedback items
+      localFeedbacks = localFeedbacks.filter((f) => !LEGACY_MOCK_IDS.has(f.id));
 
       // 2. Fetch cloud feedbacks with 3-second timeout so it never hangs
       const cloudListPromise = CloudSyncService.fetchCloudFeedback();
       const timeoutPromise = new Promise<StudentFeedback[]>((resolve) => setTimeout(() => resolve([]), 3000));
-      const cloudList = await Promise.race([cloudListPromise, timeoutPromise]);
+      const rawCloudList = await Promise.race([cloudListPromise, timeoutPromise]);
+      const cloudList = (rawCloudList || []).filter((f) => !LEGACY_MOCK_IDS.has(f.id));
 
       if (cloudList && cloudList.length > 0) {
         // Merge without duplicates
@@ -144,7 +92,7 @@ export const FeedbackService = {
       );
     } catch (e) {
       console.warn('Error reading feedbacks:', e);
-      return INITIAL_FEEDBACKS;
+      return [];
     }
   },
 
@@ -157,11 +105,13 @@ export const FeedbackService = {
     entry: Omit<StudentFeedback, 'id' | 'createdAt' | 'status'>
   ): Promise<StudentFeedback> {
     // Read local cache first to ensure immediate responsiveness
-    let existingFeedbacks: StudentFeedback[] = INITIAL_FEEDBACKS;
+    let existingFeedbacks: StudentFeedback[] = [];
     try {
       const localData = await AsyncStorage.getItem(STORAGE_KEY_FEEDBACKS);
       if (localData) {
-        existingFeedbacks = JSON.parse(localData);
+        existingFeedbacks = (JSON.parse(localData) as StudentFeedback[]).filter(
+          (f) => !LEGACY_MOCK_IDS.has(f.id)
+        );
       }
     } catch (e) {
       console.warn('[FeedbackService] Error reading existing local feedbacks:', e);
@@ -302,11 +252,36 @@ export const FeedbackService = {
   },
 
   /**
-   * Deletes a feedback item by ID.
+   * Deletes a feedback item by ID locally and from Cloud Firestore.
    */
   async deleteFeedback(id: string): Promise<void> {
-    const feedbacks = await this.getAllFeedbacks();
-    const filtered = feedbacks.filter((item) => item.id !== id);
-    await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(filtered));
+    try {
+      const feedbacks = await this.getAllFeedbacks();
+      const filtered = feedbacks.filter((item) => item.id !== id);
+      await AsyncStorage.setItem(STORAGE_KEY_FEEDBACKS, JSON.stringify(filtered));
+    } catch (e) {
+      console.warn('[FeedbackService] Error deleting local feedback item:', e);
+    }
+    try {
+      await CloudSyncService.deleteCloudFeedback(id);
+    } catch (e) {
+      console.warn('[FeedbackService] Error deleting cloud feedback item:', e);
+    }
+  },
+
+  /**
+   * Clears all feedback entries from both local storage and Cloud Firestore.
+   */
+  async clearAllFeedbacks(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY_FEEDBACKS);
+    } catch (e) {
+      console.warn('[FeedbackService] Error clearing local feedbacks:', e);
+    }
+    try {
+      await CloudSyncService.deleteAllCloudFeedbacks();
+    } catch (e) {
+      console.warn('[FeedbackService] Error deleting cloud feedbacks:', e);
+    }
   },
 };

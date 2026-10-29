@@ -883,6 +883,7 @@ export default function App() {
           <ReconcileScreen
             subjects={subjects}
             timetable={timetable}
+            periodRecords={periodRecords}
             activeRollNo={activeRollNo}
             onUpdateAttendance={handleUpdateAttendance}
             onBatchUpdateSubjects={handleBatchUpdateSubjects}

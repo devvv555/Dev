@@ -15,6 +15,12 @@ console.log('📦 Step 2: Injecting PWA manifest & Service Worker into dist...')
 // Copy manifest.json & sw.js to dist
 fs.copyFileSync(path.join(publicDir, 'manifest.json'), path.join(distDir, 'manifest.json'));
 fs.copyFileSync(path.join(publicDir, 'sw.js'), path.join(distDir, 'sw.js'));
+if (fs.existsSync(path.join(publicDir, 'robots.txt'))) {
+  fs.copyFileSync(path.join(publicDir, 'robots.txt'), path.join(distDir, 'robots.txt'));
+}
+if (fs.existsSync(path.join(publicDir, 'sitemap.xml'))) {
+  fs.copyFileSync(path.join(publicDir, 'sitemap.xml'), path.join(distDir, 'sitemap.xml'));
+}
 
 // Ensure assets directory exists in dist
 const distAssetsDir = path.join(distDir, 'assets');

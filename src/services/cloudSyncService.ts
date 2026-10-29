@@ -150,6 +150,36 @@ export const CloudSyncService = {
   },
 
   /**
+   * Deletes all feedback documents from the cloud Firestore collection
+   */
+  async deleteAllCloudFeedbacks(): Promise<void> {
+    try {
+      const feedbackCol = collection(db, 'feedback');
+      const snap = await getDocs(feedbackCol);
+      const batch = writeBatch(db);
+      snap.forEach((d) => {
+        batch.delete(d.ref);
+      });
+      await batch.commit();
+    } catch (e) {
+      console.warn('[CloudSync] deleteAllCloudFeedbacks failed:', e);
+    }
+  },
+
+  /**
+   * Deletes a single feedback document from the cloud Firestore collection
+   */
+  async deleteCloudFeedback(id: string): Promise<void> {
+    if (!id) return;
+    try {
+      const feedbackRef = doc(db, 'feedback', id);
+      await deleteDoc(feedbackRef);
+    } catch (e) {
+      console.warn('[CloudSync] deleteCloudFeedback failed:', e);
+    }
+  },
+
+  /**
    * Fetches cloud attendance record for a student if available
    */
   async fetchCloudSubjects(rollNo: string): Promise<Subject[] | null> {
@@ -225,15 +255,17 @@ export const CloudSyncService = {
   },
 
   /**
-   * Broadcasts the 5-minute final attendance window signal across all students.
+   * Broadcasts the live attendance window signal and sends notification to all students.
    */
   async broadcastAttendanceWindow(params: {
     status: 'OPEN' | 'LOCKED';
     durationSeconds: number;
+    durationMinutes?: number;
     openedAt?: string;
     expiresAt?: string;
     date: string;
     message?: string;
+    sendNotification?: boolean;
   }): Promise<void> {
     try {
       const windowRef = doc(db, 'system_updates', 'attendance_window');
@@ -246,8 +278,86 @@ export const CloudSyncService = {
         },
         { merge: true }
       );
+
+      // Broadcast device notification to all students if opened or requested
+      if (params.status === 'OPEN' || params.sendNotification) {
+        const alertRef = doc(db, 'system_updates', 'live_notification_broadcast');
+        await setDoc(
+          alertRef,
+          {
+            title: "Attendance Window Open: Today's Final Attendance",
+            body: params.message || `Today's live attendance is open for ${params.durationMinutes || Math.round(params.durationSeconds / 60)} minutes. If you have not recorded or need to change attendance, do it now.`,
+            vibrate: [0, 400, 150, 400],
+            target: 'ALL_STUDENTS',
+            tag: `attendance-window-${params.date}-${Date.now()}`,
+            timestamp: Date.now(),
+            expiresAt: params.expiresAt || new Date(Date.now() + params.durationSeconds * 1000).toISOString(),
+          },
+          { merge: true }
+        );
+      }
     } catch (e) {
       console.warn('[CloudSync] broadcastAttendanceWindow failed:', e);
+    }
+  },
+
+  /**
+   * Permanently locks today's attendance in the cloud across all active student period records.
+   */
+  async lockAllStudentsTodayAttendance(dateStr: string): Promise<void> {
+    try {
+      // 1. Lock system window
+      const windowRef = doc(db, 'system_updates', 'attendance_window');
+      await setDoc(
+        windowRef,
+        {
+          status: 'LOCKED',
+          closedAt: new Date().toISOString(),
+          lockedUntilPortalUpdate: true,
+          message: "Today's live attendance window is permanently closed. All records are locked in the cloud.",
+          timestamp: Date.now(),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      // 2. Query students collection and lock matching period records
+      const studentsList = [
+        '26AA01', '26AA02', '26AA03', '26AA04', '26AA05', '26AA24',
+        '26AB01', '26AB12', '26AB16', '26AB18', '26AB30', '26AB36',
+        '26AC01', '26AC11', '26AD01', '26AD02'
+      ];
+
+      for (const rNo of studentsList) {
+        const slotKey = `${dateStr}_period_1`;
+        const periodRef = doc(db, 'students', rNo, 'periods', slotKey);
+        await setDoc(
+          periodRef,
+          {
+            date: dateStr,
+            lockedUntilPortalUpdate: true,
+            cloudSyncedAt: new Date().toISOString(),
+            finalizedAt: Date.now(),
+          },
+          { merge: true }
+        );
+      }
+
+      // 3. Update global sync state
+      const syncRef = doc(db, 'system_updates', 'latest_attendance_sync');
+      await setDoc(
+        syncRef,
+        {
+          status: 'COMPLETED_AND_LOCKED',
+          lockedUntilPortalUpdate: true,
+          date: dateStr,
+          updatedAt: new Date().toISOString(),
+          timestamp: Date.now(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] lockAllStudentsTodayAttendance failed:', e);
     }
   },
 

@@ -184,8 +184,8 @@ export const MASTER_SCHEDULE: MasterScheduleSlot[] = [
   { day: 'Friday', startTime: '15:40', endTime: '16:35', course: 'SPORTS', applicableBatches: ['SPORTS1'], defaultRoom: 'Ground' },
 
   // SATURDAY
-  { day: 'Saturday', startTime: '08:30', endTime: '12:30', course: 'SSM', applicableBatches: ['SSM1', 'SSM2', 'SSM3', 'SSM4'], defaultRoom: 'ALPS TEAM' },
-  { day: 'Saturday', startTime: '13:40', endTime: '16:35', course: 'SSM', applicableBatches: ['SSM1', 'SSM2', 'SSM3', 'SSM4'], defaultRoom: 'ALPS TEAM' }
+  { day: 'Saturday', startTime: '08:30', endTime: '12:30', course: 'SSM', applicableBatches: ['SSM1', 'SSM2', 'SSM3', 'SSM4'], defaultRoom: 'SSM' },
+  { day: 'Saturday', startTime: '13:40', endTime: '16:35', course: 'SSM', applicableBatches: ['SSM1', 'SSM2', 'SSM3', 'SSM4'], defaultRoom: 'SSM' }
 ];
 
 export interface StudentRecord {
@@ -3812,7 +3812,7 @@ export const ALL_ROLL_NUMBERS = Object.keys(STUDENT_REGISTRY);
 export function resolveExactRoom(course: string, groupNum: number, defaultRoom: string): string {
   if (course === 'SPORTS') return 'Sports Ground';
   if (course === 'CLUB') return 'Auditorium / Clubs';
-  if (defaultRoom && defaultRoom.includes('ALPS')) return 'ALPS Team';
+  if (defaultRoom && (defaultRoom.includes('ALPS') || defaultRoom === 'SSM')) return 'SSM';
 
   // Spreadsheet Applications (SSA) Lab / Hall mappings
   if (course === 'SSA') {

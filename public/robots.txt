@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://attendance-tracker-9e4f7.web.app/sitemap.xml

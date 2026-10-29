@@ -23,11 +23,11 @@ interface FeedbackModalProps {
   batch?: string;
 }
 
-const CATEGORIES: { label: string; value: FeedbackCategory; icon: string }[] = [
-  { label: 'Feature Request', value: 'FEATURE', icon: '💡' },
-  { label: 'Schedule / Room', value: 'SCHEDULE', icon: '📅' },
-  { label: 'Bug / Error', value: 'BUG', icon: '🐛' },
-  { label: 'General Feedback', value: 'GENERAL', icon: '💬' },
+const CATEGORIES: { label: string; value: FeedbackCategory }[] = [
+  { label: 'Feature Request', value: 'FEATURE' },
+  { label: 'Schedule / Room', value: 'SCHEDULE' },
+  { label: 'Bug / Error', value: 'BUG' },
+  { label: 'General Feedback', value: 'GENERAL' },
 ];
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -167,7 +167,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                       onPress={() => setCategory(cat.value)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.categoryIcon}>{cat.icon}</Text>
                       <Text
                         style={[
                           styles.categoryLabel,
@@ -260,7 +259,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                           <Text style={styles.historyCategoryText}>{item.category}</Text>
                         </View>
                         <Text style={styles.historyDate}>
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          {new Date(item.createdAt).toLocaleDateString('en-GB')}
                         </Text>
                       </View>
 
@@ -273,7 +272,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                             <Text style={styles.studentReplyLabel}>Official Admin Reply</Text>
                             {item.repliedAt && (
                               <Text style={styles.studentReplyDate}>
-                                {new Date(item.repliedAt).toLocaleDateString()}
+                                {new Date(item.repliedAt).toLocaleDateString('en-GB')}
                               </Text>
                             )}
                           </View>

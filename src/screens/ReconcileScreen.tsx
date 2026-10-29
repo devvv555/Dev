@@ -15,7 +15,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { Subject, TimetableSlot, SurplusAttendanceAlert } from '../types';
+import { Subject, TimetableSlot, SurplusAttendanceAlert, PeriodAttendanceRecord } from '../types';
 import {
   StudzoneService,
   StudzoneAttendanceRecord,
@@ -33,6 +33,7 @@ import { DisputeReportService } from '../services/disputeReportService';
 interface ReconcileScreenProps {
   subjects: Subject[];
   timetable?: TimetableSlot[];
+  periodRecords?: Record<string, PeriodAttendanceRecord>;
   activeRollNo?: string;
   onUpdateAttendance: (
     subjectId: string,
@@ -49,6 +50,7 @@ interface ReconcileScreenProps {
 export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   subjects,
   timetable = [],
+  periodRecords = {},
   activeRollNo = '',
   onUpdateAttendance,
   onUpdateSubjectOfficial,
@@ -61,6 +63,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [appTotal, setAppTotal] = useState('');
   const [officialAttended, setOfficialAttended] = useState('');
   const [officialTotal, setOfficialTotal] = useState('');
+
+  // Drilldown modal for viewing recorded period records
+  const [viewingRecordedSubject, setViewingRecordedSubject] = useState<Subject | null>(null);
 
   // Studzone automated extraction states
   const [isStudzoneModalVisible, setIsStudzoneModalVisible] = useState(false);
@@ -145,7 +150,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           studentName: globalSync.updatedByName,
           rollNo: globalSync.updatedByRollNo,
           subjectsCount: globalSync.subjectsCount,
-          status: globalSync.status,
+          status: (globalSync as any)?.status,
         } as any);
       } else {
         const localSync = await StudzoneService.getLastSyncInfo();
@@ -1053,11 +1058,29 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         <Text style={styles.tableTitle}>Subject Attendance & Reconciliation</Text>
 
         {subjects.map((sub) => {
-          const appPct = sub.total === 0 ? 100 : (sub.attended / sub.total) * 100;
+          // Calculate today's additional logged hours for this subject
+          const todayStr = new Date().toISOString().split('T')[0];
+          const matchingTodayRecords = Object.values(periodRecords).filter(
+            (r) => r.date === todayStr && (r.subjectId === sub.id || r.subjectId === sub.code)
+          );
+          const todayTotalHrs = matchingTodayRecords.reduce((sum, r) => sum + (r.hours || 1), 0);
+          const todayAttendedHrs = matchingTodayRecords
+            .filter((r) => r.status === 'attended')
+            .reduce((sum, r) => sum + (r.hours || 1), 0);
+
+          // If the subject's base total already includes today, don't double count; otherwise add
+          const effectiveAppAttended = sub.attended >= (sub.officialAttended + todayAttendedHrs) 
+            ? sub.attended 
+            : sub.attended + todayAttendedHrs;
+          const effectiveAppTotal = sub.total >= (sub.officialTotal + todayTotalHrs)
+            ? sub.total
+            : sub.total + todayTotalHrs;
+
+          const appPct = effectiveAppTotal === 0 ? 100 : (effectiveAppAttended / effectiveAppTotal) * 100;
           const erpPct =
             sub.officialTotal === 0 ? 100 : (sub.officialAttended / sub.officialTotal) * 100;
-          const classDiff = sub.total - sub.officialTotal;
-          const attendedDiff = sub.attended - sub.officialAttended;
+          const classDiff = effectiveAppTotal - sub.officialTotal;
+          const attendedDiff = effectiveAppAttended - sub.officialAttended;
 
           return (
             <View key={sub.id} style={styles.rowItem}>
@@ -1077,13 +1100,17 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               </View>
 
               <View style={styles.comparisonGrid}>
-                <View style={styles.colBox}>
-                  <Text style={styles.colLabel}>📱 Hourly App</Text>
-                  <Text style={styles.colValue}>
-                    {sub.attended} / {sub.total}
+                <TouchableOpacity
+                  style={[styles.colBox, { backgroundColor: 'rgba(56, 189, 248, 0.05)', borderRadius: 8, padding: 4 }]}
+                  onPress={() => setViewingRecordedSubject(sub)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.colLabel}>📱 Hourly App 🔍</Text>
+                  <Text style={[styles.colValue, { textDecorationLine: 'underline' }]}>
+                    {effectiveAppAttended} / {effectiveAppTotal}
                   </Text>
                   <Text style={styles.colPct}>{appPct.toFixed(1)}%</Text>
-                </View>
+                </TouchableOpacity>
 
                 <View style={styles.colDivider} />
 
@@ -1113,18 +1140,182 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 </View>
               </View>
 
-              {classDiff > 0 && (
-                <View style={styles.deltaNotice}>
-                  <Text style={styles.deltaNoticeText}>
-                    ⚡ {classDiff} hrs logged in App since portal last updated on{' '}
-                    {sub.lastOfficialUpdate || 'last week'}.
-                  </Text>
-                </View>
-              )}
+              {/* Cloud-Stored Attendance Since College Portal Updated (Post-Portal/From 18th Onwards) */}
+              {(() => {
+                // College portal cutoff date (e.g. '2026-10-17' or sub.lastOfficialUpdate)
+                const portalCutoff = sub.lastOfficialUpdate || '2026-10-17';
+                
+                // Find all period records recorded after the portal cutoff date
+                const postPortalRecords = Object.values(periodRecords).filter((r) => {
+                  const isMatchingSub = r.subjectId === sub.id || r.subjectId === sub.code;
+                  return isMatchingSub && r.date > portalCutoff;
+                });
+
+                // Fallback to class difference if period records aren't in local storage yet
+                const attendedSincePortal = postPortalRecords.length > 0
+                  ? postPortalRecords.filter((r) => r.status === 'attended').reduce((sum, r) => sum + (r.hours || 1), 0)
+                  : Math.max(0, attendedDiff);
+
+                const totalSincePortal = postPortalRecords.length > 0
+                  ? postPortalRecords.reduce((sum, r) => sum + (r.hours || 1), 0)
+                  : Math.max(0, classDiff);
+
+                if (totalSincePortal === 0) return null;
+
+                const isCloudLocked = postPortalRecords.length > 0 
+                  ? postPortalRecords.every((r) => r.lockedUntilPortalUpdate)
+                  : true;
+
+                // Format portalCutoff for clean display: YYYY-MM-DD -> DD/MM
+                const portalCutoffParts = portalCutoff.split('-');
+                const displayFromDate = portalCutoffParts.length === 3 
+                  ? `${portalCutoffParts[2]}/${portalCutoffParts[1]}` 
+                  : portalCutoff;
+
+                return (
+                  <TouchableOpacity
+                    style={{ marginTop: 8, padding: 9, borderRadius: 8, backgroundColor: 'rgba(56, 189, 248, 0.08)', borderWidth: 1, borderColor: '#0284C7', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                    onPress={() => setViewingRecordedSubject(sub)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }}>
+                        Post-Portal (From {displayFromDate} Onwards): {attendedSincePortal} / {totalSincePortal} hrs attended
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>
+                        {isCloudLocked ? 'CLOUD STORED & LOCKED 🔍' : 'CLOUD SYNCED 🔍'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })()}
+
             </View>
           );
         })}
       </View>
+
+      {/* App Recorded Hours Breakdown Modal */}
+      <Modal visible={!!viewingRecordedSubject} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '80%' }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View>
+                <Text style={styles.modalTitle}>App Recorded Hours</Text>
+                <Text style={styles.modalSubtitle}>
+                  {viewingRecordedSubject?.name} ({viewingRecordedSubject?.code})
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setViewingRecordedSubject(null)} style={{ padding: 6 }}>
+                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(() => {
+                if (!viewingRecordedSubject) return null;
+                const matchingRecords = Object.values(periodRecords)
+                  .filter((r) => r.subjectId === viewingRecordedSubject.id || r.subjectId === viewingRecordedSubject.code)
+                  .sort((a, b) => b.date.localeCompare(a.date));
+
+                const portalCutoff = viewingRecordedSubject.lastOfficialUpdate || '2026-10-17';
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#1E293B', padding: 12, borderRadius: 8, marginBottom: 14 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 12, marginBottom: 4 }}>
+                        Official College ERP Baseline: <Text style={{ color: '#F1F5F9', fontWeight: '700' }}>{viewingRecordedSubject.officialAttended} / {viewingRecordedSubject.officialTotal} hrs</Text> (as of {portalCutoff})
+                      </Text>
+                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }}>
+                        Total Classes Logged in App: {matchingRecords.length} sessions
+                      </Text>
+                    </View>
+
+                    {matchingRecords.length === 0 ? (
+                      <View style={{ padding: 20, alignItems: 'center' }}>
+                        <Text style={{ color: '#94A3B8', fontSize: 14 }}>No individual period records logged in app yet.</Text>
+                      </View>
+                    ) : (
+                      matchingRecords.map((rec) => {
+                        const isAttended = rec.status === 'attended';
+                        const isBunked = rec.status === 'bunked';
+                        const isPostPortal = rec.date > portalCutoff;
+
+                        return (
+                          <View
+                            key={rec.periodKey}
+                            style={{
+                              backgroundColor: '#0F172A',
+                              padding: 12,
+                              borderRadius: 8,
+                              marginBottom: 8,
+                              borderWidth: 1,
+                              borderColor: isPostPortal ? '#0284C7' : '#334155',
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <View>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                <Text style={{ color: '#F1F5F9', fontSize: 13, fontWeight: '700' }}>
+                                  {rec.date}
+                                </Text>
+                                {isPostPortal && (
+                                  <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                                    <Text style={{ color: '#38BDF8', fontSize: 9, fontWeight: '700' }}>POST-PORTAL</Text>
+                                  </View>
+                                )}
+                              </View>
+                              <Text style={{ color: '#94A3B8', fontSize: 11 }}>
+                                Duration: {rec.hours || 1} hr{(rec.hours || 1) > 1 ? 's' : ''} • {rec.slotId || 'Class Slot'}
+                              </Text>
+                              <Text style={{ color: rec.lockedUntilPortalUpdate ? '#38BDF8' : '#34D399', fontSize: 10, marginTop: 2 }}>
+                                {rec.lockedUntilPortalUpdate ? 'Cloud Locked' : 'Window Synced'}
+                              </Text>
+                            </View>
+
+                            <View
+                              style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                borderRadius: 6,
+                                backgroundColor: isAttended ? 'rgba(16, 185, 129, 0.15)' : isBunked ? 'rgba(239, 68, 68, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                borderWidth: 1,
+                                borderColor: isAttended ? '#10B981' : isBunked ? '#EF4444' : '#64748B',
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: '700',
+                                  color: isAttended ? '#34D399' : isBunked ? '#F87171' : '#94A3B8',
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                {rec.status}
+                              </Text>
+                            </View>
+                          </View>
+                        );
+                      })
+                    )}
+                  </View>
+                );
+              })()}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { marginTop: 14 }]}
+              onPress={() => setViewingRecordedSubject(null)}
+            >
+              <Text style={styles.modalSubmitText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Manual Edit Modal */}
       <Modal visible={!!editingSubject} animationType="slide" transparent>

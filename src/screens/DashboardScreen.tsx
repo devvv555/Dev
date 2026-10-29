@@ -299,25 +299,74 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     return dateStr;
   };
 
-  // Selected day for timetable tracker (defaults to today, or Monday if today has no slots)
-  const [selectedDay, setSelectedDay] = useState<string>(
-    currentDayName === 'Sunday' ? 'Sunday' : currentDayName
-  );
-
   // Get slots for today
   const todaySlots = timetable.filter(
     (s) => s.day.toLowerCase() === currentDayName.toLowerCase()
   );
-  const isWeekendOrNoClass = todaySlots.length === 0;
+
+  // Check if today's attendance has been concluded and locked in the cloud (only if date matches today)
+  const isTodayLockedInCloud = Boolean(
+    attendanceWindow &&
+    attendanceWindow.status === 'LOCKED' &&
+    (!attendanceWindow.date || attendanceWindow.date === now.toISOString().split('T')[0])
+  );
+  const todayClassesEnded = todaySlots.length > 0 && todaySlots.every((s) => {
+    const end = timeToMinutes(s.endTime);
+    return currentMinutes >= end;
+  });
+  // Today's classes have finished for the day
+  const isTodayConcluded = todayClassesEnded || isTodayLockedInCloud;
+
+  // Compute next day with scheduled classes
+  const getNextScheduledDay = () => {
+    for (let offset = 1; offset <= 7; offset++) {
+      const nextDate = new Date(now);
+      nextDate.setDate(now.getDate() + offset);
+      const nextDayName = dayNames[nextDate.getDay()];
+      const slotsOnNextDay = timetable.filter((s) => s.day.toLowerCase() === nextDayName.toLowerCase());
+      if (slotsOnNextDay.length > 0) {
+        return {
+          dayName: nextDayName,
+          date: nextDate,
+          formattedDate: `${String(nextDate.getDate()).padStart(2, '0')}/${String(nextDate.getMonth() + 1).padStart(2, '0')}/${nextDate.getFullYear()}`,
+          dateStr: nextDate.toISOString().split('T')[0],
+          slots: slotsOnNextDay,
+        };
+      }
+    }
+    return {
+      dayName: currentDayName,
+      date: now,
+      formattedDate: todayFormatted,
+      dateStr: now.toISOString().split('T')[0],
+      slots: todaySlots,
+    };
+  };
+
+  const [selectedDay, setSelectedDay] = useState<string>(
+    currentDayName === 'Sunday' ? 'Sunday' : currentDayName
+  );
+  // Allow user to toggle between viewing Today's attendance vs Next Day preview
+  const [viewingNextDay, setViewingNextDay] = useState<boolean>(false);
+
+  const nextDayInfo = getNextScheduledDay();
+  const displayDayName = viewingNextDay ? nextDayInfo.dayName : (selectedDay || currentDayName);
+  const displayDateFormatted = viewingNextDay ? nextDayInfo.formattedDate : todayFormatted;
+  const displayDateStr = viewingNextDay ? nextDayInfo.dateStr : now.toISOString().split('T')[0];
 
   // Selected day's slots
   const activeDaySlots = timetable.filter(
-    (s) => s.day.toLowerCase() === selectedDay.toLowerCase()
+    (s) => s.day.toLowerCase() === displayDayName.toLowerCase()
   );
+  const isWeekendOrNoClass = activeDaySlots.length === 0;
 
   // Auto-detect which slot is active, just ended, or upcoming
   const autoDetectSlotIndex = (): number => {
     if (activeDaySlots.length === 0) return 0;
+
+    if (isTodayConcluded) {
+      return 0; // First slot of next day
+    }
 
     // 1. In-progress class
     const inProgress = activeDaySlots.findIndex((s) => {
@@ -355,7 +404,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const end = timeToMinutes(currentSlot.endTime);
     const isToday = currentSlot.day.toLowerCase() === currentDayName.toLowerCase();
 
-    if (isToday && currentMinutes >= start && currentMinutes < end) {
+    if (!isTodayConcluded && isToday && currentMinutes >= start && currentMinutes < end) {
       const left = end - currentMinutes;
       return {
         tag: `LIVE NOW (${left}m left)`,
@@ -363,14 +412,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         message: 'This class is currently in session. Mark your attendance when completed:',
       };
     }
-    if (isToday && currentMinutes >= end && currentMinutes <= end + 60) {
+    if (!isTodayConcluded && isToday && currentMinutes >= end && currentMinutes <= end + 60) {
       return {
         tag: 'CLASS JUST ENDED',
         color: '#F59E0B',
         message: 'This class has just ended. Did you attend or bunk?',
       };
     }
-    if (isToday && currentMinutes < start) {
+    if (!isTodayConcluded && isToday && currentMinutes < start) {
       const startsIn = start - currentMinutes;
       return {
         tag: `STARTS IN ${startsIn}m`,
@@ -379,13 +428,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       };
     }
     return {
-      tag: `${currentSlot.day.toUpperCase()} SCHEDULE`,
+      tag: isTodayConcluded ? `NEXT CLASS • ${currentSlot.day.toUpperCase()}` : `${currentSlot.day.toUpperCase()} SCHEDULE`,
       color: '#818CF8',
-      message: 'Automatic slot tracker based on your weekly timetable:',
+      message: isTodayConcluded
+        ? `Today's attendance is closed. Next scheduled class on ${displayDayName} (${displayDateFormatted}):`
+        : 'Automatic slot tracker based on your weekly timetable:',
     };
   };
 
-  const todayDate = now.toISOString().split('T')[0];
+  const todayDate = displayDateStr;
   const currentPeriodKey = currentSlot ? `${todayDate}_${currentSlot.id}` : null;
   const currentRecord = currentPeriodKey ? periodRecords[currentPeriodKey] : undefined;
   const slotStatus = getSlotStatus();
@@ -866,16 +917,36 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {isWeekendOrNoClass ? 'WEEKEND RELAX' : "TODAY'S SCHEDULE"}
+                {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
               </Text>
               <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748B' }}>
-                • {todayFormatted}
+                • {displayDateFormatted}
               </Text>
             </View>
-            <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
-              <Text style={{ fontSize: 10, fontWeight: '700', color: '#38BDF8' }}>
-                LIVE REAL-TIME
-              </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {isTodayConcluded && (
+                <TouchableOpacity
+                  onPress={() => setViewingNextDay(!viewingNextDay)}
+                  style={{
+                    backgroundColor: viewingNextDay ? '#312E81' : '#1E293B',
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: viewingNextDay ? '#6366F1' : '#334155',
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#A5B4FC' : '#94A3B8' }}>
+                    {viewingNextDay ? '← View Today' : 'Preview Next Day →'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#818CF8' : '#38BDF8' }}>
+                  {viewingNextDay ? 'UPCOMING DAY' : 'LIVE REAL-TIME'}
+                </Text>
+              </View>
             </View>
           </View>
 

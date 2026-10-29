@@ -9,11 +9,13 @@ import {
   Alert,
   Modal,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 
 import { FeatureUsageStats, StudentFeedback, FeedbackCategory, StudentActivityRecord } from '../types';
 import { AnalyticsService } from '../services/analyticsService';
 import { FeedbackService } from '../services/feedbackService';
+import { CloudSyncService } from '../services/cloudSyncService';
 
 export interface AdminDashboardScreenProps {
   visible: boolean;
@@ -49,6 +51,30 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   const [replyInput, setReplyInput] = useState<string>('');
   const [isSendingReply, setIsSendingReply] = useState<boolean>(false);
 
+  // Live Attendance Control States
+  const [attendanceWindowStatus, setAttendanceWindowStatus] = useState<'OPEN' | 'LOCKED'>('LOCKED');
+  const [windowExpiresAt, setWindowExpiresAt] = useState<string | null>(null);
+  const [customTimerMinutes, setCustomTimerMinutes] = useState<string>('5');
+  const [isPerformingAction, setIsPerformingAction] = useState<boolean>(false);
+  const [isControlsExpanded, setIsControlsExpanded] = useState<boolean>(true);
+
+  // Secondary Confirmation Modal State
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    actionLabel: string;
+    actionColor: string;
+    onConfirm: () => Promise<void>;
+  }>({
+    visible: false,
+    title: '',
+    description: '',
+    actionLabel: '',
+    actionColor: '#0284C7',
+    onConfirm: async () => {},
+  });
+
   const loadData = async () => {
     const stats = await AnalyticsService.getAnalyticsSummary();
     const fbList = await FeedbackService.getAllFeedbacks();
@@ -67,6 +93,117 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
       loadData();
     }
   }, [visible, initiallyAuthenticated]);
+
+  // Subscribe to live attendance window state
+  useEffect(() => {
+    const unsub = CloudSyncService.listenToAttendanceWindow((data) => {
+      if (data && data.status) {
+        setAttendanceWindowStatus(data.status);
+        setWindowExpiresAt(data.expiresAt || null);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Action 1: Lock / Unlock Live Attendance
+  const handleTriggerLockUnlock = () => {
+    const isCurrentlyOpen = attendanceWindowStatus === 'OPEN';
+    const targetStatus = isCurrentlyOpen ? 'LOCKED' : 'OPEN';
+    const todayDate = new Date().toISOString().split('T')[0];
+
+    setConfirmModalConfig({
+      visible: true,
+      title: isCurrentlyOpen ? 'Lock Live Attendance?' : 'Unlock Live Attendance?',
+      description: isCurrentlyOpen
+        ? 'This will immediately lock live attendance for all students. No student will be able to record or change attendance until reopened.'
+        : 'This will reopen live attendance for all students today. A notification will automatically be sent to all students alerting them that attendance is open.',
+      actionLabel: isCurrentlyOpen ? 'Confirm Lock Attendance' : 'Confirm Unlock & Notify All',
+      actionColor: isCurrentlyOpen ? '#EF4444' : '#10B981',
+      onConfirm: async () => {
+        setIsPerformingAction(true);
+        try {
+          if (targetStatus === 'OPEN') {
+            const minutes = parseInt(customTimerMinutes, 10) || 5;
+            const now = new Date();
+            const expires = new Date(Date.now() + minutes * 60 * 1000);
+            await CloudSyncService.broadcastAttendanceWindow({
+              status: 'OPEN',
+              durationMinutes: minutes,
+              durationSeconds: minutes * 60,
+              openedAt: now.toISOString(),
+              expiresAt: expires.toISOString(),
+              date: todayDate,
+              sendNotification: true,
+              message: `Today's live attendance has been reopened for ${minutes} minutes. If you have not recorded or need to change attendance, do it now.`,
+            });
+          } else {
+            await CloudSyncService.broadcastAttendanceWindow({
+              status: 'LOCKED',
+              durationSeconds: 0,
+              date: todayDate,
+              message: "Today's live attendance is now locked.",
+            });
+          }
+        } finally {
+          setIsPerformingAction(false);
+          setConfirmModalConfig((prev) => ({ ...prev, visible: false }));
+        }
+      },
+    });
+  };
+
+  // Action 2: Set Timer in Live Attendance
+  const handleTriggerSetTimer = (minutes: number) => {
+    const todayDate = new Date().toISOString().split('T')[0];
+    setConfirmModalConfig({
+      visible: true,
+      title: `Set Attendance Timer to ${minutes} Minutes?`,
+      description: `This will broadcast a live ${minutes}-minute countdown to all students and send an instant phone notification alerting everyone that live attendance is open for ${minutes} minutes.`,
+      actionLabel: `Confirm & Start ${minutes}m Timer`,
+      actionColor: '#0284C7',
+      onConfirm: async () => {
+        setIsPerformingAction(true);
+        try {
+          const now = new Date();
+          const expires = new Date(Date.now() + minutes * 60 * 1000);
+          await CloudSyncService.broadcastAttendanceWindow({
+            status: 'OPEN',
+            durationMinutes: minutes,
+            durationSeconds: minutes * 60,
+            openedAt: now.toISOString(),
+            expiresAt: expires.toISOString(),
+            date: todayDate,
+            sendNotification: true,
+            message: `Today's live attendance is open for ${minutes} minutes. If you have not recorded or need to change attendance, do it now.`,
+          });
+        } finally {
+          setIsPerformingAction(false);
+          setConfirmModalConfig((prev) => ({ ...prev, visible: false }));
+        }
+      },
+    });
+  };
+
+  // Action 3: Upload to Cloud & Permanently Lock (Unless clash detected)
+  const handleTriggerCloudUploadAndLock = () => {
+    const todayDate = new Date().toISOString().split('T')[0];
+    setConfirmModalConfig({
+      visible: true,
+      title: 'Upload & Permanently Lock Today\'s Attendance?',
+      description: 'This will finalize today\'s attendance, upload all student records to Cloud Firestore, and permanently lock them. Records cannot be altered unless official college ERP portal attendance clashes with app records.',
+      actionLabel: 'Confirm Upload & Lock to Cloud',
+      actionColor: '#7C3AED',
+      onConfirm: async () => {
+        setIsPerformingAction(true);
+        try {
+          await CloudSyncService.lockAllStudentsTodayAttendance(todayDate);
+        } finally {
+          setIsPerformingAction(false);
+          setConfirmModalConfig((prev) => ({ ...prev, visible: false }));
+        }
+      },
+    });
+  };
 
   const handleVerifyPin = () => {
     setPinError(null);
@@ -159,6 +296,73 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
           style: 'destructive',
           onPress: doReset,
         },
+      ]
+    );
+  };
+
+  const handleClearAllFeedbacks = () => {
+    const doClear = async () => {
+      try {
+        await FeedbackService.clearAllFeedbacks();
+        await loadData();
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+          window.alert('All feedback records have been removed.');
+        } else {
+          Alert.alert('Success', 'All feedback records have been removed.');
+        }
+      } catch (e) {
+        console.error('Error clearing feedbacks:', e);
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
+      if (
+        window.confirm(
+          'Remove All Feedback?\n\nThis will permanently delete all student feedback and replies from local storage and the cloud database.'
+        )
+      ) {
+        doClear();
+      }
+      return;
+    }
+
+    Alert.alert(
+      'Remove All Feedback?',
+      'This will permanently delete all student feedback and replies from local storage and the cloud database.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete All',
+          style: 'destructive',
+          onPress: doClear,
+        },
+      ]
+    );
+  };
+
+  const handleDeleteFeedback = (fb: StudentFeedback) => {
+    const doDelete = async () => {
+      try {
+        await FeedbackService.deleteFeedback(fb.id);
+        await loadData();
+      } catch (e) {
+        console.error('Error deleting feedback:', e);
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm(`Delete feedback from ${fb.studentName || 'Student'}?`)) {
+        doDelete();
+      }
+      return;
+    }
+
+    Alert.alert(
+      'Delete Feedback?',
+      `Are you sure you want to delete this feedback from ${fb.studentName || 'Student'}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: doDelete },
       ]
     );
   };
@@ -337,6 +541,162 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              {/* Live Attendance Master Controls */}
+              <View style={styles.masterControlCard}>
+                <View style={styles.masterControlHeader}>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={styles.masterControlTitle}>Live Attendance Master Controls</Text>
+                    <Text style={styles.masterControlSubtitle}>Real-time cohort gate and cloud synchronization</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.masterStatusBadge,
+                      attendanceWindowStatus === 'OPEN' ? styles.masterStatusBadgeOpen : styles.masterStatusBadgeLocked,
+                    ]}
+                    onPress={() => setIsControlsExpanded(!isControlsExpanded)}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={[
+                        styles.masterStatusDot,
+                        attendanceWindowStatus === 'OPEN' ? styles.masterStatusDotOpen : styles.masterStatusDotLocked,
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.masterStatusBadgeText,
+                        attendanceWindowStatus === 'OPEN' ? styles.masterStatusTextOpen : styles.masterStatusTextLocked,
+                      ]}
+                    >
+                      {attendanceWindowStatus === 'OPEN' ? 'STATUS: OPEN' : 'STATUS: LOCKED'}
+                    </Text>
+                    <Text style={styles.toggleArrowText}>
+                      {isControlsExpanded ? '▲' : '▼'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {isControlsExpanded && (
+                  <View style={styles.masterControlsBody}>
+                    {/* Button 1: Lock / Unlock Toggle */}
+                    <View style={styles.controlActionBlock}>
+                      <View style={styles.actionBlockHeader}>
+                        <View style={styles.actionBlockNumberBadge}>
+                          <Text style={styles.actionBlockNumberText}>1</Text>
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <Text style={styles.actionBlockTitle}>Student Recording Gate</Text>
+                          <Text style={styles.actionBlockDesc}>
+                            {attendanceWindowStatus === 'OPEN'
+                              ? 'Currently allowing all cohort students to mark and edit attendance.'
+                              : 'Currently locked. Reopening will broadcast an alert notification to all students.'}
+                          </Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.actionButton,
+                          attendanceWindowStatus === 'OPEN' ? styles.actionButtonRed : styles.actionButtonGreen,
+                        ]}
+                        onPress={handleTriggerLockUnlock}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.actionButtonText}>
+                          {attendanceWindowStatus === 'OPEN'
+                            ? 'Lock Live Attendance'
+                            : 'Unlock Live Attendance & Notify All'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Button 2: Set Timer Window */}
+                    <View style={styles.controlActionBlock}>
+                      <View style={styles.actionBlockHeader}>
+                        <View style={styles.actionBlockNumberBadge}>
+                          <Text style={styles.actionBlockNumberText}>2</Text>
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <Text style={styles.actionBlockTitle}>Live Attendance Timer</Text>
+                          <Text style={styles.actionBlockDesc}>
+                            Broadcasts live countdown to all students and sends high-priority notification.
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.timerPresetsRow}>
+                        {[5, 10, 15].map((mins) => (
+                          <TouchableOpacity
+                            key={mins}
+                            style={[
+                              styles.timerPresetBtn,
+                              customTimerMinutes === String(mins) && styles.timerPresetBtnActive,
+                            ]}
+                            onPress={() => {
+                              setCustomTimerMinutes(String(mins));
+                              handleTriggerSetTimer(mins);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={[
+                                styles.timerPresetBtnText,
+                                customTimerMinutes === String(mins) && styles.timerPresetBtnTextActive,
+                              ]}
+                            >
+                              {mins} Mins
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <View style={styles.customTimerRow}>
+                        <TextInput
+                          style={styles.customTimerInput}
+                          keyboardType="numeric"
+                          value={customTimerMinutes}
+                          onChangeText={setCustomTimerMinutes}
+                          placeholder="Mins"
+                          placeholderTextColor="#64748B"
+                          maxLength={3}
+                        />
+                        <Text style={styles.timerUnitText}>mins</Text>
+                        <TouchableOpacity
+                          style={styles.startCustomTimerBtn}
+                          onPress={() => handleTriggerSetTimer(parseInt(customTimerMinutes, 10) || 5)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.startCustomTimerBtnText}>Set Timer & Notify All</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Button 3: Upload & Cloud Lock */}
+                    <View style={styles.controlActionBlock}>
+                      <View style={styles.actionBlockHeader}>
+                        <View style={styles.actionBlockNumberBadge}>
+                          <Text style={styles.actionBlockNumberText}>3</Text>
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <Text style={styles.actionBlockTitle}>Cloud Sync & Permanent Lock</Text>
+                          <Text style={styles.actionBlockDesc}>
+                            Uploads today's attendance to Cloud Firestore and seals records. Cannot be modified unless official college ERP portal attendance clashes.
+                          </Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.actionButtonPurple]}
+                        onPress={handleTriggerCloudUploadAndLock}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.actionButtonText}>
+                          Upload & Permanently Lock to Cloud
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+
               {activeTab === 'ANALYTICS' && analytics && (
                 <>
                   {/* Overview Metric Cards */}
@@ -430,6 +790,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
               {activeTab === 'FEEDBACK' && (
                 <>
+                  <View style={[styles.sectionHeaderRow, { marginBottom: 14 }]}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={styles.sectionTitle}>Student Feedback</Text>
+                      <Text style={styles.sectionSub}>
+                        Suggestions, bug reports, and schedule change requests from students.
+                      </Text>
+                    </View>
+                    {feedbacks.length > 0 && (
+                      <TouchableOpacity onPress={handleClearAllFeedbacks} style={styles.resetBtn}>
+                        <Text style={[styles.resetBtnText, { color: '#EF4444' }]}>Clear All Feedback</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
                   {/* Reply Status Segment Bar */}
                   <View style={styles.replyStatusRow}>
                     <TouchableOpacity
@@ -608,6 +982,13 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
 
                         {/* Action Row */}
                         <View style={styles.fbCardActionsRow}>
+                          <TouchableOpacity
+                            style={styles.deleteActionBtn}
+                            onPress={() => handleDeleteFeedback(fb)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.deleteActionBtnText}>Delete</Text>
+                          </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.replyActionBtn}
                             onPress={() => handleOpenReplyModal(fb)}
@@ -1027,6 +1408,61 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                       </View>
                     </>
                   )}
+                </View>
+              </View>
+            </Modal>
+
+            {/* Secondary Confirmation Modal */}
+            <Modal
+              visible={confirmModalConfig.visible}
+              transparent
+              animationType="fade"
+              onRequestClose={() => {
+                if (!isPerformingAction) {
+                  setConfirmModalConfig((prev) => ({ ...prev, visible: false }));
+                }
+              }}
+            >
+              <View style={styles.confirmOverlay}>
+                <View style={styles.confirmModalCard}>
+                  <View style={styles.confirmBadgeBox}>
+                    <Text style={styles.confirmBadgeText}>ACTION CONFIRMATION</Text>
+                  </View>
+
+                  <Text style={styles.confirmTitleText}>{confirmModalConfig.title}</Text>
+                  <Text style={styles.confirmDescriptionText}>
+                    {confirmModalConfig.description}
+                  </Text>
+
+                  <View style={styles.confirmActionsRow}>
+                    <TouchableOpacity
+                      style={styles.confirmCancelBtn}
+                      onPress={() => setConfirmModalConfig((prev) => ({ ...prev, visible: false }))}
+                      disabled={isPerformingAction}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.confirmCancelBtnText}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.confirmExecuteBtn,
+                        { backgroundColor: confirmModalConfig.actionColor },
+                        isPerformingAction && styles.btnDisabled,
+                      ]}
+                      onPress={confirmModalConfig.onConfirm}
+                      disabled={isPerformingAction}
+                      activeOpacity={0.8}
+                    >
+                      {isPerformingAction ? (
+                        <ActivityIndicator color="#FFFFFF" size="small" />
+                      ) : (
+                        <Text style={styles.confirmExecuteBtnText}>
+                          {confirmModalConfig.actionLabel}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </Modal>
@@ -1931,6 +2367,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteActionBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  deleteActionBtnText: {
+    color: '#EF4444',
+    fontSize: 11,
+    fontWeight: '700',
   },
   replyActionBtn: {
     backgroundColor: 'rgba(56, 189, 248, 0.15)',
@@ -2026,6 +2477,280 @@ const styles = StyleSheet.create({
   },
   btnDisabled: {
     opacity: 0.5,
+  },
+
+  // Live Attendance Master Controls Styles
+  masterControlCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  masterControlHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  masterControlTitle: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  masterControlSubtitle: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  masterStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  masterStatusBadgeOpen: {
+    backgroundColor: '#064E3B',
+    borderColor: '#10B981',
+  },
+  masterStatusBadgeLocked: {
+    backgroundColor: '#7F1D1D',
+    borderColor: '#EF4444',
+  },
+  masterStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  masterStatusDotOpen: {
+    backgroundColor: '#34D399',
+  },
+  masterStatusDotLocked: {
+    backgroundColor: '#F87171',
+  },
+  masterStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  masterStatusTextOpen: {
+    color: '#34D399',
+  },
+  masterStatusTextLocked: {
+    color: '#FCA5A5',
+  },
+  toggleArrowText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    marginLeft: 6,
+  },
+  masterControlsBody: {
+    marginTop: 16,
+    gap: 12,
+  },
+  controlActionBlock: {
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  actionBlockHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  actionBlockNumberBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  actionBlockNumberText: {
+    color: '#F8FAFC',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  actionBlockTitle: {
+    color: '#F1F5F9',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  actionBlockDesc: {
+    color: '#94A3B8',
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  actionButton: {
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonGreen: {
+    backgroundColor: '#059669',
+  },
+  actionButtonRed: {
+    backgroundColor: '#DC2626',
+  },
+  actionButtonPurple: {
+    backgroundColor: '#7C3AED',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  timerPresetsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  timerPresetBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  timerPresetBtnActive: {
+    backgroundColor: '#0369A1',
+    borderColor: '#38BDF8',
+  },
+  timerPresetBtnText: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  timerPresetBtnTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  customTimerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  customTimerInput: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    width: 60,
+    textAlign: 'center',
+  },
+  timerUnitText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  startCustomTimerBtn: {
+    flex: 1,
+    backgroundColor: '#0284C7',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  startCustomTimerBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  // Secondary Confirmation Modal Styles
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  confirmModalCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 18,
+    padding: 22,
+    width: '100%',
+    maxWidth: 420,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  confirmBadgeBox: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#0F172A',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#475569',
+    marginBottom: 12,
+  },
+  confirmBadgeText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  confirmTitleText: {
+    color: '#F8FAFC',
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  confirmDescriptionText: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  confirmActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'flex-end',
+  },
+  confirmCancelBtn: {
+    flex: 1,
+    backgroundColor: '#334155',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmCancelBtnText: {
+    color: '#E2E8F0',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  confirmExecuteBtn: {
+    flex: 1.6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmExecuteBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
   },
 });
 
