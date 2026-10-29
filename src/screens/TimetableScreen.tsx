@@ -141,7 +141,7 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
 
                   <View style={styles.alertNotice}>
                     <Text style={styles.alertNoticeText}>
-                      {isSports ? 'Sports has no attendance requirement' : `Hourly alert scheduled for: ${slot.endTime}`}
+                      {isSports ? 'Not tracked in the ERP' : `Hourly alert scheduled for: ${slot.endTime}`}
                     </Text>
                   </View>
                 </View>

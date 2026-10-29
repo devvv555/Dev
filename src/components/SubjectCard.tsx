@@ -81,7 +81,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {isSports ? (
         <View style={styles.statsRow}>
           <Text style={styles.classCountsText}>Physical Education & Wellness</Text>
-          <Text style={styles.officialSyncText}>Sports has no attendance</Text>
+          <Text style={styles.officialSyncText}>Not tracked in the ERP</Text>
         </View>
       ) : (
         <View style={styles.statsRow}>
@@ -103,7 +103,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           ]}
         >
           <Text style={[styles.statusBannerText, { color: '#C7D2FE' }]}>
-            Sports has no attendance requirement. Not tracked in the ERP.
+            Not tracked in the ERP.
           </Text>
         </View>
       ) : (

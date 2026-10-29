@@ -76,8 +76,8 @@ export const TimesheetEngine = {
 
     const timeStr = new Date(punch.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const msg = verifiedWithinCampus
-      ? `✅ ${type.replace('_', ' ')} recorded at ${timeStr} inside PSGIM campus.`
-      : `⚠️ ${type.replace('_', ' ')} recorded at ${timeStr} (Flagged: Outside campus boundary).`;
+      ? `[VERIFIED] ${type.replace('_', ' ')} recorded at ${timeStr} inside PSGIM campus.`
+      : `[FLAGGED] ${type.replace('_', ' ')} recorded at ${timeStr} (Outside campus boundary).`;
 
     return { punch, verified: verifiedWithinCampus, message: msg };
   },
