@@ -12,80 +12,8 @@ const STORAGE_KEYS = {
   SURPLUS_ALERTS: '@attendance_monitor_surplus_alerts_',
 };
 
-// Initial realistic seed data
-export const INITIAL_SUBJECTS: Subject[] = [
-  {
-    id: 'sub_1',
-    name: 'Operating Systems',
-    code: 'CS301',
-    color: '#3B82F6', // Blue
-    standardTarget: 75,
-    medicalTarget: 65,
-    hasMedicalClaim: false,
-    attended: 28,
-    total: 32, // 87.5% - Safe with bunks
-    officialAttended: 26,
-    officialTotal: 30,
-    lastOfficialUpdate: '2026-09-12'
-  },
-  {
-    id: 'sub_2',
-    name: 'Database Management Systems',
-    code: 'CS302',
-    color: '#10B981', // Emerald
-    standardTarget: 75,
-    medicalTarget: 65,
-    hasMedicalClaim: false,
-    attended: 28,
-    total: 41,
-    officialAttended: 27,
-    officialTotal: 40,
-    lastOfficialUpdate: '2026-09-12'
-  },
-  {
-    id: 'sub_3',
-    name: 'Computer Networks',
-    code: 'CS303',
-    color: '#8B5CF6', // Purple
-    standardTarget: 75,
-    medicalTarget: 65,
-    hasMedicalClaim: false,
-    attended: 18,
-    total: 28, // 64.28% - Shortage! Needs recovery
-    officialAttended: 18,
-    officialTotal: 28,
-    lastOfficialUpdate: '2026-09-12'
-  },
-  {
-    id: 'sub_4',
-    name: 'Theory of Computation',
-    code: 'CS304',
-    color: '#F59E0B', // Amber
-    standardTarget: 75,
-    medicalTarget: 65,
-    hasMedicalClaim: false,
-    attended: 24,
-    total: 30, // 80.0% - Safe
-    officialAttended: 24,
-    officialTotal: 30,
-    lastOfficialUpdate: '2026-09-12'
-  }
-];
-
-export const INITIAL_TIMETABLE: TimetableSlot[] = [
-  // Thursday (Current day in prompt)
-  { id: 't_thu_1', day: 'Thursday', startTime: '09:00', endTime: '10:00', subjectId: 'sub_1', room: 'LH-101' },
-  { id: 't_thu_2', day: 'Thursday', startTime: '10:00', endTime: '11:00', subjectId: 'sub_2', room: 'LH-102' },
-  { id: 't_thu_3', day: 'Thursday', startTime: '11:15', endTime: '12:15', subjectId: 'sub_3', room: 'Network Lab' },
-  { id: 't_thu_4', day: 'Thursday', startTime: '13:30', endTime: '14:30', subjectId: 'sub_4', room: 'LH-203' },
-  // Friday
-  { id: 't_fri_1', day: 'Friday', startTime: '09:00', endTime: '10:00', subjectId: 'sub_2', room: 'LH-104' },
-  { id: 't_fri_2', day: 'Friday', startTime: '10:00', endTime: '11:00', subjectId: 'sub_4', room: 'LH-203' },
-  { id: 't_fri_3', day: 'Friday', startTime: '11:15', endTime: '12:15', subjectId: 'sub_1', room: 'LH-101' },
-  // Monday
-  { id: 't_mon_1', day: 'Monday', startTime: '09:00', endTime: '10:00', subjectId: 'sub_1', room: 'LH-101' },
-  { id: 't_mon_2', day: 'Monday', startTime: '10:00', endTime: '11:00', subjectId: 'sub_2', room: 'LH-102' }
-];
+export const INITIAL_SUBJECTS: Subject[] = [];
+export const INITIAL_TIMETABLE: TimetableSlot[] = [];
 
 export const INITIAL_MEDICAL_CLAIMS: MedicalClaimRecord[] = [];
 

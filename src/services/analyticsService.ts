@@ -8,19 +8,19 @@ const STORAGE_KEY_ACTIVE_STUDENTS = '@attendance_monitor_active_students';
 const STORAGE_KEY_STUDENTS_ACTIVITY = '@attendance_monitor_students_activity';
 
 const BASELINE_ANALYTICS: FeatureUsageStats = {
-  hourlyTrackerViews: 412,
-  timetableViews: 184,
-  calendarViews: 268,
-  medicalVaultViews: 95,
-  erpSyncViews: 64,
-  totalLogins: 530,
-  uniqueStudentsCount: 68,
-  activeTodayCount: 29,
+  hourlyTrackerViews: 0,
+  timetableViews: 0,
+  calendarViews: 0,
+  medicalVaultViews: 0,
+  erpSyncViews: 0,
+  totalLogins: 0,
+  uniqueStudentsCount: 0,
+  activeTodayCount: 0,
   batchBreakdown: {
-    A: 19,
-    B: 24,
-    C: 13,
-    D: 12,
+    A: 0,
+    B: 0,
+    C: 0,
+    D: 0,
   },
 };
 
@@ -35,6 +35,15 @@ export const AnalyticsService = {
       
       const data = await AsyncStorage.getItem(STORAGE_KEY_ANALYTICS);
       let stats: FeatureUsageStats = data ? JSON.parse(data) : { ...BASELINE_ANALYTICS };
+
+      // Auto-purge any legacy fake baseline numbers if cached locally
+      if (stats.hourlyTrackerViews === 412 || stats.totalLogins === 530 || stats.timetableViews === 184) {
+        stats = { ...BASELINE_ANALYTICS };
+        await AsyncStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(stats));
+        await AsyncStorage.removeItem(STORAGE_KEY_ACTIVE_STUDENTS);
+        await AsyncStorage.removeItem(STORAGE_KEY_STUDENTS_ACTIVITY);
+        await CloudSyncService.resetAllStudentActivities();
+      }
 
       // If we have live Firestore students, reflect their exact counts
       if (realStudents && realStudents.length > 0) {
@@ -54,9 +63,7 @@ export const AnalyticsService = {
 
         stats.uniqueStudentsCount = realStudents.length;
         stats.batchBreakdown = batchCounts;
-        if (todayActive > 0) {
-          stats.activeTodayCount = todayActive;
-        }
+        stats.activeTodayCount = todayActive;
       }
 
       return stats;
@@ -127,12 +134,12 @@ export const AnalyticsService = {
         rollNo: upperRoll,
         name: resolvedName,
         batch: resolvedBatch,
-        totalTimeMinutes: 2,
-        todayTimeMinutes: 2,
+        totalTimeMinutes: 0,
+        todayTimeMinutes: 0,
         lastActiveAt: new Date().toISOString(),
         lastActiveDate: today,
         featureUsage: {
-          hourlyTrack: 1,
+          hourlyTrack: 0,
           timetable: 0,
           calendar: 0,
           erpSync: 0,

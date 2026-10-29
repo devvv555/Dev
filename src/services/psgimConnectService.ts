@@ -60,7 +60,7 @@ const SEED_ANNOUNCEMENTS: PsgimAnnouncement[] = [
   },
   {
     id: 24,
-    title: '🎮 TEST NOTIFICATION  — GAME ON | WoW',
+    title: 'TEST NOTIFICATION  — GAME ON | WoW',
     category: 'Event',
     priority: 'important',
     status: 'published',
@@ -72,7 +72,7 @@ const SEED_ANNOUNCEMENTS: PsgimAnnouncement[] = [
   },
   {
     id: 23,
-    title: '🕹️ENTER THE GAME: WOW 2026',
+    title: 'ENTER THE GAME: WOW 2026',
     category: 'Event',
     priority: 'important',
     status: 'published',
