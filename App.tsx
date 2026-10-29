@@ -737,21 +737,6 @@ export default function App() {
 
           <View style={styles.headerActionsRow}>
             <TouchableOpacity
-              style={styles.refreshHeaderBtn}
-              onPress={() => {
-                if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                  window.location.reload();
-                } else {
-                  handleRefresh();
-                }
-              }}
-              activeOpacity={0.7}
-              accessibilityLabel="Reload App"
-            >
-              <Text style={styles.refreshHeaderBtnText}>🔄</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={styles.adminHeaderBtn}
               onPress={() => setShowAdminModal(true)}
               activeOpacity={0.7}
@@ -1066,19 +1051,6 @@ const styles = StyleSheet.create({
     color: '#93C5FD',
     fontSize: 11,
     fontWeight: '700',
-  },
-  refreshHeaderBtn: {
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  refreshHeaderBtnText: {
-    fontSize: 12,
   },
   adminHeaderBtn: {
     backgroundColor: 'rgba(99, 102, 241, 0.18)',

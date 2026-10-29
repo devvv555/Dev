@@ -189,7 +189,7 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     type: 'HOLIDAY',
     isLongWeekend: true,
     longWeekendTag: '🔥 4-Day Mega Weekend',
-    description: 'Monday & Tuesday official holiday = 4-Day vacation with 0 bunks! (Sat–Tue)',
+    description: 'Monday & Tuesday official holiday = 4-Day continuous break with 0 missed classes! (Sat–Tue)',
   },
   {
     id: 'cal_1021',
@@ -355,8 +355,8 @@ export const ACADEMIC_CALENDAR: AcademicCalendarItem[] = [
     type: 'HOLIDAY',
     isLongWeekend: true,
     longWeekendTag: '💡 4-Day Trip Opportunity',
-    recommendedSmartLeave: 'Bunk Monday (Jan 25) to enjoy 4 consecutive days (Sat–Tue)!',
-    description: 'Tuesday holiday. Bunking Monday turns it into a 4-day mini vacation.',
+    recommendedSmartLeave: 'Plan leave on Monday (Jan 25) to enjoy 4 consecutive days (Sat–Tue)!',
+    description: 'Tuesday holiday. Planning leave on Monday provides a 4-day continuous break.',
   },
 
   // ── FEBRUARY 2027 ───────────────────────────────────────────
@@ -670,7 +670,7 @@ function evaluateBridgeDay(
   let reason = '';
 
   const formatList = (items: SubjectLeaveStatus[]) =>
-    items.map((i) => `${i.code}: +${i.safeBunks} safe hrs`).join(', ');
+    items.map((i) => `${i.code}: +${i.safeBunks} margin hrs`).join(', ');
 
   const formatUnsafe = (items: SubjectLeaveStatus[]) =>
     items.filter((i) => !i.isSafe).map((i) => `${i.code} (${i.percentage}%, buffer: +${i.safeBunks}h vs ${i.slotHours}h)`).join(', ');
@@ -842,7 +842,7 @@ export function getHolidaySmartTripSuggestion(
       tripTitle: '🚀 4-Day Golden Weekend Opportunity',
       suggestedLeaves,
       totalDaysOff: 4,
-      explanation: `A single smart bunk/leave on Friday (${fri.dateStr}) connects Thursday's holiday to Saturday & Sunday for a 4-day getaway!`,
+      explanation: `A planned leave on Friday (${fri.dateStr}) connects Thursday's holiday to Saturday & Sunday for a 4-day break!`,
       hasPersonalizedAttendance,
     };
   }

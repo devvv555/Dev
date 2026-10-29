@@ -57,7 +57,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({
           <View style={styles.clauseCard}>
             <Text style={styles.clauseNum}>2. Use of Name & Roll Number for Attendance Monitoring</Text>
             <Text style={styles.clauseBody}>
-              Your name and roll number are used exclusively on this local device instance to calculate attendance percentages, safe bunk allowances, and medical claim concessions (65% / 75% target rules). Your attendance records are completely isolated and private to your phone; no other student or peer can access your logs.
+              Your name and roll number are used exclusively on this local device instance to calculate attendance percentages, safe absence margins, and medical claim concessions (65% / 75% target rules). Your attendance records are completely isolated and private to your phone; no other student or peer can access your logs.
             </Text>
           </View>
 
@@ -65,7 +65,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({
           <View style={styles.clauseCard}>
             <Text style={styles.clauseNum}>3. Timetable Schedules & Simulation Disclaimer</Text>
             <Text style={styles.clauseBody}>
-              Weekly timetable schedules are integrated as an advisory tracker. The "Safe Bunk" counts and "Classes Needed to Reach 75%" are mathematical simulations based on user entries. Actual classroom changes, faculty substitutions, and surprise lecture announcements announced in college supersede this schedule.
+              Weekly timetable schedules are integrated as an advisory tracker. The "Safe Margin" counts and "Classes Needed to Reach 75%" are mathematical simulations based on user entries. Actual classroom changes, faculty substitutions, and surprise lecture announcements announced in college supersede this schedule.
             </Text>
           </View>
 

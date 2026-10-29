@@ -21,6 +21,9 @@ if (fs.existsSync(path.join(publicDir, 'robots.txt'))) {
 if (fs.existsSync(path.join(publicDir, 'sitemap.xml'))) {
   fs.copyFileSync(path.join(publicDir, 'sitemap.xml'), path.join(distDir, 'sitemap.xml'));
 }
+if (fs.existsSync(path.join(publicDir, 'googlea3b7e1129bb80d53.html'))) {
+  fs.copyFileSync(path.join(publicDir, 'googlea3b7e1129bb80d53.html'), path.join(distDir, 'googlea3b7e1129bb80d53.html'));
+}
 
 // Ensure assets directory exists in dist
 const distAssetsDir = path.join(distDir, 'assets');

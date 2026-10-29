@@ -15,7 +15,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { Subject, TimetableSlot, SurplusAttendanceAlert, PeriodAttendanceRecord } from '../types';
+import { Subject, TimetableSlot, SurplusAttendanceAlert, PeriodAttendanceRecord, PsgimAnnouncement } from '../types';
 import {
   StudzoneService,
   StudzoneAttendanceRecord,
@@ -29,6 +29,8 @@ import { getMasterStudent } from '../data/psgimMasterStudents';
 import { LmsService } from '../services/lmsService';
 import { PsgimConnectService } from '../services/psgimConnectService';
 import { DisputeReportService } from '../services/disputeReportService';
+import { PsgimAnnouncementCard } from '../components/PsgimAnnouncementCard';
+import { PsgimNoticeModal } from '../components/PsgimNoticeModal';
 
 interface ReconcileScreenProps {
   subjects: Subject[];
@@ -108,9 +110,16 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [isConnectSyncing, setIsConnectSyncing] = useState(false);
   const [isAutoExtractingAll, setIsAutoExtractingAll] = useState(false);
 
+  // PSGIM Connect Announcements Feed state
+  const [connectAnnouncements, setConnectAnnouncements] = useState<PsgimAnnouncement[]>([]);
+  const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
+  const [announcementFilter, setAnnouncementFilter] = useState<'ALL' | 'EVENT' | 'CIRCULAR' | 'ACADEMIC'>('ALL');
+
   // Load saved credentials & sync status on mount or roll change
   useEffect(() => {
     async function loadSaved() {
+      PsgimConnectService.fetchAnnouncements().then(setConnectAnnouncements);
+
       const saved = await StudzoneService.getSavedCredentials();
       if (saved) {
         setStudzoneRollNo(saved.rollNo || activeRollNo);
@@ -786,13 +795,22 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         Vibration.vibrate(25);
       } catch {}
       const notices = await PsgimConnectService.fetchAnnouncements();
-      Alert.alert('PSGIM Connect Synchronized! 🚀', `Pulled ${notices.length} official notices & event circulars.`);
+      setConnectAnnouncements(notices);
+      Alert.alert('PSGIM Connect Synchronized! 🚀', `Pulled ${notices.length} official announcements & notices.`);
     } catch {
-      Alert.alert('Notice', 'PSGIM Connect circulars are up to date.');
+      Alert.alert('Notice', 'PSGIM Connect announcements are up to date.');
     } finally {
       setIsConnectSyncing(false);
     }
   };
+
+  const filteredAnnouncements = connectAnnouncements.filter((item) => {
+    if (announcementFilter === 'ALL') return true;
+    if (announcementFilter === 'EVENT') return item.category.toLowerCase() === 'event';
+    if (announcementFilter === 'CIRCULAR') return item.category.toLowerCase() === 'circular';
+    if (announcementFilter === 'ACADEMIC') return item.category.toLowerCase() === 'academic';
+    return true;
+  });
 
   return (
     <ScrollView
@@ -1039,9 +1057,70 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             {isConnectSyncing ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.moodleSyncBtnText}>🔄 Fetch Circulars</Text>
+              <Text style={styles.moodleSyncBtnText}>🔄 Fetch Announcements</Text>
             )}
           </TouchableOpacity>
+        </View>
+
+        {/* Live Announcements Feed Header & Filter Chips */}
+        <View style={styles.connectFeedSection}>
+          <View style={styles.connectFeedHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.connectFeedSectionTitle}>📢 Live Campus Announcements</Text>
+            </View>
+            <View style={styles.connectCountBadge}>
+              <Text style={styles.connectCountText}>{filteredAnnouncements.length} Live</Text>
+            </View>
+          </View>
+
+          {/* Filter Pills */}
+          <View style={styles.connectFilterRow}>
+            {(['ALL', 'EVENT', 'CIRCULAR', 'ACADEMIC'] as const).map((filterKey) => {
+              const count = connectAnnouncements.filter((a) =>
+                filterKey === 'ALL' ? true : a.category.toLowerCase() === filterKey.toLowerCase()
+              ).length;
+              const isActive = announcementFilter === filterKey;
+              const label =
+                filterKey === 'ALL'
+                  ? `All (${connectAnnouncements.length})`
+                  : filterKey === 'EVENT'
+                  ? `Events (${count})`
+                  : filterKey === 'CIRCULAR'
+                  ? `Circulars (${count})`
+                  : `Academic (${count})`;
+              return (
+                <TouchableOpacity
+                  key={filterKey}
+                  style={[styles.connectFilterChip, isActive && styles.connectFilterChipActive]}
+                  onPress={() => setAnnouncementFilter(filterKey)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.connectFilterChipText, isActive && styles.connectFilterChipTextActive]}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Announcements List */}
+          {filteredAnnouncements.length === 0 ? (
+            <View style={styles.connectEmptyState}>
+              <Text style={styles.connectEmptyIcon}>📭</Text>
+              <Text style={styles.connectEmptyText}>No announcements found in this category.</Text>
+            </View>
+          ) : (
+            filteredAnnouncements.map((item) => (
+              <PsgimAnnouncementCard
+                key={item.id}
+                announcement={item}
+                onPress={() => {
+                  setSelectedNotice(item);
+                  PsgimConnectService.markAnnouncementAsRead(item.id);
+                }}
+              />
+            ))
+          )}
         </View>
       </View>
 
@@ -1295,7 +1374,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                                   textTransform: 'uppercase',
                                 }}
                               >
-                                {rec.status}
+                                {rec.status === 'bunked' ? 'ABSENT' : rec.status === 'attended' ? 'ATTENDED' : 'FREE'}
                               </Text>
                             </View>
                           </View>
@@ -1695,6 +1774,13 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           </View>
         </View>
       </Modal>
+
+      {/* PSGIM Announcement Flyer & Detail Modal */}
+      <PsgimNoticeModal
+        visible={!!selectedNotice}
+        announcement={selectedNotice}
+        onClose={() => setSelectedNotice(null)}
+      />
     </ScrollView>
   );
 };
@@ -2697,5 +2783,80 @@ const styles = StyleSheet.create({
     color: '#A7F3D0',
     fontSize: 11,
     lineHeight: 15,
+  },
+  // PSGIM Connect Feed Styles
+  connectFeedSection: {
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  connectFeedHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  connectFeedSectionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: 0.3,
+  },
+  connectCountBadge: {
+    backgroundColor: 'rgba(2, 132, 199, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#0284C7',
+  },
+  connectCountText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#38BDF8',
+  },
+  connectFilterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+  },
+  connectFilterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  connectFilterChipActive: {
+    backgroundColor: '#0284C7',
+    borderColor: '#38BDF8',
+  },
+  connectFilterChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  connectFilterChipTextActive: {
+    color: '#FFFFFF',
+  },
+  connectEmptyState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  connectEmptyIcon: {
+    fontSize: 24,
+    marginBottom: 6,
+  },
+  connectEmptyText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
   },
 });

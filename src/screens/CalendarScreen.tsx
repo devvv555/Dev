@@ -447,7 +447,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                                         item.isSafe ? styles.bufferTextSafe : styles.bufferTextTight,
                                       ]}
                                     >
-                                      {item.isSafe ? `+${item.safeBunks} hrs safe` : `Tight (+${item.safeBunks}h)`}
+                                      {item.isSafe ? `+${item.safeBunks} hrs margin` : `Tight (+${item.safeBunks}h)`}
                                     </Text>
                                   </View>
                                   <Text style={styles.subjectPctText}>
@@ -464,7 +464,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                     <View style={styles.tripTipsBox}>
                       <Text style={styles.tripTipsTitle}>💡 Smart Leave Rule of Thumb:</Text>
                       <Text style={styles.tripTipsText}>
-                        If you take leave only for subjects where you have surplus buffer (+1 or more safe bunks), your overall percentage remains above 75%. If any subject shows "0 safe", attending that class is essential to avoid condonation!
+                        If you take leave only for subjects where you have surplus buffer (+1 or more margin hours), your overall percentage remains above 75%. If any subject shows "0 margin", attending that class is essential to avoid condonation!
                       </Text>
                     </View>
                   </ScrollView>

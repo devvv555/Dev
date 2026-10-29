@@ -3876,9 +3876,20 @@ export function getTimetableForStudent(rollNo: string) {
 
   return uniqueSlots.map((slot, index) => {
     const course = PSGIM_COURSES[slot.course];
-    const studentBatch = `${slot.course}${sectionGroupNum}`;
-    const facultyName = (course?.faculty[sectionGroupNum]) || (course?.faculty[1] || 'Faculty');
-    const specificRoom = resolveExactRoom(slot.course, sectionGroupNum, slot.defaultRoom);
+    
+    // Resolve course-specific batch for this student (e.g. LA -> LA1 => group 1; MC -> MC3 => group 3; SSA -> SSA3 => group 3)
+    let courseGroupNum = sectionGroupNum;
+    if (student?.batches && student.batches[slot.course as keyof typeof student.batches]) {
+      const assignedBatch = student.batches[slot.course as keyof typeof student.batches];
+      const match = assignedBatch.match(/\d+$/);
+      if (match) {
+        courseGroupNum = parseInt(match[0], 10);
+      }
+    }
+
+    const studentBatch = `${slot.course}${courseGroupNum}`;
+    const facultyName = (course?.faculty[courseGroupNum]) || (course?.faculty[sectionGroupNum]) || (course?.faculty[1] || 'Faculty');
+    const specificRoom = resolveExactRoom(slot.course, courseGroupNum, slot.defaultRoom);
 
     return {
       id: `slot_${rollNo}_${slot.day}_${index}`,

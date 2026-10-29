@@ -86,6 +86,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [announcements, setAnnouncements] = useState<PsgimAnnouncement[]>([]);
   const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
   const [hasConnectRegisterNo, setHasConnectRegisterNo] = useState<boolean>(true);
+  const [announcementFilter, setAnnouncementFilter] = useState<'ALL' | 'EVENT' | 'CIRCULAR' | 'ACADEMIC'>('ALL');
 
   // Moodle Assignments state
   const [assignments, setAssignments] = useState<LmsAssignment[]>([]);
@@ -416,7 +417,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       return {
         tag: 'CLASS JUST ENDED',
         color: '#F59E0B',
-        message: 'This class has just ended. Did you attend or bunk?',
+        message: 'This class has just ended. Did you attend or miss it?',
       };
     }
     if (!isTodayConcluded && isToday && currentMinutes < start) {
@@ -624,7 +625,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     setEndedSlotNotification(null);
     if (res.success) {
       Alert.alert(
-        status === 'attended' ? 'Marked Present ✅' : status === 'bunked' ? 'Marked Bunk ❌' : 'Class Cancelled ⚪',
+        status === 'attended' ? 'Marked Present ✅' : status === 'bunked' ? 'Marked Absent ❌' : 'Class Cancelled ⚪',
         `Attendance recorded for ${subject.name}.`
       );
     }
@@ -694,7 +695,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         status === 'attended'
           ? 'Logged Present ✅'
           : status === 'bunked'
-          ? 'Logged Bunk ❌'
+          ? 'Logged Absent ❌'
           : 'Class Cancelled ⚪',
         res.message
       );
@@ -779,6 +780,26 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
           </View>
         ) : null}
+
+        {/* Latest Announcement Banner */}
+        {announcements.length > 0 && (
+          <TouchableOpacity
+            style={styles.welcomeAnnouncementBanner}
+            onPress={() => {
+              setSelectedNotice(announcements[0]);
+              PsgimConnectService.markAnnouncementAsRead(announcements[0].id);
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.welcomeAnnouncementBadge}>
+              <Text style={styles.welcomeAnnouncementBadgeText}>ANNOUNCEMENT</Text>
+            </View>
+            <Text style={styles.welcomeAnnouncementTitle} numberOfLines={1}>
+              {announcements[0].title}
+            </Text>
+            <Text style={styles.welcomeAnnouncementChevron}>View →</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Weekday Holiday 7-Day Notification Alert (Strictly NO notification for weekend holidays) */}
@@ -1043,7 +1064,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   </Text>
                   {rec && (
                     <Text style={styles.periodPillStatus}>
-                      {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✗ Bunked' : '○ Free'}
+                      {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✗ Missed' : '○ Free'}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -1070,7 +1091,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <View style={styles.lockedBannerTextContainer}>
                 <Text style={styles.lockedBannerTitle}>
                   {currentRecord.status === 'attended' && `Recorded: Attended (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
-                  {currentRecord.status === 'bunked' && `Recorded: Bunked (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
+                  {currentRecord.status === 'bunked' && `Recorded: Missed (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
                   {currentRecord.status === 'cancelled' && 'Recorded: Free / Cancelled'}
                 </Text>
                 {isCurrentSlotLocked ? (
@@ -1137,8 +1158,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             >
               <Text style={styles.promptBunkText}>
                 {currentRecord?.status === 'bunked'
-                  ? `Bunked (${getSlotHours(currentSlot)} hrs)`
-                  : `I Bunked (${getSlotHours(currentSlot)} hrs)`}
+                  ? `Missed (${getSlotHours(currentSlot)} hrs)`
+                  : `I Missed (${getSlotHours(currentSlot)} hrs)`}
               </Text>
             </TouchableOpacity>
 
@@ -1321,7 +1342,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
-      {/* PSGIM Connect • Official College Notices & Circulars */}
+      {/* PSGIM Connect • Official Campus Announcements & Circulars */}
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
           <View style={styles.connectIconCircle}>
@@ -1329,38 +1350,56 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.connectSectionTitle}>PSGIM Connect Circulars</Text>
+              <Text style={styles.connectSectionTitle}>PSGIM Connect Announcements</Text>
               <View style={styles.connectLiveBadge}>
-                <Text style={styles.connectLiveBadgeText}>OFFICIAL PORTAL</Text>
+                <Text style={styles.connectLiveBadgeText}>ANNOUNCEMENTS • LIVE</Text>
               </View>
             </View>
             <Text style={styles.connectSectionSub}>
-              tqm.psginstitutions.in • Live notices & circular posters
+              tqm.psginstitutions.in • Official campus notices & circulars
             </Text>
           </View>
         </View>
 
-        {!hasConnectRegisterNo && (
-          <View style={styles.connectUnlinkedNotice}>
-            <Text style={styles.connectUnlinkedText}>
-              Register Number Not Configured (Mandatory). Please link your Admission Register Number in Portal & Sync. Default Password: Welcome@123
-            </Text>
-          </View>
-        )}
+        {/* Category Filter Chips */}
+        <View style={styles.connectCategoryFilterRow}>
+          {(['ALL', 'EVENT', 'CIRCULAR', 'ACADEMIC'] as const).map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.connectCategoryChip,
+                announcementFilter === cat && styles.connectCategoryChipActive,
+              ]}
+              onPress={() => setAnnouncementFilter(cat)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.connectCategoryChipText,
+                  announcementFilter === cat && styles.connectCategoryChipTextActive,
+                ]}
+              >
+                {cat === 'ALL' ? `All (${announcements.length})` : cat === 'EVENT' ? 'Events' : cat === 'CIRCULAR' ? 'Circulars' : 'Academic'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        {announcements.length === 0 ? (
-          <Text style={styles.connectEmptyText}>No circulars posted at this time.</Text>
+        {announcements.filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter).length === 0 ? (
+          <Text style={styles.connectEmptyText}>No announcements found in this category.</Text>
         ) : (
-          announcements.map((item) => (
-            <PsgimAnnouncementCard
-              key={item.id}
-              announcement={item}
-              onPress={() => {
-                setSelectedNotice(item);
-                PsgimConnectService.markAnnouncementAsRead(item.id);
-              }}
-            />
-          ))
+          announcements
+            .filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter)
+            .map((item) => (
+              <PsgimAnnouncementCard
+                key={item.id}
+                announcement={item}
+                onPress={() => {
+                  setSelectedNotice(item);
+                  PsgimConnectService.markAnnouncementAsRead(item.id);
+                }}
+              />
+            ))
         )}
       </View>
 
@@ -1444,7 +1483,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.notifBunkText}>
-                  ❌ Bunked ({getSlotHours(endedSlotNotification?.slot)} hrs)
+                  ❌ Missed ({getSlotHours(endedSlotNotification?.slot)} hrs)
                 </Text>
               </TouchableOpacity>
 
@@ -1774,7 +1813,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     status === 'attended'
                       ? 'Marked Attended ✅'
                       : status === 'bunked'
-                      ? 'Marked Bunked ❌'
+                      ? 'Marked Absent ❌'
                       : 'Free / Cancelled ⚪',
                     `Rescheduled class attendance recorded for ${targetSub.name} (${slotHours} hr).`
                   );
@@ -1816,7 +1855,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       activeOpacity={0.8}
                       onPress={() => handleMarkRescheduled('bunked')}
                     >
-                      <Text style={styles.rescheduledBtnText}>❌ I Bunked (1 hr)</Text>
+                      <Text style={styles.rescheduledBtnText}>❌ I Missed (1 hr)</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -3186,6 +3225,72 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12.5,
     fontWeight: '700',
+  },
+
+  // Welcome Announcement Banner Styles
+  welcomeAnnouncementBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.4)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 10,
+    gap: 8,
+  },
+  welcomeAnnouncementBadge: {
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  welcomeAnnouncementBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  welcomeAnnouncementTitle: {
+    flex: 1,
+    color: '#E0F2FE',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  welcomeAnnouncementChevron: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+
+  // Announcement Category Filter Styles
+  connectCategoryFilterRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+  },
+  connectCategoryChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  connectCategoryChipActive: {
+    backgroundColor: '#0284C7',
+    borderColor: '#38BDF8',
+  },
+  connectCategoryChipText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  connectCategoryChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
 });
 
