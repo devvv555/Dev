@@ -96,9 +96,17 @@ export function calculateAttendanceMetrics(
  * Calculates overall attendance across all subjects
  */
 export function calculateOverallMetrics(subjects: Subject[]): AttendanceMetrics & { totalAttended: number; totalHeld: number } {
-  const totalAttended = subjects.reduce((sum, s) => sum + s.attended, 0);
-  const totalHeld = subjects.reduce((sum, s) => sum + s.total, 0);
-  const hasAnyMedical = subjects.some(s => s.hasMedicalClaim);
+  // Exclude non-attendance modules like Physical Education & Sports
+  const activeSubjects = subjects.filter(
+    (s) =>
+      !s.noAttendance &&
+      s.code !== 'SPORTS' &&
+      s.id !== 'sub_sports' &&
+      !s.name.toLowerCase().includes('sports')
+  );
+  const totalAttended = activeSubjects.reduce((sum, s) => sum + s.attended, 0);
+  const totalHeld = activeSubjects.reduce((sum, s) => sum + s.total, 0);
+  const hasAnyMedical = activeSubjects.some((s) => s.hasMedicalClaim);
 
   const metrics = calculateAttendanceMetrics(totalAttended, totalHeld, hasAnyMedical);
   return {

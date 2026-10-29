@@ -34,12 +34,25 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     ? PsgimService.getMcobDetails(studentRollNo)
     : null;
 
+  const isSports =
+    subject.noAttendance ||
+    subject.code === 'SPORTS' ||
+    subject.id === 'sub_sports' ||
+    subject.name.toLowerCase().includes('sports');
+
   return (
     <View style={[styles.card, { borderLeftColor: subject.color }]}>
       {/* Top Header */}
       <View style={styles.cardHeader}>
         <View style={styles.titleArea}>
-          <Text style={styles.codeText}>{subject.code}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.codeText}>{subject.code}</Text>
+            {isSports && (
+              <View style={[styles.batchPill, { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }]}>
+                <Text style={[styles.batchPillText, { color: '#818CF8' }]}>No Attendance</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.nameText} numberOfLines={1}>
             {subject.name}
           </Text>
@@ -65,31 +78,51 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       </View>
 
       {/* Attendance Stats Row */}
-      <View style={styles.statsRow}>
-        <Text style={styles.classCountsText}>
-          <Text style={styles.attendedCount}>{subject.attended}</Text> / {subject.total} hrs attended
-        </Text>
-        <Text style={styles.officialSyncText}>
-          College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
-        </Text>
-      </View>
+      {isSports ? (
+        <View style={styles.statsRow}>
+          <Text style={styles.classCountsText}>Physical Education & Wellness</Text>
+          <Text style={styles.officialSyncText}>Sports has no attendance</Text>
+        </View>
+      ) : (
+        <View style={styles.statsRow}>
+          <Text style={styles.classCountsText}>
+            <Text style={styles.attendedCount}>{subject.attended}</Text> / {subject.total} hrs attended
+          </Text>
+          <Text style={styles.officialSyncText}>
+            College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
+          </Text>
+        </View>
+      )}
 
-      {/* Dual Gauge Bar */}
-      <AttendanceGauge metrics={metrics} />
-
-      {/* Bunk / Recovery Status Banner */}
-      <View
-        style={[
-          styles.statusBanner,
-          metrics.status === 'SAFE_STANDARD'
-            ? styles.statusBannerSafe
-            : metrics.status === 'SAFE_MEDICAL'
-            ? styles.statusBannerMedical
-            : styles.statusBannerDanger,
-        ]}
-      >
-        <Text style={styles.statusBannerText}>{metrics.summaryMessage}</Text>
-      </View>
+      {/* Dual Gauge Bar & Status Banner */}
+      {isSports ? (
+        <View
+          style={[
+            styles.statusBanner,
+            { backgroundColor: 'rgba(99, 102, 241, 0.12)', borderColor: 'rgba(99, 102, 241, 0.35)', marginTop: 8 }
+          ]}
+        >
+          <Text style={[styles.statusBannerText, { color: '#C7D2FE' }]}>
+            Sports has no attendance requirement. Attendance is not graded or tracked in ERP.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <AttendanceGauge metrics={metrics} />
+          <View
+            style={[
+              styles.statusBanner,
+              metrics.status === 'SAFE_STANDARD'
+                ? styles.statusBannerSafe
+                : metrics.status === 'SAFE_MEDICAL'
+                ? styles.statusBannerMedical
+                : styles.statusBannerDanger,
+            ]}
+          >
+            <Text style={styles.statusBannerText}>{metrics.summaryMessage}</Text>
+          </View>
+        </>
+      )}
 
       {/* Course Plan & Continuous Assessment (CA) Pattern */}
       {onOpenCoursePlan && (

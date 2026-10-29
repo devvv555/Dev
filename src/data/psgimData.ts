@@ -10,6 +10,7 @@ export interface CourseDetail {
   faculty: Record<number, string>;
   halls: string;
   color: string;
+  noAttendance?: boolean;
 }
 
 export const PSGIM_COURSES: Record<string, CourseDetail> = {
@@ -119,7 +120,7 @@ export const PSGIM_COURSES: Record<string, CourseDetail> = {
   },
   SPORTS: {
     code: 'SPORTS',
-    title: 'Physical Education & Sports',
+    title: 'Physical Education & Sports (No Attendance)',
     shortForm: 'SPORTS',
     faculty: {
       1: 'Mr. Zakeer Khan',
@@ -128,7 +129,8 @@ export const PSGIM_COURSES: Record<string, CourseDetail> = {
       4: 'Mr. Zakeer Khan'
     },
     halls: 'Sports Ground',
-    color: '#6366F1'
+    color: '#6366F1',
+    noAttendance: true,
   }
 };
 

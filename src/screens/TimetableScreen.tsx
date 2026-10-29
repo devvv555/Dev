@@ -108,13 +108,13 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       <View style={styles.slotsContainer}>
         {daySlots.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🗂️</Text>
             <Text style={styles.emptyTitle}>No periods scheduled for {selectedDay}</Text>
             <Text style={styles.emptySub}>Enjoy your day off!</Text>
           </View>
         ) : (
           daySlots.map((slot) => {
             const subject = getSubject(slot.subjectId);
+            const isSports = subject?.noAttendance || subject?.code === 'SPORTS' || slot.subjectId === 'sub_sports';
             return (
               <View key={slot.id} style={styles.slotCard}>
                 <View style={styles.timeColumn}>
@@ -126,18 +126,22 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
                 <View style={[styles.slotInfo, { borderLeftColor: subject?.color || '#3B82F6' }]}>
                   <View style={styles.slotTopRow}>
                     <Text style={styles.subjectCode}>{subject?.code || 'GEN'}</Text>
-                    {slot.room && (
-                      <View style={styles.roomBadge}>
-                        <Text style={styles.roomText}>📍 {slot.room}</Text>
+                    {isSports ? (
+                      <View style={[styles.roomBadge, { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }]}>
+                        <Text style={[styles.roomText, { color: '#818CF8' }]}>No Attendance</Text>
                       </View>
-                    )}
+                    ) : slot.room ? (
+                      <View style={styles.roomBadge}>
+                        <Text style={styles.roomText}>{slot.room}</Text>
+                      </View>
+                    ) : null}
                   </View>
 
                   <Text style={styles.subjectName}>{subject?.name || 'Class Slot'}</Text>
 
                   <View style={styles.alertNotice}>
                     <Text style={styles.alertNoticeText}>
-                      🔔 Hourly alert scheduled for: {slot.endTime}
+                      {isSports ? 'Sports has no attendance requirement' : `Hourly alert scheduled for: ${slot.endTime}`}
                     </Text>
                   </View>
                 </View>

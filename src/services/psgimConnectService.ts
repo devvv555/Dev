@@ -169,30 +169,6 @@ const SEED_ANNOUNCEMENTS: PsgimAnnouncement[] = [
     created_by: 'PSGIM IT',
     ...ENRICHED_METADATA[25],
   },
-  {
-    id: 24,
-    title: 'TEST NOTIFICATION  — GAME ON | WoW',
-    category: 'Event',
-    priority: 'important',
-    status: 'published',
-    is_pinned: 0,
-    publish_at: '2026-09-13 21:24:41',
-    created_at: '2026-09-13 21:24:41',
-    created_by: 'Subhika - Student Council Member',
-    ...ENRICHED_METADATA[24],
-  },
-  {
-    id: 23,
-    title: 'ENTER THE GAME: WOW 2026',
-    category: 'Event',
-    priority: 'important',
-    status: 'published',
-    is_pinned: 0,
-    publish_at: '2026-09-08 20:25:24',
-    created_at: '2026-09-08 20:25:24',
-    created_by: 'Subhika - Student Council Member',
-    ...ENRICHED_METADATA[23],
-  },
 ];
 
 export const PsgimConnectService = {
@@ -221,7 +197,10 @@ export const PsgimConnectService = {
       if (response.ok) {
         const json = await response.json();
         if (json?.success && Array.isArray(json?.data?.announcements)) {
-          const rawList = json.data.announcements;
+          const rawList = json.data.announcements.filter((item: any) => {
+            const titleUpper = (item.title || '').toUpperCase();
+            return !titleUpper.includes('TEST NOTIFICATION') && !titleUpper.includes('MOCK') && item.id !== 24;
+          });
 
           const merged: PsgimAnnouncement[] = rawList.map((item: any) => {
             const enriched = ENRICHED_METADATA[item.id] || {};
@@ -271,7 +250,11 @@ export const PsgimConnectService = {
       if (snap.exists()) {
         const data = snap.data();
         if (Array.isArray(data?.announcements) && data.announcements.length > 0) {
-          const merged: PsgimAnnouncement[] = data.announcements.map((item: any) => ({
+          const filteredCloud = data.announcements.filter((item: any) => {
+            const titleUpper = (item.title || '').toUpperCase();
+            return !titleUpper.includes('TEST NOTIFICATION') && !titleUpper.includes('MOCK') && item.id !== 24;
+          });
+          const merged: PsgimAnnouncement[] = filteredCloud.map((item: any) => ({
             ...item,
             ...(ENRICHED_METADATA[item.id] || {}),
             isRead: readIds.includes(item.id),

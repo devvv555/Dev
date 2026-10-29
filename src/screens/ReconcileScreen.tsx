@@ -308,7 +308,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     }
 
     setEditingSubject(null);
-    Alert.alert('Attendance Updated! 🔄', `Attendance recorded for ${editingSubject.name}.`);
+    Alert.alert('Attendance Updated', `Attendance recorded for ${editingSubject.name}.`);
   };
 
   // Perform automated Studzone extraction
@@ -1061,67 +1061,6 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             )}
           </TouchableOpacity>
         </View>
-
-        {/* Live Announcements Feed Header & Filter Chips */}
-        <View style={styles.connectFeedSection}>
-          <View style={styles.connectFeedHeaderRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.connectFeedSectionTitle}>📢 Live Campus Announcements</Text>
-            </View>
-            <View style={styles.connectCountBadge}>
-              <Text style={styles.connectCountText}>{filteredAnnouncements.length} Live</Text>
-            </View>
-          </View>
-
-          {/* Filter Pills */}
-          <View style={styles.connectFilterRow}>
-            {(['ALL', 'EVENT', 'CIRCULAR', 'ACADEMIC'] as const).map((filterKey) => {
-              const count = connectAnnouncements.filter((a) =>
-                filterKey === 'ALL' ? true : a.category.toLowerCase() === filterKey.toLowerCase()
-              ).length;
-              const isActive = announcementFilter === filterKey;
-              const label =
-                filterKey === 'ALL'
-                  ? `All (${connectAnnouncements.length})`
-                  : filterKey === 'EVENT'
-                  ? `Events (${count})`
-                  : filterKey === 'CIRCULAR'
-                  ? `Circulars (${count})`
-                  : `Academic (${count})`;
-              return (
-                <TouchableOpacity
-                  key={filterKey}
-                  style={[styles.connectFilterChip, isActive && styles.connectFilterChipActive]}
-                  onPress={() => setAnnouncementFilter(filterKey)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.connectFilterChipText, isActive && styles.connectFilterChipTextActive]}>
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Announcements List */}
-          {filteredAnnouncements.length === 0 ? (
-            <View style={styles.connectEmptyState}>
-              <Text style={styles.connectEmptyIcon}>📭</Text>
-              <Text style={styles.connectEmptyText}>No announcements found in this category.</Text>
-            </View>
-          ) : (
-            filteredAnnouncements.map((item) => (
-              <PsgimAnnouncementCard
-                key={item.id}
-                announcement={item}
-                onPress={() => {
-                  setSelectedNotice(item);
-                  PsgimConnectService.markAnnouncementAsRead(item.id);
-                }}
-              />
-            ))
-          )}
-        </View>
       </View>
 
       {/* Information Tip */}
@@ -1160,64 +1099,82 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             sub.officialTotal === 0 ? 100 : (sub.officialAttended / sub.officialTotal) * 100;
           const classDiff = effectiveAppTotal - sub.officialTotal;
           const attendedDiff = effectiveAppAttended - sub.officialAttended;
+          const isSports = sub.noAttendance || sub.code === 'SPORTS' || sub.id === 'sub_sports';
 
           return (
             <View key={sub.id} style={styles.rowItem}>
               <View style={styles.rowTop}>
                 <View style={styles.subjectTitleContainer}>
-                  <Text style={styles.subjectCode}>{sub.code}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <Text style={styles.subjectCode}>{sub.code}</Text>
+                    {isSports && (
+                      <View style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#A855F7' }}>
+                        <Text style={{ color: '#D8B4FE', fontSize: 10, fontWeight: '700' }}>NO ATTENDANCE</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.subjectName}>{sub.name}</Text>
                 </View>
 
-                <TouchableOpacity
-                  style={styles.syncBtn}
-                  onPress={() => handleOpenEdit(sub)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.syncBtnText}>✏️ Edit</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.comparisonGrid}>
-                <TouchableOpacity
-                  style={[styles.colBox, { backgroundColor: 'rgba(56, 189, 248, 0.05)', borderRadius: 8, padding: 4 }]}
-                  onPress={() => setViewingRecordedSubject(sub)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.colLabel}>📱 Hourly App 🔍</Text>
-                  <Text style={[styles.colValue, { textDecorationLine: 'underline' }]}>
-                    {effectiveAppAttended} / {effectiveAppTotal}
-                  </Text>
-                  <Text style={styles.colPct}>{appPct.toFixed(1)}%</Text>
-                </TouchableOpacity>
-
-                <View style={styles.colDivider} />
-
-                <View style={styles.colBox}>
-                  <Text style={styles.colLabel}>🏛️ College ERP</Text>
-                  <Text style={styles.colValue}>
-                    {sub.officialAttended} / {sub.officialTotal}
-                  </Text>
-                  <Text style={styles.colPct}>{erpPct.toFixed(1)}%</Text>
-                </View>
-
-                <View style={styles.colDivider} />
-
-                <View style={styles.colBox}>
-                  <Text style={styles.colLabel}>Delta / Status</Text>
-                  <Text
-                    style={[
-                      styles.colValue,
-                      classDiff > 0 ? styles.deltaPositive : styles.deltaEven,
-                    ]}
+                {!isSports && (
+                  <TouchableOpacity
+                    style={styles.syncBtn}
+                    onPress={() => handleOpenEdit(sub)}
+                    activeOpacity={0.7}
                   >
-                    {classDiff > 0 ? `+${classDiff} hrs held` : 'In sync'}
-                  </Text>
-                  <Text style={styles.deltaSub}>
-                    {attendedDiff > 0 ? `+${attendedDiff} hrs present` : 'Matches'}
+                    <Text style={styles.syncBtnText}>Edit</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {isSports ? (
+                <View style={{ backgroundColor: 'rgba(168, 85, 247, 0.08)', borderRadius: 8, padding: 10, marginTop: 8, borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)' }}>
+                  <Text style={{ color: '#E9D5FF', fontSize: 12, fontWeight: '600' }}>
+                    Physical Education & Sports has no attendance requirement. Attendance is not marked or tracked in ERP.
                   </Text>
                 </View>
-              </View>
+              ) : (
+                <View style={styles.comparisonGrid}>
+                  <TouchableOpacity
+                    style={[styles.colBox, { backgroundColor: 'rgba(56, 189, 248, 0.05)', borderRadius: 8, padding: 4 }]}
+                    onPress={() => setViewingRecordedSubject(sub)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.colLabel}>Hourly App</Text>
+                    <Text style={[styles.colValue, { textDecorationLine: 'underline' }]}>
+                      {effectiveAppAttended} / {effectiveAppTotal}
+                    </Text>
+                    <Text style={styles.colPct}>{appPct.toFixed(1)}%</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.colDivider} />
+
+                  <View style={styles.colBox}>
+                    <Text style={styles.colLabel}>College ERP</Text>
+                    <Text style={styles.colValue}>
+                      {sub.officialAttended} / {sub.officialTotal}
+                    </Text>
+                    <Text style={styles.colPct}>{erpPct.toFixed(1)}%</Text>
+                  </View>
+
+                  <View style={styles.colDivider} />
+
+                  <View style={styles.colBox}>
+                    <Text style={styles.colLabel}>Delta / Status</Text>
+                    <Text
+                      style={[
+                        styles.colValue,
+                        classDiff > 0 ? styles.deltaPositive : styles.deltaEven,
+                      ]}
+                    >
+                      {classDiff > 0 ? `+${classDiff} hrs held` : 'In sync'}
+                    </Text>
+                    <Text style={styles.deltaSub}>
+                      {attendedDiff > 0 ? `+${attendedDiff} hrs present` : 'Matches'}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               {/* Cloud-Stored Attendance Since College Portal Updated (Post-Portal/From 18th Onwards) */}
               {(() => {
@@ -1406,72 +1363,82 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 {editingSubject?.name} ({editingSubject?.code})
               </Text>
 
-              {/* Section 1: App Attendance */}
-              <View style={styles.modalSection}>
-                <Text style={styles.sectionHeader}>📱 Hourly App Attendance</Text>
-                <View style={styles.inputRow}>
-                  <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Hours Attended</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      keyboardType="numeric"
-                      value={appAttended}
-                      onChangeText={setAppAttended}
-                      placeholder="0"
-                      placeholderTextColor="#64748B"
-                    />
-                  </View>
-                  <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Total Hours Held</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      keyboardType="numeric"
-                      value={appTotal}
-                      onChangeText={setAppTotal}
-                      placeholder="0"
-                      placeholderTextColor="#64748B"
-                    />
-                  </View>
+              {(editingSubject?.noAttendance || editingSubject?.code === 'SPORTS' || editingSubject?.id === 'sub_sports') ? (
+                <View style={{ backgroundColor: 'rgba(168, 85, 247, 0.12)', padding: 14, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: '#A855F7' }}>
+                  <Text style={{ color: '#E9D5FF', fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 18 }}>
+                    Sports has no attendance requirement. Physical Education & Sports is not graded or tracked in ERP.
+                  </Text>
                 </View>
-              </View>
+              ) : (
+                <>
+                  {/* Section 1: App Attendance */}
+                  <View style={styles.modalSection}>
+                    <Text style={styles.sectionHeader}>Hourly App Attendance</Text>
+                    <View style={styles.inputRow}>
+                      <View style={styles.inputCol}>
+                        <Text style={styles.inputLabel}>Hours Attended</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          keyboardType="numeric"
+                          value={appAttended}
+                          onChangeText={setAppAttended}
+                          placeholder="0"
+                          placeholderTextColor="#64748B"
+                        />
+                      </View>
+                      <View style={styles.inputCol}>
+                        <Text style={styles.inputLabel}>Total Hours Held</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          keyboardType="numeric"
+                          value={appTotal}
+                          onChangeText={setAppTotal}
+                          placeholder="0"
+                          placeholderTextColor="#64748B"
+                        />
+                      </View>
+                    </View>
+                  </View>
 
-              {/* Section 2: College ERP Baseline */}
-              <View style={styles.modalSection}>
-                <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionHeader}>🏛️ College Portal (ERP Baseline)</Text>
-                  <TouchableOpacity
-                    onPress={handleCopyErpToApp}
-                    style={styles.copyErpBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.copyErpBtnText}>⚡ Copy to App</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.inputRow}>
-                  <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Official Hours Attended</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      keyboardType="numeric"
-                      value={officialAttended}
-                      onChangeText={setOfficialAttended}
-                      placeholder="0"
-                      placeholderTextColor="#64748B"
-                    />
+                  {/* Section 2: College ERP Baseline */}
+                  <View style={styles.modalSection}>
+                    <View style={styles.sectionHeaderRow}>
+                      <Text style={styles.sectionHeader}>College Portal (ERP Baseline)</Text>
+                      <TouchableOpacity
+                        onPress={handleCopyErpToApp}
+                        style={styles.copyErpBtn}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.copyErpBtnText}>Copy to App</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.inputRow}>
+                      <View style={styles.inputCol}>
+                        <Text style={styles.inputLabel}>Official Hours Attended</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          keyboardType="numeric"
+                          value={officialAttended}
+                          onChangeText={setOfficialAttended}
+                          placeholder="0"
+                          placeholderTextColor="#64748B"
+                        />
+                      </View>
+                      <View style={styles.inputCol}>
+                        <Text style={styles.inputLabel}>Official Hours Held</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          keyboardType="numeric"
+                          value={officialTotal}
+                          onChangeText={setOfficialTotal}
+                          placeholder="0"
+                          placeholderTextColor="#64748B"
+                        />
+                      </View>
+                    </View>
                   </View>
-                  <View style={styles.inputCol}>
-                    <Text style={styles.inputLabel}>Official Hours Held</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      keyboardType="numeric"
-                      value={officialTotal}
-                      onChangeText={setOfficialTotal}
-                      placeholder="0"
-                      placeholderTextColor="#64748B"
-                    />
-                  </View>
-                </View>
-              </View>
+                </>
+              )}
 
               <View style={styles.modalActions}>
                 <TouchableOpacity

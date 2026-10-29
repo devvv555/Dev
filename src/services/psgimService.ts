@@ -93,7 +93,7 @@ export const PsgimService = {
       SSA: { attended: 24, total: 26 }, // 24GM16: 24/26 (93%)
       SSM: { attended: 32, total: 32 }, // 24GM18: 32/32 (100%)
       LA: { attended: 12, total: 12 }, // 24GM19: 12/12 (100%)
-      SPORTS: { attended: 8, total: 8 }, // SPORTS: 8/8 (100%)
+      SPORTS: { attended: 0, total: 0 }, // SPORTS: No attendance required
     };
 
     return Object.entries(batches).map(([courseKey, batchCode]) => {
@@ -107,11 +107,12 @@ export const PsgimService = {
       const faculty = isBlankBatch ? '' : (course?.faculty[courseGroupNum] || course?.faculty[sectionGroupNum] || course?.faculty[1] || 'Faculty');
       const stats = attendancePresets[courseKey] || { attended: 20, total: 24 };
 
+      const isSports = courseKey === 'SPORTS' || course?.code === 'SPORTS';
       const isMcob = courseKey === 'MCOB' && mcobData;
-      const attended = isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : stats.attended);
-      const total = isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : stats.total);
-      const officialAttended = isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : stats.attended);
-      const officialTotal = isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : stats.total);
+      const attended = isSports ? 0 : (isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : stats.attended));
+      const total = isSports ? 0 : (isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : stats.total));
+      const officialAttended = isSports ? 0 : (isMcob ? mcobData.attendedHours : (isBlankBatch ? 0 : stats.attended));
+      const officialTotal = isSports ? 0 : (isMcob ? mcobData.totalHours : (isBlankBatch ? 0 : stats.total));
 
       return {
         id: `sub_${courseKey.toLowerCase()}`,
@@ -135,6 +136,7 @@ export const PsgimService = {
               sectionGroupNum,
               course?.halls || 'LH-101'
             ),
+        noAttendance: isSports || course?.noAttendance || false,
       };
     });
   },

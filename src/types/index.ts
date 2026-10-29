@@ -24,6 +24,7 @@ export interface Subject {
   batch?: string;
   faculty?: string;
   room?: string;
+  noAttendance?: boolean;
 }
 
 export interface TimetableSlot {

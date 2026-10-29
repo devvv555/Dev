@@ -1,0 +1,6 @@
+# Project Behavioral Rules & Guidelines
+
+## 1. Zero Emoji Policy (Strict)
+- Never use emojis anywhere in the app UI, text labels, alerts, button titles, logs, modals, cards, banners, or headers.
+- Always use clean, professional typography, icons (e.g. Ionicons, MaterialIcons, Feather), or standard text indicators (e.g. [OK], [Warning], [Notice], [Live], bullet points) instead of emojis.
+- This rule applies universally across all `.tsx`, `.ts`, `.html`, and metadata files.

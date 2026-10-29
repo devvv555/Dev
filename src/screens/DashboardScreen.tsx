@@ -217,6 +217,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   // Filter subjects based on selected tab
   const filteredSubjects = subjects.filter((s) => {
+    const isSports = s.noAttendance || s.code === 'SPORTS' || s.id === 'sub_sports' || s.name.toLowerCase().includes('sports');
+    if (isSports) return filter !== 'SHORTAGE';
     const pct = s.total === 0 ? 100 : (s.attended / s.total) * 100;
     if (filter === 'SAFE') return pct >= 75;
     if (filter === 'SHORTAGE') return pct < 75;
@@ -1029,6 +1031,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           >
             {activeDaySlots.map((slot, index) => {
               const slotSub = subjects.find((s) => s.id === slot.subjectId);
+              const isSportsSlot = slot.subjectId === 'sub_sports' || slotSub?.code === 'SPORTS';
               const pKey = `${todayDate}_${slot.id}`;
               const rec = periodRecords[pKey];
               const isSelected = activeIndex === index;
@@ -1062,11 +1065,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   >
                     {slotSub?.code || 'CLASS'}
                   </Text>
-                  {rec && (
+                  {isSportsSlot ? (
+                    <Text style={[styles.periodPillStatus, { color: '#818CF8' }]}>
+                      No Attendance
+                    </Text>
+                  ) : rec ? (
                     <Text style={styles.periodPillStatus}>
                       {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✗ Missed' : '○ Free'}
                     </Text>
-                  )}
+                  ) : null}
                 </TouchableOpacity>
               );
             })}
@@ -1124,62 +1131,71 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* 1-Tap Attendance Actions */}
         {!isWeekendOrNoClass && (
-          <View style={styles.promptActionsRow}>
-            <TouchableOpacity
-              activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
-              disabled={isCurrentSlotLocked}
-              style={[
-                styles.promptActionBtn,
-                styles.promptAttendBtn,
-                currentRecord?.status === 'attended' && styles.promptBtnSelected,
-                (currentRecord && currentRecord.status !== 'attended') && styles.promptBtnDimmed,
-                isCurrentSlotLocked && styles.promptActionBtnDisabled,
-              ]}
-              onPress={() => handleAutoRecord('attended')}
-            >
-              <Text style={styles.promptAttendText}>
-                {currentRecord?.status === 'attended'
-                  ? `Attended (${getSlotHours(currentSlot)} hrs)`
-                  : `I Attended (${getSlotHours(currentSlot)} hrs)`}
+          currentSubject?.code === 'SPORTS' || currentSlot?.subjectId === 'sub_sports' ? (
+            <View style={styles.sportsNoAttendanceBox}>
+              <Text style={styles.sportsNoAttendanceTitle}>Sports has no attendance</Text>
+              <Text style={styles.sportsNoAttendanceSub}>
+                Physical Education & Sports is a physical activity session. Attendance is not marked or tracked on the official portal.
               </Text>
-            </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.promptActionsRow}>
+              <TouchableOpacity
+                activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
+                disabled={isCurrentSlotLocked}
+                style={[
+                  styles.promptActionBtn,
+                  styles.promptAttendBtn,
+                  currentRecord?.status === 'attended' && styles.promptBtnSelected,
+                  (currentRecord && currentRecord.status !== 'attended') && styles.promptBtnDimmed,
+                  isCurrentSlotLocked && styles.promptActionBtnDisabled,
+                ]}
+                onPress={() => handleAutoRecord('attended')}
+              >
+                <Text style={styles.promptAttendText}>
+                  {currentRecord?.status === 'attended'
+                    ? `Attended (${getSlotHours(currentSlot)} hrs)`
+                    : `I Attended (${getSlotHours(currentSlot)} hrs)`}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
-              disabled={isCurrentSlotLocked}
-              style={[
-                styles.promptActionBtn,
-                styles.promptBunkBtn,
-                currentRecord?.status === 'bunked' && styles.promptBtnSelected,
-                (currentRecord && currentRecord.status !== 'bunked') && styles.promptBtnDimmed,
-                isCurrentSlotLocked && styles.promptActionBtnDisabled,
-              ]}
-              onPress={() => handleAutoRecord('bunked')}
-            >
-              <Text style={styles.promptBunkText}>
-                {currentRecord?.status === 'bunked'
-                  ? `Missed (${getSlotHours(currentSlot)} hrs)`
-                  : `I Missed (${getSlotHours(currentSlot)} hrs)`}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
+                disabled={isCurrentSlotLocked}
+                style={[
+                  styles.promptActionBtn,
+                  styles.promptBunkBtn,
+                  currentRecord?.status === 'bunked' && styles.promptBtnSelected,
+                  (currentRecord && currentRecord.status !== 'bunked') && styles.promptBtnDimmed,
+                  isCurrentSlotLocked && styles.promptActionBtnDisabled,
+                ]}
+                onPress={() => handleAutoRecord('bunked')}
+              >
+                <Text style={styles.promptBunkText}>
+                  {currentRecord?.status === 'bunked'
+                    ? `Missed (${getSlotHours(currentSlot)} hrs)`
+                    : `I Missed (${getSlotHours(currentSlot)} hrs)`}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
-              disabled={isCurrentSlotLocked}
-              style={[
-                styles.promptActionBtn,
-                styles.promptCancelBtn,
-                currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
-                (currentRecord && currentRecord.status !== 'cancelled') && styles.promptBtnDimmed,
-                isCurrentSlotLocked && styles.promptActionBtnDisabled,
-              ]}
-              onPress={() => handleAutoRecord('cancelled')}
-            >
-              <Text style={styles.promptCancelText}>
-                {currentRecord?.status === 'cancelled' ? 'Free (Marked)' : 'Free / Cancelled'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                activeOpacity={isCurrentSlotLocked ? 1 : 0.8}
+                disabled={isCurrentSlotLocked}
+                style={[
+                  styles.promptActionBtn,
+                  styles.promptCancelBtn,
+                  currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
+                  (currentRecord && currentRecord.status !== 'cancelled') && styles.promptBtnDimmed,
+                  isCurrentSlotLocked && styles.promptActionBtnDisabled,
+                ]}
+                onPress={() => handleAutoRecord('cancelled')}
+              >
+                <Text style={styles.promptCancelText}>
+                  {currentRecord?.status === 'cancelled' ? 'Free (Marked)' : 'Free / Cancelled'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )
         )}
 
 
@@ -3291,6 +3307,27 @@ const styles = StyleSheet.create({
   connectCategoryChipTextActive: {
     color: '#FFFFFF',
     fontWeight: '800',
+  },
+  sportsNoAttendanceBox: {
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.35)',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  sportsNoAttendanceTitle: {
+    color: '#818CF8',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  sportsNoAttendanceSub: {
+    color: '#94A3B8',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });
 
