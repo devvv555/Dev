@@ -173,6 +173,35 @@ const SEED_ANNOUNCEMENTS: PsgimAnnouncement[] = [
 
 export const PsgimConnectService = {
   /**
+   * Helper to sort announcements: Pinned first (newest to oldest), then unpinned (latest to oldest by publish_at / created_at).
+   */
+  sortAnnouncements(list: PsgimAnnouncement[]): PsgimAnnouncement[] {
+    const parseTime = (item: PsgimAnnouncement): number => {
+      const dateStr = item.publish_at || item.created_at;
+      if (!dateStr) return 0;
+      // Handle MySQL format "YYYY-MM-DD HH:MM:SS"
+      return new Date(dateStr.replace(' ', 'T')).getTime() || 0;
+    };
+
+    return [...list].sort((a, b) => {
+      const isPinnedA = a.is_pinned === 1 || (a.is_pinned as unknown) === true ? 1 : 0;
+      const isPinnedB = b.is_pinned === 1 || (b.is_pinned as unknown) === true ? 1 : 0;
+
+      // Pinned items stay on top
+      if (isPinnedA !== isPinnedB) {
+        return isPinnedB - isPinnedA;
+      }
+
+      // Within the same group (pinned or non-pinned), sort latest to oldest
+      const timeDiff = parseTime(b) - parseTime(a);
+      if (timeDiff !== 0) return timeDiff;
+
+      // Fallback by ID descending
+      return (b.id || 0) - (a.id || 0);
+    });
+  },
+
+  /**
    * Fetch announcements directly from PSGIM Connect live backend or Firestore.
    * Works seamlessly without login on both Web and Mobile devices.
    */
@@ -219,24 +248,26 @@ export const PsgimConnectService = {
             };
           });
 
+          const sorted = this.sortAnnouncements(merged);
+
           // Check if there are brand-new announcements to notify
           const cached = await this.getCachedAnnouncements();
-          if (cached.length > 0 && merged.length > 0) {
+          if (cached.length > 0 && sorted.length > 0) {
             const highestCachedId = Math.max(...cached.map((c) => c.id));
-            const newest = merged.find((m) => m.id > highestCachedId);
+            const newest = sorted.find((m) => m.id > highestCachedId);
             if (newest) {
               NotificationService.notifyNewAnnouncement(newest.title, newest.created_by);
             }
           }
 
           // Cache the latest announcements locally and in Firestore
-          await AsyncStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(merged));
+          await AsyncStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(sorted));
           try {
             const ref = doc(db, 'system_updates', 'psgim_announcements');
             await setDoc(ref, { announcements: rawList, updatedAt: new Date().toISOString() }, { merge: true });
           } catch {}
 
-          return merged;
+          return sorted;
         }
       }
     } catch {
@@ -259,8 +290,9 @@ export const PsgimConnectService = {
             ...(ENRICHED_METADATA[item.id] || {}),
             isRead: readIds.includes(item.id),
           }));
-          await AsyncStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(merged));
-          return merged;
+          const sorted = this.sortAnnouncements(merged);
+          await AsyncStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(sorted));
+          return sorted;
         }
       }
     } catch (fireErr) {
@@ -270,9 +302,9 @@ export const PsgimConnectService = {
     // 3. Fallback to local cache or complete seed list
     const cached = await this.getCachedAnnouncements();
     if (cached && cached.length > 0) {
-      return cached;
+      return this.sortAnnouncements(cached);
     }
-    return SEED_ANNOUNCEMENTS;
+    return this.sortAnnouncements(SEED_ANNOUNCEMENTS);
   },
 
   /**

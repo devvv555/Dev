@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   AppState,
+  Vibration,
 } from 'react-native';
 
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
@@ -31,6 +32,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DigitalIdModal } from './src/components/DigitalIdModal';
 import { CoursePlanModal } from './src/components/CoursePlanModal';
 import { AttendanceDisputeModal } from './src/components/AttendanceDisputeModal';
+import { ProtocolGate } from './src/engines/starkProtocol/protocolGate';
+import { StarkVideoModal } from './src/components/StarkVideoModal';
+import { KarenGuide } from './src/components/KarenGuide';
+import { MissMinutesScheduler } from './src/services/missMinutesScheduler';
 
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC';
@@ -47,10 +52,32 @@ export default function App() {
   const [showDigitalIdModal, setShowDigitalIdModal] = useState<boolean>(false);
   const [showCoursePlanModal, setShowCoursePlanModal] = useState<boolean>(false);
   const [showDisputeModal, setShowDisputeModal] = useState<boolean>(false);
+  const [showStarkVideoModal, setShowStarkVideoModal] = useState<boolean>(false);
+  const [showKarenGuide, setShowKarenGuide] = useState<boolean>(false);
+  const [isEnhancedSuit, setIsEnhancedSuit] = useState<boolean>(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
   const [medicalClaims, setMedicalClaims] = useState<MedicalClaimRecord[]>(INITIAL_MEDICAL_CLAIMS);
   const [periodRecords, setPeriodRecords] = useState<Record<string, PeriodAttendanceRecord>>({});
+
+  // Sync protocol mode tier (Enhanced Suit vs Training Wheels) across entire app
+  useEffect(() => {
+    ProtocolGate.isSuitUnlocked().then(setIsEnhancedSuit);
+    const unsub = ProtocolGate.onModeChange((mode) => {
+      setIsEnhancedSuit(mode === 'ENHANCED_SUIT');
+    });
+    return () => unsub();
+  }, []);
+
+  const handleLogoTap = () => {
+    const isTriggered = ProtocolGate.recordTap(2500, 5);
+    if (isTriggered) {
+      try {
+        Vibration.vibrate([0, 50, 100, 50]);
+      } catch {}
+      setShowStarkVideoModal(true);
+    }
+  };
 
   // Keep active refs so listeners always access latest state without re-triggering useEffect
   const timetableRef = React.useRef(timetable);
@@ -92,48 +119,61 @@ export default function App() {
           setTimetable(initialTimetable);
           const storedRecords = await StorageService.getPeriodRecords(officialRoll);
           setPeriodRecords(storedRecords);
-
-          // Sync with latest cloud updates (e.g. from Teacher Google Sheets)
-          const cloudSubjects = await CloudSyncService.fetchCloudSubjects(officialRoll);
-          if (cloudSubjects && cloudSubjects.length > 0) {
-            // Preserve student's saved faculty assignment overrides
-            for (const sub of cloudSubjects) {
-              const override = await AsyncStorage.getItem(`@user_faculty_override_${officialRoll}_${sub.id}`);
-              if (override) {
-                sub.faculty = override;
-              }
-            }
-            initialTimetable.forEach((slot) => {
-              const matchingSub = cloudSubjects.find((s) => s.id === slot.subjectId);
-              if (matchingSub && matchingSub.faculty) {
-                slot.faculty = matchingSub.faculty;
-              }
-            });
-            setSubjects(cloudSubjects);
-            setTimetable([...initialTimetable]);
-            await StorageService.saveSubjects(cloudSubjects);
-            await StorageService.saveTimetable(initialTimetable);
-          }
-
-          const cloudPeriods = await CloudSyncService.fetchCloudPeriodRecords(officialRoll);
-          if (cloudPeriods && Object.keys(cloudPeriods).length > 0) {
-            const mergedRecords = { ...storedRecords, ...cloudPeriods };
-            setPeriodRecords(mergedRecords);
-            await StorageService.savePeriodRecords(officialRoll, mergedRecords);
-          }
-
           setIsAuthenticated(true);
+          setIsCheckingAuth(false);
 
           const student = getMasterStudent(officialRoll);
           AnalyticsService.recordLogin(officialRoll, student?.name || '', student?.batch || 'A');
           CloudSyncService.syncStudentProfile(officialRoll, student?.name || '', student?.batch || 'A');
+
+          // Sync with latest cloud updates asynchronously in background without blocking startup
+          (async () => {
+            try {
+              const cloudSubjects = await Promise.race([
+                CloudSyncService.fetchCloudSubjects(officialRoll),
+                new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+              ]);
+              if (cloudSubjects && cloudSubjects.length > 0) {
+                for (const sub of cloudSubjects) {
+                  const override = await AsyncStorage.getItem(`@user_faculty_override_${officialRoll}_${sub.id}`);
+                  if (override) {
+                    sub.faculty = override;
+                  }
+                }
+                initialTimetable.forEach((slot) => {
+                  const matchingSub = cloudSubjects.find((s) => s.id === slot.subjectId);
+                  if (matchingSub && matchingSub.faculty) {
+                    slot.faculty = matchingSub.faculty;
+                  }
+                });
+                setSubjects(cloudSubjects);
+                setTimetable([...initialTimetable]);
+                await StorageService.saveSubjects(cloudSubjects);
+                await StorageService.saveTimetable(initialTimetable);
+              }
+
+              const cloudPeriods = await Promise.race([
+                CloudSyncService.fetchCloudPeriodRecords(officialRoll),
+                new Promise<Record<string, PeriodAttendanceRecord>>((resolve) => setTimeout(() => resolve({}), 2500))
+              ]);
+              if (cloudPeriods && Object.keys(cloudPeriods).length > 0) {
+                const mergedRecords = { ...storedRecords, ...cloudPeriods };
+                setPeriodRecords(mergedRecords);
+                await StorageService.savePeriodRecords(officialRoll, mergedRecords);
+              }
+            } catch (err) {
+              console.warn('Background cloud sync warning:', err);
+            }
+          })();
         }
 
         const storedMed = await StorageService.getMedicalClaims();
         setMedicalClaims(storedMed);
 
-        await NotificationService.requestPermissions();
-        await NotificationService.setupNotificationCategories();
+        if (Platform.OS !== 'web') {
+          await NotificationService.requestPermissions();
+          await NotificationService.setupNotificationCategories();
+        }
       } catch (e) {
         console.warn('Init session error:', e);
       } finally {
@@ -234,6 +274,25 @@ export default function App() {
       subscription.remove();
     };
   }, [isAuthenticated, activeRollNo]);
+
+  // Miss Minutes Scheduled Daily 9:00 PM Cloud Sync Check (Mon-Sat protocol)
+  useEffect(() => {
+    // Check if the current time matches the 9:00 PM Mon-Sat window on mount & periodic interval
+    const checkMissMinutesSchedule = async () => {
+      if (MissMinutesScheduler.isScheduledWindow()) {
+        const lastLog = await MissMinutesScheduler.getLastSyncLog();
+        const todayStr = new Date().toISOString().split('T')[0];
+        // Only run once per night
+        if (!lastLog || !new Date(lastLog.timestamp).toISOString().startsWith(todayStr) || lastLog.status !== 'SUCCESS') {
+          await MissMinutesScheduler.executeNightlyAttendanceSync();
+        }
+      }
+    };
+
+    checkMissMinutesSchedule();
+    const interval = setInterval(checkMissMinutesSchedule, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const handleTabChange = (newTab: Tab) => {
     setActiveTab(newTab);
@@ -716,7 +775,7 @@ export default function App() {
           <AdminDashboardScreen
             visible={showAdminModal}
             onClose={() => setShowAdminModal(false)}
-            initiallyAuthenticated={true}
+            initiallyAuthenticated={false}
           />
         )}
       </SafeAreaProvider>
@@ -728,53 +787,99 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <SafeAreaView style={[styles.safeArea, isEnhancedSuit && { backgroundColor: '#0B0202' }]}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={isEnhancedSuit ? '#180404' : '#0F172A'}
+      />
 
       {/* Main Top Header (Balanced 2-Row Clean Layout) */}
-      <View style={styles.appHeader}>
+      <View style={[
+        styles.appHeader,
+        isEnhancedSuit && {
+          backgroundColor: '#180404',
+          borderBottomColor: '#7F1D1D',
+          borderBottomWidth: 1.5,
+        }
+      ]}>
         {/* Row 1: Brand Logo & Title + Actions */}
         <View style={styles.headerTopRow}>
-          <View style={styles.brandContainer}>
+          <TouchableOpacity
+            style={styles.brandContainer}
+            onPress={handleLogoTap}
+            activeOpacity={0.8}
+          >
             <Image
               source={require('./assets/icon.png')}
-              style={styles.headerLogoImg}
+              style={[
+                styles.headerLogoImg,
+                isEnhancedSuit && { borderWidth: 1, borderColor: '#FACC15' }
+              ]}
               resizeMode="cover"
             />
-            <Text style={styles.appName} numberOfLines={1}>
-              PSGIM One
+            <Text style={[styles.appName, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
+              {isEnhancedSuit ? 'STARK ONE' : 'PSGIM One'}
             </Text>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.headerActionsRow}>
             <TouchableOpacity
-              style={styles.feedbackHeaderBtn}
-              onPress={() => setShowFeedbackModal(true)}
+              style={[
+                styles.feedbackHeaderBtn,
+                isEnhancedSuit
+                  ? { borderColor: '#EAB308', backgroundColor: 'rgba(234, 179, 8, 0.2)' }
+                  : { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.15)' }
+              ]}
+              onPress={() => setShowKarenGuide(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.feedbackHeaderBtnText}>Feedback</Text>
+              <Text style={[styles.feedbackHeaderBtnText, isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : { color: '#38BDF8' }]}>
+                {isEnhancedSuit ? 'Karen' : 'Guide'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.logoutBtn}
+              style={[
+                styles.feedbackHeaderBtn,
+                isEnhancedSuit && { borderColor: '#7F1D1D', backgroundColor: '#260606' }
+              ]}
+              onPress={() => setShowFeedbackModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.feedbackHeaderBtnText, isEnhancedSuit && { color: '#FCA5A5' }]}>Feedback</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.logoutBtn,
+                isEnhancedSuit && { backgroundColor: '#450A0A' }
+              ]}
               onPress={handleLogout}
               activeOpacity={0.7}
             >
-              <Text style={styles.logoutBtnText}>Logout</Text>
+              <Text style={[styles.logoutBtnText, isEnhancedSuit && { color: '#F87171' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Row 2: Cohort Sub-bar & Logged In Student Identity */}
-        <View style={styles.headerSubRow}>
-          <Text style={styles.appTagline}>PSGIM Campus Super-App • I MBA</Text>
+        <View style={[styles.headerSubRow, isEnhancedSuit && { borderTopColor: 'rgba(127, 29, 29, 0.6)' }]}>
+          <Text style={[styles.appTagline, isEnhancedSuit && { color: '#FCA5A5' }]}>
+            {isEnhancedSuit ? 'Mark XLVII Tactical Armor • Karen AI' : 'PSGIM Campus Super-App • I MBA'}
+          </Text>
           <TouchableOpacity
-            style={styles.studentBadge}
+            style={[
+              styles.studentBadge,
+              isEnhancedSuit && {
+                backgroundColor: '#260606',
+                borderColor: '#DC2626',
+              }
+            ]}
             onPress={() => setShowProfileMenu((prev) => !prev)}
             activeOpacity={0.7}
           >
-            <Text style={styles.studentBadgeText} numberOfLines={1}>
-              {activeRollNo ? `Roll No: ${toNewRollNo(activeRollNo)}` : 'Profile'} {showProfileMenu ? '▲' : '▼'}
+            <Text style={[styles.studentBadgeText, isEnhancedSuit && { color: '#FACC15' }]} numberOfLines={1}>
+              {activeRollNo ? `Roll: ${toNewRollNo(activeRollNo)}` : 'Profile'} {showProfileMenu ? '▲' : '▼'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -881,26 +986,47 @@ export default function App() {
       </View>
 
       {/* Bottom Tab Bar */}
-      <View style={styles.tabBar}>
+      <View style={[
+        styles.tabBar,
+        isEnhancedSuit && {
+          backgroundColor: '#180404',
+          borderTopColor: '#7F1D1D',
+          borderTopWidth: 1.5,
+        }
+      ]}>
         <TouchableOpacity
           activeOpacity={0.7}
-          style={[styles.tabItem, activeTab === 'DASHBOARD' && styles.tabItemActive]}
+          style={[
+            styles.tabItem,
+            activeTab === 'DASHBOARD' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+          ]}
           onPress={() => handleTabChange('DASHBOARD')}
         >
-          <Text style={styles.tabIcon}>#</Text>
-          <Text style={[styles.tabLabel, activeTab === 'DASHBOARD' && styles.tabLabelActive]}>
+          <Text style={styles.tabIcon}>⏱️</Text>
+          <Text style={[
+            styles.tabLabel,
+            isEnhancedSuit && { color: '#9CA3AF' },
+            activeTab === 'DASHBOARD' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+          ]}>
             Hourly
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.7}
-          style={[styles.tabItem, activeTab === 'TIMETABLE' && styles.tabItemActive]}
+          style={[
+            styles.tabItem,
+            activeTab === 'TIMETABLE' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+          ]}
           onPress={() => handleTabChange('TIMETABLE')}
         >
-          <Text style={styles.tabIcon}>::</Text>
+          <Text style={styles.tabIcon}>📑</Text>
           <Text
-            style={[styles.tabLabel, activeTab === 'TIMETABLE' && styles.tabLabelActive]}
+            style={[
+              styles.tabLabel,
+              isEnhancedSuit && { color: '#9CA3AF' },
+              activeTab === 'TIMETABLE' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+            ]}
             numberOfLines={1}
           >
             Period Index
@@ -909,23 +1035,37 @@ export default function App() {
 
         <TouchableOpacity
           activeOpacity={0.7}
-          style={[styles.tabItem, activeTab === 'CALENDAR' && styles.tabItemActive]}
+          style={[
+            styles.tabItem,
+            activeTab === 'CALENDAR' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+          ]}
           onPress={() => handleTabChange('CALENDAR')}
         >
-          <Text style={styles.tabIcon}>[]</Text>
-          <Text style={[styles.tabLabel, activeTab === 'CALENDAR' && styles.tabLabelActive]}>
+          <Text style={styles.tabIcon}>📅</Text>
+          <Text style={[
+            styles.tabLabel,
+            isEnhancedSuit && { color: '#9CA3AF' },
+            activeTab === 'CALENDAR' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+          ]}>
             Calendar
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.7}
-          style={[styles.tabItem, activeTab === 'ERP_SYNC' && styles.tabItemActive]}
+          style={[
+            styles.tabItem,
+            activeTab === 'ERP_SYNC' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+          ]}
           onPress={() => handleTabChange('ERP_SYNC')}
         >
-          <Text style={styles.tabIcon}>@</Text>
+          <Text style={styles.tabIcon}>🌐</Text>
           <Text
-            style={[styles.tabLabel, activeTab === 'ERP_SYNC' && styles.tabLabelActive]}
+            style={[
+              styles.tabLabel,
+              isEnhancedSuit && { color: '#9CA3AF' },
+              activeTab === 'ERP_SYNC' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+            ]}
             numberOfLines={1}
           >
             Portals
@@ -973,6 +1113,27 @@ export default function App() {
         studentRollNo={activeRollNo}
         subjects={subjects}
         medicalClaims={medicalClaims}
+      />
+
+      {/* Karen Welcoming & Suit Guide Modal */}
+      <KarenGuide
+        visible={showKarenGuide}
+        onClose={() => setShowKarenGuide(false)}
+        studentName={studentName}
+        isEnhancedSuit={isEnhancedSuit}
+      />
+
+      {/* Stark Protocol 5-Tap Video Easter Egg Modal */}
+      <StarkVideoModal
+        visible={showStarkVideoModal}
+        onClose={() => setShowStarkVideoModal(false)}
+        onSuitUnlocked={() => {
+          setIsEnhancedSuit(true);
+          // Automatically launch Karen Feature Guide immediately after video
+          setTimeout(() => {
+            setShowKarenGuide(true);
+          }, 350);
+        }}
       />
     </SafeAreaView>
     </SafeAreaProvider>

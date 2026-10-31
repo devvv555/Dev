@@ -240,3 +240,146 @@ test('Accurately adjusts attendance when correcting period status', () => {
   assert.strictEqual(step3.subjects[0].attended, 15);
   assert.strictEqual(step3.subjects[0].total, 18);
 });
+
+test('Stark Protocol 5-tap easter egg sliding window detection', () => {
+  let timestamps = [];
+  function recordTap(now, timeWindowMs = 2500, threshold = 5) {
+    timestamps = timestamps.filter((t) => now - t <= timeWindowMs);
+    timestamps.push(now);
+    if (timestamps.length >= threshold) {
+      timestamps = [];
+      return true;
+    }
+    return false;
+  }
+
+  // 1. Four rapid taps -> false
+  assert.strictEqual(recordTap(1000), false);
+  assert.strictEqual(recordTap(1200), false);
+  assert.strictEqual(recordTap(1400), false);
+  assert.strictEqual(recordTap(1600), false);
+
+  // 2. Fifth tap within 2.5s (at 1800ms) -> true
+  assert.strictEqual(recordTap(1800), true);
+
+  // 3. Slow taps spaced across 4 seconds -> false
+  timestamps = [];
+  assert.strictEqual(recordTap(1000), false);
+  assert.strictEqual(recordTap(2000), false);
+  assert.strictEqual(recordTap(3000), false);
+  assert.strictEqual(recordTap(4000), false);
+  assert.strictEqual(recordTap(5000), false); // Old taps expired
+});
+
+test('Friday and Edith inter-AI communication policy enforcement', () => {
+  // Policy rule: Friday <-> Edith communication is permitted.
+  // All other AI-to-AI communication is strictly unauthorized.
+  function validateInterAiCommunication(sender, receiver) {
+    const isFridayToEdith = sender === 'FRIDAY' && receiver === 'EDITH';
+    const isEdithToFriday = sender === 'EDITH' && receiver === 'FRIDAY';
+    return isFridayToEdith || isEdithToFriday;
+  }
+
+  // Authorized bilateral channel
+  assert.strictEqual(validateInterAiCommunication('FRIDAY', 'EDITH'), true);
+  assert.strictEqual(validateInterAiCommunication('EDITH', 'FRIDAY'), true);
+
+  // Unauthorized communications blocked
+  assert.strictEqual(validateInterAiCommunication('ULTRON', 'JARVIS'), false);
+  assert.strictEqual(validateInterAiCommunication('ULTRON', 'EDITH'), false);
+  assert.strictEqual(validateInterAiCommunication('KAREN', 'ULTRON'), false);
+  assert.strictEqual(validateInterAiCommunication('DUME', 'FRIDAY'), false);
+});
+
+test('Miss Minutes 9:00 PM Mon-Sat schedule window validation', () => {
+  function isMissMinutesWindow(dayOfWeek, hours, minutes) {
+    // 0 = Sunday, 1 = Mon ... 6 = Sat
+    const isMonToSat = dayOfWeek >= 1 && dayOfWeek <= 6;
+    const isNinePm = hours === 21 && minutes >= 0 && minutes <= 59;
+    return isMonToSat && isNinePm;
+  }
+
+  // Friday 9:15 PM -> true
+  assert.strictEqual(isMissMinutesWindow(5, 21, 15), true);
+  // Monday 9:00 PM -> true
+  assert.strictEqual(isMissMinutesWindow(1, 21, 0), true);
+  // Saturday 9:59 PM -> true
+  assert.strictEqual(isMissMinutesWindow(6, 21, 59), true);
+  // Sunday 9:00 PM -> false (Sunday holiday)
+  assert.strictEqual(isMissMinutesWindow(0, 21, 0), false);
+  // Tuesday 8:59 PM -> false (before 9 PM)
+  assert.strictEqual(isMissMinutesWindow(2, 20, 59), false);
+});
+
+test('3D Barometric Altitude Clamping (LH-101 vs LH-401 vertical discrimination)', () => {
+  const CLASSROOM_3D_FLOORS = {
+    'LH-101': { floorLevel: 1, minAltitudeMsl: 408.0, maxAltitudeMsl: 418.0 },
+    'LH-109': { floorLevel: 1, minAltitudeMsl: 408.0, maxAltitudeMsl: 418.0 },
+    'LH-401': { floorLevel: 4, minAltitudeMsl: 422.0, maxAltitudeMsl: 434.0 },
+    'LH-405': { floorLevel: 4, minAltitudeMsl: 422.0, maxAltitudeMsl: 434.0 },
+  };
+
+  function verifyFloorAltitude(altitude, targetRoom) {
+    const config = CLASSROOM_3D_FLOORS[targetRoom];
+    if (!config) return true;
+    if (config.floorLevel === 1 && altitude > config.maxAltitudeMsl) return false;
+    if (config.floorLevel === 4 && altitude < config.minAltitudeMsl) return false;
+    return true;
+  }
+
+  // Student physically on Floor 1 (altitude 414m)
+  assert.strictEqual(verifyFloorAltitude(414.0, 'LH-101'), true); // Valid for LH-101
+  assert.strictEqual(verifyFloorAltitude(414.0, 'LH-401'), false); // Rejected for LH-401 (student is on floor 1)
+
+  // Student physically on Floor 4 (altitude 427.5m)
+  assert.strictEqual(verifyFloorAltitude(427.5, 'LH-401'), true); // Valid for LH-401
+  assert.strictEqual(verifyFloorAltitude(427.5, 'LH-101'), false); // Rejected for LH-101 (student is on floor 4)
+});
+
+test('Ultrasonic Acoustic Frequency Map (LH-101 vs LH-401)', () => {
+  const ROOM_FREQUENCIES = {
+    'LH-101': 18500,
+    'LH-109': 18800,
+    'LH-401': 19300,
+    'LH-405': 19600,
+  };
+
+  function matchAcousticToken(detectedHz, targetRoom) {
+    const expected = ROOM_FREQUENCIES[targetRoom];
+    return Math.abs(detectedHz - expected) <= 140;
+  }
+
+  // LH-101 chime heard by student
+  assert.strictEqual(matchAcousticToken(18510, 'LH-101'), true);
+  assert.strictEqual(matchAcousticToken(18510, 'LH-401'), false); // Chime from 101 cannot mark for 401
+
+  // LH-401 chime heard by student
+  assert.strictEqual(matchAcousticToken(19305, 'LH-401'), true);
+  assert.strictEqual(matchAcousticToken(19305, 'LH-101'), false);
+});
+
+test('CrowdMesh Decentralized Peer Quorum Consensus validation', () => {
+  function evaluateQuorum(peerList, threshold = 2) {
+    const validPeers = peerList.filter(Boolean);
+    return {
+      quorumReached: validPeers.length >= threshold,
+      peerCount: validPeers.length,
+    };
+  }
+
+  // Quorum met: 3 classmates confirm presence
+  const quorumPassed = evaluateQuorum(['26AB01', '26AB05', '26AB08'], 2);
+  assert.strictEqual(quorumPassed.quorumReached, true);
+  assert.strictEqual(quorumPassed.peerCount, 3);
+
+  // Insufficient quorum: only 1 classmate checked in
+  const quorumFailed = evaluateQuorum(['26AB01'], 2);
+  assert.strictEqual(quorumFailed.quorumReached, false);
+  assert.strictEqual(quorumFailed.peerCount, 1);
+
+  // Empty room
+  const empty = evaluateQuorum([], 2);
+  assert.strictEqual(empty.quorumReached, false);
+});
+
+

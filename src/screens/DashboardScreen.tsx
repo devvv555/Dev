@@ -35,6 +35,10 @@ import { AttendanceDisputeModal } from '../components/AttendanceDisputeModal';
 import { FacultySelectModal } from '../components/FacultySelectModal';
 import { LmsService } from '../services/lmsService';
 import { toNewRollNo } from '../data/psgimMasterStudents';
+import { KarenGuide } from '../components/KarenGuide';
+import { WhatIfForecasterModal } from '../components/WhatIfForecasterModal';
+import { StarkArsenalModal } from '../components/StarkArsenalModal';
+import { ProtocolGate } from '../engines/starkProtocol/protocolGate';
 
 
 interface DashboardScreenProps {
@@ -97,6 +101,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [showDigitalIdModal, setShowDigitalIdModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showSubjectPickerModal, setShowSubjectPickerModal] = useState(false);
+  const [showKarenGuide, setShowKarenGuide] = useState(false);
+  const [showWhatIfForecaster, setShowWhatIfForecaster] = useState(false);
+  const [showStarkArsenal, setShowStarkArsenal] = useState(false);
+  const [isEnhancedSuit, setIsEnhancedSuit] = useState(false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
     code: string;
@@ -109,7 +117,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [rescheduleDate, setRescheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [rescheduleTime, setRescheduleTime] = useState<string>('16:45 - 17:45');
 
-
+  // Check Stark Protocol tier (Enhanced Suit vs Training Wheels)
+  useEffect(() => {
+    const checkSuit = async () => {
+      const isUnlocked = await ProtocolGate.isSuitUnlocked();
+      setIsEnhancedSuit(isUnlocked);
+    };
+    checkSuit();
+    const interval = setInterval(checkSuit, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     PsgimConnectService.fetchAnnouncements().then(setAnnouncements);
@@ -731,63 +748,100 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, isEnhancedSuit && { backgroundColor: '#0B0202' }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor="#38BDF8"
-          colors={['#38BDF8', '#2563EB']}
-          progressBackgroundColor="#1E293B"
+          tintColor={isEnhancedSuit ? '#EF4444' : '#38BDF8'}
+          colors={isEnhancedSuit ? ['#EF4444', '#EAB308'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isEnhancedSuit ? '#1F0606' : '#1E293B'}
         />
       }
     >
       {/* Student Welcome Card */}
-      <View style={styles.welcomeCard}>
+      <View style={[
+        styles.welcomeCard,
+        isEnhancedSuit && {
+          backgroundColor: '#180404',
+          borderColor: '#DC2626',
+          borderWidth: 1.5,
+          shadowColor: '#DC2626',
+        }
+      ]}>
         <View style={styles.welcomeTopRow}>
           <TouchableOpacity
-            style={styles.welcomeAvatar}
+            style={[
+              styles.welcomeAvatar,
+              isEnhancedSuit && {
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                borderColor: '#EF4444',
+              }
+            ]}
             onPress={() => setShowDigitalIdModal(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.welcomeAvatarText}>
+            <Text style={[styles.welcomeAvatarText, isEnhancedSuit && { color: '#FACC15' }]}>
               {studentName ? studentName.charAt(0) : 'S'}
             </Text>
           </TouchableOpacity>
           <View style={styles.welcomeInfo}>
-            <Text style={styles.welcomeGreeting}>Welcome,</Text>
-            <Text style={styles.welcomeName} numberOfLines={1}>
+            <Text style={[styles.welcomeGreeting, isEnhancedSuit && { color: '#FCA5A5' }]}>
+              {isEnhancedSuit ? 'Tactical HUD Active,' : 'Welcome,'}
+            </Text>
+            <Text style={[styles.welcomeName, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
               {studentName || 'Student'}
             </Text>
-            <Text style={styles.welcomeSub}>
-              <Text style={styles.welcomeRoll}>Roll No: {toNewRollNo(studentRollNo)}</Text>
-              {profile.section ? ` • ${profile.section}` : ''} • MBA (2026–28)
+            <Text style={[styles.welcomeSub, isEnhancedSuit && { color: '#FEE2E2' }]}>
+              <Text style={[styles.welcomeRoll, isEnhancedSuit && { color: '#FACC15' }]}>
+                Roll No: {toNewRollNo(studentRollNo)}
+              </Text>
+              {profile.section ? ` • ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark Mark XLVII' : 'MBA (2026–28)'}
             </Text>
           </View>
           {onOpenAdmin && (
             <TouchableOpacity
-              style={styles.welcomeAdminBadge}
+              style={[
+                styles.welcomeAdminBadge,
+                isEnhancedSuit && {
+                  backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                  borderColor: '#DC2626',
+                }
+              ]}
               onPress={onOpenAdmin}
               activeOpacity={0.7}
             >
-              <Text style={styles.welcomeAdminBadgeText}>Admin</Text>
+              <Text style={[styles.welcomeAdminBadgeText, isEnhancedSuit && { color: '#FEE2E2' }]}>
+                Admin
+              </Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Verified Student Details Row */}
-        <View style={styles.profileDetailsRow}>
+        <View style={[styles.profileDetailsRow, isEnhancedSuit && { borderTopColor: '#450A0A' }]}>
           {studentRollNo ? (
-            <View style={styles.profilePill}>
-              <Text style={styles.profilePillText}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#260606', borderColor: '#7F1D1D' }]}>
+              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#FACC15' }]}>
+                Roll No: {toNewRollNo(studentRollNo)}
+              </Text>
             </View>
           ) : null}
           {profile.email ? (
-            <View style={styles.profilePill}>
-              <Text style={styles.profilePillText} numberOfLines={1}>{profile.email}</Text>
+            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#260606', borderColor: '#7F1D1D' }]}>
+              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
+                {profile.email}
+              </Text>
             </View>
           ) : null}
+          {isEnhancedSuit && (
+            <View style={[styles.profilePill, { backgroundColor: '#7F1D1D', borderColor: '#EF4444' }]}>
+              <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '800' }}>
+                ⚡ STARK 576 ACTIVE
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Latest Announcement Banner */}
@@ -834,7 +888,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {/* Academic calendar pre-accounted message */}
           <View style={styles.weekdayNotifAccountedBox}>
             <Text style={styles.weekdayNotifAccountedText}>
-              [OK] {weekdayHolidayAlert.accountingNote}
+              ✓ {weekdayHolidayAlert.accountingNote}
             </Text>
           </View>
 
@@ -912,18 +966,33 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       ) : null}
 
       {/* Top Banner: Overall Attendance Metric */}
-      <View style={styles.summaryCard}>
+      <View style={[
+        styles.summaryCard,
+        isEnhancedSuit && {
+          backgroundColor: '#1C0505',
+          borderColor: '#DC2626',
+          borderWidth: 1.5,
+          shadowColor: '#DC2626',
+        }
+      ]}>
         <View style={styles.summaryTopRow}>
           <View>
-            <Text style={styles.summaryTitle}>Overall Attendance</Text>
-            <Text style={styles.summarySubtitle}>
+            <Text style={[styles.summaryTitle, isEnhancedSuit && { color: '#FFFFFF' }]}>Overall Attendance</Text>
+            <Text style={[styles.summarySubtitle, isEnhancedSuit && { color: '#FCA5A5' }]}>
               {overall.totalAttended} of {overall.totalHeld} total hours attended
             </Text>
           </View>
           <View style={styles.badgeContainer}>
             {overall.percentage >= 75 ? (
-              <View style={[styles.activeMedBadge, { backgroundColor: '#064E3B', borderColor: '#059669' }]}>
-                <Text style={[styles.activeMedBadgeText, { color: '#34D399' }]}>Target Safe (≥75%)</Text>
+              <View style={[
+                styles.activeMedBadge,
+                isEnhancedSuit
+                  ? { backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: '#EAB308' }
+                  : { backgroundColor: '#064E3B', borderColor: '#059669' }
+              ]}>
+                <Text style={[styles.activeMedBadgeText, isEnhancedSuit ? { color: '#FACC15' } : { color: '#34D399' }]}>
+                  {isEnhancedSuit ? '🛡️ Stark Safe (≥75%)' : 'Target Safe (≥75%)'}
+                </Text>
               </View>
             ) : (
               <View style={[styles.activeMedBadge, { backgroundColor: '#450A0A', borderColor: '#DC2626' }]}>
@@ -935,13 +1004,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <AttendanceGauge metrics={overall} />
 
-        <View style={styles.summaryFooter}>
-          <Text style={styles.summaryFooterText}>{overall.summaryMessage}</Text>
+        <View style={[styles.summaryFooter, isEnhancedSuit && { borderTopColor: '#450A0A' }]}>
+          <Text style={[styles.summaryFooterText, isEnhancedSuit && { color: '#FEE2E2' }]}>{overall.summaryMessage}</Text>
         </View>
       </View>
 
       {/* Live Auto-Class Tracker Card (Strictly Today's Real-Time Schedule) */}
-      <View style={styles.promptSimulatorCard}>
+      <View style={[
+        styles.promptSimulatorCard,
+        isEnhancedSuit && {
+          backgroundColor: '#180404',
+          borderColor: '#7F1D1D',
+          borderWidth: 1.5,
+        }
+      ]}>
         {/* Header: Strictly Today's Schedule */}
         <View style={{ marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1291,7 +1367,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.connectIcon}>[Moodle]</Text>
+            <Text style={styles.connectIcon}>📚</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1369,7 +1445,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.connectIcon}>[Notices]</Text>
+            <Text style={styles.connectIcon}>📢</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1426,6 +1502,87 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
+      {/* MCU AI Fleet Companion Card */}
+      <View style={[styles.mcuAiCard, isEnhancedSuit && { backgroundColor: '#1A0404', borderColor: '#DC2626', borderWidth: 1.5 }]}>
+        <View style={styles.mcuAiHeaderRow}>
+          <View style={[styles.mcuAiAvatar, isEnhancedSuit && { backgroundColor: '#DC2626' }]}>
+            <Text style={styles.mcuAiAvatarText}>{isEnhancedSuit ? 'SP' : 'AI'}</Text>
+          </View>
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.mcuAiTitle, isEnhancedSuit && { color: '#FEE2E2' }]}>
+                {isEnhancedSuit ? 'Stark Protocol: Enhanced Suit' : 'MCU Intelligence Grid'}
+              </Text>
+              <View style={[styles.mcuAiActiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: '#EF4444' }]}>
+                <Text style={[styles.mcuAiActiveBadgeText, isEnhancedSuit && { color: '#F87171' }]}>
+                  {isEnhancedSuit ? 'RED & GOLD' : 'ONLINE'}
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.mcuAiSubtitle, isEnhancedSuit && { color: '#FCA5A5' }]}>
+              {isEnhancedSuit
+                ? '576 Tactical Matrix • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh'
+                : 'Karen • Miss Minutes (9 PM) • Ultron • Jarvis • Friday ⇄ Edith • DUM-E & U'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.mcuAiActionsRow}>
+          <TouchableOpacity
+            style={styles.mcuAiBtnPrimary}
+            onPress={() => setShowKarenGuide(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.mcuAiBtnPrimaryText}>Talk to Karen Guide</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.mcuAiBtnSecondary, { borderColor: '#EAB308', backgroundColor: 'rgba(234, 179, 8, 0.12)' }]}
+            onPress={() => setShowStarkArsenal(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FACC15', fontWeight: '800' }]}>Stark Arsenal</Text>
+          </TouchableOpacity>
+
+          {isEnhancedSuit && (
+            <>
+              <TouchableOpacity
+                style={[styles.mcuAiBtnSecondary, { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.12)' }]}
+                onPress={() => setShowWhatIfForecaster(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.mcuAiBtnSecondaryText, { color: '#38BDF8', fontWeight: '800' }]}>What-If Forecaster</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.mcuAiBtnSecondary, { borderColor: '#64748B', backgroundColor: 'rgba(100, 116, 139, 0.15)' }]}
+                onPress={async () => {
+                  try {
+                    Vibration.vibrate(40);
+                  } catch {}
+                  await ProtocolGate.engageTrainingWheels();
+                  setIsEnhancedSuit(false);
+                  Alert.alert('Training Wheels Re-engaged', 'Suit reset to standard blue student interface.');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.mcuAiBtnSecondaryText, { color: '#CBD5E1', fontWeight: '600' }]}>Training Wheels</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {onOpenAdmin && (
+            <TouchableOpacity
+              style={styles.mcuAiBtnSecondary}
+              onPress={onOpenAdmin}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.mcuAiBtnSecondaryText}>Open AI Operations</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {/* Filter Chips */}
       <View style={styles.filterRow}>
         {(['ALL', 'SAFE', 'SHORTAGE'] as const).map((tab) => (
@@ -1449,6 +1606,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           key={subject.id}
           subject={subject}
           studentRollNo={toNewRollNo(studentRollNo)}
+          isEnhancedSuit={isEnhancedSuit}
           onOpenCoursePlan={(code, name) =>
             setCoursePlanModalInfo({
               visible: true,
@@ -1895,6 +2053,36 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
         </View>
       </Modal>
+
+      {/* Karen Guide Modal */}
+      <KarenGuide
+        visible={showKarenGuide}
+        onClose={() => setShowKarenGuide(false)}
+        studentName={studentName}
+        isEnhancedSuit={isEnhancedSuit}
+      />
+
+      {/* What-If Bunk & Exam Forecaster Modal */}
+      <WhatIfForecasterModal
+        visible={showWhatIfForecaster}
+        onClose={() => setShowWhatIfForecaster(false)}
+        subjects={subjects}
+        timetable={timetable}
+      />
+
+      {/* Stark Tactical Arsenal Modal (News, Canteen #004, Faculty #005, Syllabus #006, Library #011, Karen Voice #025) */}
+      <StarkArsenalModal
+        visible={showStarkArsenal}
+        onClose={() => setShowStarkArsenal(false)}
+        studentName={studentName}
+        subjects={subjects}
+        timetable={timetable}
+        isSuitUnlocked={isEnhancedSuit}
+        onOpenWhatIf={() => {
+          setShowStarkArsenal(false);
+          setShowWhatIfForecaster(true);
+        }}
+      />
     </ScrollView>
   );
 };
@@ -3338,6 +3526,95 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 16,
+  },
+  mcuAiCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 12,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  mcuAiHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  mcuAiAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0284C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+  },
+  mcuAiAvatarText: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  mcuAiTitle: {
+    color: '#F8FAFC',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  mcuAiActiveBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  mcuAiActiveBadgeText: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  mcuAiSubtitle: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  mcuAiActionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  mcuAiBtnPrimary: {
+    flex: 1,
+    backgroundColor: '#0284C7',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mcuAiBtnPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  mcuAiBtnSecondary: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  mcuAiBtnSecondaryText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

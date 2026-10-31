@@ -158,7 +158,7 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
                     <Text style={styles.articleTitle}>{item.title}</Text>
                     <Text style={styles.articleSummary}>{item.summary}</Text>
                     <View style={styles.takeawayBox}>
-                      <Text style={styles.takeawayLabel}>💡 MBA Takeaway:</Text>
+                      <Text style={styles.takeawayLabel}>MBA Takeaway:</Text>
                       <Text style={styles.takeawayText}>{item.mbaTakeaway}</Text>
                     </View>
                   </View>
@@ -255,9 +255,9 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
                     </View>
 
                     <View style={styles.facDetailsRow}>
-                      <Text style={styles.facDetailItem}>📅 {fac.day}</Text>
-                      <Text style={styles.facDetailItem}>⏰ {fac.timing}</Text>
-                      <Text style={styles.facDetailItem}>📍 {fac.cabin}</Text>
+                      <Text style={styles.facDetailItem}>{fac.day}</Text>
+                      <Text style={styles.facDetailItem}>{fac.timing}</Text>
+                      <Text style={styles.facDetailItem}>Cabin: {fac.cabin}</Text>
                     </View>
 
                     <TouchableOpacity

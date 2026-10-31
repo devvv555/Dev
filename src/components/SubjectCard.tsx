@@ -12,6 +12,7 @@ interface SubjectCardProps {
   onQuickBunk?: (id: string) => void;
   onOpenCoursePlan?: (subjectCode: string, subjectName: string) => void;
   onEditFaculty?: (subject: Subject) => void;
+  isEnhancedSuit?: boolean;
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
@@ -19,6 +20,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   studentRollNo,
   onOpenCoursePlan,
   onEditFaculty,
+  isEnhancedSuit = false,
 }) => {
   const [showSessionsModal, setShowSessionsModal] = useState(false);
 
@@ -41,7 +43,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     subject.name.toLowerCase().includes('sports');
 
   return (
-    <View style={[styles.card, { borderLeftColor: subject.color }]}>
+    <View style={[
+      styles.card,
+      { borderLeftColor: isEnhancedSuit ? '#DC2626' : subject.color },
+      isEnhancedSuit && { backgroundColor: '#1A0404', borderColor: '#7F1D1D', borderWidth: 1.5 }
+    ]}>
       {/* Top Header */}
       <View style={styles.cardHeader}>
         <View style={styles.titleArea}>

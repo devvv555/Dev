@@ -845,7 +845,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.studzoneCard}>
         <View style={styles.studzoneCardHeader}>
           <View style={styles.studzoneIconCircle}>
-            <Text style={styles.studzoneCardIcon}>[Studzone]</Text>
+            <Text style={styles.studzoneCardIcon}>🎓</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
@@ -925,7 +925,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.psgimConnectCard}>
         <View style={styles.studzoneCardHeader}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.studzoneCardIcon}>[Moodle]</Text>
+            <Text style={styles.studzoneCardIcon}>📚</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
@@ -1003,7 +1003,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.psgimConnectCard}>
         <View style={styles.studzoneCardHeader}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.studzoneCardIcon}>[Connect]</Text>
+            <Text style={styles.studzoneCardIcon}>📢</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
@@ -1077,7 +1077,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       {/* Information Tip */}
       <View style={styles.infoBanner}>
-        <Text style={styles.infoBannerIcon}>[Tip]</Text>
+        <Text style={styles.infoBannerIcon}>💡</Text>
         <Text style={styles.infoBannerText}>
           The <Text style={styles.boldText}>Hourly App</Text> logs each period real-time. The <Text style={styles.boldText}>College ERP</Text> represents your official baseline. Tap "Edit" on any subject below to make manual adjustments.
         </Text>
@@ -1478,7 +1478,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             <View style={styles.modalCard}>
               <View style={styles.studzoneModalHeader}>
                 <View style={styles.studzoneModalIconCircle}>
-                  <Text style={styles.studzoneModalIcon}>[Studzone]</Text>
+                  <Text style={styles.studzoneModalIcon}>🎓</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.modalTitle}>PSG Studzone Extractor</Text>

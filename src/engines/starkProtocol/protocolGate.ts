@@ -17,6 +17,9 @@ export interface ProtocolFeatures {
   liveTimesheetEngine: boolean;
   proxyAttendanceAudit: boolean;
   disputeEvidenceVault: boolean;
+  whatIfLeaveForecaster: boolean;
+  acousticRoomRadar: boolean;
+  crowdMeshConsensus: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -24,6 +27,10 @@ const STORAGE_KEYS = {
   PASSCODE_HASH: '@stark_protocol_passcode',
   TAP_STAMP: '@stark_protocol_tap_stamp',
 };
+
+// Sliding window timestamp tracker for 5-tap detection
+let tapTimestamps: number[] = [];
+let modeListeners: Array<(mode: ProtocolMode) => void> = [];
 
 // Default standard state (Spider-Man suit on Training Wheels)
 const DEFAULT_FEATURES: Record<ProtocolMode, ProtocolFeatures> = {
@@ -39,6 +46,9 @@ const DEFAULT_FEATURES: Record<ProtocolMode, ProtocolFeatures> = {
     liveTimesheetEngine: false,
     proxyAttendanceAudit: false,
     disputeEvidenceVault: false,
+    whatIfLeaveForecaster: false,
+    acousticRoomRadar: false,
+    crowdMeshConsensus: false,
   },
   ENHANCED_SUIT: {
     attendanceTracking: true,
@@ -52,6 +62,9 @@ const DEFAULT_FEATURES: Record<ProtocolMode, ProtocolFeatures> = {
     liveTimesheetEngine: true,
     proxyAttendanceAudit: true,
     disputeEvidenceVault: true,
+    whatIfLeaveForecaster: true,
+    acousticRoomRadar: true,
+    crowdMeshConsensus: true,
   },
 };
 
@@ -94,6 +107,9 @@ export const ProtocolGate = {
     const clean = passcode.trim().toUpperCase();
     if (UNLOCK_PASSCODES.includes(clean)) {
       await AsyncStorage.setItem(STORAGE_KEYS.PROTOCOL_MODE, 'ENHANCED_SUIT');
+      modeListeners.forEach((fn) => {
+        try { fn('ENHANCED_SUIT'); } catch {}
+      });
       return {
         success: true,
         message: 'Training Wheels Protocol disengaged. Full Enhanced Suit capabilities active.',
@@ -110,13 +126,44 @@ export const ProtocolGate = {
    */
   async engageTrainingWheels(): Promise<void> {
     await AsyncStorage.setItem(STORAGE_KEYS.PROTOCOL_MODE, 'TRAINING_WHEELS');
+    modeListeners.forEach((fn) => {
+      try { fn('TRAINING_WHEELS'); } catch {}
+    });
   },
 
   /**
-   * Easter egg tap detector (e.g. 5 taps within 2.5 seconds on logo)
+   * Subscribe to real-time mode changes
+   */
+  onModeChange(callback: (mode: ProtocolMode) => void): () => void {
+    modeListeners.push(callback);
+    return () => {
+      modeListeners = modeListeners.filter((cb) => cb !== callback);
+    };
+  },
+
+  /**
+   * Sliding window tap detector (5 taps within 2.5 seconds on logo)
+   */
+  recordTap(timeWindowMs: number = 2500, threshold: number = 5): boolean {
+    const now = Date.now();
+    tapTimestamps = tapTimestamps.filter((t) => now - t <= timeWindowMs);
+    tapTimestamps.push(now);
+    if (tapTimestamps.length >= threshold) {
+      tapTimestamps = []; // reset after trigger
+      return true;
+    }
+    return false;
+  },
+
+  resetTaps(): void {
+    tapTimestamps = [];
+  },
+
+  /**
+   * Easter egg tap detector (legacy threshold check)
    */
   registerTap(tapCount: number, timeWindowMs: number = 2500): boolean {
-    // Returns true when threshold is met to trigger the secret unlock modal
     return tapCount >= 5;
   },
 };
+

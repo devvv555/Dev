@@ -1,0 +1,4034 @@
+[
+  {
+    "dRollNo": "D26AA01",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA02",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA03",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA04",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA05",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA06",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA07",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA08",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA09",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA10",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA11",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA12",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA13",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA14",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA15",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA16",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA17",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA18",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA19",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA20",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA21",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA22",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA23",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA24",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA25",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA26",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA27",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA28",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA29",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA30",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AA31",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA32",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA33",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA34",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA35",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA36",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA37",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA38",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA39",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA40",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA41",
+    "batchSection": "A",
+    "page": 1,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA42",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA43",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA44",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA45",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AA46",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA47",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA48",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA49",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA50",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA51",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA52",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA53",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA54",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA55",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA56",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA57",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA58",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AA59",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AA60",
+    "batchSection": "A",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM1",
+      "SPORTS": "SPORTS1",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB01",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB02",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB03",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB04",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB05",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB06",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB07",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB08",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB09",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB10",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB11",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB12",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB13",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB14",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB15",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB16",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB17",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB18",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB19",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB20",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB21",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB22",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB23",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB24",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB25",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB26",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB27",
+    "batchSection": "B",
+    "page": 2,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB28",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB29",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB30",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AB31",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB32",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB33",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB34",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB35",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB36",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB37",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB38",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB39",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB40",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB41",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB42",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB43",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB44",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB45",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AB46",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB47",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB48",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB49",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB50",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB51",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB52",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB53",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB54",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB55",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB56",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB57",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB58",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AB59",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AB60",
+    "batchSection": "B",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM2",
+      "SPORTS": "SPORTS2",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC01",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC02",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC03",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC04",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC05",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC06",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC07",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC08",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC09",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC10",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC11",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC12",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC13",
+    "batchSection": "C",
+    "page": 3,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC14",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC15",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC16",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC17",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC18",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC19",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC20",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC21",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC22",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC23",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC24",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC25",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC26",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC27",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC28",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC29",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC30",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AC31",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC32",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC33",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC34",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC35",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC36",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC37",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC38",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC39",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC40",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC41",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC42",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC43",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC44",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC45",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AC46",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC47",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC48",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC49",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC50",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC51",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC52",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC53",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC54",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC55",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC56",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC57",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC58",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AC59",
+    "batchSection": "C",
+    "page": 4,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AC60",
+    "batchSection": "C",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "SPORTS3",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD01",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD02",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD03",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD04",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD05",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD06",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD07",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD08",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD09",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD10",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD11",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD12",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD13",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD14",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD15",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD16",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD17",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD18",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD19",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD20",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD21",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD22",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD23",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD24",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD25",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD26",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD27",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD28",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD29",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD30",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA4",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AD31",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD32",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD33",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD34",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD35",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD36",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD37",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD38",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD39",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD40",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD41",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD42",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD43",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD44",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD45",
+    "batchSection": "D",
+    "page": 5,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA2",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AD46",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD47",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD48",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD49",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD50",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD51",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD52",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD53",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD54",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD55",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD56",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD57",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD58",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM4",
+      "MC": "MC1",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AD59",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA2",
+      "SSA": "SSA4"
+    }
+  },
+  {
+    "dRollNo": "D26AD60",
+    "batchSection": "D",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM4",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "SPORTS4",
+      "BS": "BS4",
+      "EDM": "EDM4",
+      "LA": "LA4",
+      "SSA": "SSA2"
+    }
+  },
+  {
+    "dRollNo": "D26AE01",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC2",
+      "SSM": "SSM1",
+      "SPORTS": "",
+      "BS": "BS1",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AE02",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM2",
+      "SPORTS": "",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AE03",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM1",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AE04",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM1",
+      "MC": "MC4",
+      "SSM": "SSM4",
+      "SPORTS": "",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AE05",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM2",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "",
+      "BS": "BS2",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AE06",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB2",
+      "ADM": "ADM2",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AE07",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM2",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AE08",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM2",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "SPORTS": "",
+      "BS": "BS2",
+      "EDM": "EDM3",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AE09",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM3",
+      "MC": "MC2",
+      "SSM": "SSM4",
+      "SPORTS": "",
+      "BS": "BS3",
+      "EDM": "EDM3",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AE11",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB3",
+      "ADM": "ADM3",
+      "MC": "MC3",
+      "SSM": "SSM3",
+      "SPORTS": "",
+      "BS": "BS2",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  },
+  {
+    "dRollNo": "D26AE12",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB4",
+      "ADM": "ADM3",
+      "MC": "MC4",
+      "SSM": "SSM3",
+      "SPORTS": "",
+      "BS": "BS3",
+      "EDM": "EDM1",
+      "LA": "LA3",
+      "SSA": "SSA1"
+    }
+  },
+  {
+    "dRollNo": "D26AE13",
+    "batchSection": "AE",
+    "page": 6,
+    "courses": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM4",
+      "MC": "MC3",
+      "SSM": "SSM2",
+      "SPORTS": "",
+      "BS": "BS1",
+      "EDM": "EDM2",
+      "LA": "LA1",
+      "SSA": "SSA3"
+    }
+  }
+]
