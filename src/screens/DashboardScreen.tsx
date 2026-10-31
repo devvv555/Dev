@@ -1502,91 +1502,85 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
-      {/* MCU AI Fleet Companion Card */}
-      <View style={[styles.mcuAiCard, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1.5 }]}>
-        <View style={styles.mcuAiHeaderRow}>
-          <View style={[styles.mcuAiAvatar, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1', borderWidth: 1 }]}>
-            <Text style={[styles.mcuAiAvatarText, isEnhancedSuit && { color: '#F4E8C1' }]}>{isEnhancedSuit ? 'SP' : 'AI'}</Text>
-          </View>
-          <View style={{ flex: 1, marginLeft: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.mcuAiTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>
-                {isEnhancedSuit ? 'Stark Protocol: Enhanced Suit' : 'MCU Intelligence Grid'}
-              </Text>
-              <View style={[styles.mcuAiActiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }]}>
-                <Text style={[styles.mcuAiActiveBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>
-                  {isEnhancedSuit ? 'MIDNIGHT GOLD' : 'ONLINE'}
-                </Text>
-              </View>
+      {/* MCU AI Fleet Companion Card - Strictly Visible in Enhanced Suit Mode Only */}
+      {isEnhancedSuit && (
+        <View style={[styles.mcuAiCard, { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1.5 }]}>
+          <View style={styles.mcuAiHeaderRow}>
+            <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1', borderWidth: 1 }]}>
+              <Text style={[styles.mcuAiAvatarText, { color: '#F4E8C1' }]}>SP</Text>
             </View>
-            <Text style={[styles.mcuAiSubtitle, isEnhancedSuit && { color: '#C5BA9D' }]}>
-              {isEnhancedSuit
-                ? '576 Tactical Matrix • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh'
-                : 'Karen • Miss Minutes (9 PM) • Ultron • Jarvis • Friday ⇄ Edith • DUM-E & U'}
-            </Text>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.mcuAiTitle, { color: '#F4E8C1' }]}>
+                  Stark Protocol: Enhanced Suit
+                </Text>
+                <View style={[styles.mcuAiActiveBadge, { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }]}>
+                  <Text style={[styles.mcuAiActiveBadgeText, { color: '#F4E8C1' }]}>
+                    MIDNIGHT GOLD
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.mcuAiSubtitle, { color: '#C5BA9D' }]}>
+                576 Tactical Matrix • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.mcuAiActionsRow}>
-          <TouchableOpacity
-            style={[styles.mcuAiBtnPrimary, isEnhancedSuit && { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }]}
-            onPress={() => setShowKarenGuide(true)}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.mcuAiBtnPrimaryText, isEnhancedSuit && { color: '#0B132B', fontWeight: '800' }]}>Talk to Karen Guide</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.mcuAiBtnSecondary,
-              isEnhancedSuit
-                ? { borderColor: '#F4E8C1', backgroundColor: 'rgba(244, 232, 193, 0.12)' }
-                : { borderColor: '#EAB308', backgroundColor: 'rgba(234, 179, 8, 0.12)' }
-            ]}
-            onPress={() => setShowStarkArsenal(true)}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.mcuAiBtnSecondaryText, isEnhancedSuit ? { color: '#F4E8C1', fontWeight: '800' } : { color: '#FACC15', fontWeight: '800' }]}>Stark Arsenal</Text>
-          </TouchableOpacity>
-
-          {isEnhancedSuit && (
-            <>
-              <TouchableOpacity
-                style={[styles.mcuAiBtnSecondary, { borderColor: '#F4E8C1', backgroundColor: 'rgba(244, 232, 193, 0.12)' }]}
-                onPress={() => setShowWhatIfForecaster(true)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.mcuAiBtnSecondaryText, { color: '#F4E8C1', fontWeight: '800' }]}>What-If Forecaster</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.mcuAiBtnSecondary, { borderColor: '#2A3B5C', backgroundColor: '#0B132B' }]}
-                onPress={async () => {
-                  try {
-                    Vibration.vibrate(40);
-                  } catch {}
-                  await ProtocolGate.engageTrainingWheels();
-                  setIsEnhancedSuit(false);
-                  Alert.alert('Training Wheels Re-engaged', 'Suit reset to standard blue student interface.');
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.mcuAiBtnSecondaryText, { color: '#F4E8C1', fontWeight: '600' }]}>Training Wheels</Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {onOpenAdmin && (
+          <View style={styles.mcuAiActionsRow}>
             <TouchableOpacity
-              style={styles.mcuAiBtnSecondary}
-              onPress={onOpenAdmin}
+              style={[styles.mcuAiBtnPrimary, { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }]}
+              onPress={() => setShowKarenGuide(true)}
               activeOpacity={0.8}
             >
-              <Text style={styles.mcuAiBtnSecondaryText}>Open AI Operations</Text>
+              <Text style={[styles.mcuAiBtnPrimaryText, { color: '#0B132B', fontWeight: '800' }]}>Talk to Karen Guide</Text>
             </TouchableOpacity>
-          )}
+
+            <TouchableOpacity
+              style={[
+                styles.mcuAiBtnSecondary,
+                { borderColor: '#F4E8C1', backgroundColor: 'rgba(244, 232, 193, 0.12)' }
+              ]}
+              onPress={() => setShowStarkArsenal(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#F4E8C1', fontWeight: '800' }]}>Stark Arsenal</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.mcuAiBtnSecondary, { borderColor: '#F4E8C1', backgroundColor: 'rgba(244, 232, 193, 0.12)' }]}
+              onPress={() => setShowWhatIfForecaster(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#F4E8C1', fontWeight: '800' }]}>What-If Forecaster</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.mcuAiBtnSecondary, { borderColor: '#2A3B5C', backgroundColor: '#0B132B' }]}
+              onPress={async () => {
+                try {
+                  Vibration.vibrate(40);
+                } catch {}
+                await ProtocolGate.engageTrainingWheels();
+                setIsEnhancedSuit(false);
+                Alert.alert('Training Wheels Re-engaged', 'Suit reset to standard blue student interface.');
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#F4E8C1', fontWeight: '600' }]}>Training Wheels</Text>
+            </TouchableOpacity>
+
+            {onOpenAdmin && (
+              <TouchableOpacity
+                style={styles.mcuAiBtnSecondary}
+                onPress={onOpenAdmin}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.mcuAiBtnSecondaryText}>Open AI Operations</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Filter Chips */}
       <View style={styles.filterRow}>
