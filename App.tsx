@@ -787,18 +787,18 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={[styles.safeArea, isEnhancedSuit && { backgroundColor: '#0B0202' }]}>
+      <SafeAreaView style={[styles.safeArea, isEnhancedSuit && { backgroundColor: '#0B132B' }]}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={isEnhancedSuit ? '#180404' : '#0F172A'}
+        backgroundColor={isEnhancedSuit ? '#0B132B' : '#0F172A'}
       />
 
       {/* Main Top Header (Balanced 2-Row Clean Layout) */}
       <View style={[
         styles.appHeader,
         isEnhancedSuit && {
-          backgroundColor: '#180404',
-          borderBottomColor: '#7F1D1D',
+          backgroundColor: '#1C2541',
+          borderBottomColor: '#2A3B5C',
           borderBottomWidth: 1.5,
         }
       ]}>
@@ -813,11 +813,11 @@ export default function App() {
               source={require('./assets/icon.png')}
               style={[
                 styles.headerLogoImg,
-                isEnhancedSuit && { borderWidth: 1, borderColor: '#FACC15' }
+                isEnhancedSuit && { borderWidth: 1, borderColor: '#F4E8C1' }
               ]}
               resizeMode="cover"
             />
-            <Text style={[styles.appName, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
+            <Text style={[styles.appName, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
               {isEnhancedSuit ? 'STARK ONE' : 'PSGIM One'}
             </Text>
           </TouchableOpacity>
@@ -827,13 +827,13 @@ export default function App() {
               style={[
                 styles.feedbackHeaderBtn,
                 isEnhancedSuit
-                  ? { borderColor: '#EAB308', backgroundColor: 'rgba(234, 179, 8, 0.2)' }
+                  ? { borderColor: '#F4E8C1', backgroundColor: 'rgba(244, 232, 193, 0.15)' }
                   : { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.15)' }
               ]}
               onPress={() => setShowKarenGuide(true)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.feedbackHeaderBtnText, isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : { color: '#38BDF8' }]}>
+              <Text style={[styles.feedbackHeaderBtnText, isEnhancedSuit ? { color: '#F4E8C1', fontWeight: '800' } : { color: '#38BDF8' }]}>
                 {isEnhancedSuit ? 'Karen' : 'Guide'}
               </Text>
             </TouchableOpacity>
@@ -841,44 +841,44 @@ export default function App() {
             <TouchableOpacity
               style={[
                 styles.feedbackHeaderBtn,
-                isEnhancedSuit && { borderColor: '#7F1D1D', backgroundColor: '#260606' }
+                isEnhancedSuit && { borderColor: '#2A3B5C', backgroundColor: '#1C2541' }
               ]}
               onPress={() => setShowFeedbackModal(true)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.feedbackHeaderBtnText, isEnhancedSuit && { color: '#FCA5A5' }]}>Feedback</Text>
+              <Text style={[styles.feedbackHeaderBtnText, isEnhancedSuit && { color: '#F4E8C1' }]}>Feedback</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.logoutBtn,
-                isEnhancedSuit && { backgroundColor: '#450A0A' }
+                isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1 }
               ]}
               onPress={handleLogout}
               activeOpacity={0.7}
             >
-              <Text style={[styles.logoutBtnText, isEnhancedSuit && { color: '#F87171' }]}>Logout</Text>
+              <Text style={[styles.logoutBtnText, isEnhancedSuit && { color: '#F4E8C1' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Row 2: Cohort Sub-bar & Logged In Student Identity */}
-        <View style={[styles.headerSubRow, isEnhancedSuit && { borderTopColor: 'rgba(127, 29, 29, 0.6)' }]}>
-          <Text style={[styles.appTagline, isEnhancedSuit && { color: '#FCA5A5' }]}>
+        <View style={[styles.headerSubRow, isEnhancedSuit && { borderTopColor: 'rgba(42, 59, 92, 0.6)', backgroundColor: '#1C2541' }]}>
+          <Text style={[styles.appTagline, isEnhancedSuit && { color: '#F4E8C1' }]}>
             {isEnhancedSuit ? 'Mark XLVII Tactical Armor • Karen AI' : 'PSGIM Campus Super-App • I MBA'}
           </Text>
           <TouchableOpacity
             style={[
               styles.studentBadge,
               isEnhancedSuit && {
-                backgroundColor: '#260606',
-                borderColor: '#DC2626',
+                backgroundColor: 'rgba(244, 232, 193, 0.12)',
+                borderColor: '#F4E8C1',
               }
             ]}
             onPress={() => setShowProfileMenu((prev) => !prev)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.studentBadgeText, isEnhancedSuit && { color: '#FACC15' }]} numberOfLines={1}>
+            <Text style={[styles.studentBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
               {activeRollNo ? `Roll: ${toNewRollNo(activeRollNo)}` : 'Profile'} {showProfileMenu ? '▲' : '▼'}
             </Text>
           </TouchableOpacity>
@@ -989,8 +989,8 @@ export default function App() {
       <View style={[
         styles.tabBar,
         isEnhancedSuit && {
-          backgroundColor: '#180404',
-          borderTopColor: '#7F1D1D',
+          backgroundColor: '#1C2541',
+          borderTopColor: '#2A3B5C',
           borderTopWidth: 1.5,
         }
       ]}>
@@ -998,15 +998,15 @@ export default function App() {
           activeOpacity={0.7}
           style={[
             styles.tabItem,
-            activeTab === 'DASHBOARD' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+            activeTab === 'DASHBOARD' && (isEnhancedSuit ? { backgroundColor: '#0B132B' } : styles.tabItemActive)
           ]}
           onPress={() => handleTabChange('DASHBOARD')}
         >
           <Text style={styles.tabIcon}>⏱️</Text>
           <Text style={[
             styles.tabLabel,
-            isEnhancedSuit && { color: '#9CA3AF' },
-            activeTab === 'DASHBOARD' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+            isEnhancedSuit && { color: '#8E9BB0' },
+            activeTab === 'DASHBOARD' && (isEnhancedSuit ? { color: '#F4E8C1', fontWeight: '800' } : styles.tabLabelActive)
           ]}>
             Hourly
           </Text>
@@ -1016,7 +1016,7 @@ export default function App() {
           activeOpacity={0.7}
           style={[
             styles.tabItem,
-            activeTab === 'TIMETABLE' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+            activeTab === 'TIMETABLE' && (isEnhancedSuit ? { backgroundColor: '#0B132B' } : styles.tabItemActive)
           ]}
           onPress={() => handleTabChange('TIMETABLE')}
         >
@@ -1024,8 +1024,8 @@ export default function App() {
           <Text
             style={[
               styles.tabLabel,
-              isEnhancedSuit && { color: '#9CA3AF' },
-              activeTab === 'TIMETABLE' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+              isEnhancedSuit && { color: '#8E9BB0' },
+              activeTab === 'TIMETABLE' && (isEnhancedSuit ? { color: '#F4E8C1', fontWeight: '800' } : styles.tabLabelActive)
             ]}
             numberOfLines={1}
           >
@@ -1037,15 +1037,15 @@ export default function App() {
           activeOpacity={0.7}
           style={[
             styles.tabItem,
-            activeTab === 'CALENDAR' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+            activeTab === 'CALENDAR' && (isEnhancedSuit ? { backgroundColor: '#0B132B' } : styles.tabItemActive)
           ]}
           onPress={() => handleTabChange('CALENDAR')}
         >
           <Text style={styles.tabIcon}>📅</Text>
           <Text style={[
             styles.tabLabel,
-            isEnhancedSuit && { color: '#9CA3AF' },
-            activeTab === 'CALENDAR' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+            isEnhancedSuit && { color: '#8E9BB0' },
+            activeTab === 'CALENDAR' && (isEnhancedSuit ? { color: '#F4E8C1', fontWeight: '800' } : styles.tabLabelActive)
           ]}>
             Calendar
           </Text>
@@ -1055,7 +1055,7 @@ export default function App() {
           activeOpacity={0.7}
           style={[
             styles.tabItem,
-            activeTab === 'ERP_SYNC' && (isEnhancedSuit ? { backgroundColor: '#3B0A0A' } : styles.tabItemActive)
+            activeTab === 'ERP_SYNC' && (isEnhancedSuit ? { backgroundColor: '#0B132B' } : styles.tabItemActive)
           ]}
           onPress={() => handleTabChange('ERP_SYNC')}
         >
@@ -1063,8 +1063,8 @@ export default function App() {
           <Text
             style={[
               styles.tabLabel,
-              isEnhancedSuit && { color: '#9CA3AF' },
-              activeTab === 'ERP_SYNC' && (isEnhancedSuit ? { color: '#FACC15', fontWeight: '800' } : styles.tabLabelActive)
+              isEnhancedSuit && { color: '#8E9BB0' },
+              activeTab === 'ERP_SYNC' && (isEnhancedSuit ? { color: '#F4E8C1', fontWeight: '800' } : styles.tabLabelActive)
             ]}
             numberOfLines={1}
           >

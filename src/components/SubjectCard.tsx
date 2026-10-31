@@ -45,28 +45,28 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   return (
     <View style={[
       styles.card,
-      { borderLeftColor: isEnhancedSuit ? '#DC2626' : subject.color },
-      isEnhancedSuit && { backgroundColor: '#1A0404', borderColor: '#7F1D1D', borderWidth: 1.5 }
+      { borderLeftColor: isEnhancedSuit ? '#F4E8C1' : subject.color },
+      isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1.5 }
     ]}>
       {/* Top Header */}
       <View style={styles.cardHeader}>
         <View style={styles.titleArea}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={styles.codeText}>{subject.code}</Text>
+            <Text style={[styles.codeText, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject.code}</Text>
             {isSports && (
               <View style={[styles.batchPill, { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }]}>
                 <Text style={[styles.batchPillText, { color: '#818CF8' }]}>No Attendance</Text>
               </View>
             )}
           </View>
-          <Text style={styles.nameText} numberOfLines={1}>
+          <Text style={[styles.nameText, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
             {subject.name}
           </Text>
           {(subject.batch || subject.faculty) && (
             <View style={styles.batchInfoRow}>
               {subject.batch && (
-                <View style={styles.batchPill}>
-                  <Text style={styles.batchPillText}>{subject.batch}</Text>
+                <View style={[styles.batchPill, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.12)', borderColor: '#F4E8C1' }]}>
+                  <Text style={[styles.batchPillText, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject.batch}</Text>
                 </View>
               )}
               <TouchableOpacity
@@ -74,7 +74,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                 style={styles.facultyTouchBtn}
                 activeOpacity={0.7}
               >
-                <Text style={styles.facultyText} numberOfLines={1}>
+                <Text style={[styles.facultyText, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
                   {subject.faculty || 'Assign Faculty'} ✎
                 </Text>
               </TouchableOpacity>
@@ -86,13 +86,13 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Attendance Stats Row */}
       {isSports ? (
         <View style={styles.statsRow}>
-          <Text style={styles.classCountsText}>Physical Education & Wellness</Text>
+          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#F4E8C1' }]}>Physical Education & Wellness</Text>
           <Text style={styles.officialSyncText}>Not tracked in the ERP</Text>
         </View>
       ) : (
         <View style={styles.statsRow}>
-          <Text style={styles.classCountsText}>
-            <Text style={styles.attendedCount}>{subject.attended}</Text> / {subject.total} hrs attended
+          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#F4E8C1' }]}>
+            <Text style={[styles.attendedCount, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject.attended}</Text> / {subject.total} hrs attended
           </Text>
           <Text style={styles.officialSyncText}>
             College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
@@ -133,11 +133,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Course Plan & Continuous Assessment (CA) Pattern */}
       {onOpenCoursePlan && (
         <TouchableOpacity
-          style={styles.coursePlanBtn}
+          style={[styles.coursePlanBtn, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }]}
           onPress={() => onOpenCoursePlan(subject.code, subject.name)}
           activeOpacity={0.7}
         >
-          <Text style={styles.coursePlanBtnText}>
+          <Text style={[styles.coursePlanBtnText, isEnhancedSuit && { color: '#F4E8C1' }]}>
             Course Plan & CA Marks (50M Target) →
           </Text>
         </TouchableOpacity>
