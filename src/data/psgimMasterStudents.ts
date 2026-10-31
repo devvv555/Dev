@@ -78,7 +78,7 @@ export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
   "D26AB02": { dRollNo: "D26AB02", collegeRollNo: "26AB18", name: "GIFTY SHARON K", batch: "B", dob: "2001-08-05", dobPassword: "05AUG01", bloodGroup: "B +ve" },
   "D26AB03": { dRollNo: "D26AB03", collegeRollNo: "26AB19", name: "GOKUL NANDHAN VENUGOPAL", batch: "B", dob: "2005-05-16", dobPassword: "16MAY05", bloodGroup: "B +ve" },
   "D26AB04": { dRollNo: "D26AB04", collegeRollNo: "26AB13", name: "DHAARANI G", batch: "B", dob: "2004-10-15", dobPassword: "15OCT04", bloodGroup: "AB +ve" },
-  "D26AB05": { dRollNo: "D26AB05", collegeRollNo: "26AB12", name: "DEVDARSHAN V", batch: "B", dob: "2005-12-13", dobPassword: "13DEC05", bloodGroup: "B +ve" },
+  "D26AB05": { dRollNo: "D26AB05", collegeRollNo: "26AB12", name: "DEVDARSHAN V", batch: "B", dob: "2005-08-13", dobPassword: "13AUG05", bloodGroup: "B +ve" },
   "D26AB06": { dRollNo: "D26AB06", collegeRollNo: "26AB30", name: "MIRTHIKA S N", batch: "B", dob: "2002-03-12", dobPassword: "12MAR02", bloodGroup: "A1 +ve" },
   "D26AB07": { dRollNo: "D26AB07", collegeRollNo: "26AB04", name: "AMRUTHA SIVAANI", batch: "B", dob: "2002-01-24", dobPassword: "24JAN02", bloodGroup: "O +ve" },
   "D26AB08": { dRollNo: "D26AB08", collegeRollNo: "26AB34", name: "NEVEDHA B", batch: "B", dob: "2004-08-24", dobPassword: "24AUG04", bloodGroup: "B +ve" },
