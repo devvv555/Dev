@@ -878,57 +878,79 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Weekday Holiday 7-Day Notification Alert (Strictly NO notification for weekend holidays) */}
       {weekdayHolidayAlert ? (
         <TouchableOpacity
-          style={styles.weekdayNotifCard}
+          style={[
+            styles.weekdayNotifCard,
+            isEnhancedSuit && {
+              backgroundColor: '#1C2541',
+              borderColor: '#2A3B5C',
+              borderWidth: 1.5,
+            }
+          ]}
           onPress={onOpenCalendar}
           activeOpacity={0.85}
         >
           <View style={styles.weekdayNotifTop}>
-            <View style={styles.weekdayNotifBadge}>
-              <Text style={styles.weekdayNotifBadgeText}>
+            <View style={[
+              styles.weekdayNotifBadge,
+              isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }
+            ]}>
+              <Text style={[styles.weekdayNotifBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>
                 HOLIDAY ALERT • {weekdayHolidayAlert.daysRemaining === 0 ? 'TODAY' : weekdayHolidayAlert.daysRemaining === 1 ? 'TOMORROW' : `IN ${weekdayHolidayAlert.daysRemaining} DAYS`}
               </Text>
             </View>
-            <Text style={styles.weekdayNotifLink}>View Calendar →</Text>
+            <Text style={[styles.weekdayNotifLink, isEnhancedSuit && { color: '#F4E8C1' }]}>View Calendar →</Text>
           </View>
 
-          <Text style={styles.weekdayNotifTitle}>
+          <Text style={[styles.weekdayNotifTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>
             {weekdayHolidayAlert.holiday.title} ({formatDateDMY(weekdayHolidayAlert.holiday.date)} • {weekdayHolidayAlert.holiday.day})
           </Text>
 
           {/* Academic calendar pre-accounted message */}
-          <View style={styles.weekdayNotifAccountedBox}>
-            <Text style={styles.weekdayNotifAccountedText}>
+          <View style={[
+            styles.weekdayNotifAccountedBox,
+            isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }
+          ]}>
+            <Text style={[styles.weekdayNotifAccountedText, isEnhancedSuit && { color: '#C5BA9D' }]}>
               ✓ {weekdayHolidayAlert.accountingNote}
             </Text>
           </View>
 
           {/* Expected After-College Rescheduled / Makeup Classes breakdown */}
           {weekdayHolidayAlert.expectedMakeupClasses && weekdayHolidayAlert.expectedMakeupClasses.length > 0 && (
-            <View style={styles.makeupClassesBox}>
+            <View style={[
+              styles.makeupClassesBox,
+              isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }
+            ]}>
               <View style={styles.makeupClassesHeader}>
-                <Text style={styles.makeupClassesBadge}>
+                <Text style={[styles.makeupClassesBadge, isEnhancedSuit && { color: '#F4E8C1' }]}>
                   {weekdayHolidayAlert.totalExpectedHours} {weekdayHolidayAlert.totalExpectedHours === 1 ? 'HOUR' : 'HOURS'} EXPECTED AFTER COLLEGE
                 </Text>
-                <Text style={styles.makeupClassesSub}>
+                <Text style={[styles.makeupClassesSub, isEnhancedSuit && { color: '#C5BA9D' }]}>
                   {weekdayHolidayAlert.expectedMakeupClasses.length} regular periods will be compensated:
                 </Text>
               </View>
 
               <View style={styles.makeupClassesList}>
                 {weekdayHolidayAlert.expectedMakeupClasses.map((item, idx) => (
-                  <View key={idx} style={styles.makeupClassItem}>
+                  <View key={idx} style={[
+                    styles.makeupClassItem,
+                    isEnhancedSuit && { borderTopColor: '#2A3B5C' }
+                  ]}>
                     <View style={styles.makeupClassItemInfo}>
-                      <Text style={styles.makeupClassCode}>{item.code}</Text>
-                      <Text style={styles.makeupClassName} numberOfLines={1}>
+                      <Text style={[styles.makeupClassCode, isEnhancedSuit && { color: '#F4E8C1' }]}>{item.code}</Text>
+                      <Text style={[styles.makeupClassName, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
                         {item.subjectName}
                       </Text>
-                      <Text style={styles.makeupClassTime}>
+                      <Text style={[styles.makeupClassTime, isEnhancedSuit && { color: '#C5BA9D' }]}>
                         Original slot: {item.originalTime} • {item.hours} {item.hours === 1 ? 'hr' : 'hrs'}
                       </Text>
                     </View>
 
                     <TouchableOpacity
-                      style={styles.makeupMarkBtn}
+                      style={[
+                        styles.makeupMarkBtn,
+                        isEnhancedSuit && { backgroundColor: '#F4E8C1' }
+                      ]}
                       activeOpacity={0.8}
                       onPress={(e) => {
                         e.stopPropagation();
@@ -936,7 +958,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         setShowRescheduledModal(true);
                       }}
                     >
-                      <Text style={styles.makeupMarkBtnText}>Mark Attendance</Text>
+                      <Text style={[styles.makeupMarkBtnText, isEnhancedSuit && { color: '#0B132B', fontWeight: '800' }]}>Mark Attendance</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -948,30 +970,49 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       ) : nextHolidayInfo ? (
         /* Regular calendar access card when no weekday holiday is within 7 days */
         <TouchableOpacity
-          style={styles.holidayBannerCard}
+          style={[
+            styles.holidayBannerCard,
+            isEnhancedSuit && {
+              backgroundColor: '#1C2541',
+              borderColor: '#2A3B5C',
+              borderWidth: 1.5,
+            }
+          ]}
           onPress={onOpenCalendar}
           activeOpacity={0.8}
         >
           <View style={styles.holidayBannerLeft}>
             <View style={styles.holidayBannerTextCol}>
               <View style={styles.holidayBadgeRow}>
-                <Text style={styles.holidayCountdownBadge}>
+                <Text style={[
+                  styles.holidayCountdownBadge,
+                  isEnhancedSuit && { color: '#0B132B', backgroundColor: '#F4E8C1' }
+                ]}>
                   ACADEMIC CALENDAR & HOLIDAYS
                 </Text>
                 {nextHolidayInfo.holiday.longWeekendTag && (
-                  <View style={styles.holidayWeekendPill}>
-                    <Text style={styles.holidayWeekendPillText}>
+                  <View style={[
+                    styles.holidayWeekendPill,
+                    isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }
+                  ]}>
+                    <Text style={[
+                      styles.holidayWeekendPillText,
+                      isEnhancedSuit && { color: '#F4E8C1' }
+                    ]}>
                       {nextHolidayInfo.holiday.longWeekendTag}
                     </Text>
                   </View>
                 )}
               </View>
-              <Text style={styles.holidayBannerTitle} numberOfLines={1}>
+              <Text style={[
+                styles.holidayBannerTitle,
+                isEnhancedSuit && { color: '#F4E8C1' }
+              ]} numberOfLines={1}>
                 Next: {nextHolidayInfo.holiday.title} ({formatDateDMY(nextHolidayInfo.holiday.date)} • {nextHolidayInfo.holiday.day})
               </Text>
             </View>
           </View>
-          <Text style={styles.holidayBannerChevron}>→</Text>
+          <Text style={[styles.holidayBannerChevron, isEnhancedSuit && { color: '#F4E8C1' }]}>→</Text>
         </TouchableOpacity>
       ) : null}
 
