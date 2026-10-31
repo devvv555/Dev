@@ -886,7 +886,7 @@ export default function App() {
 
         {/* Profile Dropdown Menu */}
         {showProfileMenu && (
-          <View style={styles.profileDropdownMenu}>
+          <View style={[styles.profileDropdownMenu, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1.5 }]}>
             <TouchableOpacity
               style={styles.profileDropdownItem}
               onPress={() => {
@@ -896,11 +896,11 @@ export default function App() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.profileDropdownTitle}>Digital ID</Text>
-              <Text style={styles.profileDropdownSub}>Emergency Pass</Text>
+              <Text style={[styles.profileDropdownTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>Digital ID</Text>
+              <Text style={[styles.profileDropdownSub, isEnhancedSuit && { color: '#C5BA9D' }]}>Emergency Pass</Text>
             </TouchableOpacity>
 
-            <View style={styles.profileDropdownDivider} />
+            <View style={[styles.profileDropdownDivider, isEnhancedSuit && { backgroundColor: '#2A3B5C' }]} />
 
             <TouchableOpacity
               style={styles.profileDropdownItem}
@@ -911,11 +911,11 @@ export default function App() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.profileDropdownTitle}>Course Plans</Text>
-              <Text style={styles.profileDropdownSub}>All 8 Subjects & CA Marks</Text>
+              <Text style={[styles.profileDropdownTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>Course Plans</Text>
+              <Text style={[styles.profileDropdownSub, isEnhancedSuit && { color: '#C5BA9D' }]}>All 8 Subjects & CA Marks</Text>
             </TouchableOpacity>
 
-            <View style={styles.profileDropdownDivider} />
+            <View style={[styles.profileDropdownDivider, isEnhancedSuit && { backgroundColor: '#2A3B5C' }]} />
 
             <TouchableOpacity
               style={styles.profileDropdownItem}
@@ -925,15 +925,15 @@ export default function App() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.profileDropdownTitle}>Attendance Dispute & Proof Report</Text>
-              <Text style={styles.profileDropdownSub}>Official Dossier & Discrepancies</Text>
+              <Text style={[styles.profileDropdownTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>Attendance Dispute & Proof Report</Text>
+              <Text style={[styles.profileDropdownSub, isEnhancedSuit && { color: '#C5BA9D' }]}>Official Dossier & Discrepancies</Text>
             </TouchableOpacity>
           </View>
         )}
       </View>
 
       {/* Main Content View */}
-      <View style={styles.screenContainer}>
+      <View style={[styles.screenContainer, isEnhancedSuit && { backgroundColor: '#0B132B' }]}>
         {activeTab === 'DASHBOARD' && (
           <DashboardScreen
             subjects={subjects}
@@ -945,6 +945,7 @@ export default function App() {
             onUpdateFaculty={handleUpdateFaculty}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
             onRefresh={handleRefresh}
+            isEnhancedSuit={isEnhancedSuit}
           />
         )}
 
@@ -959,6 +960,7 @@ export default function App() {
               StorageService.saveTimetable(next);
             }}
             onRefresh={handleRefresh}
+            isEnhancedSuit={isEnhancedSuit}
           />
         )}
 
@@ -969,6 +971,7 @@ export default function App() {
             studentRollNo={activeRollNo}
             onBack={() => handleTabChange('DASHBOARD')}
             onRefresh={handleRefresh}
+            isEnhancedSuit={isEnhancedSuit}
           />
         )}
 
@@ -981,6 +984,7 @@ export default function App() {
             onUpdateAttendance={handleUpdateAttendance}
             onBatchUpdateSubjects={handleBatchUpdateSubjects}
             onRefresh={handleRefresh}
+            isEnhancedSuit={isEnhancedSuit}
           />
         )}
       </View>
