@@ -59,6 +59,7 @@ interface DashboardScreenProps {
   onOpenCalendar?: () => void;
   onOpenAdmin?: () => void;
   onRefresh?: () => Promise<void> | void;
+  isEnhancedSuit?: boolean;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -72,6 +73,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onOpenCalendar,
   onOpenAdmin,
   onRefresh,
+  isEnhancedSuit: isEnhancedSuitProp,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
@@ -104,7 +106,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [showKarenGuide, setShowKarenGuide] = useState(false);
   const [showWhatIfForecaster, setShowWhatIfForecaster] = useState(false);
   const [showStarkArsenal, setShowStarkArsenal] = useState(false);
-  const [isEnhancedSuit, setIsEnhancedSuit] = useState(false);
+  const [isEnhancedSuit, setIsEnhancedSuit] = useState(isEnhancedSuitProp ?? false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
     code: string;
@@ -117,6 +119,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [rescheduleDate, setRescheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [rescheduleTime, setRescheduleTime] = useState<string>('16:45 - 17:45');
 
+  useEffect(() => {
+    if (isEnhancedSuitProp !== undefined) {
+      setIsEnhancedSuit(isEnhancedSuitProp);
+    }
+  }, [isEnhancedSuitProp]);
+
   // Check Stark Protocol tier (Enhanced Suit vs Training Wheels)
   useEffect(() => {
     const checkSuit = async () => {
@@ -124,8 +132,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       setIsEnhancedSuit(isUnlocked);
     };
     checkSuit();
-    const interval = setInterval(checkSuit, 3000);
-    return () => clearInterval(interval);
+    const unsub = ProtocolGate.onModeChange((mode) => {
+      setIsEnhancedSuit(mode === 'ENHANCED_SUIT');
+    });
+    return () => unsub();
   }, []);
 
   useEffect(() => {
