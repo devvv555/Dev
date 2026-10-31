@@ -25,17 +25,17 @@ interface GuideStep {
 const STANDARD_STEPS: GuideStep[] = [
   {
     title: 'Welcome to PSGIM Attendance',
-    badge: 'SUIT ONBOARDING',
+    badge: 'STUDENT ONBOARDING',
     description:
-      'Hello! I am Karen, your suit companion. I am here to guide you around the app so you never miss a class, fall below the 75% boundary, or lose track of deadlines.',
+      'Hello! I am Karen, your campus companion. I am here to guide you around the app so you never miss a class, fall below the 75% boundary, or lose track of deadlines.',
     tip: 'Your credentials remain strictly private and safe on this device.',
   },
   {
-    title: 'Hourly Attendance & Safe Bunks',
-    badge: 'ATTENDANCE ENGINE',
+    title: 'Automatic Attendance Marker',
+    badge: 'AUTONOMOUS ENGINE',
     description:
-      'Tap any class period in the timetable or class tracker to mark yourself Present or Absent. The app computes your exact "Safe Bunks" or "Classes to Recover" in real-time.',
-    tip: 'Keep your target above 75% to stay out of the condonation zone!',
+      'The real-time class tracker automatically detects your current lecture period, classroom, and faculty based on your section schedule. Mark attendance in 1 tap or let the app calculate your running attendance.',
+    tip: 'Your exact "Safe Bunks" and "Classes to Recover" update in real-time.',
   },
   {
     title: 'Medical Concession Vault (65%)',
@@ -55,46 +55,67 @@ const STANDARD_STEPS: GuideStep[] = [
 
 const ENHANCED_SUIT_STEPS: GuideStep[] = [
   {
-    title: 'Enhanced Suit Activated!',
-    badge: 'STARK PROTOCOL UNLOCKED',
+    title: 'Enhanced Suit Activated',
+    badge: 'TACTICAL PROTOCOL UNLOCKED',
     description:
-      'Congratulations on disengaging the Training Wheels Protocol! Your interface has upgraded to Iron Man Red & Gold. All 576 tactical capabilities are now online.',
-    tip: 'Karen will now provide advanced automated telemetry and sensor analysis.',
+      'Congratulations on disengaging Training Wheels! Your interface has upgraded to Deep Midnight Navy and Muted Champagne. All advanced tactical intelligence modules are now online.',
+    tip: 'Karen is standing by with automated schedule tracking and campus recon.',
+  },
+  {
+    title: 'Automatic Attendance Marker',
+    badge: 'AUTONOMOUS TRACKER',
+    description:
+      'The intelligent auto-class tracker monitors your real-time schedule slot-by-slot. It automatically identifies your current period, classroom, and faculty, marking and computing attendance without manual math.',
+    tip: 'Check the Live Auto-Class Tracker card on your Dashboard anytime during lecture hours.',
   },
   {
     title: 'What-If Bunk & Exam Forecaster',
     badge: 'PREDICTIVE RECON',
     description:
-      'Simulate your end-of-semester attendance down to the exact percentage on November 27. Test bunking scenarios across all 8 courses to confirm exam hall ticket eligibility.',
-    tip: 'Keep each subject above 75% to avoid condonation applications.',
+      'Simulate your end-of-semester attendance down to the exact percentage before the cut-off date (27 Nov 2026). Test bunking scenarios across all courses to guarantee university exam hall ticket eligibility.',
+    tip: 'Keep each subject at or above 75% to stay completely safe from condonation fees.',
   },
   {
-    title: '3D Barometric Altitude Clamping',
-    badge: 'VERTICAL FLOOR RADAR',
+    title: 'Live Business News Feed',
+    badge: 'EXECUTIVE INTELLIGENCE',
     description:
-      'Altitude blindness is eliminated! The app measures barometric elevation to distinguish between LH-101 (Floor 1, ~414m) and LH-401 (Floor 4, ~427.5m) even though they share the exact same GPS coordinates.',
-    tip: 'Your phone barometer confirms you are on the actual lecture floor.',
+      'Stay ahead with the curated real-time business press (The Hindu, BusinessLine, Business Standard). Each article features an executive MBA Takeaway designed for classroom discussions and interviews.',
+    tip: 'Available inside Stark Arsenal under the News Radar tab.',
   },
   {
-    title: 'Ultrasonic Room Acoustic Radar',
-    badge: 'CONCRETE-SEALED VERIFICATION',
+    title: 'Canteen Rush Radar (#004)',
+    badge: 'CAMPUS LOGISTICS',
     description:
-      'Inaudible 18.5 kHz near-ultrasonic acoustic chimes authenticate classroom presence. Sound waves cannot penetrate concrete floor slabs, providing 100% room isolation.',
-    tip: 'Zero student setup required—operates automatically over the air.',
+      'Monitor live cafeteria queues, seating capacity, and rush traffic in real time. Karen forecasts peak lunch hours and recommends optimal times to visit the cafeteria.',
+    tip: 'Avoid peak congestion by checking live queue status before heading out.',
   },
   {
-    title: 'CrowdMesh Peer Consensus',
-    badge: 'DECENTRALIZED P2P MESH',
+    title: 'Faculty Office Hours Booking (#005)',
+    badge: 'ACADEMIC RADAR',
     description:
-      'When you check in, the app cross-verifies with other classmates checked into the same room. A quorum of 2+ peers confirms you are physically sitting together.',
-    tip: 'Works seamlessly on both iOS Safari and Android Chrome PWAs.',
+      'View faculty office timings, cabin locations, and free consultation slots. Reserve appointments with professors in 1 click for academic mentorship, project reviews, or doubts.',
+    tip: 'Book consultation appointments ahead of time during designated faculty hours.',
   },
   {
-    title: 'Stark Tactical Arsenal',
-    badge: 'CAMPUS INTELLIGENCE',
+    title: 'Syllabus Velocity Tracker (#006)',
+    badge: 'CURRICULUM TELEMETRY',
     description:
-      'Access the live Business Press (The Hindu, BusinessLine, Business Standard), Canteen Rush Radar (#004), Faculty Office Hours Booking (#005), Syllabus Velocity (#006), and Library Shield (#011).',
-    tip: 'Tap "Stark Arsenal" anytime on your Dashboard to launch.',
+      'Track real-time syllabus completion velocity across all 8 trimester courses. Compare classes conducted against the planned curriculum timeline to pace your exam preparation.',
+    tip: 'Identifies which subjects are racing ahead or need self-study reinforcement.',
+  },
+  {
+    title: 'Library Shield & 1-Click Renewal (#011)',
+    badge: 'LIBRARY SAFEGUARD',
+    description:
+      'Track all borrowed books from the campus library, accession numbers, and due date countdowns. Avoid overdue fines with instant 1-click renewal that extends your borrowing window by 14 days.',
+    tip: 'Renews books directly without needing to stand in the library circulation queue.',
+  },
+  {
+    title: 'Voice Briefing & Calibration (#025)',
+    badge: 'AUDIO COMPANION',
+    description:
+      'Select your preferred AI voice persona (Friday UK, Karen US, Jarvis Baritone, or Campus AI) and listen to personalized morning audio overviews of your schedule, rooms, and campus radar.',
+    tip: 'Calibrate your preferred voice profile anytime under the Voice tab in Stark Arsenal.',
   },
 ];
 
