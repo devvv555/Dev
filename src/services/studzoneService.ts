@@ -256,6 +256,21 @@ export const StudzoneService = {
       return false;
     };
 
+    // If student credentials match verified master roster (e.g. offline/PWA/mobile), accept immediately!
+    if (checkMasterCredentials()) {
+      // Fire-and-forget background portal warmup
+      fetch(`${CLOUDFLARE_WORKER_URL}/api/studzone/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollNo: outboundRollNo, password: cleanPassword }),
+      }).catch(() => {});
+
+      return {
+        success: true,
+        rollNo: collegeRollNo,
+      };
+    }
+
     // Try Cloudflare Worker Proxy first (bypasses browser CORS & DNS timeouts)
     try {
       const proxyRes = await fetch(`${CLOUDFLARE_WORKER_URL}/api/studzone/attendance`, {
