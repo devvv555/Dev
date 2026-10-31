@@ -5,9 +5,10 @@ import { AttendanceMetrics } from '../types';
 interface AttendanceGaugeProps {
   metrics: AttendanceMetrics;
   compact?: boolean;
+  isEnhancedSuit?: boolean;
 }
 
-export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compact = false }) => {
+export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compact = false, isEnhancedSuit = false }) => {
   const { percentage, effectiveTarget, isMedicalClaimActive, status } = metrics;
   
   // Clamped percentage for visual bar (0 - 100)
@@ -15,7 +16,7 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
 
   // Determine bar color
   const getBarColor = () => {
-    if (status === 'SAFE_STANDARD') return '#10B981'; // Green
+    if (status === 'SAFE_STANDARD') return isEnhancedSuit ? '#F4E8C1' : '#10B981';
     if (status === 'SAFE_MEDICAL') return '#06B6D4';  // Cyan / Medical safe
     return '#EF4444'; // Red
   };
@@ -32,13 +33,13 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
           </Text>
         </View>
 
-        <Text style={styles.targetIndicatorText}>
+        <Text style={[styles.targetIndicatorText, isEnhancedSuit && { color: '#F4E8C1' }]}>
           Target: 75%
         </Text>
       </View>
 
       {/* The Gauge Track */}
-      <View style={styles.trackContainer}>
+      <View style={[styles.trackContainer, isEnhancedSuit && { backgroundColor: '#0B132B' }]}>
         {/* Fill Bar */}
         <View 
           style={[
@@ -49,9 +50,9 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
 
         {/* 75% Standard Line Marker */}
         <View style={[styles.marker, { left: '75%' }]}>
-          <View style={[styles.markerLine, { backgroundColor: '#FBBF24' }]} />
+          <View style={[styles.markerLine, { backgroundColor: isEnhancedSuit ? '#F4E8C1' : '#FBBF24' }]} />
           {!compact && (
-            <Text style={[styles.markerLabel, { color: '#FBBF24' }]}>75%</Text>
+            <Text style={[styles.markerLabel, { color: isEnhancedSuit ? '#F4E8C1' : '#FBBF24' }]}>75%</Text>
           )}
         </View>
       </View>
@@ -60,8 +61,8 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
       {!compact && (
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#FBBF24' }]} />
-            <Text style={styles.legendText}>75% Standard Minimum Safe Line</Text>
+            <View style={[styles.legendDot, { backgroundColor: isEnhancedSuit ? '#F4E8C1' : '#FBBF24' }]} />
+            <Text style={[styles.legendText, isEnhancedSuit && { color: '#C5BA9D' }]}>75% Standard Minimum Safe Line</Text>
           </View>
         </View>
       )}

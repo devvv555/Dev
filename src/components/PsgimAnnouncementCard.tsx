@@ -5,25 +5,44 @@ import { PsgimAnnouncement } from '../types';
 interface PsgimAnnouncementCardProps {
   announcement: PsgimAnnouncement;
   onPress: () => void;
+  isEnhancedSuit?: boolean;
 }
 
 export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
   announcement,
   onPress,
+  isEnhancedSuit = false,
 }) => {
   const isUrgent = announcement.priority === 'urgent';
   const isImportant = announcement.priority === 'important';
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={[
+        styles.card,
+        isEnhancedSuit && {
+          backgroundColor: '#0B132B',
+          borderColor: '#2A3B5C',
+          borderWidth: 1.5,
+        }
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
       <View style={styles.headerRow}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{announcement.category.toUpperCase()}</Text>
+        <View style={[
+          styles.categoryBadge,
+          isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }
+        ]}>
+          <Text style={[styles.categoryBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>{announcement.category.toUpperCase()}</Text>
         </View>
 
         {announcement.is_pinned === 1 && (
-          <View style={styles.pinnedBadge}>
-            <Text style={styles.pinnedText}>📌 PINNED</Text>
+          <View style={[
+            styles.pinnedBadge,
+            isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.2)', borderColor: '#F4E8C1' }
+          ]}>
+            <Text style={[styles.pinnedText, isEnhancedSuit && { color: '#F4E8C1' }]}>[PINNED]</Text>
           </View>
         )}
 
@@ -32,20 +51,23 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
             style={[
               styles.priorityBadge,
               isUrgent ? styles.priorityUrgent : styles.priorityImportant,
+              isEnhancedSuit && isUrgent && { backgroundColor: 'rgba(239, 68, 68, 0.25)', borderColor: '#EF4444' },
+              isEnhancedSuit && isImportant && { backgroundColor: 'rgba(244, 232, 193, 0.2)', borderColor: '#F4E8C1' },
             ]}
           >
             <Text
               style={[
                 styles.priorityText,
                 isUrgent ? styles.priorityUrgentText : styles.priorityImportantText,
+                isEnhancedSuit && isImportant && { color: '#F4E8C1' }
               ]}
             >
-              {isUrgent ? '🔥 URGENT' : '⭐ IMPORTANT'}
+              {isUrgent ? 'URGENT' : 'IMPORTANT'}
             </Text>
           </View>
         )}
 
-        <Text style={styles.dateText}>
+        <Text style={[styles.dateText, isEnhancedSuit && { color: '#C5BA9D' }]}>
           {new Date(announcement.publish_at).toLocaleDateString('en-IN', {
             day: 'numeric',
             month: 'short',
@@ -55,12 +77,12 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
 
       <View style={styles.bodyRow}>
         <View style={styles.textContainer}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={[styles.title, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={2}>
             {announcement.title}
           </Text>
 
           {announcement.summary ? (
-            <Text style={styles.summary} numberOfLines={2}>
+            <Text style={[styles.summary, isEnhancedSuit && { color: '#C5BA9D' }]} numberOfLines={2}>
               {announcement.summary}
             </Text>
           ) : null}
@@ -69,18 +91,18 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
           {(announcement.eventDate || announcement.venue) && (
             <View style={styles.scheduleRow}>
               {announcement.eventDate && (
-                <Text style={styles.scheduleText}>📅 {announcement.eventDate}</Text>
+                <Text style={[styles.scheduleText, isEnhancedSuit && { color: '#F4E8C1' }]}>Date: {announcement.eventDate}</Text>
               )}
               {announcement.venue && (
-                <Text style={styles.scheduleText} numberOfLines={1}>
-                  📍 {announcement.venue}
+                <Text style={[styles.scheduleText, isEnhancedSuit && { color: '#C5BA9D' }]} numberOfLines={1}>
+                  Venue: {announcement.venue}
                 </Text>
               )}
             </View>
           )}
 
           <View style={styles.authorRow}>
-            <Text style={styles.authorText}>👤 {announcement.created_by}</Text>
+            <Text style={[styles.authorText, isEnhancedSuit && { color: '#8E9BB0' }]}>By: {announcement.created_by}</Text>
           </View>
         </View>
 

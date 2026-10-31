@@ -113,19 +113,38 @@ export const StarkVideoModal: React.FC<StarkVideoModalProps> = ({
           >
             <style>
               {`
-                @media (orientation: portrait) {
+                .stark-video-landscape-wrapper {
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100vw;
+                  height: 100vh;
+                  background-color: #000000;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  z-index: 9999999;
+                  overflow: hidden;
+                }
+                @media (max-aspect-ratio: 1/1) {
+                  /* Device is in portrait orientation: rotate 90 degrees to landscape */
                   .stark-landscape-video {
                     width: 100vh !important;
                     height: 100vw !important;
+                    max-width: 100vh !important;
+                    max-height: 100vw !important;
                     transform: rotate(90deg) !important;
                     transform-origin: center center !important;
                     object-fit: contain !important;
                   }
                 }
-                @media (orientation: landscape) {
+                @media (min-aspect-ratio: 1/1) {
+                  /* Device is already landscape */
                   .stark-landscape-video {
                     width: 100vw !important;
                     height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
                     transform: none !important;
                     object-fit: contain !important;
                   }

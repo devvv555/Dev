@@ -58,7 +58,7 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
     title: 'Enhanced Suit Activated',
     badge: 'TACTICAL PROTOCOL UNLOCKED',
     description:
-      'Congratulations on disengaging Training Wheels! Your interface has upgraded to Deep Midnight Navy and Muted Champagne. All advanced tactical intelligence modules are now online.',
+      'Congratulations on disengaging Training Wheels! Your interface has upgraded to Iron Man Crimson Red, Gold, White and Stealth Black. All advanced tactical intelligence modules are now online.',
     tip: 'Karen is standing by with automated schedule tracking and campus recon.',
   },
   {
@@ -251,8 +251,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardRed: {
-    backgroundColor: '#1C2541',
-    borderColor: '#2A3B5C',
+    backgroundColor: '#1A0404',
+    borderColor: '#DC2626',
     borderWidth: 1.5,
   },
   header: {
@@ -261,11 +261,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#1E293B',
-    backgroundColor: '#0B132B',
+    backgroundColor: '#0F172A',
   },
   headerRed: {
-    backgroundColor: '#0B132B',
-    borderBottomColor: '#2A3B5C',
+    backgroundColor: '#260606',
+    borderBottomColor: '#7F1D1D',
   },
   karenAvatar: {
     width: 40,
@@ -276,9 +276,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   karenAvatarRed: {
-    backgroundColor: 'rgba(244, 232, 193, 0.2)',
-    borderColor: '#F4E8C1',
-    borderWidth: 1,
+    backgroundColor: 'rgba(250, 204, 21, 0.2)',
+    borderColor: '#FACC15',
+    borderWidth: 1.5,
   },
   karenAvatarText: {
     color: '#FFFFFF',
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   stepBadgeRed: {
-    backgroundColor: 'rgba(244, 232, 193, 0.15)',
-    borderColor: '#F4E8C1',
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    borderColor: '#FACC15',
   },
   stepBadgeText: {
     color: '#38BDF8',
@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
     borderLeftColor: '#38BDF8',
   },
   tipBoxRed: {
-    backgroundColor: '#0B132B',
-    borderLeftColor: '#F4E8C1',
+    backgroundColor: '#0B0202',
+    borderLeftColor: '#FACC15',
   },
   tipLabel: {
     color: '#38BDF8',
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   dotActiveRed: {
-    backgroundColor: '#F4E8C1',
+    backgroundColor: '#FACC15',
     width: 20,
   },
   btnRow: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0284C7',
   },
   nextBtnRed: {
-    backgroundColor: '#F4E8C1',
+    backgroundColor: '#FACC15',
   },
   nextBtnText: {
     color: '#FFFFFF',

@@ -18,6 +18,7 @@ interface TimetableScreenProps {
   studentRollNo?: string;
   onAddSlot?: (slot: TimetableSlot) => void;
   onRefresh?: () => Promise<void> | void;
+  isEnhancedSuit?: boolean;
 }
 
 const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -36,6 +37,7 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
   timetable,
   studentRollNo,
   onRefresh,
+  isEnhancedSuit = false,
 }) => {
   const todayDay = getTodayDayOfWeek();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(todayDay);
@@ -65,28 +67,28 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, isEnhancedSuit && { backgroundColor: '#0B132B' }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor="#38BDF8"
-          colors={['#38BDF8', '#2563EB']}
-          progressBackgroundColor="#1E293B"
+          tintColor={isEnhancedSuit ? '#F4E8C1' : '#38BDF8'}
+          colors={isEnhancedSuit ? ['#F4E8C1', '#1C2541'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isEnhancedSuit ? '#1C2541' : '#1E293B'}
         />
       }
     >
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTitle}>Weekly Period Index</Text>
+          <Text style={[styles.headerTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>Weekly Period Index</Text>
           {studentRollNo ? (
-            <View style={styles.rollBadge}>
-              <Text style={styles.rollBadgeText}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            <View style={[styles.rollBadge, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#F4E8C1' }]}>
+              <Text style={[styles.rollBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>Roll No: {toNewRollNo(studentRollNo)}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={styles.headerSubtitle}>
+        <Text style={[styles.headerSubtitle, isEnhancedSuit && { color: '#C5BA9D' }]}>
           {studentRollNo ? `Roll No: ${toNewRollNo(studentRollNo)} • ` : ''}Showing {selectedDay}'s schedule{selectedDay === todayDay ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
         </Text>
       </View>
@@ -104,9 +106,22 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
                 styles.dayButton,
                 isSelected && styles.dayButtonActive,
                 isToday && !isSelected && styles.dayButtonToday,
+                isEnhancedSuit && (
+                  isSelected
+                    ? { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }
+                    : { backgroundColor: '#1C2541', borderColor: isToday ? '#F4E8C1' : '#2A3B5C' }
+                )
               ]}
             >
-              <Text style={[styles.dayText, isSelected && styles.dayTextActive]}>
+              <Text style={[
+                styles.dayText,
+                isSelected && styles.dayTextActive,
+                isEnhancedSuit && (
+                  isSelected
+                    ? { color: '#0B132B', fontWeight: '800' }
+                    : { color: '#F4E8C1' }
+                )
+              ]}>
                 {day.slice(0, 3)}{isToday ? ' •' : ''}
               </Text>
             </TouchableOpacity>
@@ -117,40 +132,53 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       {/* Slots List */}
       <View style={styles.slotsContainer}>
         {daySlots.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No periods scheduled for {selectedDay}</Text>
-            <Text style={styles.emptySub}>Enjoy your day off!</Text>
+          <View style={[styles.emptyCard, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }]}>
+            <Text style={[styles.emptyTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>No periods scheduled for {selectedDay}</Text>
+            <Text style={[styles.emptySub, isEnhancedSuit && { color: '#C5BA9D' }]}>Enjoy your day off!</Text>
           </View>
         ) : (
           daySlots.map((slot) => {
             const subject = getSubject(slot.subjectId);
             const isSports = subject?.noAttendance || subject?.code === 'SPORTS' || slot.subjectId === 'sub_sports';
             return (
-              <View key={slot.id} style={styles.slotCard}>
-                <View style={styles.timeColumn}>
-                  <Text style={styles.timeStart}>{slot.startTime}</Text>
-                  <View style={styles.timeDivider} />
-                  <Text style={styles.timeEnd}>{slot.endTime}</Text>
+              <View
+                key={slot.id}
+                style={[
+                  styles.slotCard,
+                  isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }
+                ]}
+              >
+                <View style={[styles.timeColumn, isEnhancedSuit && { backgroundColor: '#0B132B' }]}>
+                  <Text style={[styles.timeStart, isEnhancedSuit && { color: '#F4E8C1' }]}>{slot.startTime}</Text>
+                  <View style={[styles.timeDivider, isEnhancedSuit && { backgroundColor: '#2A3B5C' }]} />
+                  <Text style={[styles.timeEnd, isEnhancedSuit && { color: '#C5BA9D' }]}>{slot.endTime}</Text>
                 </View>
 
-                <View style={[styles.slotInfo, { borderLeftColor: subject?.color || '#3B82F6' }]}>
+                <View style={[styles.slotInfo, { borderLeftColor: isEnhancedSuit ? '#F4E8C1' : (subject?.color || '#3B82F6') }]}>
                   <View style={styles.slotTopRow}>
-                    <Text style={styles.subjectCode}>{subject?.code || 'GEN'}</Text>
+                    <Text style={[styles.subjectCode, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject?.code || 'GEN'}</Text>
                     {isSports ? (
-                      <View style={[styles.roomBadge, { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }]}>
-                        <Text style={[styles.roomText, { color: '#818CF8' }]}>No Attendance</Text>
+                      <View style={[
+                        styles.roomBadge,
+                        { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' },
+                        isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }
+                      ]}>
+                        <Text style={[styles.roomText, { color: isEnhancedSuit ? '#F4E8C1' : '#818CF8' }]}>No Attendance</Text>
                       </View>
                     ) : slot.room ? (
-                      <View style={styles.roomBadge}>
-                        <Text style={styles.roomText}>{slot.room}</Text>
+                      <View style={[styles.roomBadge, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C', borderWidth: 1 }]}>
+                        <Text style={[styles.roomText, isEnhancedSuit && { color: '#F4E8C1' }]}>{slot.room}</Text>
                       </View>
                     ) : null}
                   </View>
 
-                  <Text style={styles.subjectName}>{subject?.name || 'Class Slot'}</Text>
+                  <Text style={[styles.subjectName, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject?.name || 'Class Slot'}</Text>
 
-                  <View style={styles.alertNotice}>
-                    <Text style={styles.alertNoticeText}>
+                  <View style={[
+                    styles.alertNotice,
+                    isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C', borderWidth: 1 }
+                  ]}>
+                    <Text style={[styles.alertNoticeText, isEnhancedSuit && { color: '#C5BA9D' }]}>
                       {isSports ? 'Not tracked in the ERP' : `Hourly alert scheduled for: ${slot.endTime}`}
                     </Text>
                   </View>

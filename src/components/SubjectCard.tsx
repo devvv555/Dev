@@ -45,28 +45,28 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   return (
     <View style={[
       styles.card,
-      { borderLeftColor: isEnhancedSuit ? '#F4E8C1' : subject.color },
-      isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1.5 }
+      { borderLeftColor: isEnhancedSuit ? '#FACC15' : subject.color },
+      isEnhancedSuit && { backgroundColor: '#1A0404', borderColor: '#7F1D1D', borderWidth: 1.5 }
     ]}>
       {/* Top Header */}
       <View style={styles.cardHeader}>
         <View style={styles.titleArea}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[styles.codeText, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject.code}</Text>
+            <Text style={[styles.codeText, isEnhancedSuit && { color: '#FACC15' }]}>{subject.code}</Text>
             {isSports && (
               <View style={[styles.batchPill, { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }]}>
                 <Text style={[styles.batchPillText, { color: '#818CF8' }]}>No Attendance</Text>
               </View>
             )}
           </View>
-          <Text style={[styles.nameText, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
+          <Text style={[styles.nameText, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
             {subject.name}
           </Text>
           {(subject.batch || subject.faculty) && (
             <View style={styles.batchInfoRow}>
               {subject.batch && (
-                <View style={[styles.batchPill, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.12)', borderColor: '#F4E8C1' }]}>
-                  <Text style={[styles.batchPillText, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject.batch}</Text>
+                <View style={[styles.batchPill, isEnhancedSuit && { backgroundColor: 'rgba(250, 204, 21, 0.15)', borderColor: '#FACC15' }]}>
+                  <Text style={[styles.batchPillText, isEnhancedSuit && { color: '#FACC15' }]}>{subject.batch}</Text>
                 </View>
               )}
               <TouchableOpacity
@@ -74,7 +74,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                 style={styles.facultyTouchBtn}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.facultyText, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
+                <Text style={[styles.facultyText, isEnhancedSuit && { color: '#FACC15' }]} numberOfLines={1}>
                   {subject.faculty || 'Assign Faculty'} ✎
                 </Text>
               </TouchableOpacity>
@@ -86,15 +86,15 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Attendance Stats Row */}
       {isSports ? (
         <View style={styles.statsRow}>
-          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#F4E8C1' }]}>Physical Education & Wellness</Text>
-          <Text style={styles.officialSyncText}>Not tracked in the ERP</Text>
+          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#FFFFFF' }]}>Physical Education & Wellness</Text>
+          <Text style={[styles.officialSyncText, isEnhancedSuit && { color: '#FCA5A5' }]}>Not tracked in the ERP</Text>
         </View>
       ) : (
         <View style={styles.statsRow}>
-          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#F4E8C1' }]}>
-            <Text style={[styles.attendedCount, isEnhancedSuit && { color: '#F4E8C1' }]}>{subject.attended}</Text> / {subject.total} hrs attended
+          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#FFFFFF' }]}>
+            <Text style={[styles.attendedCount, isEnhancedSuit && { color: '#FACC15' }]}>{subject.attended}</Text> / {subject.total} hrs attended
           </Text>
-          <Text style={styles.officialSyncText}>
+          <Text style={[styles.officialSyncText, isEnhancedSuit && { color: '#FCA5A5' }]}>
             College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
           </Text>
         </View>
@@ -114,18 +114,25 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         </View>
       ) : (
         <>
-          <AttendanceGauge metrics={metrics} />
+          <AttendanceGauge metrics={metrics} isEnhancedSuit={isEnhancedSuit} />
           <View
             style={[
               styles.statusBanner,
               metrics.status === 'SAFE_STANDARD'
-                ? styles.statusBannerSafe
+                ? (isEnhancedSuit
+                    ? { backgroundColor: 'rgba(250, 204, 21, 0.15)', borderColor: '#FACC15' }
+                    : styles.statusBannerSafe)
                 : metrics.status === 'SAFE_MEDICAL'
                 ? styles.statusBannerMedical
                 : styles.statusBannerDanger,
             ]}
           >
-            <Text style={styles.statusBannerText}>{metrics.summaryMessage}</Text>
+            <Text style={[
+              styles.statusBannerText,
+              isEnhancedSuit && metrics.status === 'SAFE_STANDARD' && { color: '#FACC15' }
+            ]}>
+              {metrics.summaryMessage}
+            </Text>
           </View>
         </>
       )}

@@ -26,6 +26,7 @@ interface CalendarScreenProps {
   studentRollNo?: string;
   onBack?: () => void;
   onRefresh?: () => Promise<void> | void;
+  isEnhancedSuit?: boolean;
 }
 
 const getTodayDateStr = (): string => {
@@ -47,6 +48,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   studentRollNo,
   onBack,
   onRefresh,
+  isEnhancedSuit = false,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
   const [refreshing, setRefreshing] = useState(false);
@@ -130,34 +132,38 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, isEnhancedSuit && { backgroundColor: '#0B132B' }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor="#38BDF8"
-          colors={['#38BDF8', '#2563EB']}
-          progressBackgroundColor="#1E293B"
+          tintColor={isEnhancedSuit ? '#F4E8C1' : '#38BDF8'}
+          colors={isEnhancedSuit ? ['#F4E8C1', '#1C2541'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isEnhancedSuit ? '#1C2541' : '#1E293B'}
         />
       }
     >
       {/* Header */}
       <View style={styles.header}>
         {onBack && (
-          <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backBtnText}>← Back</Text>
+          <TouchableOpacity
+            onPress={onBack}
+            style={[styles.backBtn, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1 }]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.backBtnText, isEnhancedSuit && { color: '#F4E8C1' }]}>← Back</Text>
           </TouchableOpacity>
         )}
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTitle}>Academic Calendar 2026–27</Text>
+          <Text style={[styles.headerTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>Academic Calendar 2026–27</Text>
           {studentRollNo ? (
-            <View style={styles.rollBadge}>
-              <Text style={styles.rollBadgeText}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            <View style={[styles.rollBadge, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#F4E8C1' }]}>
+              <Text style={[styles.rollBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>Roll No: {toNewRollNo(studentRollNo)}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={styles.headerSubtitle}>
+        <Text style={[styles.headerSubtitle, isEnhancedSuit && { color: '#C5BA9D' }]}>
           {studentRollNo ? `Roll No: ${toNewRollNo(studentRollNo)} • ` : ''}Official schedule, holidays, exam blackout dates & long weekend trip planner.
         </Text>
       </View>
@@ -165,39 +171,46 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
       {/* Next Upcoming Holiday Spotlight */}
       {nextHolidayInfo && (
-        <View style={styles.spotlightCard}>
+        <View style={[
+          styles.spotlightCard,
+          isEnhancedSuit && {
+            backgroundColor: '#1C2541',
+            borderColor: '#2A3B5C',
+            borderWidth: 1.5,
+          }
+        ]}>
           <View style={styles.spotlightHeaderRow}>
-            <View style={styles.spotlightIconCircle}>
-              <Text style={styles.spotlightIconText}>CAL</Text>
+            <View style={[styles.spotlightIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1', borderWidth: 1 }]}>
+              <Text style={[styles.spotlightIconText, isEnhancedSuit && { color: '#F4E8C1' }]}>CAL</Text>
             </View>
             <View style={styles.spotlightInfo}>
-              <Text style={styles.spotlightTag}>
+              <Text style={[styles.spotlightTag, isEnhancedSuit && { color: '#F4E8C1' }]}>
                 {nextHolidayInfo.daysRemaining === 0
                   ? 'TODAY IS A HOLIDAY!'
                   : nextHolidayInfo.daysRemaining === 1
                   ? 'HOLIDAY TOMORROW!'
                   : `NEXT HOLIDAY IN ${nextHolidayInfo.daysRemaining} DAYS`}
               </Text>
-              <Text style={styles.spotlightTitle} numberOfLines={1}>
+              <Text style={[styles.spotlightTitle, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={1}>
                 {nextHolidayInfo.holiday.title}
               </Text>
-              <Text style={styles.spotlightDate}>
+              <Text style={[styles.spotlightDate, isEnhancedSuit && { color: '#C5BA9D' }]}>
                 {formatDisplayDate(nextHolidayInfo.holiday.date, nextHolidayInfo.holiday.endDate)} • {nextHolidayInfo.holiday.day}
               </Text>
             </View>
           </View>
 
           {nextHolidayInfo.holiday.longWeekendTag && (
-            <View style={styles.longWeekendBanner}>
-              <Text style={styles.longWeekendBannerText}>
+            <View style={[styles.longWeekendBanner, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.12)', borderLeftColor: '#F4E8C1' }]}>
+              <Text style={[styles.longWeekendBannerText, isEnhancedSuit && { color: '#F4E8C1' }]}>
                 {nextHolidayInfo.holiday.longWeekendTag} • {nextHolidayInfo.holiday.description}
               </Text>
             </View>
           )}
 
           {nextHolidayInfo.holiday.recommendedSmartLeave && (
-            <View style={styles.smartLeaveBox}>
-              <Text style={styles.smartLeaveText}>
+            <View style={[styles.smartLeaveBox, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }]}>
+              <Text style={[styles.smartLeaveText, isEnhancedSuit && { color: '#C5BA9D' }]}>
                 {nextHolidayInfo.holiday.recommendedSmartLeave}
               </Text>
             </View>
@@ -208,41 +221,105 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       {/* Filter Chips */}
       <View style={styles.filterRow}>
         <TouchableOpacity
-          style={[styles.filterChip, filter === 'HOLIDAY' && styles.filterChipActive]}
+          style={[
+            styles.filterChip,
+            filter === 'HOLIDAY' && styles.filterChipActive,
+            isEnhancedSuit && (
+              filter === 'HOLIDAY'
+                ? { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }
+                : { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }
+            )
+          ]}
           onPress={() => setFilter('HOLIDAY')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterChipText, filter === 'HOLIDAY' && styles.filterChipTextActive]}>
+          <Text style={[
+            styles.filterChipText,
+            filter === 'HOLIDAY' && styles.filterChipTextActive,
+            isEnhancedSuit && (
+              filter === 'HOLIDAY'
+                ? { color: '#0B132B', fontWeight: '800' }
+                : { color: '#F4E8C1' }
+            )
+          ]}>
             Holidays ({upcomingHolidaysCount})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterChip, filter === 'EXAM' && styles.filterChipActive]}
+          style={[
+            styles.filterChip,
+            filter === 'EXAM' && styles.filterChipActive,
+            isEnhancedSuit && (
+              filter === 'EXAM'
+                ? { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }
+                : { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }
+            )
+          ]}
           onPress={() => setFilter('EXAM')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterChipText, filter === 'EXAM' && styles.filterChipTextActive]}>
+          <Text style={[
+            styles.filterChipText,
+            filter === 'EXAM' && styles.filterChipTextActive,
+            isEnhancedSuit && (
+              filter === 'EXAM'
+                ? { color: '#0B132B', fontWeight: '800' }
+                : { color: '#F4E8C1' }
+            )
+          ]}>
             Exams ({upcomingExamsCount})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterChip, filter === 'EVENT' && styles.filterChipActive]}
+          style={[
+            styles.filterChip,
+            filter === 'EVENT' && styles.filterChipActive,
+            isEnhancedSuit && (
+              filter === 'EVENT'
+                ? { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }
+                : { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }
+            )
+          ]}
           onPress={() => setFilter('EVENT')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterChipText, filter === 'EVENT' && styles.filterChipTextActive]}>
+          <Text style={[
+            styles.filterChipText,
+            filter === 'EVENT' && styles.filterChipTextActive,
+            isEnhancedSuit && (
+              filter === 'EVENT'
+                ? { color: '#0B132B', fontWeight: '800' }
+                : { color: '#F4E8C1' }
+            )
+          ]}>
             Events & Trips ({upcomingEventsCount})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterChip, filter === 'ALL' && styles.filterChipActive]}
+          style={[
+            styles.filterChip,
+            filter === 'ALL' && styles.filterChipActive,
+            isEnhancedSuit && (
+              filter === 'ALL'
+                ? { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }
+                : { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }
+            )
+          ]}
           onPress={() => setFilter('ALL')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterChipText, filter === 'ALL' && styles.filterChipTextActive]}>
+          <Text style={[
+            styles.filterChipText,
+            filter === 'ALL' && styles.filterChipTextActive,
+            isEnhancedSuit && (
+              filter === 'ALL'
+                ? { color: '#0B132B', fontWeight: '800' }
+                : { color: '#F4E8C1' }
+            )
+          ]}>
             All ({upcomingHolidaysCount + upcomingExamsCount + upcomingEventsCount})
           </Text>
         </TouchableOpacity>
@@ -251,10 +328,10 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       {/* Timeline List */}
       <View style={styles.timelineList}>
         {filteredItems.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>[Cal]</Text>
-            <Text style={styles.emptyTitle}>No Upcoming Events</Text>
-            <Text style={styles.emptySub}>All scheduled items for this category have passed or concluded.</Text>
+          <View style={[styles.emptyCard, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }]}>
+            <Text style={[styles.emptyIcon, isEnhancedSuit && { color: '#F4E8C1' }]}>[Cal]</Text>
+            <Text style={[styles.emptyTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>No Upcoming Events</Text>
+            <Text style={[styles.emptySub, isEnhancedSuit && { color: '#C5BA9D' }]}>All scheduled items for this category have passed or concluded.</Text>
           </View>
         ) : (
           filteredItems.map((item) => {
@@ -268,7 +345,11 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           return (
             <TouchableOpacity
               key={item.id}
-              style={[styles.itemCard, isHoliday && styles.itemCardHolidayClickable]}
+              style={[
+                styles.itemCard,
+                isHoliday && styles.itemCardHolidayClickable,
+                isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }
+              ]}
               activeOpacity={isHoliday ? 0.75 : 1}
               onPress={() => {
                 if (isHoliday) {
@@ -280,11 +361,15 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
               }}
             >
               <View style={styles.itemLeftCol}>
-                <View style={[styles.dateBlock, isHoliday && styles.dateBlockHoliday]}>
-                  <Text style={styles.dateBlockMonth}>{monthLabel}</Text>
-                  <Text style={styles.dateBlockDay}>{dayNumber}</Text>
+                <View style={[
+                  styles.dateBlock,
+                  isHoliday && styles.dateBlockHoliday,
+                  isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C', borderWidth: 1 }
+                ]}>
+                  <Text style={[styles.dateBlockMonth, isEnhancedSuit && { color: '#F4E8C1' }]}>{monthLabel}</Text>
+                  <Text style={[styles.dateBlockDay, isEnhancedSuit && { color: '#F4E8C1' }]}>{dayNumber}</Text>
                 </View>
-                <Text style={styles.itemDayName} numberOfLines={1}>
+                <Text style={[styles.itemDayName, isEnhancedSuit && { color: '#C5BA9D' }]} numberOfLines={1}>
                   {item.day.slice(0, 3)}
                 </Text>
               </View>
@@ -298,27 +383,27 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                   </View>
 
                   {item.longWeekendTag && (
-                    <View style={styles.longWeekendPill}>
-                      <Text style={styles.longWeekendPillText}>{item.longWeekendTag}</Text>
+                    <View style={[styles.longWeekendPill, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }]}>
+                      <Text style={[styles.longWeekendPillText, isEnhancedSuit && { color: '#F4E8C1' }]}>{item.longWeekendTag}</Text>
                     </View>
                   )}
 
                   {isHoliday && (
-                    <View style={styles.tapToPlanPill}>
-                      <Text style={styles.tapToPlanText}>Smart Leave Planner ›</Text>
+                    <View style={[styles.tapToPlanPill, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }]}>
+                      <Text style={[styles.tapToPlanText, isEnhancedSuit && { color: '#F4E8C1' }]}>Smart Leave Planner ›</Text>
                     </View>
                   )}
                 </View>
 
-                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Text style={[styles.itemTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>{item.title}</Text>
 
                 {item.description && (
-                  <Text style={styles.itemDescription}>{item.description}</Text>
+                  <Text style={[styles.itemDescription, isEnhancedSuit && { color: '#C5BA9D' }]}>{item.description}</Text>
                 )}
 
                 {item.recommendedSmartLeave && (
-                  <View style={styles.smartLeaveBox}>
-                    <Text style={styles.smartLeaveText}>
+                  <View style={[styles.smartLeaveBox, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }]}>
+                    <Text style={[styles.smartLeaveText, isEnhancedSuit && { color: '#C5BA9D' }]}>
                       {item.recommendedSmartLeave}
                     </Text>
                   </View>
@@ -340,56 +425,56 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
             onRequestClose={() => setSelectedHoliday(null)}
           >
             <View style={styles.modalBackdrop}>
-              <View style={styles.tripModalCard}>
-                <View style={styles.tripModalHeader}>
-                  <View style={styles.tripModalIconCircle}>
-                    <Text style={styles.tripModalIcon}>[Trip]</Text>
+              <View style={[styles.tripModalCard, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C', borderWidth: 1.5 }]}>
+                <View style={[styles.tripModalHeader, isEnhancedSuit && { borderBottomColor: '#2A3B5C' }]}>
+                  <View style={[styles.tripModalIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)' }]}>
+                    <Text style={[styles.tripModalIcon, isEnhancedSuit && { color: '#F4E8C1' }]}>[Trip]</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.tripModalTag}>
+                    <Text style={[styles.tripModalTag, isEnhancedSuit && { color: '#F4E8C1' }]}>
                       {selectedHoliday.day.toUpperCase()} HOLIDAY
                     </Text>
-                    <Text style={styles.tripModalTitle} numberOfLines={2}>
+                    <Text style={[styles.tripModalTitle, isEnhancedSuit && { color: '#F4E8C1' }]} numberOfLines={2}>
                       {selectedHoliday.title}
                     </Text>
-                    <Text style={styles.tripModalDate}>
+                    <Text style={[styles.tripModalDate, isEnhancedSuit && { color: '#C5BA9D' }]}>
                       {formatDisplayDate(selectedHoliday.date, selectedHoliday.endDate)} ({selectedHoliday.day})
                     </Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => setSelectedHoliday(null)}
-                    style={styles.closeTripModalBtn}
+                    style={[styles.closeTripModalBtn, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C', borderWidth: 1 }]}
                   >
-                    <Text style={styles.closeTripModalBtnText}>X</Text>
+                    <Text style={[styles.closeTripModalBtnText, isEnhancedSuit && { color: '#F4E8C1' }]}>✕</Text>
                   </TouchableOpacity>
                 </View>
 
                 {suggestion && (
                   <ScrollView style={styles.tripModalBody} showsVerticalScrollIndicator={false}>
-                    <View style={styles.tripHeroBanner}>
+                    <View style={[styles.tripHeroBanner, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }]}>
                       <View style={styles.tripHeroRow}>
-                        <Text style={styles.tripHeroTitle}>{suggestion.tripTitle}</Text>
+                        <Text style={[styles.tripHeroTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>{suggestion.tripTitle}</Text>
                         {suggestion.hasPersonalizedAttendance && (
-                          <View style={styles.liveSyncBadge}>
-                            <Text style={styles.liveSyncBadgeText}>Real Attendance Synced</Text>
+                          <View style={[styles.liveSyncBadge, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)', borderColor: '#F4E8C1' }]}>
+                            <Text style={[styles.liveSyncBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>Real Attendance Synced</Text>
                           </View>
                         )}
                       </View>
-                      <Text style={styles.tripHeroSubtitle}>
+                      <Text style={[styles.tripHeroSubtitle, isEnhancedSuit && { color: '#C5BA9D' }]}>
                         {suggestion.explanation}
                       </Text>
                     </View>
 
-                    <Text style={styles.smartLeaveSectionHeader}>
+                    <Text style={[styles.smartLeaveSectionHeader, isEnhancedSuit && { color: '#F4E8C1' }]}>
                       ATTENDANCE-BASED LEAVE RECOMMENDATIONS
                     </Text>
 
                     {suggestion.suggestedLeaves.map((leave, idx) => (
-                      <View key={idx} style={styles.leaveOptionCard}>
+                      <View key={idx} style={[styles.leaveOptionCard, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }]}>
                         {/* Option Tag & Status Badge */}
                         <View style={styles.leaveOptionTopRow}>
-                          <View style={styles.leaveDayBadge}>
-                            <Text style={styles.leaveDayBadgeText}>{leave.optionLabel}</Text>
+                          <View style={[styles.leaveDayBadge, isEnhancedSuit && { backgroundColor: 'rgba(244, 232, 193, 0.15)' }]}>
+                            <Text style={[styles.leaveDayBadgeText, isEnhancedSuit && { color: '#F4E8C1' }]}>{leave.optionLabel}</Text>
                           </View>
                           <View
                             style={[
@@ -404,15 +489,15 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                         </View>
 
                         {/* Headline */}
-                        <Text style={styles.leaveOptionHeadline}>{leave.headline}</Text>
+                        <Text style={[styles.leaveOptionHeadline, isEnhancedSuit && { color: '#F4E8C1' }]}>{leave.headline}</Text>
 
                         {/* Reason / Advice */}
-                        <Text style={styles.leaveReasonText}>{leave.reason}</Text>
+                        <Text style={[styles.leaveReasonText, isEnhancedSuit && { color: '#C5BA9D' }]}>{leave.reason}</Text>
 
                         {/* Subject Breakdown if classes exist on this day */}
                         {leave.subjectBreakdown && leave.subjectBreakdown.length > 0 && (
-                          <View style={styles.subjectBreakdownBox}>
-                            <Text style={styles.breakdownTitle}>
+                          <View style={[styles.subjectBreakdownBox, isEnhancedSuit && { backgroundColor: '#1C2541', borderColor: '#2A3B5C' }]}>
+                            <Text style={[styles.breakdownTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>
                               Scheduled on {leave.day} ({leave.subjectBreakdown.reduce((sum, it) => sum + (it.slotHours || 1), 0)} hrs):
                             </Text>
                             {leave.subjectBreakdown.map((item, sIdx) => (
