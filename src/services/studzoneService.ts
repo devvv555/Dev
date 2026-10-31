@@ -233,7 +233,7 @@ export const StudzoneService = {
     const cleanRollNo = rollNo.trim().toUpperCase().replace(/\s+/g, '');
     const cleanPassword = dobPassword.trim().toUpperCase().replace(/\s+/g, '');
     const collegeRollNo = toNewRollNo(cleanRollNo) || cleanRollNo;
-    const outboundRollNo = toOldRollNo(cleanRollNo) || cleanRollNo;
+    const outboundRollNo = collegeRollNo;
 
     if (!cleanRollNo) {
       return { success: false, rollNo: '', error: 'Please enter your Student Roll Number.' };
@@ -453,7 +453,7 @@ export const StudzoneService = {
   ): Promise<StudzoneExtractionResult> {
     const cleanRollNo = rollNo.trim().toUpperCase().replace(/\s+/g, '');
     const cleanPassword = dobPassword.trim().toUpperCase().replace(/\s+/g, '');
-    const outboundRollNo = toOldRollNo(cleanRollNo) || cleanRollNo;
+    const outboundRollNo = toNewRollNo(cleanRollNo) || cleanRollNo;
 
     if (!cleanRollNo) {
       return { success: false, records: [], error: 'Please enter your Student Roll Number.' };
