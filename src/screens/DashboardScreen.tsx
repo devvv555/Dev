@@ -1073,10 +1073,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={{ marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#F4E8C1' }]}>
                 {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
               </Text>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748B' }}>
+              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#64748B' }, isEnhancedSuit && { color: '#C5BA9D' }]}>
                 • {displayDateFormatted}
               </Text>
             </View>
@@ -1084,23 +1084,38 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {isTodayConcluded && (
                 <TouchableOpacity
                   onPress={() => setViewingNextDay(!viewingNextDay)}
-                  style={{
-                    backgroundColor: viewingNextDay ? '#312E81' : '#1E293B',
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    borderRadius: 6,
-                    borderWidth: 1,
-                    borderColor: viewingNextDay ? '#6366F1' : '#334155',
-                  }}
+                  style={[
+                    {
+                      backgroundColor: viewingNextDay ? '#312E81' : '#1E293B',
+                      paddingHorizontal: 8,
+                      paddingVertical: 3,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: viewingNextDay ? '#6366F1' : '#334155',
+                    },
+                    isEnhancedSuit && {
+                      backgroundColor: viewingNextDay ? '#F4E8C1' : '#0B132B',
+                      borderColor: '#2A3B5C',
+                    }
+                  ]}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#A5B4FC' : '#94A3B8' }}>
+                  <Text style={[
+                    { fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#A5B4FC' : '#94A3B8' },
+                    isEnhancedSuit && { color: viewingNextDay ? '#0B132B' : '#F4E8C1' }
+                  ]}>
                     {viewingNextDay ? '← View Today' : 'Preview Next Day →'}
                   </Text>
                 </TouchableOpacity>
               )}
-              <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#818CF8' : '#38BDF8' }}>
+              <View style={[
+                { backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' },
+                isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }
+              ]}>
+                <Text style={[
+                  { fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#818CF8' : '#38BDF8' },
+                  isEnhancedSuit && { color: '#F4E8C1' }
+                ]}>
                   {viewingNextDay ? 'UPCOMING DAY' : 'LIVE REAL-TIME'}
                 </Text>
               </View>
@@ -1108,11 +1123,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
 
           {isWeekendOrNoClass ? (
-            <View style={{ backgroundColor: '#1E293B', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#334155', alignItems: 'center', marginTop: 10 }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: '#F1F5F9', marginBottom: 4 }}>
+            <View style={[
+              { backgroundColor: '#1E293B', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#334155', alignItems: 'center', marginTop: 10 },
+              isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }
+            ]}>
+              <Text style={[{ fontSize: 16, fontWeight: '800', color: '#F1F5F9', marginBottom: 4 }, isEnhancedSuit && { color: '#F4E8C1' }]}>
                 No Classes Scheduled Today ({currentDayName})
               </Text>
-              <Text style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center' }}>
+              <Text style={[{ fontSize: 12, color: '#94A3B8', textAlign: 'center' }, isEnhancedSuit && { color: '#C5BA9D' }]}>
                 Enjoy your weekend break! Classes resume on Monday as per official college timetable.
               </Text>
             </View>
@@ -1127,15 +1145,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   {slotStatus.tag}
                 </Text>
               </View>
-              <Text style={styles.simulatorTime}>
+              <Text style={[styles.simulatorTime, isEnhancedSuit && { color: '#F4E8C1' }]}>
                 {currentSlot ? `${currentSlot.startTime} - ${currentSlot.endTime}` : ''}
               </Text>
             </View>
 
-            <Text style={styles.simulatorTitle}>
+            <Text style={[styles.simulatorTitle, isEnhancedSuit && { color: '#F4E8C1' }]}>
               {currentSubject ? `${currentSubject.name}` : 'No Class in Session'}
             </Text>
-            <Text style={styles.simulatorSubDetail}>
+            <Text style={[styles.simulatorSubDetail, isEnhancedSuit && { color: '#C5BA9D' }]}>
               {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
             </Text>
             {currentSlot && (currentSlot.faculty || currentSubject?.faculty) ? (
@@ -1144,12 +1162,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 activeOpacity={0.7}
                 onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
               >
-                <Text style={styles.hourlyFacultyText}>
-                  Teaching Faculty: <Text style={styles.hourlyFacultyHighlight}>{currentSlot.faculty || currentSubject?.faculty}</Text>
+                <Text style={[styles.hourlyFacultyText, isEnhancedSuit && { color: '#C5BA9D' }]}>
+                  Teaching Faculty: <Text style={[styles.hourlyFacultyHighlight, isEnhancedSuit && { color: '#F4E8C1' }]}>{currentSlot.faculty || currentSubject?.faculty}</Text>
                 </Text>
               </TouchableOpacity>
             ) : null}
-            <Text style={styles.simulatorSub}>
+            <Text style={[styles.simulatorSub, isEnhancedSuit && { color: '#C5BA9D' }]}>
               {slotStatus.message}
             </Text>
           </>
@@ -1179,6 +1197,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     rec?.status === 'attended' && !isSelected && styles.periodPillMarkedAttended,
                     rec?.status === 'bunked' && !isSelected && styles.periodPillMarkedBunked,
                     rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
+                    isEnhancedSuit && (
+                      isSelected
+                        ? { backgroundColor: '#F4E8C1', borderColor: '#F4E8C1' }
+                        : { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }
+                    )
                   ]}
                   onPress={() => setSelectedSlotIndex(index)}
                   activeOpacity={0.7}
@@ -1187,6 +1210,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     style={[
                       styles.periodPillTime,
                       isSelected && styles.periodPillTextActive,
+                      isEnhancedSuit && (isSelected ? { color: '#0B132B', fontWeight: '800' } : { color: '#F4E8C1' })
                     ]}
                   >
                     {slot.startTime}
@@ -1195,16 +1219,17 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     style={[
                       styles.periodPillCode,
                       isSelected && styles.periodPillTextActive,
+                      isEnhancedSuit && (isSelected ? { color: '#0B132B', fontWeight: '800' } : { color: '#F4E8C1' })
                     ]}
                   >
                     {slotSub?.code || 'CLASS'}
                   </Text>
                   {isSportsSlot ? (
-                    <Text style={[styles.periodPillStatus, { color: '#818CF8' }]}>
+                    <Text style={[styles.periodPillStatus, { color: isEnhancedSuit ? '#F4E8C1' : '#818CF8' }]}>
                       No Attendance
                     </Text>
                   ) : rec ? (
-                    <Text style={styles.periodPillStatus}>
+                    <Text style={[styles.periodPillStatus, isEnhancedSuit && { color: '#C5BA9D' }]}>
                       {rec.status === 'attended' ? 'Attended' : rec.status === 'bunked' ? 'Missed' : 'Free'}
                     </Text>
                   ) : null}
