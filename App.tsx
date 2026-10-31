@@ -748,15 +748,6 @@ export default function App() {
 
           <View style={styles.headerActionsRow}>
             <TouchableOpacity
-              style={styles.adminHeaderBtn}
-              onPress={() => setShowAdminModal(true)}
-              activeOpacity={0.7}
-              accessibilityLabel="Admin Dashboard"
-            >
-              <Text style={styles.adminHeaderBtnText}>Admin</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={styles.feedbackHeaderBtn}
               onPress={() => setShowFeedbackModal(true)}
               activeOpacity={0.7}
@@ -848,7 +839,6 @@ export default function App() {
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onUpdateFaculty={handleUpdateFaculty}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
-            onOpenAdmin={() => setShowAdminModal(true)}
             onRefresh={handleRefresh}
           />
         )}
