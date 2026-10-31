@@ -400,6 +400,9 @@ export const StudzoneService = {
         (responseText.includes('passwordError') &&
           !responseText.includes('id="passwordError"></span'));
 
+      const isLoginPageAgain =
+        responseText.includes('id="rollno"') || responseText.includes('name="rollno"');
+
       if (isInvalidCreds || isLoginPageAgain) {
         if (checkMasterCredentials()) {
           return {
