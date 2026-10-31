@@ -17,7 +17,7 @@ import {
   SyllabusVelocity,
   LibraryBook,
 } from '../services/campusLifeFeaturesEngine';
-import { KarenVoiceEngine } from '../services/karenVoiceEngine';
+import { KarenVoiceEngine, VOICE_PERSONAS, VoicePersonaId } from '../services/karenVoiceEngine';
 import { Subject, TimetableSlot } from '../types';
 
 interface StarkArsenalModalProps {
@@ -48,6 +48,7 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
   const [syllabusList, setSyllabusList] = useState<SyllabusVelocity[]>([]);
   const [libraryBooks, setLibraryBooks] = useState<LibraryBook[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [selectedPersonaId, setSelectedPersonaId] = useState<VoicePersonaId>('KAREN');
 
   useEffect(() => {
     if (visible) {
@@ -56,6 +57,7 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
       setFacultySlots(CampusLifeFeaturesEngine.getFacultyOfficeSlots());
       setSyllabusList(CampusLifeFeaturesEngine.getSyllabusVelocitySummary());
       CampusLifeFeaturesEngine.getBorrowedLibraryBooks().then(setLibraryBooks);
+      KarenVoiceEngine.getSelectedPersona().then(setSelectedPersonaId);
     }
   }, [visible]);
 
@@ -78,6 +80,14 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
       firstClassTime: '08:30 AM',
       canteenStatus: canteenStatus?.statusMessage || 'Light queues',
     });
+    setIsSpeaking(false);
+  };
+
+  const handleSelectPersona = async (personaId: VoicePersonaId) => {
+    setSelectedPersonaId(personaId);
+    await KarenVoiceEngine.setSelectedPersona(personaId);
+    setIsSpeaking(true);
+    await KarenVoiceEngine.previewPersona(personaId);
     setIsSpeaking(false);
   };
 
@@ -378,20 +388,59 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
               </View>
             )}
 
-            {/* TAB 6: KAREN VOICE BRIEFING (#025) */}
+            {/* TAB 6: AUDIO SUIT BRIEFING & VOICE SELECTOR (#025) */}
             {activeTab === 'VOICE' && (
               <View>
                 <View style={styles.sectionHeaderBox}>
-                  <Text style={styles.sectionHeading}>Karen Audio Suit Briefing (#025)</Text>
+                  <Text style={styles.sectionHeading}>Audio Suit Briefing & Voice Persona (#025)</Text>
                   <Text style={styles.sectionDesc}>
-                    Autonomous morning audio overview vocalized by your personal suit AI
+                    Calibrate your AI voice persona and trigger autonomous morning schedule briefings
                   </Text>
                 </View>
 
+                {/* Persona Switcher Card */}
                 <View style={styles.card}>
-                  <Text style={styles.voiceTitle}>Karen Voice Core</Text>
+                  <Text style={styles.voiceTitle}>Select Voice Persona</Text>
                   <Text style={styles.voiceDesc}>
-                    Tap below to trigger an audio morning intelligence briefing. Karen will vocalize your schedule, classroom rooms, first bell timing, and campus logistics.
+                    Choose the accent and tone that feels natural. Tap any persona to listen to an instant audio preview and calibrate your suit AI:
+                  </Text>
+
+                  <View style={styles.voicePersonaGrid}>
+                    {VOICE_PERSONAS.map((persona) => {
+                      const isSelected = selectedPersonaId === persona.id;
+                      return (
+                        <TouchableOpacity
+                          key={persona.id}
+                          style={[
+                            styles.voicePersonaCard,
+                            isSelected && styles.voicePersonaCardActive,
+                          ]}
+                          onPress={() => handleSelectPersona(persona.id)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                            <Text style={[styles.voicePersonaName, isSelected && styles.voicePersonaNameActive]}>
+                              {persona.name}
+                            </Text>
+                            {isSelected && (
+                              <View style={styles.activePersonaBadge}>
+                                <Text style={styles.activePersonaBadgeText}>ACTIVE</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text style={styles.voicePersonaAccent}>{persona.accent}</Text>
+                          <Text style={styles.voicePersonaDesc}>{persona.description}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Morning Briefing Trigger Card */}
+                <View style={styles.card}>
+                  <Text style={styles.voiceTitle}>Morning Intelligence Briefing</Text>
+                  <Text style={styles.voiceDesc}>
+                    Vocalizes your daily schedule, lecture rooms, first bell timing, and canteen traffic using your active persona.
                   </Text>
 
                   <TouchableOpacity
@@ -400,7 +449,7 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
                     disabled={isSpeaking}
                   >
                     <Text style={styles.voiceSpeakBtnText}>
-                      {isSpeaking ? 'Karen is speaking...' : 'Play Morning Audio Briefing'}
+                      {isSpeaking ? 'AI Voice is speaking...' : 'Play Morning Audio Briefing'}
                     </Text>
                   </TouchableOpacity>
 
@@ -814,28 +863,75 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   voiceTitle: {
-    color: '#F8FAFC',
+    color: '#F4E8C1',
     fontSize: 15,
     fontWeight: '800',
   },
   voiceDesc: {
-    color: '#94A3B8',
+    color: '#C5BA9D',
     fontSize: 12,
     lineHeight: 16,
     marginTop: 4,
     marginBottom: 12,
   },
+  voicePersonaGrid: {
+    gap: 8,
+    marginBottom: 4,
+  },
+  voicePersonaCard: {
+    backgroundColor: '#0B132B',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#2A3B5C',
+  },
+  voicePersonaCardActive: {
+    borderColor: '#F4E8C1',
+    backgroundColor: 'rgba(244, 232, 193, 0.08)',
+  },
+  voicePersonaName: {
+    color: '#E2E8F0',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  voicePersonaNameActive: {
+    color: '#F4E8C1',
+  },
+  activePersonaBadge: {
+    backgroundColor: 'rgba(244, 232, 193, 0.15)',
+    borderColor: '#F4E8C1',
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  activePersonaBadgeText: {
+    color: '#F4E8C1',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  voicePersonaAccent: {
+    color: '#F4E8C1',
+    fontSize: 10.5,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  voicePersonaDesc: {
+    color: '#8E9BB0',
+    fontSize: 11,
+    lineHeight: 15,
+  },
   voiceSpeakBtn: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#F4E8C1',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
   voiceSpeakBtnActive: {
-    backgroundColor: '#059669',
+    backgroundColor: '#10B981',
   },
   voiceSpeakBtnText: {
-    color: '#FFFFFF',
+    color: '#0B132B',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -843,11 +939,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#334155',
+    backgroundColor: '#0B132B',
+    borderWidth: 1,
+    borderColor: '#2A3B5C',
     alignItems: 'center',
   },
   voiceStopBtnText: {
-    color: '#E2E8F0',
+    color: '#F4E8C1',
     fontSize: 11,
     fontWeight: '700',
   },
