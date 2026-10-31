@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { StudzoneService } from '../services/studzoneService';
 import { PsgimService } from '../services/psgimService';
-import { getMasterStudent, toNewRollNo } from '../data/psgimMasterStudents';
+import { getMasterStudent, toNewRollNo, toOldRollNo } from '../data/psgimMasterStudents';
 import { CORRECT_ADMIN_PIN } from './AdminDashboardScreen';
 
 interface AuthScreenProps {
