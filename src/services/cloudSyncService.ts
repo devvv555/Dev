@@ -550,6 +550,83 @@ export const CloudSyncService = {
       console.warn('[CloudSync] resetAllStudentActivities warning:', e);
     }
   },
+
+  /**
+   * Syncs the latest MCU AI Subsystems reports to Cloud Firestore
+   */
+  async syncAiSubsystemsToCloud(aiData: {
+    ultronScan?: any;
+    jarvisFix?: any;
+    fridayDiagnoses?: any[];
+    edithOverview?: any;
+    dumeReport?: any;
+    missMinutesLog?: any;
+  }): Promise<void> {
+    try {
+      const aiRef = doc(db, 'system_updates', 'mcu_ai_grid_status');
+      await setDoc(
+        aiRef,
+        {
+          ...aiData,
+          lastSyncedAt: new Date().toISOString(),
+          timestamp: Date.now(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] syncAiSubsystemsToCloud error:', e);
+    }
+  },
+
+  /**
+   * Fetches the complete list of students who have marked attendance in the app.
+   * Merges all attendance documents in Firestore and registered active students.
+   */
+  async fetchAttendanceMarkedStudents(): Promise<{
+    rollNo: string;
+    name: string;
+    batch: string;
+    lastActiveAt?: string;
+    totalPeriodsMarked: number;
+    subjectsWithAttendance: number;
+    syncedAt?: string;
+  }[]> {
+    try {
+      const attendanceCol = collection(db, 'attendance');
+      const snap = await getDocs(attendanceCol);
+      const list: {
+        rollNo: string;
+        name: string;
+        batch: string;
+        lastActiveAt?: string;
+        totalPeriodsMarked: number;
+        subjectsWithAttendance: number;
+        syncedAt?: string;
+      }[] = [];
+
+      snap.forEach((d) => {
+        const data = d.data();
+        if (data && data.rollNo) {
+          const subjects = (data.subjects || []) as Subject[];
+          const subjectsWithAtt = subjects.filter((s) => (s.attended || 0) > 0 || (s.total || 0) > 0);
+          const totalAttendedHrs = subjects.reduce((sum, s) => sum + (s.attended || 0), 0);
+          list.push({
+            rollNo: data.rollNo,
+            name: data.name || data.rollNo,
+            batch: data.batch || (data.rollNo.length >= 5 ? data.rollNo.charAt(3) : 'A'),
+            lastActiveAt: data.lastActiveAt || data.syncedAt,
+            totalPeriodsMarked: totalAttendedHrs,
+            subjectsWithAttendance: subjectsWithAtt.length,
+            syncedAt: data.syncedAt,
+          });
+        }
+      });
+      return list;
+    } catch (e) {
+      console.warn('[CloudSync] fetchAttendanceMarkedStudents failed:', e);
+      return [];
+    }
+  },
 };
 
 

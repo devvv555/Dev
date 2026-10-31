@@ -17,6 +17,12 @@ import { AnalyticsService } from '../services/analyticsService';
 import { FeedbackService } from '../services/feedbackService';
 import { CloudSyncService } from '../services/cloudSyncService';
 import { toNewRollNo, toOldRollNo } from '../data/psgimMasterStudents';
+import { UltronScanner, UltronScanResult } from '../services/ultronScanner';
+import { JarvisFixer, JarvisFixReport } from '../services/jarvisFixer';
+import { FridayAnalyzer, FridayDiagnosis } from '../services/fridayAnalyzer';
+import { EdithSupervisor } from '../services/edithSupervisor';
+import { DumeMonitor, DumeMaintenanceReport } from '../services/dumeMonitor';
+import { MissMinutesScheduler, MissMinutesSyncLog, MarkedStudentSummary } from '../services/missMinutesScheduler';
 
 export interface AdminDashboardScreenProps {
   visible: boolean;
@@ -36,11 +42,28 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
   const [showPin, setShowPin] = useState<boolean>(false);
   const [pinError, setPinError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'STUDENTS' | 'FEEDBACK'>('STUDENTS');
+  const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'STUDENTS' | 'FEEDBACK' | 'AI_OPERATIONS'>('STUDENTS');
   const [analytics, setAnalytics] = useState<FeatureUsageStats | null>(null);
   const [feedbacks, setFeedbacks] = useState<StudentFeedback[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<'ALL' | FeedbackCategory>('ALL');
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<'ALL' | 'REPLIED' | 'PENDING'>('ALL');
+
+  // AI Subsystem States
+  const [ultronReport, setUltronReport] = useState<UltronScanResult | null>(null);
+  const [jarvisReport, setJarvisReport] = useState<JarvisFixReport | null>(null);
+  const [fridayDiagnoses, setFridayDiagnoses] = useState<FridayDiagnosis[]>([]);
+  const [dumeReport, setDumeReport] = useState<DumeMaintenanceReport | null>(null);
+  const [missMinutesLog, setMissMinutesLog] = useState<MissMinutesSyncLog | null>(null);
+  const [markedAttendanceStudents, setMarkedAttendanceStudents] = useState<MarkedStudentSummary[]>([]);
+  const [isAiScanning, setIsAiScanning] = useState<boolean>(false);
+  const [scanProgress, setScanProgress] = useState<{
+    phase: string;
+    percent: number;
+    currentTest: string;
+    findingsCount: number;
+  } | null>(null);
+  const [isAiFixing, setIsAiFixing] = useState<boolean>(false);
+  const [isMinutesSyncing, setIsMinutesSyncing] = useState<boolean>(false);
 
   // Student Telemetry & Time Spent State
   const [studentActivities, setStudentActivities] = useState<StudentActivityRecord[]>([]);
@@ -80,9 +103,130 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
     const stats = await AnalyticsService.getAnalyticsSummary();
     const fbList = await FeedbackService.getAllFeedbacks();
     const activities = await AnalyticsService.getAllStudentActivities();
+    const lastUltron = await UltronScanner.getLastScan();
+    const lastDume = await DumeMonitor.getLastReport();
+    const lastMinutes = await MissMinutesScheduler.getLastSyncLog();
+    const markedList = await MissMinutesScheduler.getAttendanceMarkedStudents();
     setAnalytics(stats);
     setFeedbacks(fbList);
     setStudentActivities(activities);
+    setMarkedAttendanceStudents(markedList);
+    if (lastUltron) setUltronReport(lastUltron);
+    if (lastDume) setDumeReport(lastDume);
+    if (lastMinutes) {
+      setMissMinutesLog(lastMinutes);
+      if (lastMinutes.markedStudents && lastMinutes.markedStudents.length > 0) {
+        setMarkedAttendanceStudents(lastMinutes.markedStudents);
+      }
+    }
+  };
+
+  const handleRunUltronScan = async () => {
+    setIsAiScanning(true);
+    setScanProgress({
+      phase: 'Initializing Ultron...',
+      percent: 0,
+      currentTest: 'Preparing deep stress test suites across all app vectors...',
+      findingsCount: 0,
+    });
+    try {
+      const scan = await UltronScanner.scanAll((prog) => {
+        setScanProgress({
+          phase: prog.phase,
+          percent: prog.percent,
+          currentTest: prog.currentTest,
+          findingsCount: prog.findingsCount,
+        });
+      });
+      setUltronReport(scan);
+
+      // Friday automatically investigates the root causes for each finding
+      const diagnoses: FridayDiagnosis[] = [];
+      for (const vuln of scan.vulnerabilities) {
+        const diag = FridayAnalyzer.analyzeRootCause(vuln.id, vuln.description);
+        diagnoses.push(diag);
+        // Friday reports directly to Edith
+        await FridayAnalyzer.reportToEdith(diag);
+      }
+      setFridayDiagnoses(diagnoses);
+
+      Alert.alert(
+        'Ultron Probe Complete',
+        `Ultron tested all options across ${scan.phasesCompleted} phases (${scan.totalTestsRun} test cases) and detected ${scan.totalVulnerabilitiesFound} vulnerabilities. Friday diagnosed root causes and reported to Edith.`
+      );
+
+      // Cloud Firestore Sync
+      await CloudSyncService.syncAiSubsystemsToCloud({
+        ultronScan: scan,
+        fridayDiagnoses: diagnoses,
+        edithOverview: EdithSupervisor.getSystemSupervisionOverview(),
+      });
+    } catch (e: any) {
+      Alert.alert('Scan Error', e?.message || 'Ultron probe failed.');
+    } finally {
+      setIsAiScanning(false);
+      setScanProgress(null);
+    }
+  };
+
+  const handleRunJarvisFix = async () => {
+    setIsAiFixing(true);
+    try {
+      const result = await JarvisFixer.fixVulnerabilities(ultronReport || undefined);
+      setJarvisReport(result);
+      const refreshedUltron = await UltronScanner.getLastScan();
+      if (refreshedUltron) setUltronReport(refreshedUltron);
+
+      Alert.alert(
+        'Jarvis Fix Deployed',
+        `J.A.R.V.I.S. patched ${result.fixedCount} vulnerabilities! Status: ${result.status}.`
+      );
+
+      // Cloud Firestore Sync
+      await CloudSyncService.syncAiSubsystemsToCloud({
+        ultronScan: refreshedUltron || ultronReport,
+        jarvisFix: result,
+        edithOverview: EdithSupervisor.getSystemSupervisionOverview(),
+      });
+    } catch (e: any) {
+      Alert.alert('Fix Error', e?.message || 'Jarvis fix failed.');
+    } finally {
+      setIsAiFixing(false);
+    }
+  };
+
+  const handleRunDumeMaintenance = async () => {
+    try {
+      const report = await DumeMonitor.generateMaintenanceReport();
+      setDumeReport(report);
+      Alert.alert('DUM-E & U Report Ready', `UX Ease-of-use score: ${report.easeOfUseScore}/100.`);
+
+      // Cloud Firestore Sync
+      await CloudSyncService.syncAiSubsystemsToCloud({
+        dumeReport: report,
+      });
+    } catch (e: any) {
+      Alert.alert('Analysis Error', e?.message || 'Maintenance generation failed.');
+    }
+  };
+
+  const handleRunMissMinutes = async () => {
+    setIsMinutesSyncing(true);
+    try {
+      const log = await MissMinutesScheduler.executeNightlyAttendanceSync(true);
+      setMissMinutesLog(log);
+      if (log.markedStudents && log.markedStudents.length > 0) {
+        setMarkedAttendanceStudents(log.markedStudents);
+      } else {
+        const fresh = await MissMinutesScheduler.getAttendanceMarkedStudents();
+        setMarkedAttendanceStudents(fresh);
+      }
+      Alert.alert('Miss Minutes Sync', log.details);
+    } catch (e: any) {
+      Alert.alert('Sync Error', e?.message || 'Miss Minutes sync failed.');
+    } finally {
+      setIsMinutesSyncing(false);
+    }
   };
 
 
@@ -536,6 +680,20 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                   ]}
                 >
                   Feedback ({feedbacks.length})
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.switchTab, activeTab === 'AI_OPERATIONS' && styles.switchTabActive]}
+                onPress={() => setActiveTab('AI_OPERATIONS')}
+              >
+                <Text
+                  style={[
+                    styles.switchTabText,
+                    activeTab === 'AI_OPERATIONS' && styles.switchTabTextActive,
+                  ]}
+                >
+                  AI Operations
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1231,6 +1389,322 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                       })
                     )}
                   </>
+                );
+              })()}
+
+              {/* AI Operations & MCU Fleet Control Tab */}
+              {activeTab === 'AI_OPERATIONS' && (() => {
+                const edithOverview = EdithSupervisor.getSystemSupervisionOverview();
+
+                return (
+                  <View style={{ marginBottom: 40 }}>
+                    {/* Header Banner */}
+                    <View style={styles.aiHeaderCard}>
+                      <Text style={styles.aiHeaderTitle}>MCU AI Intelligence Grid</Text>
+                      <Text style={styles.aiHeaderSubtitle}>
+                        Autonomous testing, root cause diagnosis, UX maintenance, isolation oversight, and cloud updates.
+                      </Text>
+                    </View>
+
+                    {/* Section 1: E.D.I.T.H. Supervisory Grid */}
+                    <View style={styles.sectionCard}>
+                      <View style={styles.aiSectionTitleRow}>
+                        <View style={[styles.aiDot, { backgroundColor: '#38BDF8' }]} />
+                        <Text style={styles.sectionTitle}>E.D.I.T.H. Security & Oversight</Text>
+                      </View>
+                      <Text style={styles.sectionSub}>
+                        {edithOverview.enforcementPolicy}
+                      </Text>
+
+                      <View style={styles.aiFleetGrid}>
+                        {edithOverview.aiFleet.map((ai) => (
+                          <View key={ai.service} style={styles.aiFleetItem}>
+                            <Text style={styles.aiFleetName}>{ai.service}</Text>
+                            <View style={styles.aiStatusPill}>
+                              <Text style={styles.aiStatusText}>{ai.status}</Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+
+                    {/* Section 2: Ultron & Jarvis (Vulnerability Hunter & Auto-Fixer) */}
+                    <View style={styles.sectionCard}>
+                      <View style={styles.aiSectionTitleRow}>
+                        <View style={[styles.aiDot, { backgroundColor: '#EF4444' }]} />
+                        <Text style={styles.sectionTitle}>Ultron (Villain) & J.A.R.V.I.S. (Hero)</Text>
+                      </View>
+                      <Text style={styles.sectionSub}>
+                        Ultron aggressively probes all app options to find vulnerabilities. Jarvis automatically patches them.
+                      </Text>
+
+                      <View style={styles.aiActionRow}>
+                        <TouchableOpacity
+                          style={[styles.aiBtn, { backgroundColor: '#EF4444' }]}
+                          onPress={handleRunUltronScan}
+                          disabled={isAiScanning}
+                        >
+                          <Text style={styles.aiBtnText}>
+                            {isAiScanning ? 'Ultron Testing System...' : '1. Run Ultron Vulnerability Scan'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[styles.aiBtn, { backgroundColor: '#10B981' }]}
+                          onPress={handleRunJarvisFix}
+                          disabled={isAiFixing || isAiScanning}
+                        >
+                          <Text style={styles.aiBtnText}>
+                            {isAiFixing ? 'Jarvis Patching...' : '2. Deploy J.A.R.V.I.S. Auto-Fix'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {scanProgress && (
+                        <View style={[styles.aiResultBox, { borderColor: '#EF4444', backgroundColor: '#1F1116' }]}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <Text style={[styles.aiResultTitle, { color: '#F87171' }]}>{scanProgress.phase}</Text>
+                            <Text style={{ color: '#F87171', fontWeight: '800', fontSize: 12 }}>{scanProgress.percent}%</Text>
+                          </View>
+                          <View style={{ height: 6, backgroundColor: '#371B20', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+                            <View style={{ width: `${scanProgress.percent}%`, height: '100%', backgroundColor: '#EF4444' }} />
+                          </View>
+                          <Text style={{ color: '#FECACA', fontSize: 11, fontStyle: 'italic' }}>
+                            {scanProgress.currentTest}
+                          </Text>
+                        </View>
+                      )}
+
+                      {ultronReport && (
+                        <View style={styles.aiResultBox}>
+                          <Text style={styles.aiResultTitle}>Latest Ultron Threat Assessment:</Text>
+                          <Text style={styles.aiResultDesc}>{ultronReport.threatAssessment}</Text>
+                          <Text style={styles.aiResultMeta}>
+                            Vulnerabilities Found: {ultronReport.totalVulnerabilitiesFound} | Critical: {ultronReport.criticalCount}
+                          </Text>
+
+                          {ultronReport.vulnerabilities.map((v) => (
+                            <View key={v.id} style={styles.vulnItem}>
+                              <View style={styles.vulnTop}>
+                                <Text style={styles.vulnId}>[{v.id}] {v.target}</Text>
+                                <Text style={[styles.vulnSeverity, v.fixed ? { color: '#10B981' } : { color: '#EF4444' }]}>
+                                  {v.fixed ? 'RESOLVED BY JARVIS' : v.severity}
+                                </Text>
+                              </View>
+                              <Text style={styles.vulnDesc}>{v.description}</Text>
+                              <Text style={styles.vulnRec}>Fix: {v.fixRecommendation}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {jarvisReport && (
+                        <View style={[styles.aiResultBox, { borderColor: '#10B981', marginTop: 12 }]}>
+                          <Text style={[styles.aiResultTitle, { color: '#10B981' }]}>Jarvis Remediation Log:</Text>
+                          <Text style={styles.aiResultDesc}>
+                            Status: {jarvisReport.status} | Repaired: {jarvisReport.fixedCount} items.
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Section 3: Friday (Root Cause Analyzer) */}
+                    <View style={styles.sectionCard}>
+                      <View style={styles.aiSectionTitleRow}>
+                        <View style={[styles.aiDot, { backgroundColor: '#8B5CF6' }]} />
+                        <Text style={styles.sectionTitle}>F.R.I.D.A.Y. Root Cause Diagnostics</Text>
+                      </View>
+                      <Text style={styles.sectionSub}>
+                        Friday traces the technical origin of every glitch and communicates directly with Edith.
+                      </Text>
+
+                      {fridayDiagnoses.length === 0 ? (
+                        <Text style={styles.aiEmptyText}>
+                          No active diagnostics. Run an Ultron scan above to trigger Friday root-cause analysis.
+                        </Text>
+                      ) : (
+                        fridayDiagnoses.map((diag) => (
+                          <View key={diag.diagnosisId} style={styles.diagItem}>
+                            <Text style={styles.diagTitle}>Module: {diag.sourceModule}</Text>
+                            <Text style={styles.diagCause}>Root Cause: {diag.rootCause}</Text>
+                            <Text style={styles.diagFix}>Prevention: {diag.preventionStrategy}</Text>
+                          </View>
+                        ))
+                      )}
+                    </View>
+
+                    {/* Section 4: DUM-E & U (Maintenance & UX Ease-of-Use) */}
+                    <View style={styles.sectionCard}>
+                      <View style={styles.aiSectionTitleRow}>
+                        <View style={[styles.aiDot, { backgroundColor: '#F59E0B' }]} />
+                        <Text style={styles.sectionTitle}>D.U.M.-E. & U. Maintenance & UX</Text>
+                      </View>
+                      <Text style={styles.sectionSub}>
+                        Monitors student navigation ease, identifies user friction, and recommends improvements.
+                      </Text>
+
+                      <TouchableOpacity
+                        style={[styles.aiBtn, { backgroundColor: '#F59E0B' }]}
+                        onPress={handleRunDumeMaintenance}
+                      >
+                        <Text style={styles.aiBtnText}>Run DUM-E & U UX Analysis</Text>
+                      </TouchableOpacity>
+
+                      {dumeReport && (
+                        <View style={styles.aiResultBox}>
+                          <Text style={styles.aiResultTitle}>
+                            Ease of Use Score: {dumeReport.easeOfUseScore}/100
+                          </Text>
+                          <Text style={styles.aiResultDesc}>
+                            Monitored {dumeReport.totalStudentsMonitored} students | Avg Session: {dumeReport.averageActiveTimeMinutes} mins
+                          </Text>
+
+                          <Text style={[styles.aiResultTitle, { marginTop: 10, fontSize: 13 }]}>
+                            Recommendations for Improvement:
+                          </Text>
+                          {dumeReport.recommendations.map((rec) => (
+                            <View key={rec.id} style={styles.recItem}>
+                              <Text style={styles.recFeature}>{rec.feature} ({rec.priority} Priority)</Text>
+                              <Text style={styles.recIssue}>Issue: {rec.issueObserved}</Text>
+                              <Text style={styles.recAdvice}>Fix: {rec.recommendedImprovement}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Section 5: Miss Minutes (Nightly 9:00 PM Cloud Sync) */}
+                    <View style={styles.sectionCard}>
+                      <View style={styles.aiSectionTitleRow}>
+                        <View style={[styles.aiDot, { backgroundColor: '#EC4899' }]} />
+                        <Text style={styles.sectionTitle}>Miss Minutes Scheduled Cloud Update</Text>
+                      </View>
+                      <Text style={styles.sectionSub}>
+                        Automated protocol: Syncs every day's attendance to the cloud at 9:00 PM, Monday through Saturday.
+                      </Text>
+
+                      <TouchableOpacity
+                        style={[styles.aiBtn, { backgroundColor: '#EC4899' }]}
+                        onPress={handleRunMissMinutes}
+                        disabled={isMinutesSyncing}
+                      >
+                        <Text style={styles.aiBtnText}>
+                          {isMinutesSyncing ? 'Syncing Cloud...' : 'Trigger Miss Minutes Daily Protocol'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      {missMinutesLog && (
+                        <View style={styles.aiResultBox}>
+                          <Text style={styles.aiResultTitle}>
+                            Protocol Status: {missMinutesLog.status} ({missMinutesLog.dayOfWeek})
+                          </Text>
+                          <Text style={styles.aiResultDesc}>{missMinutesLog.details}</Text>
+                          <Text style={styles.aiResultMeta}>
+                            Records Synced: {missMinutesLog.uploadedRecordsCount} | Schedule: {missMinutesLog.scheduledTime}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* List of Students Who Marked Attendance in the App */}
+                      <View style={{ marginTop: 16 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: '#F8FAFC' }}>
+                            Students Marked Attendance in App ({markedAttendanceStudents.length})
+                          </Text>
+                          <Text style={{ fontSize: 11, color: '#94A3B8' }}>Synced via Miss Minutes</Text>
+                        </View>
+
+                        {markedAttendanceStudents.length === 0 ? (
+                          <View style={{ padding: 14, backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: 8, borderWidth: 1, borderColor: '#334155', alignItems: 'center' }}>
+                            <Text style={{ color: '#94A3B8', fontSize: 12 }}>
+                              No student attendance recordings detected yet today.
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={{ gap: 8 }}>
+                            {markedAttendanceStudents.map((st, sIdx) => (
+                              <View
+                                key={st.rollNo}
+                                style={{
+                                  backgroundColor: 'rgba(30, 41, 59, 0.7)',
+                                  padding: 12,
+                                  borderRadius: 8,
+                                  borderWidth: 1,
+                                  borderColor: '#334155',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                }}
+                              >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, marginRight: 8 }}>
+                                  <View
+                                    style={{
+                                      width: 26,
+                                      height: 26,
+                                      borderRadius: 13,
+                                      backgroundColor: 'rgba(236, 72, 153, 0.2)',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
+                                    <Text style={{ color: '#EC4899', fontSize: 11, fontWeight: '700' }}>
+                                      {sIdx + 1}
+                                    </Text>
+                                  </View>
+
+                                  <View style={{ flex: 1 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                      <Text style={{ color: '#F8FAFC', fontSize: 13, fontWeight: '700' }} numberOfLines={1}>
+                                        {st.name}
+                                      </Text>
+                                      <View
+                                        style={{
+                                          paddingHorizontal: 6,
+                                          paddingVertical: 1,
+                                          borderRadius: 4,
+                                          backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                                        }}
+                                      >
+                                        <Text style={{ color: '#38BDF8', fontSize: 10, fontWeight: '700' }}>
+                                          Batch {st.batch}
+                                        </Text>
+                                      </View>
+                                    </View>
+                                    <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 1 }}>
+                                      Roll No: {toNewRollNo(st.rollNo)}
+                                      {st.subjectsCount > 0 ? ` • ${st.subjectsCount} subjects active` : ''}
+                                    </Text>
+                                  </View>
+                                </View>
+
+                                <View style={{ alignItems: 'flex-end' }}>
+                                  <View
+                                    style={{
+                                      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                                      paddingHorizontal: 8,
+                                      paddingVertical: 4,
+                                      borderRadius: 6,
+                                      borderWidth: 1,
+                                      borderColor: 'rgba(16, 185, 129, 0.3)',
+                                    }}
+                                  >
+                                    <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '700' }}>
+                                      {st.totalHoursMarked} hrs marked
+                                    </Text>
+                                  </View>
+                                  {st.lastMarkedAt && (
+                                    <Text style={{ color: '#64748B', fontSize: 10, marginTop: 2 }}>
+                                      {new Date(st.lastMarkedAt).toLocaleDateString('en-GB')}
+                                    </Text>
+                                  )}
+                                </View>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
                 );
               })()}
             </ScrollView>
@@ -2753,6 +3227,208 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
+  },
+  aiHeaderCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+  },
+  aiHeaderTitle: {
+    color: '#38BDF8',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  aiHeaderSubtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  aiSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  aiDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  aiFleetGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  aiFleetItem: {
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    padding: 10,
+    minWidth: 95,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#334155',
+    alignItems: 'center',
+  },
+  aiFleetName: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  aiStatusPill: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  aiStatusText: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  aiActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+    flexWrap: 'wrap',
+  },
+  aiBtn: {
+    flex: 1,
+    minWidth: 160,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  aiBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  aiResultBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  aiResultTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  aiResultDesc: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  aiResultMeta: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  aiEmptyText: {
+    color: '#64748B',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  vulnItem: {
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#EF4444',
+  },
+  vulnTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  vulnId: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+  },
+  vulnSeverity: {
+    fontSize: 10,
+    fontWeight: '800',
+    marginLeft: 6,
+  },
+  vulnDesc: {
+    color: '#CBD5E1',
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  vulnRec: {
+    color: '#38BDF8',
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  diagItem: {
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#8B5CF6',
+  },
+  diagTitle: {
+    color: '#A78BFA',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  diagCause: {
+    color: '#E2E8F0',
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: 2,
+  },
+  diagFix: {
+    color: '#34D399',
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  recItem: {
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#F59E0B',
+  },
+  recFeature: {
+    color: '#FBBF24',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  recIssue: {
+    color: '#CBD5E1',
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: 2,
+  },
+  recAdvice: {
+    color: '#38BDF8',
+    fontSize: 11,
+    lineHeight: 16,
   },
 });
 
