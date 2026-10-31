@@ -123,7 +123,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Text style={styles.closeBtnText}>✕</Text>
+              <Text style={styles.closeBtnText}>X</Text>
             </TouchableOpacity>
           </View>
 
@@ -294,7 +294,7 @@ export const CoursePlanModal: React.FC<CoursePlanModalProps> = ({
                         </View>
                       </View>
 
-                      {/* 💡 Automatic 40 -> 20 Marks Converter for Mid Term Exam */}
+                      {/* Automatic 40 -> 20 Marks Converter for Mid Term Exam */}
                       {isMidTerm && (
                         <View style={styles.midTermConvertBox}>
                           <View style={styles.convertLeft}>

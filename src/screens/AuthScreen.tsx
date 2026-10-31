@@ -59,7 +59,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
   useEffect(() => {
     StudzoneService.getSavedCredentials().then((saved) => {
       if (saved) {
-        setRollNoInput(saved.rollNo || '');
+        setRollNoInput(toNewRollNo(saved.rollNo) || saved.rollNo || '');
         setPasswordInput(saved.dobPassword || '');
         setRememberMe(saved.remember);
       }
@@ -71,6 +71,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
 
     const cleanRollNo = rollNoInput.trim().toUpperCase().replace(/\s+/g, '');
     const rawPassword = passwordInput.trim();
+    const officialRoll = toNewRollNo(cleanRollNo) || cleanRollNo;
 
     // ── Hidden Admin Door ──
     if (cleanRollNo.toLowerCase() === 'admin') {
@@ -84,7 +85,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     }
 
     if (!cleanRollNo) {
-      setErrorMessage('Please enter your Roll Number (e.g. 26AA01).');
+      setErrorMessage('Please enter your College Roll Number (e.g. 26AB12).');
       return;
     }
 
@@ -104,20 +105,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
 
     // In Web / PWA mode or if the external Studzone portal is unreachable, check against the Master Directory
     if (!result.success) {
-      const student = getMasterStudent(cleanRollNo);
-      if (student) {
-        // If master student has dobPassword defined, check it, or accept valid format
-        const expectedDob = (student.dobPassword || '').toUpperCase();
-        if (!expectedDob || expectedDob === rawPassword.toUpperCase()) {
-          result = { success: true, rollNo: student.dRollNo };
-        } else {
-          setLoginStep('credentials');
-          setErrorMessage('Invalid Password. Please check your Date of Birth (DDMMMYY).');
-          return;
-        }
+      const student = getMasterStudent(cleanRollNo) || getMasterStudent(officialRoll);
+      if (student && student.dobPassword && student.dobPassword.toUpperCase() === rawPassword.toUpperCase()) {
+        result = { success: true, rollNo: officialRoll };
       } else {
         setLoginStep('credentials');
-        setErrorMessage(result.error || 'Student not found in master roster.');
+        setErrorMessage(
+          result.error ||
+          'Invalid credentials. The entered Date of Birth does not match this Student Roll Number.'
+        );
         return;
       }
     }
@@ -125,13 +121,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     // ── Login successful ──
     // Save credentials if rememberMe
     await StudzoneService.saveCredentials({
-      rollNo: cleanRollNo,
+      rollNo: officialRoll,
       dobPassword: rawPassword,
       remember: rememberMe,
     });
 
     // Resolve to our internal roll format
-    const officialRoll = toNewRollNo(cleanRollNo) || cleanRollNo;
     setLoginStep('done');
     onLoginSuccess(officialRoll);
   };
@@ -167,7 +162,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
         <View style={styles.card}>
           {/* Portal badge */}
           <View style={styles.portalBadge}>
-            <Text style={styles.portalBadgeIcon}>⚡</Text>
+            <Text style={styles.portalBadgeIcon}>•</Text>
             <Text style={styles.portalBadgeText}>Powered by PSG Studzone Portal</Text>
           </View>
 
@@ -179,7 +174,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
           {/* Error message */}
           {errorMessage && !isLoading && (
             <View style={styles.errorBox}>
-              <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
+              <Text style={styles.errorText}>[!] {errorMessage}</Text>
             </View>
           )}
 
@@ -195,7 +190,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
               <Text style={styles.verifyingStatus}>{verifyingStatus}</Text>
               <View style={styles.verifyingHint}>
                 <Text style={styles.verifyingHintText}>
-                  🔒 Your credentials are sent directly to the official college portal and never stored on our servers.
+                  Your credentials are sent directly to the official college portal and never stored on our servers.
                 </Text>
               </View>
             </View>
@@ -205,7 +200,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
               <Text style={styles.inputLabel}>ROLL NUMBER</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. 26AA01"
+                placeholder="e.g. 26AB12"
                 placeholderTextColor="#475569"
                 value={rollNoInput}
                 onChangeText={(t) => {
@@ -242,13 +237,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                   onPress={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
-                  <Text style={styles.showHideText}>{showPassword ? '🙈 Hide' : '👁️ Show'}</Text>
+                  <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
                 </TouchableOpacity>
               </View>
 
               {/* DOB Hint */}
               <View style={styles.hintBox}>
-                <Text style={styles.hintTitle}>💡 Password Format</Text>
+                <Text style={styles.hintTitle}>Password Format</Text>
                 <Text style={styles.hintBody}>
                   Your Studzone password is your <Text style={styles.highlight}>Date of Birth</Text> in{' '}
                   <Text style={styles.highlight}>DDMMMYY</Text> format.{'\n'}
@@ -259,7 +254,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
               {/* Warning */}
               <View style={styles.warningBox}>
                 <Text style={styles.warningText}>
-                  ⚠️ <Text style={styles.highlight}>Caution:</Text> 5 consecutive wrong attempts will lock your Studzone account.
+                  <Text style={styles.highlight}>Caution:</Text> 5 consecutive wrong attempts will lock your Studzone account.
                 </Text>
               </View>
 
@@ -270,7 +265,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                 activeOpacity={0.7}
               >
                 <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                  {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                  {rememberMe && <Text style={styles.checkmark}>OK</Text>}
                 </View>
                 <Text style={styles.rememberLabel}>Remember me on this device</Text>
               </TouchableOpacity>
@@ -294,7 +289,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
         {/* ── Footer ── */}
         <View style={styles.footer}>
           <Text style={styles.footerLine}>
-            🔒 Private & Confidential
+            Private & Confidential
           </Text>
           <Text style={styles.footerSub}>
             Your credentials are verified directly against the official PSG Studzone portal. We never store your password.
@@ -305,7 +300,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
               onPress={onAdminLogin}
               activeOpacity={0.7}
             >
-              <Text style={styles.adminAuthBtnText}>🛡️ Open Admin Analytics Dashboard</Text>
+              <Text style={styles.adminAuthBtnText}>Open Admin Analytics Dashboard</Text>
             </TouchableOpacity>
           )}
         </View>

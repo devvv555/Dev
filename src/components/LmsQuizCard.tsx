@@ -31,7 +31,7 @@ export const LmsQuizCard: React.FC<LmsQuizCardProps> = ({
               isOpen ? styles.statusOpenText : styles.statusUpcomingText,
             ]}
           >
-            {isOpen ? '🔴 LIVE NOW' : '⏳ UPCOMING'}
+            {isOpen ? 'LIVE NOW' : 'UPCOMING'}
           </Text>
         </View>
       </View>
@@ -45,11 +45,11 @@ export const LmsQuizCard: React.FC<LmsQuizCardProps> = ({
       {/* Quiz Metadata (Timer & Attempts) */}
       <View style={styles.metaRow}>
         <View style={styles.metaItem}>
-          <Text style={styles.metaIcon}>⏱️</Text>
+          <Text style={styles.metaIcon}>TIME:</Text>
           <Text style={styles.metaText}>{quiz.timeLimitMinutes} Mins Limit</Text>
         </View>
         <View style={styles.metaItem}>
-          <Text style={styles.metaIcon}>🎯</Text>
+          <Text style={styles.metaIcon}>LIMIT:</Text>
           <Text style={styles.metaText}>
             {quiz.attemptsUsed} / {quiz.attemptsAllowed} Attempts
           </Text>
@@ -64,7 +64,7 @@ export const LmsQuizCard: React.FC<LmsQuizCardProps> = ({
         activeOpacity={0.7}
       >
         <Text style={styles.attemptBtnText}>
-          {isOpen ? '🚀 Attempt Test (Direct Bypass)' : 'Test Not Open Yet'}
+          {isOpen ? 'Attempt Test (Direct Bypass)' : 'Test Not Open Yet'}
         </Text>
       </TouchableOpacity>
     </View>
@@ -156,7 +156,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   metaIcon: {
-    fontSize: 13,
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#38BDF8',
   },
   metaText: {
     color: '#CBD5E1',

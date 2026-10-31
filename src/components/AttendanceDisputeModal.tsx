@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Subject, MedicalClaimRecord, AttendanceDisputeReport } from '../types';
 import { DisputeReportService } from '../services/disputeReportService';
+import { toNewRollNo } from '../data/psgimMasterStudents';
 
 interface AttendanceDisputeModalProps {
   visible: boolean;
@@ -32,8 +33,9 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
+  const officialRoll = toNewRollNo(studentRollNo);
   const report: AttendanceDisputeReport = DisputeReportService.generateReport(
-    studentRollNo,
+    officialRoll,
     subjects,
     medicalClaims,
     portalFromDate,
@@ -76,12 +78,12 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
     setCopied(true);
     if (success) {
       Alert.alert(
-        'Dispute Dossier Copied! 📋✅',
+        'Dispute Dossier Copied!',
         'The complete itemized attendance dispute text has been copied to your clipboard. You can now paste and send it directly via WhatsApp, Email, or SMS to your Faculty Advisor / HOD.'
       );
     } else {
       Alert.alert(
-        'Dispute Dossier Ready 📋',
+        'Dispute Dossier Ready',
         'You can select, copy, or share the text directly from the box below.'
       );
     }
@@ -92,7 +94,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
     try {
       if (typeof navigator !== 'undefined' && (navigator as any).share) {
         await (navigator as any).share({
-          title: `Attendance Dispute - ${report.studentName} (${report.rollNo})`,
+          title: `Attendance Dispute - ${report.studentName} (${toNewRollNo(report.rollNo)})`,
           text: report.summaryText,
         });
         return;
@@ -115,16 +117,16 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
                   <Text style={styles.reportBadgeText}>OFFICIAL DOSSIER</Text>
                 </View>
                 <Text style={styles.periodText}>
-                  {report.portalFromDate} → {report.portalToDate}
+                  {report.portalFromDate} to {report.portalToDate}
                 </Text>
               </View>
               <Text style={styles.modalTitle}>Attendance Dispute & Proof Report</Text>
               <Text style={styles.modalSub}>
-                {report.studentName} ({report.rollNo}) • {report.section}
+                {report.studentName} ({toNewRollNo(report.rollNo)}) • {report.section}
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Text style={styles.closeBtnText}>✕</Text>
+              <Text style={styles.closeBtnText}>X</Text>
             </TouchableOpacity>
           </View>
 
@@ -139,7 +141,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
               ]}
             >
               <Text style={styles.summaryBannerIcon}>
-                {report.totalDiscrepancyHours > 0 ? '⚠️' : '✅'}
+                {report.totalDiscrepancyHours > 0 ? '[!]' : '[OK]'}
               </Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.summaryBannerTitle}>
@@ -186,7 +188,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
                     </View>
                   ) : (
                     <View style={styles.matchPill}>
-                      <Text style={styles.matchPillText}>✓ MATCHED</Text>
+                      <Text style={styles.matchPillText}>MATCHED</Text>
                     </View>
                   )}
                 </View>
@@ -237,7 +239,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
                     <View style={{ flex: 1 }}>
                       <Text style={styles.medReason}>{med.reason}</Text>
                       <Text style={styles.medDates}>
-                        📅 {med.fromDate} to {med.toDate}
+                        {med.fromDate} to {med.toDate}
                       </Text>
                     </View>
                     <View style={styles.medStatusBadge}>
@@ -255,7 +257,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
               </Text>
               <TouchableOpacity onPress={handleCopyReport} activeOpacity={0.7}>
                 <Text style={styles.quickCopyLink}>
-                  {copied ? '✅ Copied!' : '📋 Copy Text'}
+                  {copied ? 'Copied!' : 'Copy Text'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -277,7 +279,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.copyBtnText}>
-                  {copied ? '✅ Copied to Clipboard!' : '📋 Copy Dossier'}
+                  {copied ? 'Copied to Clipboard' : 'Copy Dossier'}
                 </Text>
               </TouchableOpacity>
 
@@ -286,7 +288,7 @@ export const AttendanceDisputeModal: React.FC<AttendanceDisputeModalProps> = ({
                 onPress={handleNativeShare}
                 activeOpacity={0.8}
               >
-                <Text style={styles.shareBtnText}>📤 Share / Send</Text>
+                <Text style={styles.shareBtnText}>Share / Send</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

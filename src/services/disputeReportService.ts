@@ -1,6 +1,6 @@
 import { Linking, Platform } from 'react-native';
 import { Subject, MedicalClaimRecord, AttendanceDisputeReport, AttendanceDisputeItem } from '../types';
-import { getMasterStudent } from '../data/psgimMasterStudents';
+import { getMasterStudent, toNewRollNo } from '../data/psgimMasterStudents';
 import { PsgimService } from '../services/psgimService';
 
 export interface AttendanceOverlapItem {
@@ -84,11 +84,12 @@ export const DisputeReportService = {
     const student = getMasterStudent(cleanRoll);
     const profile = PsgimService.getStudentProfile(cleanRoll);
     const studentName = student ? student.name : cleanRoll;
+    const collegeRoll = toNewRollNo(cleanRoll);
     const studentEmail = profile?.email || `${cleanRoll.toLowerCase()}@psgim.ac.in`;
     const overlapResult = this.checkAttendanceOverlap(subjects);
 
     let emailBody = `ATTENDANCE OVERLAP & DISCREPANCY DOSSIER\n\n`;
-    emailBody += `Student: ${studentName} (${cleanRoll})\n`;
+    emailBody += `Student: ${studentName} (${collegeRoll})\n`;
     emailBody += `Class: I MBA (2026-28) - ${profile?.section || 'Batch A'}\n`;
     emailBody += `College Portal Period: ${portalFromDate} to ${portalToDate}\n`;
     emailBody += `Generated: ${new Date().toLocaleDateString('en-IN')}\n\n`;
@@ -204,23 +205,24 @@ export const DisputeReportService = {
     const activeMedCount = medicalClaims.filter((c) => c.status === 'APPROVED' || c.status === 'SUBMITTED').length;
 
     // Build plain text summary for copying/emailing to Advisor/HOD
-    let summaryText = `*PSG INSTITUTE OF MANAGEMENT — ATTENDANCE DISCREPANCY DOSSIER*\n`;
-    summaryText += `👤 Student: ${studentName} (${cleanRoll})\n`;
-    summaryText += `🏫 Class: I MBA (2026–28) • ${section}\n`;
-    summaryText += `📅 Official Portal Period: ${portalFromDate} to ${portalToDate}\n`;
-    summaryText += `🕒 Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}\n\n`;
+    const collegeRoll = toNewRollNo(cleanRoll);
+    let summaryText = `*PSG INSTITUTE OF MANAGEMENT -- ATTENDANCE DISCREPANCY DOSSIER*\n`;
+    summaryText += `Student: ${studentName} (${collegeRoll})\n`;
+    summaryText += `Class: I MBA (2026-28) - ${section}\n`;
+    summaryText += `Official Portal Period: ${portalFromDate} to ${portalToDate}\n`;
+    summaryText += `Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}\n\n`;
 
     summaryText += `*SUBJECT-WISE COMPARISON:*\n`;
     items.forEach((item) => {
-      summaryText += `• *${item.subjectCode}* (${item.subjectName}):\n`;
+      summaryText += `* ${item.subjectCode} (${item.subjectName}):\n`;
       summaryText += `   Portal Baseline: ${item.portalAttended}/${item.portalTotal} hrs (${item.portalPercentage.toFixed(1)}%)\n`;
       summaryText += `   Hourly Logged:   ${item.appAttended}/${item.appTotal} hrs (${item.appPercentage.toFixed(1)}%)\n`;
       if (item.deltaAttended > 0) {
-        summaryText += `   ⚠️ Discrepancy: +${item.deltaAttended} hrs marked present in class but missing on portal.\n`;
+        summaryText += `   Discrepancy: +${item.deltaAttended} hrs marked present in class but missing on portal.\n`;
       } else if (item.deltaAttended < 0) {
-        summaryText += `   ℹ️ Portal Surplus: Portal shows ${Math.abs(item.deltaAttended)} more hrs.\n`;
+        summaryText += `   Portal Surplus: Portal shows ${Math.abs(item.deltaAttended)} more hrs.\n`;
       } else {
-        summaryText += `   ✓ Records Match (100% Reconciled)\n`;
+        summaryText += `   Records Match (100% Reconciled)\n`;
       }
     });
 
@@ -236,7 +238,7 @@ export const DisputeReportService = {
 
     return {
       generatedAt: new Date().toISOString(),
-      rollNo: cleanRoll,
+      rollNo: collegeRoll,
       studentName,
       section,
       portalFromDate,

@@ -18,10 +18,12 @@ import {
   SmartTripSuggestion,
 } from '../data/academicCalendarData';
 import { Subject, TimetableSlot } from '../types';
+import { toNewRollNo } from '../data/psgimMasterStudents';
 
 interface CalendarScreenProps {
   subjects?: Subject[];
   timetable?: TimetableSlot[];
+  studentRollNo?: string;
   onBack?: () => void;
   onRefresh?: () => Promise<void> | void;
 }
@@ -42,6 +44,7 @@ const isItemPassed = (item: AcademicCalendarItem, todayStr: string): boolean => 
 export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   subjects = [],
   timetable = [],
+  studentRollNo,
   onBack,
   onRefresh,
 }) => {
@@ -115,13 +118,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   const getTypeBadge = (type: CalendarEventType) => {
     switch (type) {
       case 'HOLIDAY':
-        return { label: '🌴 Holiday', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' };
+        return { label: 'Holiday', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' };
       case 'EXAM':
-        return { label: '📝 Exam', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
+        return { label: 'Exam', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
       case 'EVENT':
-        return { label: '⛺ Event / Trip', color: '#A855F7', bg: 'rgba(168, 85, 247, 0.15)' };
+        return { label: 'Event / Trip', color: '#A855F7', bg: 'rgba(168, 85, 247, 0.15)' };
       case 'ACADEMIC':
-        return { label: '🎓 Academic', color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)' };
+        return { label: 'Academic', color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)' };
     }
   };
 
@@ -146,9 +149,16 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
             <Text style={styles.backBtnText}>← Back</Text>
           </TouchableOpacity>
         )}
-        <Text style={styles.headerTitle}>Academic Calendar 2026–27</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.headerTitle}>Academic Calendar 2026–27</Text>
+          {studentRollNo ? (
+            <View style={styles.rollBadge}>
+              <Text style={styles.rollBadgeText}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.headerSubtitle}>
-          Official schedule, holidays, exam blackout dates & long weekend trip planner.
+          {studentRollNo ? `Roll No: ${toNewRollNo(studentRollNo)} • ` : ''}Official schedule, holidays, exam blackout dates & long weekend trip planner.
         </Text>
       </View>
 
@@ -158,21 +168,21 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
         <View style={styles.spotlightCard}>
           <View style={styles.spotlightHeaderRow}>
             <View style={styles.spotlightIconCircle}>
-              <Text style={styles.spotlightIconText}>🌴</Text>
+              <Text style={styles.spotlightIconText}>CAL</Text>
             </View>
             <View style={styles.spotlightInfo}>
               <Text style={styles.spotlightTag}>
                 {nextHolidayInfo.daysRemaining === 0
-                  ? 'TODAY IS A HOLIDAY! 🎉'
+                  ? 'TODAY IS A HOLIDAY!'
                   : nextHolidayInfo.daysRemaining === 1
-                  ? 'HOLIDAY TOMORROW! 🚀'
+                  ? 'HOLIDAY TOMORROW!'
                   : `NEXT HOLIDAY IN ${nextHolidayInfo.daysRemaining} DAYS`}
               </Text>
               <Text style={styles.spotlightTitle} numberOfLines={1}>
                 {nextHolidayInfo.holiday.title}
               </Text>
               <Text style={styles.spotlightDate}>
-                📅 {formatDisplayDate(nextHolidayInfo.holiday.date, nextHolidayInfo.holiday.endDate)} • {nextHolidayInfo.holiday.day}
+                {formatDisplayDate(nextHolidayInfo.holiday.date, nextHolidayInfo.holiday.endDate)} • {nextHolidayInfo.holiday.day}
               </Text>
             </View>
           </View>
@@ -188,7 +198,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           {nextHolidayInfo.holiday.recommendedSmartLeave && (
             <View style={styles.smartLeaveBox}>
               <Text style={styles.smartLeaveText}>
-                💡 {nextHolidayInfo.holiday.recommendedSmartLeave}
+                {nextHolidayInfo.holiday.recommendedSmartLeave}
               </Text>
             </View>
           )}
@@ -203,7 +213,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'HOLIDAY' && styles.filterChipTextActive]}>
-            🌴 Holidays ({upcomingHolidaysCount})
+            Holidays ({upcomingHolidaysCount})
           </Text>
         </TouchableOpacity>
 
@@ -213,7 +223,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'EXAM' && styles.filterChipTextActive]}>
-            📝 Exams ({upcomingExamsCount})
+            Exams ({upcomingExamsCount})
           </Text>
         </TouchableOpacity>
 
@@ -223,7 +233,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           activeOpacity={0.7}
         >
           <Text style={[styles.filterChipText, filter === 'EVENT' && styles.filterChipTextActive]}>
-            ⛺ Events & Trips ({upcomingEventsCount})
+            Events & Trips ({upcomingEventsCount})
           </Text>
         </TouchableOpacity>
 
@@ -242,7 +252,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       <View style={styles.timelineList}>
         {filteredItems.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🗓️</Text>
+            <Text style={styles.emptyIcon}>[Cal]</Text>
             <Text style={styles.emptyTitle}>No Upcoming Events</Text>
             <Text style={styles.emptySub}>All scheduled items for this category have passed or concluded.</Text>
           </View>
@@ -295,7 +305,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
                   {isHoliday && (
                     <View style={styles.tapToPlanPill}>
-                      <Text style={styles.tapToPlanText}>✈️ Smart Leave Planner ›</Text>
+                      <Text style={styles.tapToPlanText}>Smart Leave Planner ›</Text>
                     </View>
                   )}
                 </View>
@@ -309,7 +319,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                 {item.recommendedSmartLeave && (
                   <View style={styles.smartLeaveBox}>
                     <Text style={styles.smartLeaveText}>
-                      💡 {item.recommendedSmartLeave}
+                      {item.recommendedSmartLeave}
                     </Text>
                   </View>
                 )}
@@ -333,7 +343,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
               <View style={styles.tripModalCard}>
                 <View style={styles.tripModalHeader}>
                   <View style={styles.tripModalIconCircle}>
-                    <Text style={styles.tripModalIcon}>🌴</Text>
+                    <Text style={styles.tripModalIcon}>[Trip]</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.tripModalTag}>
@@ -343,14 +353,14 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                       {selectedHoliday.title}
                     </Text>
                     <Text style={styles.tripModalDate}>
-                      📅 {formatDisplayDate(selectedHoliday.date, selectedHoliday.endDate)} ({selectedHoliday.day})
+                      {formatDisplayDate(selectedHoliday.date, selectedHoliday.endDate)} ({selectedHoliday.day})
                     </Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => setSelectedHoliday(null)}
                     style={styles.closeTripModalBtn}
                   >
-                    <Text style={styles.closeTripModalBtnText}>✕</Text>
+                    <Text style={styles.closeTripModalBtnText}>X</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -361,7 +371,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                         <Text style={styles.tripHeroTitle}>{suggestion.tripTitle}</Text>
                         {suggestion.hasPersonalizedAttendance && (
                           <View style={styles.liveSyncBadge}>
-                            <Text style={styles.liveSyncBadgeText}>⚡ Real Attendance Synced</Text>
+                            <Text style={styles.liveSyncBadgeText}>Real Attendance Synced</Text>
                           </View>
                         )}
                       </View>
@@ -371,7 +381,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                     </View>
 
                     <Text style={styles.smartLeaveSectionHeader}>
-                      🎯 ATTENDANCE-BASED LEAVE RECOMMENDATIONS
+                      ATTENDANCE-BASED LEAVE RECOMMENDATIONS
                     </Text>
 
                     {suggestion.suggestedLeaves.map((leave, idx) => (
@@ -403,12 +413,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                         {leave.subjectBreakdown && leave.subjectBreakdown.length > 0 && (
                           <View style={styles.subjectBreakdownBox}>
                             <Text style={styles.breakdownTitle}>
-                              📚 Scheduled on {leave.day} ({leave.subjectBreakdown.reduce((sum, it) => sum + (it.slotHours || 1), 0)} hrs):
+                              Scheduled on {leave.day} ({leave.subjectBreakdown.reduce((sum, it) => sum + (it.slotHours || 1), 0)} hrs):
                             </Text>
                             {leave.subjectBreakdown.map((item, sIdx) => (
                               <View key={sIdx} style={styles.subjectRowItem}>
                                 <View style={styles.subjectRowLeft}>
-                                  <View style={styles.subjectBadgeRow}>
+                                   <View style={styles.subjectBadgeRow}>
                                     <View
                                       style={[
                                         styles.sessionTag,
@@ -430,7 +440,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                                     {item.subjectName}
                                   </Text>
                                   <Text style={styles.subjectTimeText}>
-                                    ⏰ {item.timeSlot} {item.room ? `• ${item.room}` : ''}
+                                    {item.timeSlot} {item.room ? `• ${item.room}` : ''}
                                   </Text>
                                 </View>
 
@@ -462,7 +472,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                     ))}
 
                     <View style={styles.tripTipsBox}>
-                      <Text style={styles.tripTipsTitle}>💡 Smart Leave Rule of Thumb:</Text>
+                      <Text style={styles.tripTipsTitle}>Smart Leave Rule of Thumb:</Text>
                       <Text style={styles.tripTipsText}>
                         If you take leave only for subjects where you have surplus buffer (+1 or more margin hours), your overall percentage remains above 75%. If any subject shows "0 margin", attending that class is essential to avoid condonation!
                       </Text>
@@ -514,10 +524,31 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 13,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: '#F8FAFC',
+  },
+  rollBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  rollBadgeText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: 13,

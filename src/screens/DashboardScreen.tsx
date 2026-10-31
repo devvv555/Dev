@@ -34,6 +34,7 @@ import { CoursePlanModal } from '../components/CoursePlanModal';
 import { AttendanceDisputeModal } from '../components/AttendanceDisputeModal';
 import { FacultySelectModal } from '../components/FacultySelectModal';
 import { LmsService } from '../services/lmsService';
+import { toNewRollNo } from '../data/psgimMasterStudents';
 
 
 interface DashboardScreenProps {
@@ -180,7 +181,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     setReminderNote('');
     setReminderCustomTime('');
     Alert.alert(
-      'Reminder Set! ⏰',
+      'Reminder Set!',
       `Reminder saved: "${newReminder.note}" (${timingDesc}).`
     );
   };
@@ -627,7 +628,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     setEndedSlotNotification(null);
     if (res.success) {
       Alert.alert(
-        status === 'attended' ? 'Marked Present ✅' : status === 'bunked' ? 'Marked Absent ❌' : 'Class Cancelled ⚪',
+        status === 'attended' ? 'Marked Present' : status === 'bunked' ? 'Marked Absent' : 'Class Cancelled',
         `Attendance recorded for ${subject.name}.`
       );
     }
@@ -638,7 +639,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
     if (isCurrentSlotLocked) {
       Alert.alert(
-        'Attendance Locked 🔒',
+        'Attendance Locked',
         lockInfo.reason || 'The class timer has completed and attendance has been synced to the cloud. You cannot modify it until the college updates the portal.'
       );
       return;
@@ -647,7 +648,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (currentRecord) {
       if (currentRecord.status === status) {
         Alert.alert(
-          'Already Recorded ℹ️',
+          'Already Recorded',
           `This period is already marked as "${status.toUpperCase()}".`
         );
         return;
@@ -662,7 +663,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       });
       if (check.isLocked) {
         Alert.alert(
-          'Attendance Locked 🔒',
+          'Attendance Locked',
           check.reason || 'The class timer has completed and attendance has been uploaded to the cloud. It cannot be altered until the college updates the portal.'
         );
         return;
@@ -678,7 +679,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
       if (res.success) {
         Alert.alert(
-          'Attendance Updated 🔄',
+          'Attendance Updated',
           `Changed from "${fromStatus}" to "${toStatus}" (${getSlotHours(currentSlot)} hrs). Your attendance totals and percentages have been recalculated.`
         );
       } else {
@@ -695,10 +696,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (res.success) {
       Alert.alert(
         status === 'attended'
-          ? 'Logged Present ✅'
+          ? 'Logged Present'
           : status === 'bunked'
-          ? 'Logged Absent ❌'
-          : 'Class Cancelled ⚪',
+          ? 'Logged Absent'
+          : 'Class Cancelled',
         res.message
       );
     } else {
@@ -760,7 +761,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {studentName || 'Student'}
             </Text>
             <Text style={styles.welcomeSub}>
-              {profile.section ? `${profile.section} • ` : ''}MBA (2026–28)
+              <Text style={styles.welcomeRoll}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+              {profile.section ? ` • ${profile.section}` : ''} • MBA (2026–28)
             </Text>
           </View>
           {onOpenAdmin && (
@@ -774,14 +776,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           )}
         </View>
 
-        {/* Verified Student Email if available */}
-        {profile.email ? (
-          <View style={styles.profileDetailsRow}>
+        {/* Verified Student Details Row */}
+        <View style={styles.profileDetailsRow}>
+          {studentRollNo ? (
+            <View style={styles.profilePill}>
+              <Text style={styles.profilePillText}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            </View>
+          ) : null}
+          {profile.email ? (
             <View style={styles.profilePill}>
               <Text style={styles.profilePillText} numberOfLines={1}>{profile.email}</Text>
             </View>
-          </View>
-        ) : null}
+          ) : null}
+        </View>
 
         {/* Latest Announcement Banner */}
         {announcements.length > 0 && (
@@ -827,7 +834,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {/* Academic calendar pre-accounted message */}
           <View style={styles.weekdayNotifAccountedBox}>
             <Text style={styles.weekdayNotifAccountedText}>
-              ✓ {weekdayHolidayAlert.accountingNote}
+              [OK] {weekdayHolidayAlert.accountingNote}
             </Text>
           </View>
 
@@ -1011,7 +1018,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
               >
                 <Text style={styles.hourlyFacultyText}>
-                  Teaching Faculty: <Text style={styles.hourlyFacultyHighlight}>{currentSlot.faculty || currentSubject?.faculty}</Text> ✎
+                  Teaching Faculty: <Text style={styles.hourlyFacultyHighlight}>{currentSlot.faculty || currentSubject?.faculty}</Text>
                 </Text>
               </TouchableOpacity>
             ) : null}
@@ -1071,7 +1078,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     </Text>
                   ) : rec ? (
                     <Text style={styles.periodPillStatus}>
-                      {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✗ Missed' : '○ Free'}
+                      {rec.status === 'attended' ? 'Attended' : rec.status === 'bunked' ? 'Missed' : 'Free'}
                     </Text>
                   ) : null}
                 </TouchableOpacity>
@@ -1093,7 +1100,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           >
             <View style={styles.lockedBannerRow}>
               <Text style={styles.lockedBannerIcon}>
-                {isCurrentSlotLocked ? '🔒' : currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
+                {isCurrentSlotLocked ? '[LOCKED]' : currentRecord.status === 'attended' ? '[ATTENDED]' : currentRecord.status === 'bunked' ? '[MISSED]' : '[FREE]'}
               </Text>
               <View style={styles.lockedBannerTextContainer}>
                 <Text style={styles.lockedBannerTitle}>
@@ -1220,7 +1227,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         activeOpacity={0.7}
                       >
                         <Text style={styles.reminderCheckIcon}>
-                          {rem.completed ? '✓' : '○'}
+                          {rem.completed ? '[DONE]' : '[TODO]'}
                         </Text>
                       </TouchableOpacity>
 
@@ -1252,7 +1259,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         style={styles.reminderDeleteAction}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.reminderDeleteActionText}>✕</Text>
+                        <Text style={styles.reminderDeleteActionText}>X</Text>
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -1280,11 +1287,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
 
 
-      {/* 📚 PSGIM Moodle • Upcoming Course Assignments & Deadlines */}
+      {/* PSGIM Moodle • Upcoming Course Assignments & Deadlines */}
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.connectIcon}>📚</Text>
+            <Text style={styles.connectIcon}>[Moodle]</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1362,7 +1369,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={styles.connectSection}>
         <View style={styles.connectHeaderRow}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.connectIcon}>📢</Text>
+            <Text style={styles.connectIcon}>[Notices]</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1429,8 +1436,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           >
             <Text style={[styles.filterChipText, filter === tab && styles.filterChipTextActive]}>
               {tab === 'ALL' && 'All Subjects'}
-              {tab === 'SAFE' && '✅ Safe (≥75%)'}
-              {tab === 'SHORTAGE' && '⚠️ Shortage (<75%)'}
+              {tab === 'SAFE' && 'Safe (>=75%)'}
+              {tab === 'SHORTAGE' && 'Shortage (<75%)'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -1441,7 +1448,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <SubjectCard
           key={subject.id}
           subject={subject}
-          studentRollNo={studentRollNo}
+          studentRollNo={toNewRollNo(studentRollNo)}
           onOpenCoursePlan={(code, name) =>
             setCoursePlanModalInfo({
               visible: true,
@@ -1465,7 +1472,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.notifCard}>
             <View style={styles.notifHeaderRow}>
               <View style={styles.notifIconCircle}>
-                <Text style={styles.notifIconText}>🔔</Text>
+                <Text style={styles.notifIconText}>[Alert]</Text>
               </View>
               <View style={styles.notifHeaderInfo}>
                 <Text style={styles.notifHeaderBadge}>CLASS CONCLUDED</Text>
@@ -1473,7 +1480,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   {endedSlotNotification?.subject.name}
                 </Text>
                 <Text style={styles.notifTimeSlot}>
-                  ⏰ {endedSlotNotification?.slot.startTime} – {endedSlotNotification?.slot.endTime} • {endedSlotNotification?.slot.day}
+                  {endedSlotNotification?.slot.startTime} – {endedSlotNotification?.slot.endTime} • {endedSlotNotification?.slot.day}
                 </Text>
               </View>
             </View>
@@ -1489,7 +1496,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.notifAttendText}>
-                  ✅ Attended ({getSlotHours(endedSlotNotification?.slot)} hrs)
+                  Attended ({getSlotHours(endedSlotNotification?.slot)} hrs)
                 </Text>
               </TouchableOpacity>
 
@@ -1499,7 +1506,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.notifBunkText}>
-                  ❌ Missed ({getSlotHours(endedSlotNotification?.slot)} hrs)
+                  Missed ({getSlotHours(endedSlotNotification?.slot)} hrs)
                 </Text>
               </TouchableOpacity>
 
@@ -1508,7 +1515,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={() => handleRecordFromNotification('cancelled')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.notifCancelText}>⚪ Free / Off</Text>
+                <Text style={styles.notifCancelText}>Free / Off</Text>
               </TouchableOpacity>
             </View>
 
@@ -1534,7 +1541,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.reminderModalCard}>
             <View style={styles.reminderModalHeader}>
               <View style={styles.reminderModalIconCircle}>
-                <Text style={styles.reminderModalIcon}>⏰</Text>
+                <Text style={styles.reminderModalIcon}>TASK</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.reminderModalTag}>CLASS INSTRUCTION / HOMEWORK</Text>
@@ -1549,7 +1556,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 onPress={() => setShowReminderModal(false)}
                 style={styles.closeTripModalBtn}
               >
-                <Text style={styles.closeTripModalBtnText}>✕</Text>
+                <Text style={styles.closeTripModalBtnText}>X</Text>
               </TouchableOpacity>
             </View>
 
@@ -1684,14 +1691,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         onClose={() => setSelectedNotice(null)}
       />
 
-      {/* 🪪 Emergency Digital Student ID Modal */}
+      {/* Emergency Digital Student ID Modal */}
       <DigitalIdModal
         visible={showDigitalIdModal}
         onClose={() => setShowDigitalIdModal(false)}
-        studentRollNo={studentRollNo}
+        studentRollNo={toNewRollNo(studentRollNo)}
       />
 
-      {/* 📚 Course Plan Subject Selector Modal */}
+      {/* Course Plan Subject Selector Modal */}
       <Modal
         visible={showSubjectPickerModal}
         animationType="slide"
@@ -1711,7 +1718,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 style={styles.closeTripModalBtn}
                 activeOpacity={0.7}
               >
-                <Text style={styles.closeTripModalBtnText}>✕</Text>
+                <Text style={styles.closeTripModalBtnText}>X</Text>
               </TouchableOpacity>
             </View>
 
@@ -1752,7 +1759,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
       </Modal>
 
-      {/* 📊 Course Plan & CA Marks Tracker Modal */}
+      {/* Course Plan & CA Marks Tracker Modal */}
       <CoursePlanModal
         visible={coursePlanModalInfo.visible}
         onClose={() =>
@@ -1760,19 +1767,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         }
         subjectCode={coursePlanModalInfo.code}
         subjectName={coursePlanModalInfo.name}
-        studentRollNo={studentRollNo}
+        studentRollNo={toNewRollNo(studentRollNo)}
         allowSubjectSwitching={coursePlanModalInfo.allowSubjectSwitching}
       />
 
-      {/* 📄 Attendance Dispute & Proof Dossier Modal */}
+      {/* Attendance Dispute & Proof Dossier Modal */}
       <AttendanceDisputeModal
         visible={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
-        studentRollNo={studentRollNo}
+        studentRollNo={toNewRollNo(studentRollNo)}
         subjects={subjects}
       />
 
-      {/* 👨‍🏫 Faculty Assignment & Customization Modal */}
+      {/* Faculty Assignment & Customization Modal */}
       <FacultySelectModal
         visible={facultyModalSubject !== null}
         subject={facultyModalSubject}
@@ -1783,7 +1790,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         }}
       />
 
-      {/* ⚡ Rescheduled / After-College Makeup Class Attendance Modal */}
+      {/* Rescheduled / After-College Makeup Class Attendance Modal */}
       <Modal
         visible={showRescheduledModal}
         transparent
@@ -1794,14 +1801,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.rescheduledModalCard}>
             <View style={styles.rescheduledModalHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.rescheduledBadge}>AFTER-COLLEGE COMPENSATION CLASS</Text>
+                <Text style={styles.rescheduledBadge}>AFTER-COLLEAGE COMPENSATION CLASS</Text>
                 <Text style={styles.rescheduledModalTitle}>Mark Rescheduled Attendance</Text>
               </View>
               <TouchableOpacity
                 onPress={() => setShowRescheduledModal(false)}
                 style={styles.closeRescheduledBtn}
               >
-                <Text style={styles.closeRescheduledText}>✕</Text>
+                <Text style={styles.closeRescheduledText}>X</Text>
               </TouchableOpacity>
             </View>
 
@@ -1827,10 +1834,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 if (res.success) {
                   Alert.alert(
                     status === 'attended'
-                      ? 'Marked Attended ✅'
+                      ? 'Marked Attended'
                       : status === 'bunked'
-                      ? 'Marked Absent ❌'
-                      : 'Free / Cancelled ⚪',
+                      ? 'Marked Absent'
+                      : 'Free / Cancelled',
                     `Rescheduled class attendance recorded for ${targetSub.name} (${slotHours} hr).`
                   );
                 } else {
@@ -1863,7 +1870,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       activeOpacity={0.8}
                       onPress={() => handleMarkRescheduled('attended')}
                     >
-                      <Text style={styles.rescheduledBtnText}>✅ I Attended (1 hr)</Text>
+                      <Text style={styles.rescheduledBtnText}>I Attended (1 hr)</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1871,7 +1878,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       activeOpacity={0.8}
                       onPress={() => handleMarkRescheduled('bunked')}
                     >
-                      <Text style={styles.rescheduledBtnText}>❌ I Missed (1 hr)</Text>
+                      <Text style={styles.rescheduledBtnText}>I Missed (1 hr)</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1879,7 +1886,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       activeOpacity={0.8}
                       onPress={() => handleMarkRescheduled('cancelled')}
                     >
-                      <Text style={styles.rescheduledBtnText}>⚪ Not Conducted</Text>
+                      <Text style={styles.rescheduledBtnText}>Not Conducted</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -2673,7 +2680,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   reminderModalIcon: {
-    fontSize: 20,
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#38BDF8',
+    letterSpacing: 0.5,
   },
   reminderModalTag: {
     color: '#38BDF8',

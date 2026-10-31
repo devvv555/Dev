@@ -16,6 +16,7 @@ import { FeatureUsageStats, StudentFeedback, FeedbackCategory, StudentActivityRe
 import { AnalyticsService } from '../services/analyticsService';
 import { FeedbackService } from '../services/feedbackService';
 import { CloudSyncService } from '../services/cloudSyncService';
+import { toNewRollNo, toOldRollNo } from '../data/psgimMasterStudents';
 
 export interface AdminDashboardScreenProps {
   visible: boolean;
@@ -436,7 +437,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
             }}
             style={styles.exitBtn}
           >
-            <Text style={styles.exitBtnText}>Exit Admin ✕</Text>
+            <Text style={styles.exitBtnText}>Exit Admin X</Text>
           </TouchableOpacity>
         </View>
 
@@ -910,7 +911,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                                 {fb.studentName || 'Student'}
                               </Text>
                               {fb.studentRollNo ? (
-                                <Text style={styles.fbRollNo}>({fb.studentRollNo})</Text>
+                                <Text style={styles.fbRollNo}>({toNewRollNo(fb.studentRollNo)})</Text>
                               ) : null}
                               {fb.isAnonymous && (
                                 <View style={styles.anonymousBadge}>
@@ -946,7 +947,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                         <View style={styles.fbMetaRow}>
                           <View style={styles.fbRatingStars}>
                             {[...Array(fb.rating)].map((_, i) => (
-                              <Text key={i} style={styles.fbStar}>★</Text>
+                              <Text key={i} style={styles.fbStar}>*</Text>
                             ))}
                           </View>
                           <View style={styles.categoryPill}>
@@ -1022,7 +1023,8 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                   const query = studentSearch.trim().toLowerCase();
                   const matchSearch =
                     !query ||
-                    rec.rollNo.toLowerCase().includes(query) ||
+                    toNewRollNo(rec.rollNo).toLowerCase().includes(query) ||
+                    toOldRollNo(rec.rollNo).toLowerCase().includes(query) ||
                     rec.name.toLowerCase().includes(query);
                   return matchBatch && matchLive && matchSearch;
                 });
@@ -1080,7 +1082,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                         />
                         {studentSearch.length > 0 && (
                           <TouchableOpacity onPress={() => setStudentSearch('')}>
-                            <Text style={styles.clearSearchText}>✕</Text>
+                            <Text style={styles.clearSearchText}>X</Text>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -1208,7 +1210,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                                   </View>
                                 )}
                               </View>
-                              <Text style={styles.studentCardRoll}>{st.rollNo}</Text>
+                              <Text style={styles.studentCardRoll}>{toNewRollNo(st.rollNo)}</Text>
 
                               {topFeat && (
                                 <View style={styles.topFeatRow}>
@@ -1222,7 +1224,7 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                             <View style={styles.studentCardTimes}>
                               <Text style={styles.studentTotalTime}>{timeStr}</Text>
                               <Text style={styles.studentTodayTime}>Today: {todayTimeStr}</Text>
-                              <Text style={styles.drilldownHint}>Inspect ➔</Text>
+                              <Text style={styles.drilldownHint}>Inspect -&gt;</Text>
                             </View>
                           </TouchableOpacity>
                         );
@@ -1278,14 +1280,14 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                           <View style={{ flex: 1 }}>
                             <Text style={styles.drilldownName}>{st.name}</Text>
                             <Text style={styles.drilldownSub}>
-                              Roll No: {st.rollNo} • Batch {st.batch}
+                              Roll No: {toNewRollNo(st.rollNo)} • Batch {st.batch}
                             </Text>
                           </View>
                           <TouchableOpacity
                             onPress={() => setSelectedStudentDrilldown(null)}
                             style={styles.closeDrilldownBtn}
                           >
-                            <Text style={styles.closeDrilldownText}>✕</Text>
+                            <Text style={styles.closeDrilldownText}>X</Text>
                           </TouchableOpacity>
                         </View>
 
@@ -1352,14 +1354,14 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                             Reply to {replyingFeedback.studentName}
                           </Text>
                           <Text style={styles.drilldownSub}>
-                            {replyingFeedback.studentRollNo ? `Roll No: ${replyingFeedback.studentRollNo} • ` : ''}Batch {replyingFeedback.batch} • {replyingFeedback.category}
+                            {replyingFeedback.studentRollNo ? `Roll No: ${toNewRollNo(replyingFeedback.studentRollNo)} • ` : ''}Batch {replyingFeedback.batch} • {replyingFeedback.category}
                           </Text>
                         </View>
                         <TouchableOpacity
                           onPress={() => setReplyingFeedback(null)}
                           style={styles.closeDrilldownBtn}
                         >
-                          <Text style={styles.closeDrilldownText}>✕</Text>
+                          <Text style={styles.closeDrilldownText}>X</Text>
                         </TouchableOpacity>
                       </View>
 

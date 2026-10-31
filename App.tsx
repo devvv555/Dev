@@ -24,7 +24,7 @@ import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
 import { FeedbackModal } from './src/components/FeedbackModal';
 import { AnalyticsService } from './src/services/analyticsService';
 import { PsgimService } from './src/services/psgimService';
-import { toNewRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
+import { toNewRollNo, toOldRollNo, getMasterStudent } from './src/data/psgimMasterStudents';
 import { CloudSyncService } from './src/services/cloudSyncService';
 import { getSlotHours, isPeriodLocked } from './src/services/attendanceEngine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -63,7 +63,12 @@ export default function App() {
       try {
         const savedRollNo = await StorageService.getAuthUser();
         if (savedRollNo && PsgimService.getStudent(savedRollNo)) {
-          const officialRoll = toNewRollNo(savedRollNo);
+          const officialRoll = toNewRollNo(savedRollNo) || savedRollNo;
+          const oldRoll = toOldRollNo(savedRollNo);
+          if (oldRoll && oldRoll !== officialRoll) {
+            await StorageService.migrateStudentData(oldRoll, officialRoll);
+          }
+          await StorageService.setAuthUser(officialRoll);
           setActiveRollNo(officialRoll);
           const initialSubjects = PsgimService.generateSubjectsForStudent(officialRoll);
           const initialTimetable = PsgimService.generateTimetableForStudent(officialRoll);
@@ -137,7 +142,7 @@ export default function App() {
     }
     initSession();
 
-    // 🌟 Global Real-time Listener (Mount once):
+    // Global Real-time Listener (Mount once):
     let lastKnownSyncTime = Date.now();
     const unsubGlobal = CloudSyncService.listenToGlobalAttendanceUpdates((update) => {
       if (update && update.timestamp && update.timestamp > lastKnownSyncTime) {
@@ -191,7 +196,7 @@ export default function App() {
     };
   }, []);
 
-  // ⏱️ Active Foreground Time Tracking (Increments active time per minute while student uses the app)
+  // Active Foreground Time Tracking (Increments active time per minute while student uses the app)
   useEffect(() => {
     if (!isAuthenticated || !activeRollNo) return;
 
@@ -243,7 +248,14 @@ export default function App() {
 
 
   // Login handler
-  const handleLoginSuccess = async (rollNo: string) => {
+  const handleLoginSuccess = async (rawRollNo: string) => {
+    const rollNo = toNewRollNo(rawRollNo) || rawRollNo;
+    const oldRoll = toOldRollNo(rawRollNo);
+    if (oldRoll && oldRoll !== rollNo) {
+      await StorageService.migrateStudentData(oldRoll, rollNo);
+    }
+    await StorageService.setAuthUser(rollNo);
+
     const studentSubjects = PsgimService.generateSubjectsForStudent(rollNo);
     const studentTimetable = PsgimService.generateTimetableForStudent(rollNo);
 
@@ -268,7 +280,6 @@ export default function App() {
     setTimetable(studentTimetable);
     setPeriodRecords(storedRecords);
     setIsAuthenticated(true);
-    await StorageService.setAuthUser(rollNo);
 
     const student = getMasterStudent(rollNo);
     AnalyticsService.recordLogin(rollNo, student?.name || '', student?.batch || 'A');
@@ -772,7 +783,7 @@ export default function App() {
             activeOpacity={0.7}
           >
             <Text style={styles.studentBadgeText} numberOfLines={1}>
-              Profile {showProfileMenu ? '▲' : '▼'}
+              {activeRollNo ? `Roll No: ${toNewRollNo(activeRollNo)}` : 'Profile'} {showProfileMenu ? '▲' : '▼'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -846,6 +857,7 @@ export default function App() {
           <TimetableScreen
             subjects={subjects}
             timetable={timetable}
+            studentRollNo={activeRollNo}
             onAddSlot={(slot) => {
               const next = [...timetable, slot];
               setTimetable(next);
@@ -859,6 +871,7 @@ export default function App() {
           <CalendarScreen
             subjects={subjects}
             timetable={timetable}
+            studentRollNo={activeRollNo}
             onBack={() => handleTabChange('DASHBOARD')}
             onRefresh={handleRefresh}
           />
@@ -884,7 +897,7 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'DASHBOARD' && styles.tabItemActive]}
           onPress={() => handleTabChange('DASHBOARD')}
         >
-          <Text style={styles.tabIcon}>⚡</Text>
+          <Text style={styles.tabIcon}>#</Text>
           <Text style={[styles.tabLabel, activeTab === 'DASHBOARD' && styles.tabLabelActive]}>
             Hourly
           </Text>
@@ -895,7 +908,7 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'TIMETABLE' && styles.tabItemActive]}
           onPress={() => handleTabChange('TIMETABLE')}
         >
-          <Text style={styles.tabIcon}>🗂️</Text>
+          <Text style={styles.tabIcon}>::</Text>
           <Text
             style={[styles.tabLabel, activeTab === 'TIMETABLE' && styles.tabLabelActive]}
             numberOfLines={1}
@@ -909,7 +922,7 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'CALENDAR' && styles.tabItemActive]}
           onPress={() => handleTabChange('CALENDAR')}
         >
-          <Text style={styles.tabIcon}>🗓️</Text>
+          <Text style={styles.tabIcon}>[]</Text>
           <Text style={[styles.tabLabel, activeTab === 'CALENDAR' && styles.tabLabelActive]}>
             Calendar
           </Text>
@@ -920,7 +933,7 @@ export default function App() {
           style={[styles.tabItem, activeTab === 'ERP_SYNC' && styles.tabItemActive]}
           onPress={() => handleTabChange('ERP_SYNC')}
         >
-          <Text style={styles.tabIcon}>🌐</Text>
+          <Text style={styles.tabIcon}>@</Text>
           <Text
             style={[styles.tabLabel, activeTab === 'ERP_SYNC' && styles.tabLabelActive]}
             numberOfLines={1}

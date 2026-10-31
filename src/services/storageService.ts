@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Subject, TimetableSlot, AttendanceLog, MedicalClaimRecord, PeriodAttendanceRecord, PeriodReminder, SurplusAttendanceAlert } from '../types';
+import { toNewRollNo, toOldRollNo } from '../data/psgimMasterStudents';
 
 const STORAGE_KEYS = {
   SUBJECTS: '@attendance_monitor_subjects',
   TIMETABLE: '@attendance_monitor_timetable',
   LOGS: '@attendance_monitor_logs',
   MEDICAL_CLAIMS: '@attendance_monitor_medical_claims',
+  ROLL_NO: '@attendance_monitor_roll_no',
   AUTH_USER: '@attendance_monitor_auth_user',
   PERIOD_RECORDS: '@attendance_monitor_period_records_',
   PERIOD_REMINDERS: '@attendance_monitor_period_reminders_',
@@ -96,7 +98,11 @@ export const StorageService = {
 
   async getAuthUser(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem(STORAGE_KEYS.AUTH_USER);
+      const rollNo = await AsyncStorage.getItem(STORAGE_KEYS.ROLL_NO);
+      if (rollNo) return toNewRollNo(rollNo) || rollNo;
+      const legacyUser = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_USER);
+      if (legacyUser) return toNewRollNo(legacyUser) || legacyUser;
+      return null;
     } catch {
       return null;
     }
@@ -104,7 +110,9 @@ export const StorageService = {
 
   async setAuthUser(rollNo: string): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, rollNo);
+      const officialRoll = toNewRollNo(rollNo) || rollNo;
+      await AsyncStorage.setItem(STORAGE_KEYS.ROLL_NO, officialRoll);
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, officialRoll);
     } catch (e) {
       console.warn('Storage error:', e);
     }
@@ -112,18 +120,98 @@ export const StorageService = {
 
   async clearAuthUser(): Promise<void> {
     try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.ROLL_NO);
       await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_USER);
     } catch (e) {
       console.warn('Storage error:', e);
     }
   },
 
+  async migrateStudentData(oldRoll: string, newRoll: string): Promise<void> {
+    try {
+      if (!oldRoll || !newRoll) return;
+      const cleanOld = oldRoll.trim().toUpperCase();
+      const cleanNew = newRoll.trim().toUpperCase();
+      if (cleanOld === cleanNew) return;
+
+      // 1. Migrate period records
+      const oldKey = `${STORAGE_KEYS.PERIOD_RECORDS}${cleanOld}`;
+      const newKey = `${STORAGE_KEYS.PERIOD_RECORDS}${cleanNew}`;
+      const oldData = await AsyncStorage.getItem(oldKey);
+      if (oldData) {
+        const parsed = JSON.parse(oldData);
+        const migrated: Record<string, PeriodAttendanceRecord> = {};
+        for (const [key, val] of Object.entries(parsed)) {
+          const migratedKey = key.includes(cleanOld) ? key.replace(cleanOld, cleanNew) : key;
+          const record = val as PeriodAttendanceRecord;
+          const migratedSlotId = record.slotId && record.slotId.includes(cleanOld)
+            ? record.slotId.replace(cleanOld, cleanNew)
+            : record.slotId;
+          migrated[migratedKey] = {
+            ...record,
+            slotId: migratedSlotId,
+          };
+        }
+        await AsyncStorage.setItem(newKey, JSON.stringify(migrated));
+      }
+
+      // 2. Migrate period reminders
+      const oldRemindersKey = `${STORAGE_KEYS.PERIOD_REMINDERS}${cleanOld}`;
+      const newRemindersKey = `${STORAGE_KEYS.PERIOD_REMINDERS}${cleanNew}`;
+      const oldReminders = await AsyncStorage.getItem(oldRemindersKey);
+      if (oldReminders) {
+        const parsed = JSON.parse(oldReminders) as PeriodReminder[];
+        const migrated = parsed.map((r) => ({
+          ...r,
+          slotId: r.slotId && r.slotId.includes(cleanOld) ? r.slotId.replace(cleanOld, cleanNew) : r.slotId,
+        }));
+        await AsyncStorage.setItem(newRemindersKey, JSON.stringify(migrated));
+      }
+
+      // 3. Migrate surplus alerts
+      const oldAlertsKey = `${STORAGE_KEYS.SURPLUS_ALERTS}${cleanOld}`;
+      const newAlertsKey = `${STORAGE_KEYS.SURPLUS_ALERTS}${cleanNew}`;
+      const oldAlerts = await AsyncStorage.getItem(oldAlertsKey);
+      if (oldAlerts) {
+        await AsyncStorage.setItem(newAlertsKey, oldAlerts);
+      }
+    } catch (e) {
+      console.warn('Error migrating student data:', e);
+    }
+  },
+
   async getPeriodRecords(rollNo: string): Promise<Record<string, PeriodAttendanceRecord>> {
     try {
       if (!rollNo) return {};
-      const key = `${STORAGE_KEYS.PERIOD_RECORDS}${rollNo.toUpperCase()}`;
-      const data = await AsyncStorage.getItem(key);
-      return data ? JSON.parse(data) : {};
+      const cleanNew = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const cleanOld = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+
+      const newKey = `${STORAGE_KEYS.PERIOD_RECORDS}${cleanNew}`;
+      const data = await AsyncStorage.getItem(newKey);
+      if (data) return JSON.parse(data);
+
+      if (cleanOld !== cleanNew) {
+        const oldKey = `${STORAGE_KEYS.PERIOD_RECORDS}${cleanOld}`;
+        const legacyData = await AsyncStorage.getItem(oldKey);
+        if (legacyData) {
+          const parsed = JSON.parse(legacyData);
+          const migrated: Record<string, PeriodAttendanceRecord> = {};
+          for (const [key, val] of Object.entries(parsed)) {
+            const migratedKey = key.includes(cleanOld) ? key.replace(cleanOld, cleanNew) : key;
+            const record = val as PeriodAttendanceRecord;
+            const migratedSlotId = record.slotId && record.slotId.includes(cleanOld)
+              ? record.slotId.replace(cleanOld, cleanNew)
+              : record.slotId;
+            migrated[migratedKey] = {
+              ...record,
+              slotId: migratedSlotId,
+            };
+          }
+          await AsyncStorage.setItem(newKey, JSON.stringify(migrated));
+          return migrated;
+        }
+      }
+      return {};
     } catch (e) {
       console.warn('Error reading period records:', e);
       return {};
@@ -136,7 +224,8 @@ export const StorageService = {
   ): Promise<void> {
     try {
       if (!rollNo) return;
-      const key = `${STORAGE_KEYS.PERIOD_RECORDS}${rollNo.toUpperCase()}`;
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.PERIOD_RECORDS}${canonicalRoll}`;
       await AsyncStorage.setItem(key, JSON.stringify(records));
     } catch (e) {
       console.warn('Error saving period records:', e);
@@ -146,9 +235,27 @@ export const StorageService = {
   async getPeriodReminders(rollNo: string): Promise<PeriodReminder[]> {
     try {
       if (!rollNo) return [];
-      const key = `${STORAGE_KEYS.PERIOD_REMINDERS}${rollNo.toUpperCase()}`;
-      const data = await AsyncStorage.getItem(key);
-      return data ? JSON.parse(data) : [];
+      const cleanNew = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const cleanOld = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+
+      const newKey = `${STORAGE_KEYS.PERIOD_REMINDERS}${cleanNew}`;
+      const data = await AsyncStorage.getItem(newKey);
+      if (data) return JSON.parse(data);
+
+      if (cleanOld !== cleanNew) {
+        const oldKey = `${STORAGE_KEYS.PERIOD_REMINDERS}${cleanOld}`;
+        const oldData = await AsyncStorage.getItem(oldKey);
+        if (oldData) {
+          const parsed = JSON.parse(oldData) as PeriodReminder[];
+          const migrated = parsed.map((r) => ({
+            ...r,
+            slotId: r.slotId && r.slotId.includes(cleanOld) ? r.slotId.replace(cleanOld, cleanNew) : r.slotId,
+          }));
+          await AsyncStorage.setItem(newKey, JSON.stringify(migrated));
+          return migrated;
+        }
+      }
+      return [];
     } catch (e) {
       console.warn('Error reading period reminders:', e);
       return [];
@@ -161,7 +268,8 @@ export const StorageService = {
   ): Promise<void> {
     try {
       if (!rollNo) return;
-      const key = `${STORAGE_KEYS.PERIOD_REMINDERS}${rollNo.toUpperCase()}`;
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.PERIOD_REMINDERS}${canonicalRoll}`;
       await AsyncStorage.setItem(key, JSON.stringify(reminders));
     } catch (e) {
       console.warn('Error saving period reminders:', e);
@@ -171,9 +279,22 @@ export const StorageService = {
   async getSurplusAlerts(rollNo: string): Promise<SurplusAttendanceAlert[]> {
     try {
       if (!rollNo) return [];
-      const key = `${STORAGE_KEYS.SURPLUS_ALERTS}${rollNo.toUpperCase()}`;
-      const data = await AsyncStorage.getItem(key);
-      return data ? JSON.parse(data) : [];
+      const cleanNew = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const cleanOld = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+
+      const newKey = `${STORAGE_KEYS.SURPLUS_ALERTS}${cleanNew}`;
+      const data = await AsyncStorage.getItem(newKey);
+      if (data) return JSON.parse(data);
+
+      if (cleanOld !== cleanNew) {
+        const oldKey = `${STORAGE_KEYS.SURPLUS_ALERTS}${cleanOld}`;
+        const oldData = await AsyncStorage.getItem(oldKey);
+        if (oldData) {
+          await AsyncStorage.setItem(newKey, oldData);
+          return JSON.parse(oldData);
+        }
+      }
+      return [];
     } catch (e) {
       console.warn('Error reading surplus alerts:', e);
       return [];
@@ -186,7 +307,8 @@ export const StorageService = {
   ): Promise<void> {
     try {
       if (!rollNo) return;
-      const key = `${STORAGE_KEYS.SURPLUS_ALERTS}${rollNo.toUpperCase()}`;
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.SURPLUS_ALERTS}${canonicalRoll}`;
       await AsyncStorage.setItem(key, JSON.stringify(alerts));
     } catch (e) {
       console.warn('Error saving surplus alerts:', e);

@@ -23,7 +23,8 @@ export const PsgimService = {
   getStudent(rollNo: string) {
     if (!rollNo) return null;
     const oldRoll = toOldRollNo(rollNo);
-    return STUDENT_REGISTRY[oldRoll] || STUDENT_REGISTRY[rollNo.toUpperCase()] || null;
+    const newRoll = toNewRollNo(rollNo);
+    return STUDENT_REGISTRY[rollNo.toUpperCase()] || STUDENT_REGISTRY[newRoll] || STUDENT_REGISTRY[oldRoll] || null;
   },
 
   getStudentName(rollNo: string): string {
@@ -75,7 +76,7 @@ export const PsgimService = {
     const oldRoll = toOldRollNo(rollNo);
     const newRoll = toNewRollNo(rollNo);
     const master = getMasterStudent(rollNo) || getMasterStudent(newRoll) || getMasterStudent(oldRoll);
-    const student = this.getStudent(oldRoll) || STUDENT_REGISTRY['D26AA01'];
+    const student = this.getStudent(rollNo) || this.getStudent(newRoll) || this.getStudent(oldRoll) || STUDENT_REGISTRY['D26AA01'];
     const batches = student ? student.batches : STUDENT_REGISTRY['D26AA01'].batches;
     const mcobData = getMcobData(oldRoll) || getMcobData(rollNo);
 
@@ -151,12 +152,12 @@ export const PsgimService = {
     const batchLetter = master?.batch || (newRoll.length >= 5 ? newRoll.charAt(3) : 'A');
     const sectionGroupNum = batchLetter === 'B' ? 2 : batchLetter === 'C' ? 3 : batchLetter === 'D' ? 4 : 1;
 
-    const rawSlots = getPsgimTimetable(oldRoll) || getPsgimTimetable(rollNo);
+    const rawSlots = getPsgimTimetable(rollNo) || getPsgimTimetable(newRoll) || getPsgimTimetable(oldRoll);
     if (!rawSlots || rawSlots.length === 0) return [];
 
     return rawSlots.map((slot) => {
       const course = PSGIM_COURSES[slot.shortForm];
-      const faculty = course?.faculty[sectionGroupNum] || slot.faculty || 'Faculty';
+      const faculty = slot.faculty || course?.faculty[sectionGroupNum] || 'Faculty';
       return {
         id: slot.id,
         day: slot.day,

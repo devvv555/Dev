@@ -10,10 +10,12 @@ import {
   Vibration,
 } from 'react-native';
 import { DayOfWeek, Subject, TimetableSlot } from '../types';
+import { toNewRollNo } from '../data/psgimMasterStudents';
 
 interface TimetableScreenProps {
   subjects: Subject[];
   timetable: TimetableSlot[];
+  studentRollNo?: string;
   onAddSlot?: (slot: TimetableSlot) => void;
   onRefresh?: () => Promise<void> | void;
 }
@@ -32,6 +34,7 @@ const getTodayDayOfWeek = (): DayOfWeek => {
 export const TimetableScreen: React.FC<TimetableScreenProps> = ({
   subjects,
   timetable,
+  studentRollNo,
   onRefresh,
 }) => {
   const todayDay = getTodayDayOfWeek();
@@ -75,9 +78,16 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       }
     >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Weekly Period Index</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.headerTitle}>Weekly Period Index</Text>
+          {studentRollNo ? (
+            <View style={styles.rollBadge}>
+              <Text style={styles.rollBadgeText}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.headerSubtitle}>
-          Showing {selectedDay}'s schedule{selectedDay === todayDay ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
+          {studentRollNo ? `Roll No: ${toNewRollNo(studentRollNo)} • ` : ''}Showing {selectedDay}'s schedule{selectedDay === todayDay ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
         </Text>
       </View>
 
@@ -166,10 +176,31 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: '#F8FAFC',
+  },
+  rollBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  rollBadgeText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: 13,

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PsgimService } from '../services/psgimService';
-import { getMasterStudent } from '../data/psgimMasterStudents';
+import { getMasterStudent, toNewRollNo } from '../data/psgimMasterStudents';
 
 interface DigitalIdModalProps {
   visible: boolean;
@@ -31,7 +31,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
   const [showBloodPicker, setShowBloodPicker] = useState(false);
   const [tempPhone, setTempPhone] = useState('');
 
-  const cleanRoll = studentRollNo.toUpperCase().trim();
+  const cleanRoll = toNewRollNo(studentRollNo).toUpperCase().trim();
   const student = getMasterStudent(cleanRoll);
   const studentName = student ? student.name : cleanRoll;
   const profile = PsgimService.getStudentProfile(cleanRoll);
@@ -143,14 +143,14 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
           <View style={styles.topBar}>
             <Text style={styles.topBarTitle}>Digital Student Identification</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Text style={styles.closeBtnText}>✕</Text>
+              <Text style={styles.closeBtnText}>X</Text>
             </TouchableOpacity>
           </View>
 
           {/* Mandatory User-Requested Disclaimer */}
           <View style={styles.disclaimerBox}>
             <View style={styles.disclaimerHeaderRow}>
-              <Text style={styles.disclaimerIcon}>⚠️</Text>
+              <Text style={styles.disclaimerIcon}>[!]</Text>
               <Text style={styles.disclaimerTitle}>
                 WAITING FOR COLLEGE APPROVAL • EMERGENCY USE ONLY
               </Text>
@@ -167,7 +167,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
               {/* Card Top Brand Strip */}
               <View style={styles.idCardTopBrand}>
                 <View style={styles.psgLogoBox}>
-                  <Text style={styles.psgLogoText}>🏛️</Text>
+                  <Text style={styles.psgLogoText}>PSG</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.psgCollegeName}>PSG INSTITUTE OF MANAGEMENT</Text>
@@ -198,7 +198,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                         {studentName}
                       </Text>
                       <View style={styles.rollBadge}>
-                        <Text style={styles.rollBadgeText}>{cleanRoll}</Text>
+                        <Text style={styles.rollBadgeText}>{toNewRollNo(cleanRoll)}</Text>
                       </View>
                       <Text style={styles.programText}>
                         Master of Business Administration
@@ -229,7 +229,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                     >
                       <View style={styles.bloodLabelRow}>
                         <Text style={styles.metaColLabel}>BLOOD GROUP</Text>
-                        <Text style={styles.editPencilIcon}>✎</Text>
+                        <Text style={styles.editPencilIcon}>(Edit)</Text>
                       </View>
                       <Text style={[styles.metaColVal, styles.bloodGroupText]}>{bloodGroup}</Text>
                     </TouchableOpacity>
@@ -283,12 +283,12 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                   {/* Personal Emergency Contact */}
                   <View style={styles.emergencyContactCard}>
                     <View style={styles.emergencyContactHeader}>
-                      <Text style={styles.emergencyContactTitle}>🚨 Student Emergency Contact:</Text>
+                      <Text style={styles.emergencyContactTitle}>Student Emergency Contact:</Text>
                       <TouchableOpacity
                         onPress={() => setShowBloodPicker(true)}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.emergencyEditLink}>✎ Edit</Text>
+                        <Text style={styles.emergencyEditLink}>Edit</Text>
                       </TouchableOpacity>
                     </View>
                     <Text style={styles.emergencyPhoneDisplay}>
@@ -311,7 +311,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.flipCardBtnText}>
-                  🔄 {isFlipped ? 'View Card Front' : 'View Emergency Contacts (Back)'}
+                  {isFlipped ? 'View Card Front' : 'View Emergency Contacts (Back)'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -326,9 +326,9 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
             <View style={styles.pickerOverlay}>
               <View style={styles.pickerCard}>
                 <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerTitle}>🩸 Select Your Blood Group</Text>
+                  <Text style={styles.pickerTitle}>Select Your Blood Group</Text>
                   <TouchableOpacity onPress={() => setShowBloodPicker(false)}>
-                    <Text style={styles.closeBtnText}>✕</Text>
+                    <Text style={styles.closeBtnText}>X</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -350,7 +350,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                         <Text style={[styles.bgOptionText, isSelected && styles.bgOptionTextSelected]}>
                           {bg}
                         </Text>
-                        {isSelected && <Text style={styles.bgCheck}>✓</Text>}
+                        {isSelected && <Text style={styles.bgCheck}>OK</Text>}
                       </TouchableOpacity>
                     );
                   })}
@@ -377,7 +377,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                   }}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.savePickerBtnText}>Save to ID Card ✅</Text>
+                  <Text style={styles.savePickerBtnText}>Save to ID Card</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -498,7 +498,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   psgLogoText: {
-    fontSize: 18,
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#0F2744',
   },
   psgCollegeName: {
     color: '#FFFFFF',

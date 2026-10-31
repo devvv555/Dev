@@ -25,7 +25,7 @@ import { NotificationService } from '../services/notificationService';
 import { StorageService } from '../services/storageService';
 import { PsgimService } from '../services/psgimService';
 import { findNextSlotForSubject } from '../services/attendanceEngine';
-import { getMasterStudent } from '../data/psgimMasterStudents';
+import { getMasterStudent, toNewRollNo } from '../data/psgimMasterStudents';
 import { LmsService } from '../services/lmsService';
 import { PsgimConnectService } from '../services/psgimConnectService';
 import { DisputeReportService } from '../services/disputeReportService';
@@ -437,15 +437,15 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       let msg = `Synchronized ${matchedCount} subjects from your official Studzone portal!`;
       if (extractedAttendanceFrom && extractedAttendanceTo) {
-        msg += `\n\n📅 Attendance Period: ${extractedAttendanceFrom} to ${extractedAttendanceTo}`;
+        msg += `\n\nAttendance Period: ${extractedAttendanceFrom} to ${extractedAttendanceTo}`;
       } else if (extractedPortalDate) {
-        msg += `\n\n📅 Portal Attendance As On: ${extractedPortalDate}`;
+        msg += `\n\nPortal Attendance As On: ${extractedPortalDate}`;
       }
       if (unmatchedCodes.length > 0) {
         msg += `\n\n(Unmatched course codes: ${unmatchedCodes.join(', ')})`;
       }
 
-      Alert.alert('Studzone Sync Complete! 🚀', msg);
+      Alert.alert('Studzone Sync Complete', msg);
     } else {
       // Fallback single updates
       extractedRecords.forEach((rec) => {
@@ -458,7 +458,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           onUpdateAttendance(sub.id, appAtt, appTot, rec.attendedClasses, rec.totalClasses);
         }
       });
-      Alert.alert('Studzone Sync Complete! 🚀', `Updated official baseline from Studzone.`);
+      Alert.alert('Studzone Sync Complete', `Updated official baseline from Studzone.`);
     }
 
     // Check difference for each extracted record compared to current app period attendance
@@ -536,7 +536,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       subjectsCount,
     });
 
-    // 🌟 Broadcast to cloud Firestore so ALL classmates get live notification & portal updated date
+    // Broadcast to cloud Firestore so ALL classmates get live notification & portal updated date
     CloudSyncService.broadcastGlobalAttendanceUpdate(
       activeRollNo,
       studentName,
@@ -546,10 +546,10 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       extractedAttendanceTo
     );
 
-    // 📲 Fire system notification on device notification shade with portal updated date
+    // Fire system notification on device notification shade with portal updated date
     NotificationService.notifyAttendanceUpdated(studentName, subjectsCount, extractedPortalDate);
 
-    // 🔍 Check Attendance Overlap against College Recording
+    // Check Attendance Overlap against College Recording
     const targetSubjects = onBatchUpdateSubjects
       ? StudzoneService.applyToSubjects(extractedRecords, subjects, syncAppAttendanceToo).updatedSubjects
       : subjects;
@@ -664,7 +664,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         }
       }
 
-      // 🔍 Check Attendance Overlap against College Recording
+      // Check Attendance Overlap against College Recording
       const overlap = DisputeReportService.checkAttendanceOverlap(appliedSubjects);
       const studentProfile = PsgimService.getStudentProfile(cleanRoll);
       const studentEmail = studentProfile?.email || `${cleanRoll.toLowerCase()}@psgim.ac.in`;
@@ -716,7 +716,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     });
     setLmsPassword(editLmsPassword.trim());
     setShowLmsCredsModal(false);
-    Alert.alert('Moodle Credentials Saved ✅', 'Credentials saved. You can now submit assignments and attempt quizzes directly.');
+    Alert.alert('Moodle Credentials Saved', 'Credentials saved. You can now submit assignments and attempt quizzes directly.');
   };
 
   const handleSyncLms = async () => {
@@ -752,7 +752,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
         await NotificationService.notifyMoodleCourseUpdate(
           'PSGIM Moodle (LMS)',
           'Faculty Course Content Calibrated',
-          `Synced with ${LmsService.resolveMoodleUsername(activeRollNo)}. All upcoming class submissions & teacher updates are up to date!`
+          `Synced with Roll No: ${toNewRollNo(activeRollNo)}. All upcoming class submissions & teacher updates are up to date!`
         );
 
         Alert.alert(
@@ -771,7 +771,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
   const handleSaveConnectCredentials = async () => {
     if (!connectRegisterNo.trim()) {
-      Alert.alert('Register Number Required ⚠️', 'Admission Register Number is mandatory for PSGIM Connect. Please enter your register number.');
+      Alert.alert('Register Number Required', 'Admission Register Number is mandatory for PSGIM Connect. Please enter your register number.');
       return;
     }
     const finalPassword = connectPassword.trim() || 'Welcome@123';
@@ -783,20 +783,19 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     setConnectPassword(finalPassword);
     setShowConnectModal(false);
     Alert.alert(
-      'Register Number Linked! ✅',
+      'Register Number Linked!',
       `Your Admission Register Number (${connectRegisterNo.trim()}) is now officially linked with default password (${finalPassword}).`
     );
   };
 
   const handleSyncConnect = async () => {
-    setIsConnectSyncing(true);
     try {
       try {
         Vibration.vibrate(25);
       } catch {}
       const notices = await PsgimConnectService.fetchAnnouncements();
       setConnectAnnouncements(notices);
-      Alert.alert('PSGIM Connect Synchronized! 🚀', `Pulled ${notices.length} official announcements & notices.`);
+      Alert.alert('PSGIM Connect Synchronized', `Pulled ${notices.length} official announcements & notices.`);
     } catch {
       Alert.alert('Notice', 'PSGIM Connect announcements are up to date.');
     } finally {
@@ -829,9 +828,16 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Campus Portals & Sync</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.headerTitle}>Campus Portals & Sync</Text>
+          {activeRollNo ? (
+            <View style={styles.rollBadge}>
+              <Text style={styles.rollBadgeText}>Roll No: {toNewRollNo(activeRollNo)}</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.headerSubtitle}>
-          Unified access to official PSG systems: Studzone Attendance, Moodle & Overlap Verification.
+          {activeRollNo ? `Roll No: ${toNewRollNo(activeRollNo)} • ` : ''}Unified access to official PSG systems: Studzone Attendance, Moodle & Overlap Verification.
         </Text>
       </View>
 
@@ -839,7 +845,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.studzoneCard}>
         <View style={styles.studzoneCardHeader}>
           <View style={styles.studzoneIconCircle}>
-            <Text style={styles.studzoneCardIcon}>⚡</Text>
+            <Text style={styles.studzoneCardIcon}>[Studzone]</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
@@ -884,7 +890,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           {lastSyncInfo ? (
             <View style={styles.lastUpdatedDetails}>
               <Text style={styles.lastUpdatedWho}>
-                👤 Last Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || lastSyncInfo.rollNo || 'Student'}</Text>
+                Last Extracted by: <Text style={styles.studentNameText}>{lastSyncInfo.studentName || (lastSyncInfo.rollNo ? toNewRollNo(lastSyncInfo.rollNo) : 'Student')}</Text>
                 {lastSyncInfo.subjectsCount ? ` • ${lastSyncInfo.subjectsCount} subjects` : ''}
                 {lastSyncInfo.lastSyncedAt ? ` • Synced ${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''}
               </Text>
@@ -898,7 +904,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             </View>
           ) : (
             <Text style={styles.lastUpdatedEmpty}>
-              ⚡ Portal not checked yet today. Be the first to connect & extract attendance from the college portal!
+              Portal not checked yet today. Be the first to connect & extract attendance from the college portal!
             </Text>
           )}
         </View>
@@ -911,7 +917,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Text style={styles.studzoneSyncButtonText}>🌐 Connect & Extract Attendance</Text>
+          <Text style={styles.studzoneSyncButtonText}>Connect & Extract Attendance</Text>
         </TouchableOpacity>
       </View>
 
@@ -919,7 +925,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.psgimConnectCard}>
         <View style={styles.studzoneCardHeader}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.studzoneCardIcon}>📚</Text>
+            <Text style={styles.studzoneCardIcon}>[Moodle]</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
@@ -940,23 +946,29 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
         <View style={styles.moodleCredsSummaryBox}>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>👤 Moodle Username (D-Roll):</Text>
+            <Text style={styles.moodleCredsLabel}>Student Roll Number:</Text>
             <Text style={[styles.moodleCredsValue, { color: '#38BDF8', fontWeight: '800' }]}>
-              {LmsService.resolveMoodleUsername(activeRollNo)}
+              Roll No: {toNewRollNo(activeRollNo)}
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>🔑 Moodle Password:</Text>
+            <Text style={styles.moodleCredsLabel}>LMS Bridge Mode:</Text>
+            <Text style={[styles.moodleCredsValue, { color: '#34D399', fontWeight: '700' }]}>
+              Automatic Server Gateway
+            </Text>
+          </View>
+          <View style={styles.moodleCredsRow}>
+            <Text style={styles.moodleCredsLabel}>Moodle Password:</Text>
             <Text style={styles.moodleCredsValue}>•••••••• ({lmsPassword || 'Welcome@123'})</Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>🔔 Phone Notifications:</Text>
+            <Text style={styles.moodleCredsLabel}>Phone Notifications:</Text>
             <Text style={[styles.moodleCredsValue, { color: '#34D399', fontWeight: '800' }]}>
-              📲 Active on Phone Tray
+              Active on Phone Tray
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>🕒 Night Auto-Sync Window:</Text>
+            <Text style={styles.moodleCredsLabel}>Night Auto-Sync Window:</Text>
             <Text style={[styles.moodleCredsValue, { color: '#38BDF8', fontWeight: '700' }]}>
               {LmsService.getOffPeakSlotForStudent(activeRollNo).timeString} (57s Stagger)
             </Text>
@@ -969,7 +981,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             onPress={() => setShowLmsCredsModal(true)}
             activeOpacity={0.8}
           >
-            <Text style={styles.moodleEditCredsBtnText}>⚙️ Moodle Password</Text>
+            <Text style={styles.moodleEditCredsBtnText}>Moodle Password</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -981,7 +993,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             {isLmsSyncing ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.moodleSyncBtnText}>🔄 Sync Moodle Deadlines</Text>
+              <Text style={styles.moodleSyncBtnText}>Sync Moodle Deadlines</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -991,7 +1003,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={styles.psgimConnectCard}>
         <View style={styles.studzoneCardHeader}>
           <View style={styles.connectIconCircle}>
-            <Text style={styles.studzoneCardIcon}>📢</Text>
+            <Text style={styles.studzoneCardIcon}>[Connect]</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
@@ -1017,25 +1029,25 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             activeOpacity={0.8}
           >
             <Text style={styles.mandatoryWarningBannerText}>
-              ⚠️ Register Number Not Configured (Mandatory). Tap here to link your Admission Register Number now. Default Password: Welcome@123
+              Register Number Not Configured (Mandatory). Tap here to link your Admission Register Number now. Default Password: Welcome@123
             </Text>
           </TouchableOpacity>
         )}
 
         <View style={styles.moodleCredsSummaryBox}>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>👤 Register Number (Mandatory):</Text>
+            <Text style={styles.moodleCredsLabel}>Register Number (Mandatory):</Text>
             <Text style={[styles.moodleCredsValue, !connectRegisterNo && { color: '#F87171' }]}>
-              {connectRegisterNo || '⚠️ Not Linked (Mandatory)'}
+              {connectRegisterNo || 'Not Linked (Mandatory)'}
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>🔑 Portal Password:</Text>
+            <Text style={styles.moodleCredsLabel}>Portal Password:</Text>
             <Text style={styles.moodleCredsValue}>•••••••• ({connectPassword || 'Welcome@123'})</Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={styles.moodleCredsLabel}>🌐 Feed Status:</Text>
-            <Text style={[styles.moodleCredsValue, { color: '#34D399' }]}>🟢 Live & Connected</Text>
+            <Text style={styles.moodleCredsLabel}>Feed Status:</Text>
+            <Text style={[styles.moodleCredsValue, { color: '#34D399' }]}>Live & Connected</Text>
           </View>
         </View>
 
@@ -1045,7 +1057,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             onPress={() => setShowConnectModal(true)}
             activeOpacity={0.8}
           >
-            <Text style={styles.moodleEditCredsBtnText}>⚙️ Register No Settings</Text>
+            <Text style={styles.moodleEditCredsBtnText}>Register No Settings</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -1057,7 +1069,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             {isConnectSyncing ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.moodleSyncBtnText}>🔄 Fetch Announcements</Text>
+              <Text style={styles.moodleSyncBtnText}>Fetch Announcements</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1065,9 +1077,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       {/* Information Tip */}
       <View style={styles.infoBanner}>
-        <Text style={styles.infoBannerIcon}>💡</Text>
+        <Text style={styles.infoBannerIcon}>[Tip]</Text>
         <Text style={styles.infoBannerText}>
-          The <Text style={styles.boldText}>Hourly App</Text> logs each period real-time. The <Text style={styles.boldText}>College ERP</Text> represents your official baseline. Tap "✏️ Edit" on any subject below to make manual adjustments.
+          The <Text style={styles.boldText}>Hourly App</Text> logs each period real-time. The <Text style={styles.boldText}>College ERP</Text> represents your official baseline. Tap "Edit" on any subject below to make manual adjustments.
         </Text>
       </View>
 
@@ -1221,7 +1233,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                     </View>
                     <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
                       <Text style={{ color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>
-                        {isCloudLocked ? 'CLOUD STORED & LOCKED 🔍' : 'CLOUD SYNCED 🔍'}
+                        {isCloudLocked ? 'CLOUD STORED & LOCKED' : 'CLOUD SYNCED'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -1245,7 +1257,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setViewingRecordedSubject(null)} style={{ padding: 6 }}>
-                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: 'bold' }}>✕</Text>
+                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: 'bold' }}>X</Text>
               </TouchableOpacity>
             </View>
 
@@ -1466,7 +1478,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             <View style={styles.modalCard}>
               <View style={styles.studzoneModalHeader}>
                 <View style={styles.studzoneModalIconCircle}>
-                  <Text style={styles.studzoneModalIcon}>⚡</Text>
+                  <Text style={styles.studzoneModalIcon}>[Studzone]</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.modalTitle}>PSG Studzone Extractor</Text>
@@ -1483,7 +1495,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                   }}
                   style={styles.closeModalBtn}
                 >
-                  <Text style={styles.closeModalBtnText}>✕</Text>
+                  <Text style={styles.closeModalBtnText}>X</Text>
                 </TouchableOpacity>
               </View>
 
@@ -1497,7 +1509,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                       autoCapitalize="characters"
                       value={studzoneRollNo}
                       onChangeText={(val) => setStudzoneRollNo(val.toUpperCase())}
-                      placeholder="e.g. 24AA01"
+                      placeholder="e.g. 26AB12"
                       placeholderTextColor="#64748B"
                       editable={!isExtracting}
                     />
@@ -1520,12 +1532,12 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                         onPress={() => setShowPassword(!showPassword)}
                         style={styles.eyeBtn}
                       >
-                        <Text style={styles.eyeText}>{showPassword ? '👁️' : '🙈'}</Text>
+                        <Text style={styles.eyeText}>{showPassword ? 'Show' : 'Hide'}</Text>
                       </TouchableOpacity>
                     </View>
 
                     <View style={styles.dobHintBox}>
-                      <Text style={styles.dobHintTitle}>💡 Password Format Hint:</Text>
+                      <Text style={styles.dobHintTitle}>Password Format Hint:</Text>
                       <Text style={styles.dobHintText}>
                         Password is your Date of Birth in format{' '}
                         <Text style={styles.boldText}>DDMMMYY</Text>. For example, if you were born on{' '}
@@ -1536,7 +1548,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
                     <View style={styles.securityWarningBox}>
                       <Text style={styles.securityWarningText}>
-                        ⚠️ Caution: Studzone locks student accounts after 5 consecutive incorrect password attempts.
+                        Caution: Studzone locks student accounts after 5 consecutive incorrect password attempts.
                       </Text>
                     </View>
 
@@ -1588,7 +1600,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                       disabled={isExtracting}
                     >
                       <Text style={styles.modalSubmitText}>
-                        {isExtracting ? 'Connecting...' : '🚀 Extract Attendance'}
+                        {isExtracting ? 'Connecting...' : 'Extract Attendance'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -1598,7 +1610,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 <>
                   <View style={styles.successPreviewHeader}>
                     <Text style={styles.successPreviewTitle}>
-                      🎉 Extracted {extractedRecords.length} Subjects Successfully!
+                      Extracted {extractedRecords.length} Subjects Successfully!
                     </Text>
                     <View style={[styles.periodRangeCard, { marginTop: 8, marginBottom: 8, backgroundColor: '#0F172A' }]}>
                       <View style={styles.periodCol}>
@@ -1674,7 +1686,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                       style={styles.modalSubmitBtn}
                       onPress={handleApplyExtractedRecords}
                     >
-                      <Text style={styles.modalSubmitText}>✅ Apply to All Subjects</Text>
+                      <Text style={styles.modalSubmitText}>Apply to All Subjects</Text>
                     </TouchableOpacity>
                   </View>
                 </>
@@ -1693,7 +1705,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             <View style={styles.credsModalHeader}>
               <Text style={styles.credsModalTitle}>PSGIM Connect Settings</Text>
               <TouchableOpacity onPress={() => setShowConnectModal(false)}>
-                <Text style={styles.closeBtnText}>✕</Text>
+                <Text style={styles.closeBtnText}>X</Text>
               </TouchableOpacity>
             </View>
 
@@ -1735,7 +1747,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 style={styles.credsSaveBtn}
                 onPress={handleSaveConnectCredentials}
               >
-                <Text style={styles.credsSaveBtnText}>Save Settings ✅</Text>
+                <Text style={styles.credsSaveBtnText}>Save Settings</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1768,6 +1780,27 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: '#F8FAFC',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  rollBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+  },
+  rollBadgeText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: 13,

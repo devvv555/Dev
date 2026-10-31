@@ -5,14 +5,13 @@ export interface PsgimStudentInfo {
   dRollNo: string;
   collegeRollNo: string;
   name: string;
-  batch: 'A' | 'B' | 'C' | 'D';
+  batch: 'A' | 'B' | 'C' | 'D' | 'AE';
   dob?: string;
   dobPassword?: string;
   bloodGroup?: string;
 }
 
 export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
-  // BATCH A (62 Students)
   "D26AA01": { dRollNo: "D26AA01", collegeRollNo: "26AA04", name: "AKASH VARDHAMAN", batch: "A" },
   "D26AA02": { dRollNo: "D26AA02", collegeRollNo: "26AA27", name: "MITHUN K", batch: "A" },
   "D26AA03": { dRollNo: "D26AA03", collegeRollNo: "26AA38", name: "R NIVEDA", batch: "A" },
@@ -75,8 +74,6 @@ export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
   "D26AA61": { dRollNo: "D26AA61", collegeRollNo: "26AA62", name: "VISHWADIKA G", batch: "A" },
   "D26AA62": { dRollNo: "D26AA62", collegeRollNo: "26AA43", name: "SADHIKA MUGUNDAN", batch: "A" },
   "D26AA63": { dRollNo: "D26AA63", collegeRollNo: "26AA07", name: "DARSHAN M S", batch: "A" },
-
-  // BATCH B (63 Students)
   "D26AB01": { dRollNo: "D26AB01", collegeRollNo: "26AB33", name: "MUKTHA MATHI S", batch: "B", dob: "2005-02-13", dobPassword: "13FEB05", bloodGroup: "B +ve" },
   "D26AB02": { dRollNo: "D26AB02", collegeRollNo: "26AB18", name: "GIFTY SHARON K", batch: "B", dob: "2001-08-05", dobPassword: "05AUG01", bloodGroup: "B +ve" },
   "D26AB03": { dRollNo: "D26AB03", collegeRollNo: "26AB19", name: "GOKUL NANDHAN VENUGOPAL", batch: "B", dob: "2005-05-16", dobPassword: "16MAY05", bloodGroup: "B +ve" },
@@ -140,8 +137,6 @@ export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
   "D26AB62": { dRollNo: "D26AB62", collegeRollNo: "26AB08", name: "ANUSREE O", batch: "B", dob: "2006-09-12", dobPassword: "12SEP06", bloodGroup: "O +ve" },
   "D26AB63": { dRollNo: "D26AB63", collegeRollNo: "26AB09", name: "ARVIND P", batch: "B", dob: "2005-08-31", dobPassword: "31AUG05", bloodGroup: "O +ve" },
   "D26AB64": { dRollNo: "D26AB64", collegeRollNo: "26AB11", name: "AVANTHIKA PRABAKARAN", batch: "B", dob: "2005-06-12", dobPassword: "12JUN05", bloodGroup: "O +ve" },
-
-  // BATCH C (62 Students)
   "D26AC01": { dRollNo: "D26AC01", collegeRollNo: "26AC09", name: "DHARSHINE E H", batch: "C" },
   "D26AC02": { dRollNo: "D26AC02", collegeRollNo: "26AC19", name: "JEGADHARANI A", batch: "C" },
   "D26AC03": { dRollNo: "D26AC03", collegeRollNo: "26AC17", name: "IJAAZ AJMAL F", batch: "C" },
@@ -204,8 +199,6 @@ export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
   "D26AC61": { dRollNo: "D26AC61", collegeRollNo: "26AC11", name: "DHIGAMBARI A", batch: "C" },
   "D26AC62": { dRollNo: "D26AC62", collegeRollNo: "26AC41", name: "S KRISHNA KUMAR", batch: "C" },
   "D26AC63": { dRollNo: "D26AC63", collegeRollNo: "26AC04", name: "ARUN VIGNESWAR S K", batch: "C" },
-
-  // BATCH D (65 Students)
   "D26AD01": { dRollNo: "D26AD01", collegeRollNo: "26AD28", name: "LOHIT DEVESHWAR S K", batch: "D" },
   "D26AD02": { dRollNo: "D26AD02", collegeRollNo: "26AD09", name: "ANANYA A", batch: "D" },
   "D26AD03": { dRollNo: "D26AD03", collegeRollNo: "26AD11", name: "ASWANTH RAAJHEN A", batch: "D" },
@@ -276,7 +269,7 @@ export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
 export const STUDENTS_BY_NEW_ROLL: Record<string, PsgimStudentInfo> = {};
 export const STUDENTS_BY_OLD_ROLL: Record<string, PsgimStudentInfo> = PSGIM_MASTER_STUDENTS;
 
-// Build lookup indexed by the right-hand newest roll number (e.g. "26AA04")
+// Build lookup indexed by official college roll number (e.g. "26AA01")
 Object.values(PSGIM_MASTER_STUDENTS).forEach((student) => {
   if (student.collegeRollNo) {
     STUDENTS_BY_NEW_ROLL[student.collegeRollNo.toUpperCase()] = student;
@@ -286,20 +279,20 @@ Object.values(PSGIM_MASTER_STUDENTS).forEach((student) => {
 export const ALL_COLLEGE_ROLL_NUMBERS = Object.keys(STUDENTS_BY_NEW_ROLL);
 
 /**
- * Resolves a student by either their new roll no ("26AA04") or legacy roll no ("D26AA01")
+ * Resolves a student by either their college roll no ("26AA01") or D roll no ("D26AA01")
  */
 export function getStudentByAnyRoll(inputRoll: string): PsgimStudentInfo | null {
   if (!inputRoll) return null;
   const clean = inputRoll.trim().toUpperCase();
 
-  // 1. Direct match on new roll number (e.g. "26AA04")
+  // 1. Direct match in STUDENTS_BY_NEW_ROLL (e.g. "26AB12")
   if (STUDENTS_BY_NEW_ROLL[clean]) {
     return STUDENTS_BY_NEW_ROLL[clean];
   }
 
-  // 2. Direct match on old roll number (e.g. "D26AA01")
-  if (STUDENTS_BY_OLD_ROLL[clean]) {
-    return STUDENTS_BY_OLD_ROLL[clean];
+  // 2. Direct match in PSGIM_MASTER_STUDENTS (e.g. "D26AB05")
+  if (PSGIM_MASTER_STUDENTS[clean]) {
+    return PSGIM_MASTER_STUDENTS[clean];
   }
 
   // 3. Fallback: handle with or without leading 'D'
@@ -308,26 +301,38 @@ export function getStudentByAnyRoll(inputRoll: string): PsgimStudentInfo | null 
     if (STUDENTS_BY_NEW_ROLL[withoutD]) return STUDENTS_BY_NEW_ROLL[withoutD];
   } else {
     const withD = 'D' + clean;
-    if (STUDENTS_BY_OLD_ROLL[withD]) return STUDENTS_BY_OLD_ROLL[withD];
+    if (PSGIM_MASTER_STUDENTS[withD]) return PSGIM_MASTER_STUDENTS[withD];
   }
 
   return null;
 }
 
 /**
- * Always returns the student's official newest roll number (e.g. "26AA04")
+ * Always returns the student's official college roll number without leading 'D' (e.g. "26AA01")
  */
 export function toNewRollNo(inputRoll: string): string {
+  if (!inputRoll) return '';
+  const clean = inputRoll.trim().toUpperCase();
+  if (clean === 'D26AB05') {
+    return '26AB12';
+  }
   const student = getStudentByAnyRoll(inputRoll);
-  return student ? student.collegeRollNo : inputRoll.trim().toUpperCase();
+  if (student) return student.collegeRollNo;
+  return clean.startsWith('D') ? clean.substring(1) : clean;
 }
 
 /**
- * Returns the legacy internal roll number (e.g. "D26AA01") for batch schedule mapping
+ * Returns the internal roll number with leading 'D' (e.g. "D26AA01") for schedule mapping
  */
 export function toOldRollNo(inputRoll: string): string {
+  if (!inputRoll) return '';
+  const clean = inputRoll.trim().toUpperCase();
+  if (clean === '26AB12') {
+    return 'D26AB05';
+  }
   const student = getStudentByAnyRoll(inputRoll);
-  return student ? student.dRollNo : inputRoll.trim().toUpperCase();
+  if (student) return student.dRollNo;
+  return clean.startsWith('D') ? clean : 'D' + clean;
 }
 
 export function getMasterStudent(rollNo: string): PsgimStudentInfo | null {
@@ -364,4 +369,3 @@ export function getStudentByName(inputName: string): PsgimStudentInfo | null {
   // 4. Fallback: check if the input was actually a roll number
   return getStudentByAnyRoll(inputName);
 }
-

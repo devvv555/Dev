@@ -36,19 +36,19 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
   let dueBadgeColor = '#38BDF8';
 
   if (assignment.status === 'SUBMITTED' || assignment.status === 'GRADED') {
-    dueBadgeText = '✅ SUBMITTED';
+    dueBadgeText = 'SUBMITTED';
     dueBadgeColor = '#10B981';
   } else if (isPastDue) {
-    dueBadgeText = '⚠️ PAST DUE';
+    dueBadgeText = 'PAST DUE';
     dueBadgeColor = '#EF4444';
   } else if (diffHours <= 12) {
-    dueBadgeText = `🔥 DUE IN ${diffHours} HRS`;
+    dueBadgeText = `DUE IN ${diffHours} HRS`;
     dueBadgeColor = '#EF4444';
   } else if (diffHours <= 48) {
-    dueBadgeText = `⏳ DUE IN ${Math.round(diffHours / 24)} DAYS`;
+    dueBadgeText = `DUE IN ${Math.round(diffHours / 24)} DAYS`;
     dueBadgeColor = '#F59E0B';
   } else {
-    dueBadgeText = `📅 DUE IN ${Math.round(diffHours / 24)} DAYS`;
+    dueBadgeText = `DUE IN ${Math.round(diffHours / 24)} DAYS`;
     dueBadgeColor = '#38BDF8';
   }
 
@@ -72,7 +72,7 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Submit to Moodle 🚀',
+            text: 'Submit to Moodle',
             onPress: async () => {
               setIsUploading(true);
               try {
@@ -90,7 +90,7 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
               if (res.success && res.updatedAssignment) {
                 onUpdated(res.updatedAssignment);
                 Alert.alert(
-                  'Submission Verified! 🎉',
+                  'Submission Verified!',
                   `"${file.name}" has been recorded as officially submitted for grading.`
                 );
               } else {
@@ -129,11 +129,11 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
       {assignment.status === 'SUBMITTED' ? (
         <View style={styles.verifiedBox}>
           <View style={styles.verifiedHeader}>
-            <Text style={styles.verifiedIcon}>✅</Text>
+            <Text style={styles.verifiedIcon}>[VERIFIED]</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.verifiedTitle}>Submitted for Grading</Text>
               <Text style={styles.verifiedFileName} numberOfLines={1}>
-                📄 {assignment.submittedFileName || 'Document.pdf'} ({assignment.submittedFileSize || 'Uploaded'})
+                {assignment.submittedFileName || 'Document.pdf'} ({assignment.submittedFileSize || 'Uploaded'})
               </Text>
               <Text style={styles.verifiedDate}>
                 Submitted on {assignment.submissionDate ? new Date(assignment.submissionDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recently'}
@@ -162,7 +162,7 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <Text style={styles.uploadBtnText}>
-              {assignment.status === 'SUBMITTED' ? '🔄 Replace Document' : '📎 Upload & Submit'}
+              {assignment.status === 'SUBMITTED' ? 'Replace Document' : 'Upload & Submit'}
             </Text>
           )}
         </TouchableOpacity>
@@ -172,7 +172,7 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
           onPress={() => onOpenInMoodle(assignment.title, assignment.moodleUrl)}
           activeOpacity={0.7}
         >
-          <Text style={styles.moodleLinkBtnText}>🌐 Open Moodle</Text>
+          <Text style={styles.moodleLinkBtnText}>Open Moodle</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -252,7 +252,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   verifiedIcon: {
-    fontSize: 18,
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#34D399',
     marginTop: 2,
   },
   verifiedTitle: {

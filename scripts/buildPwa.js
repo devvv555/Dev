@@ -7,10 +7,10 @@ const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
 const assetsDir = path.join(rootDir, 'assets');
 
-console.log('🚀 Step 1: Exporting web bundle using Expo...');
+console.log('[Step 1] Exporting web bundle using Expo...');
 execSync('npx expo export -p web', { stdio: 'inherit', cwd: rootDir });
 
-console.log('📦 Step 2: Injecting PWA manifest & Service Worker into dist...');
+console.log('[Step 2] Injecting PWA manifest & Service Worker into dist...');
 
 // Copy manifest.json & sw.js to dist
 fs.copyFileSync(path.join(publicDir, 'manifest.json'), path.join(distDir, 'manifest.json'));
@@ -60,4 +60,4 @@ finalHtml = finalHtml.replace('</body>', `  ${scriptsToInject}\n  </body>`);
 
 fs.writeFileSync(indexPath, finalHtml, 'utf8');
 
-console.log('✅ PWA Build Complete! Dist folder ready at:', distDir);
+console.log('[OK] PWA Build Complete! Dist folder ready at:', distDir);

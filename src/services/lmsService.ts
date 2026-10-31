@@ -17,7 +17,7 @@ export interface LmsCredentials {
 const DEFAULT_ASSIGNMENTS: LmsAssignment[] = [];
 const DEFAULT_QUIZZES: LmsQuiz[] = [];
 
-import { getMasterStudent, toOldRollNo, ALL_COLLEGE_ROLL_NUMBERS } from '../data/psgimMasterStudents';
+import { getMasterStudent, toOldRollNo, toNewRollNo, ALL_COLLEGE_ROLL_NUMBERS } from '../data/psgimMasterStudents';
 import { CLOUDFLARE_WORKER_URL } from './studzoneService';
 import { CloudSyncService } from './cloudSyncService';
 
@@ -41,9 +41,19 @@ export const LmsService = {
     try {
       if (!rollNo) return null;
       const moodleUser = this.resolveMoodleUsername(rollNo);
-      const key = `${STORAGE_KEYS.LMS_CREDS}${rollNo.toUpperCase()}`;
+      const newRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const oldRoll = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.LMS_CREDS}${newRoll}`;
       const data = await AsyncStorage.getItem(key);
       if (data) return JSON.parse(data);
+      if (oldRoll !== newRoll) {
+        const oldKey = `${STORAGE_KEYS.LMS_CREDS}${oldRoll}`;
+        const oldData = await AsyncStorage.getItem(oldKey);
+        if (oldData) {
+          await AsyncStorage.setItem(key, oldData);
+          return JSON.parse(oldData);
+        }
+      }
       // Default initial credentials (Dummy roll.no e.g. D26AB05 + Welcome@123)
       return {
         rollNo: moodleUser,
@@ -248,9 +258,24 @@ export const LmsService = {
   async getAssignments(rollNo: string): Promise<LmsAssignment[]> {
     try {
       if (!rollNo) return DEFAULT_ASSIGNMENTS;
-      const key = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${rollNo.toUpperCase()}`;
+      const newRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const oldRoll = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${newRoll}`;
       const data = await AsyncStorage.getItem(key);
-      let assignments = data ? (JSON.parse(data) as LmsAssignment[]) : DEFAULT_ASSIGNMENTS;
+      let assignments = data ? (JSON.parse(data) as LmsAssignment[]) : null;
+
+      if (!assignments && oldRoll !== newRoll) {
+        const oldKey = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${oldRoll}`;
+        const oldData = await AsyncStorage.getItem(oldKey);
+        if (oldData) {
+          assignments = JSON.parse(oldData) as LmsAssignment[];
+          await AsyncStorage.setItem(key, oldData);
+        }
+      }
+
+      if (!assignments) {
+        assignments = DEFAULT_ASSIGNMENTS;
+      }
 
       // Check cloud Firestore broadcast if local data is default
       const master = getMasterStudent(rollNo);
@@ -276,7 +301,8 @@ export const LmsService = {
   async saveCredentials(creds: LmsCredentials): Promise<void> {
     try {
       if (!creds.rollNo) return;
-      const key = `${STORAGE_KEYS.LMS_CREDS}${creds.rollNo.toUpperCase()}`;
+      const canonicalRoll = (toNewRollNo(creds.rollNo) || creds.rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.LMS_CREDS}${canonicalRoll}`;
       await AsyncStorage.setItem(key, JSON.stringify(creds));
     } catch (e) {
       console.warn('Error saving LMS credentials:', e);
@@ -289,7 +315,8 @@ export const LmsService = {
   async saveAssignments(rollNo: string, assignments: LmsAssignment[]): Promise<void> {
     try {
       if (!rollNo) return;
-      const key = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${rollNo.toUpperCase()}`;
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.LMS_ASSIGNMENTS}${canonicalRoll}`;
       await AsyncStorage.setItem(key, JSON.stringify(assignments));
     } catch (e) {
       console.warn('Error saving LMS assignments:', e);
@@ -302,10 +329,20 @@ export const LmsService = {
   async getQuizzes(rollNo: string): Promise<LmsQuiz[]> {
     try {
       if (!rollNo) return DEFAULT_QUIZZES;
-      const key = `${STORAGE_KEYS.LMS_QUIZZES}${rollNo.toUpperCase()}`;
+      const newRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const oldRoll = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.LMS_QUIZZES}${newRoll}`;
       const data = await AsyncStorage.getItem(key);
       if (data) {
         return JSON.parse(data);
+      }
+      if (oldRoll !== newRoll) {
+        const oldKey = `${STORAGE_KEYS.LMS_QUIZZES}${oldRoll}`;
+        const oldData = await AsyncStorage.getItem(oldKey);
+        if (oldData) {
+          await AsyncStorage.setItem(key, oldData);
+          return JSON.parse(oldData);
+        }
       }
       await this.saveQuizzes(rollNo, DEFAULT_QUIZZES);
       return DEFAULT_QUIZZES;
@@ -320,7 +357,8 @@ export const LmsService = {
   async saveQuizzes(rollNo: string, quizzes: LmsQuiz[]): Promise<void> {
     try {
       if (!rollNo) return;
-      const key = `${STORAGE_KEYS.LMS_QUIZZES}${rollNo.toUpperCase()}`;
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.LMS_QUIZZES}${canonicalRoll}`;
       await AsyncStorage.setItem(key, JSON.stringify(quizzes));
     } catch (e) {
       console.warn('Error saving LMS quizzes:', e);
