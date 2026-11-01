@@ -58,7 +58,7 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
     title: 'Enhanced Suit Activated',
     badge: 'TACTICAL PROTOCOL UNLOCKED',
     description:
-      'Congratulations on disengaging Training Wheels! Your interface has upgraded to Iron Man Crimson Red, Gold, White and Stealth Black. All advanced tactical intelligence modules are now online.',
+      'Congratulations on disengaging Training Wheels! Your interface has upgraded to Deep Midnight Navy, Surface Navy, and Muted Champagne. All advanced tactical intelligence modules are now online.',
     tip: 'Karen is standing by with automated schedule tracking and campus recon.',
   },
   {
@@ -80,14 +80,14 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
     badge: 'EXECUTIVE INTELLIGENCE',
     description:
       'Stay ahead with the curated real-time business press (The Hindu, BusinessLine, Business Standard). Each article features an executive MBA Takeaway designed for classroom discussions and interviews.',
-    tip: 'Available inside Stark Arsenal under the News Radar tab.',
+    tip: 'Available directly in the 5th section under the Enhanced Hub tab.',
   },
   {
-    title: 'Canteen Rush Radar (#004)',
-    badge: 'CAMPUS LOGISTICS',
+    title: 'Canteen & Xerox Radar (#004)',
+    badge: 'CAMPUS AMENITIES',
     description:
-      'Monitor live cafeteria queues, seating capacity, and rush traffic in real time. Karen forecasts peak lunch hours and recommends optimal times to visit the cafeteria.',
-    tip: 'Avoid peak congestion by checking live queue status before heading out.',
+      'Monitor live crowd levels across all 3 campus dining spots (Main IM Canteen, Campus Annex, and Coffee Kiosk) with 8:30 AM to 6:00 PM hours (Lunch 12:30-2:00 PM). Plus, calculate print costs and send files to the Xerox shop without standing in line.',
+    tip: 'Check the Xerox calculator to scan UPI QR and forward files via WhatsApp ahead of time.',
   },
   {
     title: 'Faculty Office Hours Booking (#005)',
@@ -111,11 +111,11 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
     tip: 'Renews books directly without needing to stand in the library circulation queue.',
   },
   {
-    title: 'Voice Briefing & Calibration (#025)',
-    badge: 'AUDIO COMPANION',
+    title: '5th Navigation Section: Enhanced Hub',
+    badge: 'TACTICAL NAVIGATION',
     description:
-      'Select your preferred AI voice persona (Friday UK, Karen US, Jarvis Baritone, or Campus AI) and listen to personalized morning audio overviews of your schedule, rooms, and campus radar.',
-    tip: 'Calibrate your preferred voice profile anytime under the Voice tab in Stark Arsenal.',
+      'All campus recon modules—News, Canteen, Xerox, Faculty Booking, Syllabus Velocity, and Library Shield—are organized inside the 5th tab on your bottom navigation bar.',
+    tip: 'Switch tabs anytime from the bottom bar or tap the Enhanced Suit Hub button on your Dashboard.',
   },
 ];
 
@@ -251,8 +251,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardRed: {
-    backgroundColor: '#1A0404',
-    borderColor: '#DC2626',
+    backgroundColor: '#1C2541',
+    borderColor: '#2A3B5C',
     borderWidth: 1.5,
   },
   header: {
@@ -264,8 +264,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F172A',
   },
   headerRed: {
-    backgroundColor: '#260606',
-    borderBottomColor: '#7F1D1D',
+    backgroundColor: '#0B132B',
+    borderBottomColor: '#2A3B5C',
   },
   karenAvatar: {
     width: 40,
@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   karenAvatarRed: {
-    backgroundColor: 'rgba(250, 204, 21, 0.2)',
-    borderColor: '#FACC15',
+    backgroundColor: 'rgba(244, 232, 193, 0.15)',
+    borderColor: '#F4E8C1',
     borderWidth: 1.5,
   },
   karenAvatarText: {
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   stepBadgeRed: {
-    backgroundColor: 'rgba(250, 204, 21, 0.15)',
-    borderColor: '#FACC15',
+    backgroundColor: 'rgba(244, 232, 193, 0.15)',
+    borderColor: '#F4E8C1',
   },
   stepBadgeText: {
     color: '#38BDF8',
@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
     borderLeftColor: '#38BDF8',
   },
   tipBoxRed: {
-    backgroundColor: '#0B0202',
-    borderLeftColor: '#FACC15',
+    backgroundColor: '#0B132B',
+    borderLeftColor: '#F4E8C1',
   },
   tipLabel: {
     color: '#38BDF8',
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   dotActiveRed: {
-    backgroundColor: '#FACC15',
+    backgroundColor: '#F4E8C1',
     width: 20,
   },
   btnRow: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0284C7',
   },
   nextBtnRed: {
-    backgroundColor: '#FACC15',
+    backgroundColor: '#F4E8C1',
   },
   nextBtnText: {
     color: '#FFFFFF',
