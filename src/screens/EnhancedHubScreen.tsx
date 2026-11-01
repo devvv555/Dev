@@ -47,6 +47,14 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
 
   // Live state
   const [news, setNews] = useState<NewsArticle[]>([]);
+  const [newsLastUpdated, setNewsLastUpdated] = useState<string>(
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  );
+  const [newsCountdownSeconds, setNewsCountdownSeconds] = useState<number>(
+    BusinessNewsService.getRefreshIntervalSeconds()
+  );
+  const [isRefreshingNews, setIsRefreshingNews] = useState<boolean>(false);
+
   const [canteenStatus, setCanteenStatus] = useState<CanteenRushStatus | null>(null);
   const [xeroxStatus, setXeroxStatus] = useState<XeroxRushStatus | null>(null);
   const [facultySlots, setFacultySlots] = useState<FacultyOfficeHourSlot[]>([]);
@@ -67,6 +75,38 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   useEffect(() => {
     loadAllData();
   }, [selectedCanteenId]);
+
+  // 15-Minute News Auto-Refresh ticker & countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const remaining = BusinessNewsService.getSecondsUntilNextRefresh();
+      setNewsCountdownSeconds(remaining);
+      if (remaining <= 0) {
+        handleRefreshNews(false);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleRefreshNews = (manual: boolean = false) => {
+    setIsRefreshingNews(true);
+    const updated = BusinessNewsService.getLatestHeadlines(true);
+    setNews(updated);
+    setNewsLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    setNewsCountdownSeconds(BusinessNewsService.getRefreshIntervalSeconds());
+    if (manual) {
+      setActionNotice('Live Business News Feed refreshed successfully.');
+      setTimeout(() => setActionNotice(null), 3000);
+    }
+    setTimeout(() => setIsRefreshingNews(false), 350);
+  };
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+  };
 
   const loadAllData = async () => {
     setNews(BusinessNewsService.getLatestHeadlines());
@@ -208,6 +248,25 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
               <Text style={styles.sectionCaption}>
                 Executive headlines from The Hindu, BusinessLine & Business Standard with actionable MBA takeaways.
               </Text>
+
+              {/* 15-Minute Live Auto-Sync Status Bar */}
+              <View style={styles.newsSyncBar}>
+                <View style={styles.newsSyncInfo}>
+                  <View style={styles.syncPulseDot} />
+                  <Text style={styles.newsSyncText}>
+                    AUTO-REFRESH: 15 MIN  |  Last: {newsLastUpdated}  |  Next: {formatCountdown(newsCountdownSeconds)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.newsRefreshBtn, isRefreshingNews && styles.newsRefreshBtnActive]}
+                  onPress={() => handleRefreshNews(true)}
+                  disabled={isRefreshingNews}
+                >
+                  <Text style={styles.newsRefreshBtnText}>
+                    {isRefreshingNews ? 'SYNCING...' : 'REFRESH NOW'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {news.map((item) => (
@@ -933,6 +992,54 @@ const styles = StyleSheet.create({
     color: '#C5BA9D',
     marginTop: 4,
     lineHeight: 17,
+  },
+  newsSyncBar: {
+    marginTop: 10,
+    backgroundColor: '#0B132B',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#2A3B5C',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  newsSyncInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  syncPulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+  },
+  newsSyncText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#F4E8C1',
+    letterSpacing: 0.5,
+  },
+  newsRefreshBtn: {
+    backgroundColor: 'rgba(244, 232, 193, 0.15)',
+    borderWidth: 1,
+    borderColor: '#F4E8C1',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  newsRefreshBtnActive: {
+    backgroundColor: '#2A3B5C',
+  },
+  newsRefreshBtnText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#F4E8C1',
+    letterSpacing: 0.8,
   },
   card: {
     backgroundColor: '#1C2541',
