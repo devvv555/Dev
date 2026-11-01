@@ -58,6 +58,7 @@ interface DashboardScreenProps {
   onQuickBunk?: (id: string) => void;
   onOpenCalendar?: () => void;
   onOpenAdmin?: () => void;
+  onOpenEnhancedHub?: () => void;
   onRefresh?: () => Promise<void> | void;
   isEnhancedSuit?: boolean;
 }
@@ -72,6 +73,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onUpdateFaculty,
   onOpenCalendar,
   onOpenAdmin,
+  onOpenEnhancedHub,
   onRefresh,
   isEnhancedSuit: isEnhancedSuitProp,
 }) => {
@@ -1663,10 +1665,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 styles.mcuAiBtnSecondary,
                 { borderColor: '#FACC15', backgroundColor: 'rgba(250, 204, 21, 0.12)' }
               ]}
-              onPress={() => setShowStarkArsenal(true)}
+              onPress={() => {
+                if (onOpenEnhancedHub) {
+                  onOpenEnhancedHub();
+                } else {
+                  setShowStarkArsenal(true);
+                }
+              }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FACC15', fontWeight: '800' }]}>Stark Arsenal</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FACC15', fontWeight: '800' }]}>Enhanced Suit Hub</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

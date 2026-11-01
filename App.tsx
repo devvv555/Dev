@@ -36,9 +36,9 @@ import { ProtocolGate } from './src/engines/starkProtocol/protocolGate';
 import { StarkVideoModal } from './src/components/StarkVideoModal';
 import { KarenGuide } from './src/components/KarenGuide';
 import { MissMinutesScheduler } from './src/services/missMinutesScheduler';
+import { EnhancedHubScreen } from './src/screens/EnhancedHubScreen';
 
-
-type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC';
+type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC' | 'ENHANCED';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -301,6 +301,7 @@ export default function App() {
       TIMETABLE: 'TIMETABLE',
       CALENDAR: 'CALENDAR',
       ERP_SYNC: 'ERP_SYNC',
+      ENHANCED: 'ENHANCED_HUB',
     };
     AnalyticsService.trackFeatureEvent(activeRollNo, featureMap[newTab]);
   };
@@ -944,6 +945,7 @@ export default function App() {
             onRecordPeriodAttendance={handleRecordPeriodAttendance}
             onUpdateFaculty={handleUpdateFaculty}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
+            onOpenEnhancedHub={() => handleTabChange('ENHANCED')}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
           />
@@ -983,6 +985,15 @@ export default function App() {
             activeRollNo={activeRollNo}
             onUpdateAttendance={handleUpdateAttendance}
             onBatchUpdateSubjects={handleBatchUpdateSubjects}
+            onRefresh={handleRefresh}
+            isEnhancedSuit={isEnhancedSuit}
+          />
+        )}
+
+        {activeTab === 'ENHANCED' && (
+          <EnhancedHubScreen
+            studentRollNo={activeRollNo}
+            studentName={studentName}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
           />
@@ -1075,6 +1086,36 @@ export default function App() {
             Portals
           </Text>
         </TouchableOpacity>
+
+        {isEnhancedSuit && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={[
+              styles.tabItem,
+              activeTab === 'ENHANCED' && { backgroundColor: '#0B132B' }
+            ]}
+            onPress={() => handleTabChange('ENHANCED')}
+          >
+            <Text
+              style={[
+                styles.tabIcon,
+                { fontSize: 13, fontWeight: '900', color: activeTab === 'ENHANCED' ? '#F4E8C1' : '#8E9BB0' }
+              ]}
+            >
+              ★
+            </Text>
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: '#8E9BB0' },
+                activeTab === 'ENHANCED' && { color: '#F4E8C1', fontWeight: '800' }
+              ]}
+              numberOfLines={1}
+            >
+              Enhanced
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Student Feedback & Improvement Suggestions Modal */}
