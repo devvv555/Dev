@@ -140,11 +140,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Course Plan & Continuous Assessment (CA) Pattern */}
       {onOpenCoursePlan && (
         <TouchableOpacity
-          style={[styles.coursePlanBtn, isEnhancedSuit && { backgroundColor: '#0B132B', borderColor: '#2A3B5C' }]}
+          style={[styles.coursePlanBtn, isEnhancedSuit && { backgroundColor: '#4D0907', borderColor: '#B87D0E' }]}
           onPress={() => onOpenCoursePlan(subject.code, subject.name)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.coursePlanBtnText, isEnhancedSuit && { color: '#F4E8C1' }]}>
+          <Text style={[styles.coursePlanBtnText, isEnhancedSuit && { color: '#F7C700' }]}>
             Course Plan & CA Marks (50M Target) →
           </Text>
         </TouchableOpacity>
