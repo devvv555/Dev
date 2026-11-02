@@ -877,7 +877,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               ]}
               numberOfLines={1}
             >
-              {studentName || 'Student'}
+              {studentRollNo?.toUpperCase() === 'GUEST' ? 'Faculty & Administration Guest' : (studentName || 'Student')}
             </Text>
             <Text
               style={[
@@ -886,9 +886,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               ]}
             >
               <Text style={[styles.welcomeRoll, isLightMode ? { color: '#334155', fontWeight: '600' } : isEnhancedSuit && { color: '#10B981' }]}>
-                Roll No: {toNewRollNo(studentRollNo)}
+                {studentRollNo?.toUpperCase() === 'GUEST' ? 'Profile: Institutional Guest' : `Roll No: ${toNewRollNo(studentRollNo)}`}
               </Text>
-              {profile.section ? ` • Batch ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark' : 'I MBA'}
+              {studentRollNo?.toUpperCase() === 'GUEST'
+                ? ' • Faculty & Admin Preview'
+                : `${profile.section ? ` • Batch ${profile.section}` : ''} • ${isEnhancedSuit ? 'Enhanced Stark' : 'I MBA'}`}
             </Text>
             {profile.email ? (
               <Text
@@ -897,7 +899,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 ]}
                 numberOfLines={1}
               >
-                Email · {profile.email}
+                {studentRollNo?.toUpperCase() === 'GUEST' ? 'Official Inspection & Teacher Sandbox' : `Email · ${profile.email}`}
               </Text>
             ) : null}
           </View>
@@ -929,7 +931,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Verified Student Details Row */}
         <View style={[styles.profileDetailsRow, isLightMode ? { borderTopColor: '#E2E8F0' } : isEnhancedSuit && { borderTopColor: '#262626' }]}>
-          {studentRollNo ? (
+          {studentRollNo?.toUpperCase() === 'GUEST' ? (
+            <View style={[
+              styles.profilePill,
+              isLightMode
+                ? { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }
+                : { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: '#F59E0B' }
+            ]}>
+              <Text style={[
+                styles.profilePillText,
+                { color: isLightMode ? '#B45309' : '#FBBF24', fontWeight: '800' }
+              ]}>
+                🏛️ Faculty & Admin Sandbox Mode
+              </Text>
+            </View>
+          ) : studentRollNo ? (
             <View style={[
               styles.profilePill,
               isLightMode
@@ -1634,32 +1650,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           )
         )}
 
-        {/* 1-Tap Unlock Entire Day Button */}
-        {!isWeekendOrNoClass && (
-          <View style={styles.unlockDayRow}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.unlockDayBtn,
-                isDayUnlocked ? styles.unlockDayBtnActive : styles.unlockDayBtnInactive,
-                isLightMode && (isDayUnlocked ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' } : { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }),
-                isEnhancedSuit && (isDayUnlocked ? { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' } : { backgroundColor: '#121212', borderColor: '#262626' }),
-              ]}
-              onPress={handleToggleUnlockEntireDay}
-            >
-              <Text
-                style={[
-                  styles.unlockDayBtnText,
-                  isDayUnlocked ? styles.unlockDayBtnTextActive : styles.unlockDayBtnTextInactive,
-                  isLightMode && (isDayUnlocked ? { color: '#059669' } : { color: '#475569' }),
-                  isEnhancedSuit && (isDayUnlocked ? { color: '#10B981' } : { color: '#9CA3AF' }),
-                ]}
-              >
-                {isDayUnlocked ? '🔓 Day Unlocked (Editing Allowed) • Tap to Relock' : '🔓 Unlock Attendance for Entire Day'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+
 
 
         {/* Next Class Tasks & Reminders Section */}
