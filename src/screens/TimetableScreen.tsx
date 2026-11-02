@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { DayOfWeek, Subject, TimetableSlot } from '../types';
 import { toNewRollNo } from '../data/psgimMasterStudents';
+import { ThemeManager } from '../constants/theme';
 
 interface TimetableScreenProps {
   subjects: Subject[];
@@ -42,6 +43,13 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
   const todayDay = getTodayDayOfWeek();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(todayDay);
   const [refreshing, setRefreshing] = useState(false);
+  const [themeMode, setThemeMode] = useState<'LIGHT' | 'DARK'>(ThemeManager.getMode());
+  const isLightMode = themeMode === 'LIGHT';
+
+  useEffect(() => {
+    const unsub = ThemeManager.subscribe((mode) => setThemeMode(mode));
+    return unsub;
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -67,28 +75,33 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
 
   return (
     <ScrollView
-      style={[styles.container, isEnhancedSuit && { backgroundColor: '#050505' }]}
+      style={[styles.container, isLightMode ? { backgroundColor: '#F1F5F9' } : isEnhancedSuit && { backgroundColor: '#050505' }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={isEnhancedSuit ? '#10B981' : '#38BDF8'}
-          colors={isEnhancedSuit ? ['#10B981', '#121212'] : ['#38BDF8', '#2563EB']}
-          progressBackgroundColor={isEnhancedSuit ? '#121212' : '#1E293B'}
+          tintColor={isLightMode ? '#2B3990' : isEnhancedSuit ? '#10B981' : '#38BDF8'}
+          colors={isLightMode ? ['#2B3990', '#3B82F6'] : isEnhancedSuit ? ['#10B981', '#121212'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isLightMode ? '#FFFFFF' : isEnhancedSuit ? '#121212' : '#1E293B'}
         />
       }
     >
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Text style={[styles.headerTitle, isEnhancedSuit && { color: '#10B981' }]}>Weekly Period Index</Text>
+          <Text style={[styles.headerTitle, isLightMode ? { color: '#0F172A', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' }]}>Weekly Period Index</Text>
           {studentRollNo ? (
-            <View style={[styles.rollBadge, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#10B981' }]}>
-              <Text style={[styles.rollBadgeText, isEnhancedSuit && { color: '#10B981' }]}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            <View style={[
+              styles.rollBadge,
+              isLightMode
+                ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1', borderWidth: 1 }
+                : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#10B981' }
+            ]}>
+              <Text style={[styles.rollBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>Roll No: {toNewRollNo(studentRollNo)}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={[styles.headerSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
+        <Text style={[styles.headerSubtitle, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
           {studentRollNo ? `Roll No: ${toNewRollNo(studentRollNo)} • ` : ''}Showing {selectedDay}'s schedule{selectedDay === todayDay ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
         </Text>
       </View>
@@ -106,7 +119,12 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
                 styles.dayButton,
                 isSelected && styles.dayButtonActive,
                 isToday && !isSelected && styles.dayButtonToday,
-                isEnhancedSuit && (
+                isLightMode && (
+                  isSelected
+                    ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                    : { backgroundColor: '#FFFFFF', borderColor: isToday ? '#2B3990' : '#E2E8F0' }
+                ),
+                isEnhancedSuit && !isLightMode && (
                   isSelected
                     ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                     : { backgroundColor: '#121212', borderColor: isToday ? '#10B981' : '#262626' }
@@ -116,7 +134,12 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
               <Text style={[
                 styles.dayText,
                 isSelected && styles.dayTextActive,
-                isEnhancedSuit && (
+                isLightMode && (
+                  isSelected
+                    ? { color: '#FFFFFF', fontWeight: '800' }
+                    : { color: isToday ? '#2B3990' : '#64748B', fontWeight: isToday ? '800' : '600' }
+                ),
+                isEnhancedSuit && !isLightMode && (
                   isSelected
                     ? { color: '#050505', fontWeight: '800' }
                     : { color: '#10B981' }
@@ -132,9 +155,14 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
       {/* Slots List */}
       <View style={styles.slotsContainer}>
         {daySlots.length === 0 ? (
-          <View style={[styles.emptyCard, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }]}>
-            <Text style={[styles.emptyTitle, isEnhancedSuit && { color: '#10B981' }]}>No periods scheduled for {selectedDay}</Text>
-            <Text style={[styles.emptySub, isEnhancedSuit && { color: '#9CA3AF' }]}>Enjoy your day off!</Text>
+          <View style={[
+            styles.emptyCard,
+            isLightMode
+              ? { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderWidth: 1 }
+              : isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }
+          ]}>
+            <Text style={[styles.emptyTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>No periods scheduled for {selectedDay}</Text>
+            <Text style={[styles.emptySub, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>Enjoy your day off!</Text>
           </View>
         ) : (
           daySlots.map((slot) => {
@@ -145,40 +173,60 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
                 key={slot.id}
                 style={[
                   styles.slotCard,
-                  isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }
+                  isLightMode
+                    ? {
+                        backgroundColor: '#FFFFFF',
+                        borderColor: '#E2E8F0',
+                        borderWidth: 1,
+                        shadowColor: '#64748B',
+                        shadowOpacity: 0.08,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                        elevation: 2,
+                      }
+                    : isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }
                 ]}
               >
-                <View style={[styles.timeColumn, isEnhancedSuit && { backgroundColor: '#050505' }]}>
-                  <Text style={[styles.timeStart, isEnhancedSuit && { color: '#10B981' }]}>{slot.startTime}</Text>
-                  <View style={[styles.timeDivider, isEnhancedSuit && { backgroundColor: '#262626' }]} />
-                  <Text style={[styles.timeEnd, isEnhancedSuit && { color: '#9CA3AF' }]}>{slot.endTime}</Text>
+                <View style={[styles.timeColumn, isLightMode ? { backgroundColor: '#F8FAFC' } : isEnhancedSuit && { backgroundColor: '#050505' }]}>
+                  <Text style={[styles.timeStart, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{slot.startTime}</Text>
+                  <View style={[styles.timeDivider, isLightMode ? { backgroundColor: '#E2E8F0' } : isEnhancedSuit && { backgroundColor: '#262626' }]} />
+                  <Text style={[styles.timeEnd, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>{slot.endTime}</Text>
                 </View>
 
-                <View style={[styles.slotInfo, { borderLeftColor: isEnhancedSuit ? '#10B981' : (subject?.color || '#3B82F6') }]}>
+                <View style={[styles.slotInfo, { borderLeftColor: isLightMode ? '#2B3990' : isEnhancedSuit ? '#10B981' : (subject?.color || '#3B82F6') }]}>
                   <View style={styles.slotTopRow}>
-                    <Text style={[styles.subjectCode, isEnhancedSuit && { color: '#10B981' }]}>{subject?.code || 'GEN'}</Text>
+                    <Text style={[styles.subjectCode, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{subject?.code || 'GEN'}</Text>
                     {isSports ? (
                       <View style={[
                         styles.roomBadge,
-                        { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' },
-                        isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                        isLightMode
+                          ? { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE', borderWidth: 1 }
+                          : { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' },
+                        isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                       ]}>
-                        <Text style={[styles.roomText, { color: isEnhancedSuit ? '#10B981' : '#818CF8' }]}>No Attendance</Text>
+                        <Text style={[styles.roomText, isLightMode ? { color: '#2B3990', fontWeight: '700' } : { color: isEnhancedSuit ? '#10B981' : '#818CF8' }]}>No Attendance</Text>
                       </View>
                     ) : slot.room ? (
-                      <View style={[styles.roomBadge, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626', borderWidth: 1 }]}>
-                        <Text style={[styles.roomText, isEnhancedSuit && { color: '#10B981' }]}>{slot.room}</Text>
+                      <View style={[
+                        styles.roomBadge,
+                        isLightMode
+                          ? { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0', borderWidth: 1 }
+                          : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626', borderWidth: 1 }
+                      ]}>
+                        <Text style={[styles.roomText, isLightMode ? { color: '#475569', fontWeight: '700' } : isEnhancedSuit && { color: '#10B981' }]}>{slot.room}</Text>
                       </View>
                     ) : null}
                   </View>
 
-                  <Text style={[styles.subjectName, isEnhancedSuit && { color: '#10B981' }]}>{subject?.name || 'Class Slot'}</Text>
+                  <Text style={[styles.subjectName, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{subject?.name || 'Class Slot'}</Text>
 
                   <View style={[
                     styles.alertNotice,
-                    isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626', borderWidth: 1 }
+                    isLightMode
+                      ? { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0', borderWidth: 1 }
+                      : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626', borderWidth: 1 }
                   ]}>
-                    <Text style={[styles.alertNoticeText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                    <Text style={[styles.alertNoticeText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
                       {isSports ? 'Not tracked in the ERP' : `Hourly alert scheduled for: ${slot.endTime}`}
                     </Text>
                   </View>

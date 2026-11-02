@@ -1101,30 +1101,51 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       {/* PSGIM Connect Official Portal Card */}
       <View style={[
         styles.psgimConnectCard,
-        isEnhancedSuit && {
-          backgroundColor: '#121212',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOpacity: 0.08,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#121212',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+            }
       ]}>
         <View style={styles.studzoneCardHeader}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+          <View style={[
+            styles.connectIconCircle,
+            isLightMode
+              ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+              : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
+          ]}>
             <Text style={styles.studzoneCardIcon}>📢</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
-              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>OFFICIAL PORTAL</Text>
+              <Text style={[styles.studzoneCardTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect</Text>
+              <View style={[
+                styles.connectLiveBadge,
+                isLightMode
+                  ? { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }
+                  : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+              ]}>
+                <Text style={[styles.connectLiveBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>OFFICIAL PORTAL</Text>
               </View>
             </View>
-            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text style={[styles.studzoneCardSubtitle, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
               tqm.psginstitutions.in/psgimconnect
             </Text>
           </View>
         </View>
 
-        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#9CA3AF' }]}>
+        <Text style={[styles.studzoneDescription, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
           Official college announcements, event flyers & Student Council notices. Circulars are streamed live. Register Number linking is mandatory for official records and section notices.
         </Text>
 
@@ -1140,10 +1161,15 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           </TouchableOpacity>
         )}
 
-        <View style={[styles.moodleCredsSummaryBox, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}>
+        <View style={[
+          styles.moodleCredsSummaryBox,
+          isLightMode
+            ? { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
+            : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
+        ]}>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Register Number (Mandatory):</Text>
-            <Text style={[styles.moodleCredsValue, !connectRegisterNo && { color: '#F87171' }, isEnhancedSuit && connectRegisterNo && { color: '#10B981' }]}>
+            <Text style={[styles.moodleCredsLabel, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>Register Number (Mandatory):</Text>
+            <Text style={[styles.moodleCredsValue, !connectRegisterNo && { color: '#F87171' }, isLightMode && connectRegisterNo && { color: '#2B3990', fontWeight: '800' }, isEnhancedSuit && connectRegisterNo && { color: '#10B981' }]}>
               {connectRegisterNo || 'Not Linked (Mandatory)'}
             </Text>
           </View>

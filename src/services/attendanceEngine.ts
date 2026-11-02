@@ -240,12 +240,21 @@ export function isPeriodLocked(params: {
     return { isLocked: false };
   }
 
-  const timerCompleted = isPastDay || (isToday && currentMinutes >= endMinutes);
-  if (!timerCompleted) {
-    return { isLocked: false };
+  // 9:00 PM (21:00 = 1260 minutes) daily attendance window policy:
+  // Attendance is open for everyone throughout the entire day until 9:00 PM.
+  // At 9:00 PM (when Miss Minutes triggers the daily cloud sync), records seal and lock.
+  const LOCK_CUTOFF_MINUTES = 21 * 60; // 9:00 PM IST (1260 minutes)
+  const isBeforeNightlyLock = isToday && currentMinutes < LOCK_CUTOFF_MINUTES;
+
+  if (isBeforeNightlyLock) {
+    return {
+      isLocked: false,
+      reason: "Today's attendance is open for all students until 9:00 PM nightly cloud sync.",
+    };
   }
 
-  // Timer has completed. Has the college updated the portal for this or subsequent dates?
+  // Timer has completed (after 9:00 PM for today, or past days).
+  // Has the college updated the portal for this or subsequent dates?
   const portalUpdateTime = normalizeDateToTimestamp(subject?.lastOfficialUpdate);
   const recordDateTime = normalizeDateToTimestamp(recordDate);
 
@@ -259,6 +268,8 @@ export function isPeriodLocked(params: {
 
   return {
     isLocked: true,
-    reason: 'Class timer has ended and attendance has been uploaded to the cloud. Locked until college updates portal attendance.',
+    reason: isToday
+      ? 'Daily attendance window closed at 9:00 PM and synced to cloud. Locked until college updates portal attendance.'
+      : 'Class timer has ended and attendance has been uploaded to the cloud. Locked until college updates portal attendance.',
   };
 }

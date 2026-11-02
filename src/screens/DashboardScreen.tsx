@@ -584,7 +584,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const isDayUnlocked = unlockedDays.includes(todayDate) || Boolean(
     attendanceWindow &&
     attendanceWindow.status === 'OPEN' &&
-    attendanceWindow.isDayUnlocked &&
+    (attendanceWindow as any).isDayUnlocked &&
     (!attendanceWindow.date || attendanceWindow.date === todayDate)
   );
 
@@ -646,11 +646,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           const pKey = `${todayStr}_${slot.id}`;
           const existingRec = periodRecords[pKey];
           if (existingRec && !existingRec.cloudSyncedAt) {
-            // Auto-upload to cloud
+            // Auto-upload to cloud (records stay open until 9:00 PM nightly lock)
+            const isAfterNinePm = currentMins >= 21 * 60;
             const syncedRec: PeriodAttendanceRecord = {
               ...existingRec,
               cloudSyncedAt: new Date().toISOString(),
-              lockedUntilPortalUpdate: true,
+              lockedUntilPortalUpdate: isAfterNinePm,
             };
             try {
               await CloudSyncService.syncPeriodRecord(studentRollNo, syncedRec);
@@ -1531,7 +1532,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   </>
                 ) : (
                   <Text style={styles.lockedBannerSub}>
-                    Live class session. Editable until the class timer ends. Tap any option below to change status.
+                    Daily attendance window open until 9:00 PM nightly cloud sync. Tap any option below to change or record status.
                   </Text>
                 )}
               </View>
