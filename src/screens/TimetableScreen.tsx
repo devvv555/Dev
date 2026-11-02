@@ -20,6 +20,7 @@ interface TimetableScreenProps {
   onAddSlot?: (slot: TimetableSlot) => void;
   onRefresh?: () => Promise<void> | void;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -39,14 +40,16 @@ export const TimetableScreen: React.FC<TimetableScreenProps> = ({
   studentRollNo,
   onRefresh,
   isEnhancedSuit = false,
+  isLightMode: isLightModeProp,
 }) => {
   const todayDay = getTodayDayOfWeek();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(todayDay);
   const [refreshing, setRefreshing] = useState(false);
   const [themeMode, setThemeMode] = useState<'LIGHT' | 'DARK'>(ThemeManager.getMode());
-  const isLightMode = themeMode === 'LIGHT';
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
 
   useEffect(() => {
+    ThemeManager.init().then(setThemeMode);
     const unsub = ThemeManager.subscribe((mode) => setThemeMode(mode));
     return unsub;
   }, []);

@@ -62,6 +62,7 @@ interface DashboardScreenProps {
   onOpenEnhancedHub?: () => void;
   onRefresh?: () => Promise<void> | void;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -77,6 +78,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onOpenEnhancedHub,
   onRefresh,
   isEnhancedSuit: isEnhancedSuitProp,
+  isLightMode: isLightModeProp,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'SHORTAGE' | 'SAFE'>('ALL');
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
@@ -124,7 +126,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [unlockedDays, setUnlockedDays] = useState<string[]>([]);
 
   const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
-  const isLightMode = themeMode === 'LIGHT';
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
 
   useEffect(() => {
     ThemeManager.init().then(setThemeMode);
@@ -975,7 +977,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </Text>
             </View>
           ) : null}
-          {isEnhancedSuit && (
+          {isEnhancedSuit && studentRollNo?.toUpperCase() !== 'GUEST' && (
             <View style={[styles.profilePill, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
               <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '800' }}>
                 STARK 576 ACTIVE
@@ -1985,8 +1987,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
-      {/* MCU AI Fleet Companion Card - Strictly Visible in Enhanced Suit Mode Only */}
-      {isEnhancedSuit && (
+      {/* MCU AI Fleet Companion Card - Strictly Visible in Enhanced Suit Mode Only (Disabled for Guest) */}
+      {isEnhancedSuit && studentRollNo?.toUpperCase() !== 'GUEST' && (
         <View style={[styles.mcuAiCard, { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }]}>
           <View style={styles.mcuAiHeaderRow}>
             <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981', borderWidth: 1 }]}>

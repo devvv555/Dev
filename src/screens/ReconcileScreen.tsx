@@ -49,6 +49,7 @@ interface ReconcileScreenProps {
   onBatchUpdateSubjects?: (updatedSubjects: Subject[]) => void;
   onRefresh?: () => Promise<void>;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
@@ -61,6 +62,7 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   onBatchUpdateSubjects,
   onRefresh,
   isEnhancedSuit = false,
+  isLightMode: isLightModeProp,
 }) => {
   // Manual edit states
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -69,9 +71,10 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
   const [officialAttended, setOfficialAttended] = useState('');
   const [officialTotal, setOfficialTotal] = useState('');
   const [themeMode, setThemeMode] = useState<'LIGHT' | 'DARK'>(ThemeManager.getMode());
-  const isLightMode = themeMode === 'LIGHT';
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
 
   useEffect(() => {
+    ThemeManager.init().then(setThemeMode);
     const unsub = ThemeManager.subscribe((mode) => setThemeMode(mode));
     return unsub;
   }, []);

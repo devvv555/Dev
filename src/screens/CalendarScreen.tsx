@@ -28,6 +28,7 @@ interface CalendarScreenProps {
   onBack?: () => void;
   onRefresh?: () => Promise<void> | void;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 const getTodayDateStr = (): string => {
@@ -50,14 +51,16 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   onBack,
   onRefresh,
   isEnhancedSuit = false,
+  isLightMode: isLightModeProp,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<AcademicCalendarItem | null>(null);
   const [themeMode, setThemeMode] = useState<'LIGHT' | 'DARK'>(ThemeManager.getMode());
-  const isLightMode = themeMode === 'LIGHT';
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
 
   useEffect(() => {
+    ThemeManager.init().then(setThemeMode);
     const unsub = ThemeManager.subscribe((mode) => setThemeMode(mode));
     return unsub;
   }, []);

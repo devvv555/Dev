@@ -84,7 +84,7 @@ export const THEMES: Record<AppThemeMode, ThemeColors> = {
   },
 };
 
-const THEME_STORAGE_KEY = '@app_theme_mode_v2';
+const THEME_STORAGE_KEY = '@app_theme_mode_v3';
 
 let currentThemeMode: AppThemeMode = 'LIGHT'; // Default to user's desired clean Light theme
 const listeners: Array<(theme: AppThemeMode) => void> = [];
@@ -97,6 +97,7 @@ export const ThemeManager = {
         currentThemeMode = saved;
       } else {
         currentThemeMode = 'LIGHT'; // Default to Light theme
+        await AsyncStorage.setItem(THEME_STORAGE_KEY, 'LIGHT');
       }
     } catch {
       currentThemeMode = 'LIGHT';

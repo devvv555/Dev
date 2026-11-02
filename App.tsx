@@ -88,6 +88,10 @@ export default function App() {
   }, []);
 
   const handleLogoTap = () => {
+    // Disable Stark 576 Easter Egg when logged in as Guest
+    if (activeRollNo?.toUpperCase() === 'GUEST') {
+      return;
+    }
     const isTriggered = ProtocolGate.recordTap(2500, 5);
     if (isTriggered) {
       try {
@@ -132,6 +136,11 @@ export default function App() {
               slot.faculty = matchingSub.faculty;
             }
           });
+
+          if (officialRoll?.toUpperCase() === 'GUEST') {
+            await ProtocolGate.engageTrainingWheels();
+            setIsEnhancedSuit(false);
+          }
 
           setSubjects(initialSubjects);
           setTimetable(initialTimetable);
@@ -352,6 +361,11 @@ export default function App() {
     });
 
     const storedRecords = await StorageService.getPeriodRecords(rollNo);
+
+    if (rollNo?.toUpperCase() === 'GUEST') {
+      await ProtocolGate.engageTrainingWheels();
+      setIsEnhancedSuit(false);
+    }
 
     setActiveRollNo(rollNo);
     setSubjects(studentSubjects);
@@ -1096,6 +1110,7 @@ export default function App() {
             onOpenEnhancedHub={() => handleTabChange('ENHANCED')}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
+            isLightMode={isLightMode}
           />
         )}
 
@@ -1111,6 +1126,7 @@ export default function App() {
             }}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
+            isLightMode={isLightMode}
           />
         )}
 
@@ -1122,6 +1138,7 @@ export default function App() {
             onBack={() => handleTabChange('DASHBOARD')}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
+            isLightMode={isLightMode}
           />
         )}
 
@@ -1135,6 +1152,7 @@ export default function App() {
             onBatchUpdateSubjects={handleBatchUpdateSubjects}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
+            isLightMode={isLightMode}
           />
         )}
 
