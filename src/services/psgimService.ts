@@ -51,16 +51,17 @@ export const PsgimService = {
     const newRoll = toNewRollNo(rollNo);
     const secB = getSectionBStudent(newRoll) || getSectionBStudent(oldRoll);
     const mcob = getMcobData(newRoll) || getMcobData(oldRoll);
-    const name = master?.name || secB?.name || mcob?.name || newRoll;
-    const batchLetter = master?.batch || (newRoll.length >= 5 ? newRoll.charAt(3) : 'A');
+    const isGuest = rollNo?.toUpperCase() === 'GUEST' || newRoll === 'GUEST';
+    const name = isGuest ? 'Faculty & Administration Guest' : (master?.name || secB?.name || mcob?.name || newRoll);
+    const batchLetter = isGuest ? 'Guest Preview' : (master?.batch || (newRoll.length >= 5 ? newRoll.charAt(3) : 'A'));
 
     return {
-      rollNo: newRoll,
-      collegeRollNo: newRoll,
-      dRollNo: master?.dRollNo || oldRoll,
+      rollNo: isGuest ? 'GUEST' : newRoll,
+      collegeRollNo: isGuest ? 'GUEST' : newRoll,
+      dRollNo: isGuest ? 'GUEST' : (master?.dRollNo || oldRoll),
       name,
-      email: secB?.email,
-      section: `Batch ${batchLetter}`,
+      email: isGuest ? 'guest.admin@psgim.ac.in' : secB?.email,
+      section: isGuest ? 'Faculty & Administration Preview' : `Batch ${batchLetter}`,
     };
   },
 

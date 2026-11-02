@@ -84,8 +84,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
       }
     }
 
+    // ── Guest / Faculty / Administration Door ──
+    if (cleanRollNo.toLowerCase() === 'guest' || rawPassword.toLowerCase() === 'guest') {
+      await StudzoneService.saveCredentials({
+        rollNo: 'GUEST',
+        dobPassword: 'GUEST',
+        remember: rememberMe,
+      });
+      setLoginStep('done');
+      onLoginSuccess('GUEST');
+      return;
+    }
+
     if (!cleanRollNo) {
-      setErrorMessage('Please enter your College Roll Number (e.g. 26AB12).');
+      setErrorMessage('Please enter your College Roll Number (e.g. 26AB12) or tap Guest Mode below.');
       return;
     }
 
@@ -134,6 +146,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     // Resolve to our internal roll format
     setLoginStep('done');
     onLoginSuccess(officialRoll);
+  };
+
+  const handleGuestLogin = async () => {
+    setErrorMessage(null);
+    setLoginStep('verifying');
+    setVerifyingStatus('Preparing Faculty & Administration Guest Environment...');
+    setTimeout(async () => {
+      await StudzoneService.saveCredentials({
+        rollNo: 'GUEST',
+        dobPassword: 'GUEST',
+        remember: true,
+      });
+      setLoginStep('done');
+      onLoginSuccess('GUEST');
+    }, 400);
   };
 
   const isLoading = loginStep === 'verifying';
@@ -286,6 +313,27 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                 disabled={isLoading}
               >
                 <Text style={styles.submitBtnText}>Sign In with Studzone</Text>
+              </TouchableOpacity>
+
+              {/* Divider */}
+              <View style={styles.orDividerRow}>
+                <View style={styles.orDividerLine} />
+                <Text style={styles.orDividerText}>OR</Text>
+                <View style={styles.orDividerLine} />
+              </View>
+
+              {/* Faculty & Administration Guest Access Button */}
+              <TouchableOpacity
+                style={styles.guestAccessBtn}
+                onPress={handleGuestLogin}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                <View style={styles.guestBadgePill}>
+                  <Text style={styles.guestBadgeText}>FACULTY & ADMIN</Text>
+                </View>
+                <Text style={styles.guestAccessBtnTitle}>Continue as Guest / Teacher</Text>
+                <Text style={styles.guestAccessBtnSub}>Explore timetable, attendance forecaster & campus modules</Text>
               </TouchableOpacity>
             </>
           )}
@@ -668,5 +716,61 @@ const styles = StyleSheet.create({
     color: '#818CF8',
     fontSize: 12,
     fontWeight: '700',
+  },
+  // ── Guest Access Styles ──
+  orDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
+    gap: 12,
+  },
+  orDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#334155',
+  },
+  orDividerText: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  guestAccessBtn: {
+    backgroundColor: 'rgba(30, 41, 59, 0.75)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+    borderStyle: 'dashed',
+  },
+  guestBadgePill: {
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  guestBadgeText: {
+    color: '#FBBF24',
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  guestAccessBtnTitle: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  guestAccessBtnSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 3,
+    lineHeight: 15,
   },
 });

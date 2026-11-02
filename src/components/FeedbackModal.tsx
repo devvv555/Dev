@@ -21,6 +21,7 @@ interface FeedbackModalProps {
   studentRollNo?: string;
   studentDob?: string;
   batch?: string;
+  isLightMode?: boolean;
 }
 
 const CATEGORIES: { label: string; value: FeedbackCategory }[] = [
@@ -37,6 +38,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   studentRollNo = '26AA04',
   studentDob,
   batch = 'A',
+  isLightMode = false,
 }) => {
   const [category, setCategory] = useState<FeedbackCategory>('FEATURE');
   const [rating, setRating] = useState<number>(5);
@@ -111,41 +113,94 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.modalContainer}>
+        <View
+          style={[
+            styles.modalContainer,
+            isLightMode && {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#CBD5E1',
+              shadowColor: '#64748B',
+              shadowOpacity: 0.15,
+              shadowOffset: { width: 0, height: -4 },
+              shadowRadius: 16,
+              elevation: 8,
+            },
+          ]}
+        >
           {/* Header */}
-          <View style={styles.header}>
+          <View
+            style={[
+              styles.header,
+              isLightMode && {
+                borderBottomColor: '#E2E8F0',
+              },
+            ]}
+          >
             <View>
-              <Text style={styles.headerTitle}>Feedback & Improvements</Text>
-              <Text style={styles.headerSubtitle}>
+              <Text style={[styles.headerTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
+                Feedback & Improvements
+              </Text>
+              <Text style={[styles.headerSubtitle, isLightMode && { color: '#64748B' }]}>
                 Help shape upcoming features and receive official developer replies.
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeBtnText}>✕</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.closeBtn,
+                isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+              ]}
+            >
+              <Text style={[styles.closeBtnText, isLightMode && { color: '#64748B' }]}>✕</Text>
             </TouchableOpacity>
           </View>
 
           {/* Sub Navigation Tabs */}
-          <View style={styles.tabToggleRow}>
+          <View
+            style={[
+              styles.tabToggleRow,
+              isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' },
+            ]}
+          >
             <TouchableOpacity
-              style={[styles.toggleBtn, activeTab === 'NEW' && styles.toggleBtnActive]}
+              style={[
+                styles.toggleBtn,
+                activeTab === 'NEW' &&
+                  (isLightMode ? { backgroundColor: '#2B3990' } : styles.toggleBtnActive),
+              ]}
               onPress={() => setActiveTab('NEW')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.toggleBtnText, activeTab === 'NEW' && styles.toggleBtnTextActive]}>
+              <Text
+                style={[
+                  styles.toggleBtnText,
+                  isLightMode && { color: '#64748B' },
+                  activeTab === 'NEW' && (isLightMode ? { color: '#FFFFFF' } : styles.toggleBtnTextActive),
+                ]}
+              >
                 Submit Feedback
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.toggleBtn, activeTab === 'HISTORY' && styles.toggleBtnActive]}
+              style={[
+                styles.toggleBtn,
+                activeTab === 'HISTORY' &&
+                  (isLightMode ? { backgroundColor: '#2B3990' } : styles.toggleBtnActive),
+              ]}
               onPress={() => setActiveTab('HISTORY')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.toggleBtnText, activeTab === 'HISTORY' && styles.toggleBtnTextActive]}>
+              <Text
+                style={[
+                  styles.toggleBtnText,
+                  isLightMode && { color: '#64748B' },
+                  activeTab === 'HISTORY' && (isLightMode ? { color: '#FFFFFF' } : styles.toggleBtnTextActive),
+                ]}
+              >
                 Admin Replies ({repliedCount}/{historyList.length})
               </Text>
             </TouchableOpacity>
@@ -155,14 +210,23 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             {activeTab === 'NEW' ? (
               <>
                 {/* Category Selector */}
-                <Text style={styles.sectionLabel}>SELECT CATEGORY</Text>
+                <Text style={[styles.sectionLabel, isLightMode && { color: '#475569' }]}>
+                  SELECT CATEGORY
+                </Text>
                 <View style={styles.categoryRow}>
                   {CATEGORIES.map((cat) => (
                     <TouchableOpacity
                       key={cat.value}
                       style={[
                         styles.categoryChip,
-                        category === cat.value && styles.categoryChipActive,
+                        isLightMode && {
+                          backgroundColor: '#F8FAFC',
+                          borderColor: '#E2E8F0',
+                        },
+                        category === cat.value &&
+                          (isLightMode
+                            ? { backgroundColor: '#EEF2FF', borderColor: '#6366F1' }
+                            : styles.categoryChipActive),
                       ]}
                       onPress={() => setCategory(cat.value)}
                       activeOpacity={0.7}
@@ -170,7 +234,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                       <Text
                         style={[
                           styles.categoryLabel,
-                          category === cat.value && styles.categoryLabelActive,
+                          isLightMode && { color: '#64748B' },
+                          category === cat.value &&
+                            (isLightMode
+                              ? { color: '#4338CA', fontWeight: '800' }
+                              : styles.categoryLabelActive),
                         ]}
                       >
                         {cat.label}
@@ -180,7 +248,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 </View>
 
                 {/* Star Rating */}
-                <Text style={styles.sectionLabel}>EXPERIENCE RATING</Text>
+                <Text style={[styles.sectionLabel, isLightMode && { color: '#475569' }]}>
+                  EXPERIENCE RATING
+                </Text>
                 <View style={styles.starsRow}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <TouchableOpacity
@@ -189,22 +259,50 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                       style={styles.starBtn}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.starText, star <= rating && styles.starActive]}>
+                      <Text
+                        style={[
+                          styles.starText,
+                          isLightMode && { color: '#CBD5E1' },
+                          star <= rating && (isLightMode ? { color: '#D97706' } : styles.starActive),
+                        ]}
+                      >
                         ★
                       </Text>
                     </TouchableOpacity>
                   ))}
-                  <Text style={styles.ratingText}>
-                    {rating === 5 ? 'Excellent' : rating === 4 ? 'Very Good' : rating === 3 ? 'Good' : rating === 2 ? 'Needs Work' : 'Poor'}
+                  <Text
+                    style={[
+                      styles.ratingText,
+                      isLightMode && { color: '#D97706', fontWeight: '800' },
+                    ]}
+                  >
+                    {rating === 5
+                      ? 'Excellent'
+                      : rating === 4
+                      ? 'Very Good'
+                      : rating === 3
+                      ? 'Good'
+                      : rating === 2
+                      ? 'Needs Work'
+                      : 'Poor'}
                   </Text>
                 </View>
 
                 {/* Message Box */}
-                <Text style={styles.sectionLabel}>YOUR SUGGESTION OR REPORT</Text>
+                <Text style={[styles.sectionLabel, isLightMode && { color: '#475569' }]}>
+                  YOUR SUGGESTION OR REPORT
+                </Text>
                 <TextInput
-                  style={styles.textArea}
+                  style={[
+                    styles.textArea,
+                    isLightMode && {
+                      backgroundColor: '#F8FAFC',
+                      borderColor: '#CBD5E1',
+                      color: '#0F172A',
+                    },
+                  ]}
                   placeholder="e.g. Can you add GPA tracking? Or Friday room changed to LH-104..."
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                   value={message}
                   onChangeText={setMessage}
                   multiline
@@ -214,16 +312,41 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
                 {/* Anonymous Toggle */}
                 <TouchableOpacity
-                  style={styles.anonymousRow}
+                  style={[
+                    styles.anonymousRow,
+                    isLightMode && {
+                      backgroundColor: '#F8FAFC',
+                      borderColor: '#E2E8F0',
+                    },
+                  ]}
                   onPress={() => setIsAnonymous(!isAnonymous)}
                   activeOpacity={0.8}
                 >
-                  <View style={[styles.checkbox, isAnonymous && styles.checkboxActive]}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      isLightMode && { borderColor: '#94A3B8' },
+                      isAnonymous &&
+                        (isLightMode ? { backgroundColor: '#2B3990', borderColor: '#2B3990' } : styles.checkboxActive),
+                    ]}
+                  >
                     {isAnonymous && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                   <View style={styles.anonymousTextCol}>
-                    <Text style={styles.anonymousTitle}>Submit Anonymously</Text>
-                    <Text style={styles.anonymousSub}>
+                    <Text
+                      style={[
+                        styles.anonymousTitle,
+                        isLightMode && { color: '#0F172A', fontWeight: '800' },
+                      ]}
+                    >
+                      Submit Anonymously
+                    </Text>
+                    <Text
+                      style={[
+                        styles.anonymousSub,
+                        isLightMode && { color: '#64748B' },
+                      ]}
+                    >
                       Hide your name and roll number from the feedback list.
                     </Text>
                   </View>
@@ -231,7 +354,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
                 {/* Submit Button */}
                 <TouchableOpacity
-                  style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
+                  style={[
+                    styles.submitBtn,
+                    isLightMode && { backgroundColor: '#2B3990' },
+                    isSubmitting && styles.submitBtnDisabled,
+                  ]}
                   onPress={handleSubmit}
                   disabled={isSubmitting}
                   activeOpacity={0.85}
@@ -246,41 +373,120 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               <View style={styles.historyContainer}>
                 {historyList.length === 0 ? (
                   <View style={styles.historyEmptyBox}>
-                    <Text style={styles.historyEmptyTitle}>No Feedback Submissions Yet</Text>
-                    <Text style={styles.historyEmptySub}>
+                    <Text
+                      style={[
+                        styles.historyEmptyTitle,
+                        isLightMode && { color: '#0F172A', fontWeight: '800' },
+                      ]}
+                    >
+                      No Feedback Submissions Yet
+                    </Text>
+                    <Text
+                      style={[
+                        styles.historyEmptySub,
+                        isLightMode && { color: '#64748B' },
+                      ]}
+                    >
                       When you submit feedback or questions, developer replies will appear here.
                     </Text>
                   </View>
                 ) : (
                   historyList.map((item) => (
-                    <View key={item.id} style={styles.historyCard}>
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.historyCard,
+                        isLightMode && {
+                          backgroundColor: '#F8FAFC',
+                          borderColor: '#E2E8F0',
+                        },
+                      ]}
+                    >
                       <View style={styles.historyCardTop}>
-                        <View style={styles.historyCategoryBadge}>
-                          <Text style={styles.historyCategoryText}>{item.category}</Text>
+                        <View
+                          style={[
+                            styles.historyCategoryBadge,
+                            isLightMode && {
+                              backgroundColor: '#EEF2FF',
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.historyCategoryText,
+                              isLightMode && { color: '#4338CA', fontWeight: '800' },
+                            ]}
+                          >
+                            {item.category}
+                          </Text>
                         </View>
-                        <Text style={styles.historyDate}>
+                        <Text style={[styles.historyDate, isLightMode && { color: '#94A3B8' }]}>
                           {new Date(item.createdAt).toLocaleDateString('en-GB')}
                         </Text>
                       </View>
 
-                      <Text style={styles.historyMessage}>{item.message}</Text>
+                      <Text
+                        style={[
+                          styles.historyMessage,
+                          isLightMode && { color: '#1E293B' },
+                        ]}
+                      >
+                        {item.message}
+                      </Text>
 
                       {/* Official Admin Reply */}
                       {item.adminReply ? (
-                        <View style={styles.studentReplyBox}>
+                        <View
+                          style={[
+                            styles.studentReplyBox,
+                            isLightMode && {
+                              backgroundColor: '#ECFDF5',
+                              borderLeftColor: '#059669',
+                            },
+                          ]}
+                        >
                           <View style={styles.studentReplyHeader}>
-                            <Text style={styles.studentReplyLabel}>Official Admin Reply</Text>
+                            <Text
+                              style={[
+                                styles.studentReplyLabel,
+                                isLightMode && { color: '#059669', fontWeight: '800' },
+                              ]}
+                            >
+                              Official Admin Reply
+                            </Text>
                             {item.repliedAt && (
-                              <Text style={styles.studentReplyDate}>
+                              <Text
+                                style={[
+                                  styles.studentReplyDate,
+                                  isLightMode && { color: '#059669' },
+                                ]}
+                              >
                                 {new Date(item.repliedAt).toLocaleDateString('en-GB')}
                               </Text>
                             )}
                           </View>
-                          <Text style={styles.studentReplyBody}>{item.adminReply}</Text>
+                          <Text
+                            style={[
+                              styles.studentReplyBody,
+                              isLightMode && { color: '#064E3B' },
+                            ]}
+                          >
+                            {item.adminReply}
+                          </Text>
                         </View>
                       ) : (
-                        <View style={styles.pendingReplyBox}>
-                          <Text style={styles.pendingReplyText}>
+                        <View
+                          style={[
+                            styles.pendingReplyBox,
+                            isLightMode && { borderTopColor: '#E2E8F0' },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.pendingReplyText,
+                              isLightMode && { color: '#94A3B8' },
+                            ]}
+                          >
                             Status: {item.status} • Pending developer review
                           </Text>
                         </View>

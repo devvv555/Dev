@@ -16,6 +16,7 @@ interface DigitalIdModalProps {
   visible: boolean;
   onClose: () => void;
   studentRollNo: string;
+  isLightMode?: boolean;
 }
 
 const BLOOD_GROUPS = ['O +ve', 'O -ve', 'A +ve', 'A -ve', 'B +ve', 'B -ve', 'AB +ve', 'AB -ve'];
@@ -24,6 +25,7 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
   visible,
   onClose,
   studentRollNo,
+  isLightMode = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [bloodGroup, setBloodGroup] = useState('O +ve');
@@ -137,27 +139,64 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+      <View style={[styles.modalOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
+        <View
+          style={[
+            styles.modalCard,
+            isLightMode && {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#CBD5E1',
+              shadowColor: '#64748B',
+              shadowOpacity: 0.15,
+              shadowOffset: { width: 0, height: 6 },
+              shadowRadius: 16,
+              elevation: 8,
+            },
+          ]}
+        >
           {/* Header */}
-          <View style={styles.topBar}>
-            <Text style={styles.topBarTitle}>Digital Student Identification</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Text style={styles.closeBtnText}>X</Text>
+          <View
+            style={[
+              styles.topBar,
+              isLightMode && {
+                borderBottomColor: '#E2E8F0',
+              },
+            ]}
+          >
+            <Text style={[styles.topBarTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
+              Digital Student Identification
+            </Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.closeBtn,
+                isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+              ]}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.closeBtnText, isLightMode && { color: '#64748B' }]}>✕</Text>
             </TouchableOpacity>
           </View>
 
           {/* Mandatory User-Requested Disclaimer */}
-          <View style={styles.disclaimerBox}>
+          <View
+            style={[
+              styles.disclaimerBox,
+              isLightMode && {
+                backgroundColor: '#FEF2F2',
+                borderColor: '#FCA5A5',
+              },
+            ]}
+          >
             <View style={styles.disclaimerHeaderRow}>
-              <Text style={styles.disclaimerIcon}>[!]</Text>
-              <Text style={styles.disclaimerTitle}>
+              <Text style={styles.disclaimerIcon}>⚠️</Text>
+              <Text style={[styles.disclaimerTitle, isLightMode && { color: '#B91C1C' }]}>
                 WAITING FOR COLLEGE APPROVAL • EMERGENCY USE ONLY
               </Text>
             </View>
-            <Text style={styles.disclaimerText}>
+            <Text style={[styles.disclaimerText, isLightMode && { color: '#7F1D1D' }]}>
               This digital student ID is strictly for emergency backup identification on campus and does{' '}
-              <Text style={styles.boldRed}>NOT</Text> replace your official physical PSGIM RFID Smart ID card.
+              <Text style={[styles.boldRed, isLightMode && { color: '#B91C1C' }]}>NOT</Text> replace your official physical PSGIM RFID Smart ID card.
             </Text>
           </View>
 
@@ -316,23 +355,40 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={[
+                styles.doneBtn,
+                isLightMode && { backgroundColor: '#2B3990' },
+              ]}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
               <Text style={styles.doneBtnText}>Close Digital ID</Text>
             </TouchableOpacity>
           </ScrollView>
 
           {/* Blood Group & Emergency Contact Picker Modal */}
           <Modal visible={showBloodPicker} animationType="slide" transparent>
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerCard}>
+            <View style={[styles.pickerOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
+              <View
+                style={[
+                  styles.pickerCard,
+                  isLightMode && {
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#CBD5E1',
+                  },
+                ]}
+              >
                 <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerTitle}>Select Your Blood Group</Text>
+                  <Text style={[styles.pickerTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
+                    Select Your Blood Group
+                  </Text>
                   <TouchableOpacity onPress={() => setShowBloodPicker(false)}>
-                    <Text style={styles.closeBtnText}>X</Text>
+                    <Text style={[styles.closeBtnText, isLightMode && { color: '#64748B' }]}>✕</Text>
                   </TouchableOpacity>
                 </View>
 
-                <Text style={styles.pickerSubtitle}>
+                <Text style={[styles.pickerSubtitle, isLightMode && { color: '#64748B' }]}>
                   Studzone only registers Roll Number & Date of Birth. Select your real blood group to display on your Emergency Digital ID:
                 </Text>
 
@@ -343,14 +399,33 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                     return (
                       <TouchableOpacity
                         key={bg}
-                        style={[styles.bgOption, isSelected && styles.bgOptionSelected]}
+                        style={[
+                          styles.bgOption,
+                          isLightMode && {
+                            backgroundColor: '#F8FAFC',
+                            borderColor: '#CBD5E1',
+                          },
+                          isSelected &&
+                            (isLightMode
+                              ? { backgroundColor: '#EEF2FF', borderColor: '#2B3990' }
+                              : styles.bgOptionSelected),
+                        ]}
                         onPress={() => handleSelectBloodGroup(bg)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.bgOptionText, isSelected && styles.bgOptionTextSelected]}>
+                        <Text
+                          style={[
+                            styles.bgOptionText,
+                            isLightMode && { color: '#475569' },
+                            isSelected &&
+                              (isLightMode
+                                ? { color: '#2B3990', fontWeight: '900' }
+                                : styles.bgOptionTextSelected),
+                          ]}
+                        >
                           {bg}
                         </Text>
-                        {isSelected && <Text style={styles.bgCheck}>OK</Text>}
+                        {isSelected && <Text style={[styles.bgCheck, isLightMode && { color: '#2B3990' }]}>✓</Text>}
                       </TouchableOpacity>
                     );
                   })}
@@ -358,11 +433,20 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
 
                 {/* Emergency Contact Phone Input */}
                 <View style={styles.phoneInputGroup}>
-                  <Text style={styles.phoneInputLabel}>Parent / Guardian Emergency Phone:</Text>
+                  <Text style={[styles.phoneInputLabel, isLightMode && { color: '#475569' }]}>
+                    Parent / Guardian Emergency Phone:
+                  </Text>
                   <TextInput
-                    style={styles.phoneInput}
+                    style={[
+                      styles.phoneInput,
+                      isLightMode && {
+                        backgroundColor: '#F8FAFC',
+                        borderColor: '#CBD5E1',
+                        color: '#0F172A',
+                      },
+                    ]}
                     placeholder="e.g. +91 98765 43210"
-                    placeholderTextColor="#64748B"
+                    placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                     value={tempPhone}
                     onChangeText={setTempPhone}
                     keyboardType="phone-pad"
@@ -370,7 +454,10 @@ export const DigitalIdModal: React.FC<DigitalIdModalProps> = ({
                 </View>
 
                 <TouchableOpacity
-                  style={styles.savePickerBtn}
+                  style={[
+                    styles.savePickerBtn,
+                    isLightMode && { backgroundColor: '#2B3990' },
+                  ]}
                   onPress={() => {
                     handleSavePhone();
                     setShowBloodPicker(false);

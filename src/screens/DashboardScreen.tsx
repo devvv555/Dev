@@ -1019,11 +1019,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <TouchableOpacity
           style={[
             styles.weekdayNotifCard,
-            isEnhancedSuit && {
-              backgroundColor: '#121212',
-              borderColor: '#262626',
-              borderWidth: 1.5,
-            }
+            isLightMode
+              ? {
+                  backgroundColor: '#ECFDF5',
+                  borderColor: '#6EE7B7',
+                  borderWidth: 1,
+                  shadowColor: '#64748B',
+                  shadowOpacity: 0.08,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowRadius: 6,
+                  elevation: 2,
+                }
+              : isEnhancedSuit && {
+                  backgroundColor: '#121212',
+                  borderColor: '#262626',
+                  borderWidth: 1.5,
+                }
           ]}
           onPress={onOpenCalendar}
           activeOpacity={0.85}
@@ -1031,25 +1042,43 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.weekdayNotifTop}>
             <View style={[
               styles.weekdayNotifBadge,
-              isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+              isLightMode
+                ? { backgroundColor: '#D1FAE5', borderColor: '#34D399' }
+                : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
             ]}>
-              <Text style={[styles.weekdayNotifBadgeText, isEnhancedSuit && { color: '#10B981' }]}>
+              <Text style={[
+                styles.weekdayNotifBadgeText,
+                isLightMode ? { color: '#065F46', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }
+              ]}>
                 HOLIDAY ALERT • {weekdayHolidayAlert.daysRemaining === 0 ? 'TODAY' : weekdayHolidayAlert.daysRemaining === 1 ? 'TOMORROW' : `IN ${weekdayHolidayAlert.daysRemaining} DAYS`}
               </Text>
             </View>
-            <Text style={[styles.weekdayNotifLink, isEnhancedSuit && { color: '#10B981' }]}>View Calendar →</Text>
+            <Text style={[
+              styles.weekdayNotifLink,
+              isLightMode ? { color: '#059669', fontWeight: '700' } : isEnhancedSuit && { color: '#10B981' }
+            ]}>
+              View Calendar →
+            </Text>
           </View>
 
-          <Text style={[styles.weekdayNotifTitle, isEnhancedSuit && { color: '#10B981' }]}>
+          <Text style={[
+            styles.weekdayNotifTitle,
+            isLightMode ? { color: '#064E3B', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' }
+          ]}>
             {weekdayHolidayAlert.holiday.title} ({formatDateDMY(weekdayHolidayAlert.holiday.date)} • {weekdayHolidayAlert.holiday.day})
           </Text>
 
           {/* Academic calendar pre-accounted message */}
           <View style={[
             styles.weekdayNotifAccountedBox,
-            isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
+            isLightMode
+              ? { backgroundColor: '#FFFFFF', borderColor: '#A7F3D0' }
+              : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
           ]}>
-            <Text style={[styles.weekdayNotifAccountedText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text style={[
+              styles.weekdayNotifAccountedText,
+              isLightMode ? { color: '#047857', fontWeight: '600' } : isEnhancedSuit && { color: '#9CA3AF' }
+            ]}>
               ✓ {weekdayHolidayAlert.accountingNote}
             </Text>
           </View>
@@ -2371,6 +2400,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         visible={showDigitalIdModal}
         onClose={() => setShowDigitalIdModal(false)}
         studentRollNo={toNewRollNo(studentRollNo)}
+        isLightMode={isLightMode}
       />
 
       {/* Course Plan Subject Selector Modal */}
@@ -2577,6 +2607,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         onClose={() => setShowKarenGuide(false)}
         studentName={studentName}
         isEnhancedSuit={isEnhancedSuit}
+        isLightMode={isLightMode}
       />
 
       {/* What-If Bunk & Exam Forecaster Modal */}

@@ -1299,6 +1299,7 @@ export default function App() {
         studentRollNo={activeRollNo}
         studentDob={getMasterStudent(activeRollNo)?.dob || ''}
         batch={getMasterStudent(activeRollNo)?.batch || 'A'}
+        isLightMode={isLightMode}
       />
 
       {/* Secret Admin Dashboard Protected by PIN */}
@@ -1312,6 +1313,7 @@ export default function App() {
         visible={showDigitalIdModal}
         onClose={() => setShowDigitalIdModal(false)}
         studentRollNo={activeRollNo}
+        isLightMode={isLightMode}
       />
 
       {/* Academic Syllabus & Course Plan Modal */}

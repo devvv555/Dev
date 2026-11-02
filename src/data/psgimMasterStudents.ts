@@ -5,13 +5,21 @@ export interface PsgimStudentInfo {
   dRollNo: string;
   collegeRollNo: string;
   name: string;
-  batch: 'A' | 'B' | 'C' | 'D' | 'AE';
+  batch: 'A' | 'B' | 'C' | 'D' | 'AE' | 'GUEST';
   dob?: string;
   dobPassword?: string;
   bloodGroup?: string;
 }
 
 export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
+  "GUEST": {
+    dRollNo: "GUEST",
+    collegeRollNo: "GUEST",
+    name: "Faculty & Administration Guest",
+    batch: "GUEST",
+    dob: "01/01/2000",
+    dobPassword: "GUEST",
+  },
   "D26AA01": { dRollNo: "D26AA01", collegeRollNo: "26AA04", name: "AKASH VARDHAMAN", batch: "A" },
   "D26AA02": { dRollNo: "D26AA02", collegeRollNo: "26AA27", name: "MITHUN K", batch: "A" },
   "D26AA03": { dRollNo: "D26AA03", collegeRollNo: "26AA38", name: "R NIVEDA", batch: "A" },

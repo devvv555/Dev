@@ -13,6 +13,7 @@ export interface KarenGuideProps {
   onClose: () => void;
   studentName?: string;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 interface GuideStep {
@@ -124,6 +125,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
   onClose,
   studentName,
   isEnhancedSuit = false,
+  isLightMode = false,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
 
@@ -149,27 +151,86 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[styles.card, isRed && styles.cardRed]}>
+      <View style={[styles.overlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
+        <View
+          style={[
+            styles.card,
+            isLightMode && {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#CBD5E1',
+              shadowColor: '#64748B',
+              shadowOpacity: 0.15,
+              shadowOffset: { width: 0, height: 6 },
+              shadowRadius: 16,
+              elevation: 8,
+            },
+            isRed && !isLightMode && styles.cardRed,
+          ]}
+        >
           {/* Header */}
-          <View style={[styles.header, isRed && styles.headerRed]}>
-            <View style={[styles.karenAvatar, isRed && styles.karenAvatarRed]}>
+          <View
+            style={[
+              styles.header,
+              isLightMode && {
+                backgroundColor: '#FFFFFF',
+                borderBottomColor: '#E2E8F0',
+              },
+              isRed && !isLightMode && styles.headerRed,
+            ]}
+          >
+            <View
+              style={[
+                styles.karenAvatar,
+                isLightMode && { backgroundColor: '#2B3990' },
+                isRed && !isLightMode && styles.karenAvatarRed,
+              ]}
+            >
               <Text style={styles.karenAvatarText}>K</Text>
             </View>
             <View style={styles.headerTitles}>
-              <Text style={styles.karenTitle}>Karen Guide</Text>
-              <Text style={[styles.karenSub, isRed && { color: '#10B981' }]}>
+              <Text style={[styles.karenTitle, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>
+                Karen Guide
+              </Text>
+              <Text
+                style={[
+                  styles.karenSub,
+                  isLightMode && { color: '#2563EB', fontWeight: '700' },
+                  isRed && !isLightMode && { color: '#10B981' },
+                ]}
+              >
                 {isRed ? 'Stark Suit AI Companion // Level 2' : 'Your Suit AI Assistant'}
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, isRed && styles.closeBtnRed]}>
-              <Text style={styles.closeBtnText}>✕</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.closeBtn,
+                isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' },
+                isRed && !isLightMode && styles.closeBtnRed,
+              ]}
+            >
+              <Text style={[styles.closeBtnText, isLightMode && { color: '#64748B' }]}>✕</Text>
             </TouchableOpacity>
           </View>
 
           {/* Privacy Guarantee Banner */}
-          <View style={[styles.privacyBanner, isRed && styles.privacyBannerRed]}>
-            <Text style={[styles.privacyText, isRed && { color: '#10B981' }]}>
+          <View
+            style={[
+              styles.privacyBanner,
+              isLightMode && {
+                backgroundColor: '#EFF6FF',
+                borderBottomColor: '#DBEAFE',
+              },
+              isRed && !isLightMode && styles.privacyBannerRed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.privacyText,
+                isLightMode && { color: '#1E40AF', fontWeight: '700' },
+                isRed && !isLightMode && { color: '#10B981' },
+              ]}
+            >
               {isRed
                 ? 'STARK PROTOCOL LEVEL 2: All enhanced capabilities online.'
                 : 'Privacy Guarantee: Zero sensitive data or credentials are displayed or shared.'}
@@ -178,33 +239,91 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
 
           {/* Step Body */}
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            <View style={[styles.stepBadge, isRed && styles.stepBadgeRed]}>
-              <Text style={[styles.stepBadgeText, isRed && { color: '#10B981' }]}>
+            <View
+              style={[
+                styles.stepBadge,
+                isLightMode && {
+                  backgroundColor: '#EFF6FF',
+                  borderColor: '#93C5FD',
+                },
+                isRed && !isLightMode && styles.stepBadgeRed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.stepBadgeText,
+                  isLightMode && { color: '#1D4ED8', fontWeight: '800' },
+                  isRed && !isLightMode && { color: '#10B981' },
+                ]}
+              >
                 {step.badge}
               </Text>
             </View>
 
-            <Text style={styles.stepTitle}>
+            <Text style={[styles.stepTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
               {currentStepIndex === 0 && studentName ? `${studentName}: ${step.title}` : step.title}
             </Text>
 
-            <Text style={styles.stepDescription}>{step.description}</Text>
+            <Text style={[styles.stepDescription, isLightMode && { color: '#475569' }]}>
+              {step.description}
+            </Text>
 
-            <View style={[styles.tipBox, isRed && styles.tipBoxRed]}>
-              <Text style={[styles.tipLabel, isRed && { color: '#10B981' }]}>PRO TIP</Text>
-              <Text style={[styles.tipText, isRed && { color: '#10B981' }]}>{step.tip}</Text>
+            <View
+              style={[
+                styles.tipBox,
+                isLightMode && {
+                  backgroundColor: '#F8FAFC',
+                  borderLeftColor: '#2563EB',
+                  borderWidth: 1,
+                  borderColor: '#E2E8F0',
+                },
+                isRed && !isLightMode && styles.tipBoxRed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tipLabel,
+                  isLightMode && { color: '#2563EB', fontWeight: '800' },
+                  isRed && !isLightMode && { color: '#10B981' },
+                ]}
+              >
+                PRO TIP
+              </Text>
+              <Text
+                style={[
+                  styles.tipText,
+                  isLightMode && { color: '#334155', fontWeight: '600' },
+                  isRed && !isLightMode && { color: '#10B981' },
+                ]}
+              >
+                {step.tip}
+              </Text>
             </View>
           </ScrollView>
 
           {/* Stepper Dots & Navigation Footer */}
-          <View style={styles.footer}>
+          <View
+            style={[
+              styles.footer,
+              isLightMode && {
+                backgroundColor: '#FFFFFF',
+                borderTopColor: '#E2E8F0',
+              },
+            ]}
+          >
             <View style={styles.dotsRow}>
               {steps.map((_, idx) => (
                 <View
                   key={idx}
                   style={[
                     styles.dot,
-                    idx === currentStepIndex && (isRed ? styles.dotActiveRed : styles.dotActive),
+                    isLightMode && { backgroundColor: '#E2E8F0' },
+                    idx === currentStepIndex &&
+                      (isLightMode
+                        ? { backgroundColor: '#2B3990', width: 20 }
+                        : isRed
+                        ? styles.dotActiveRed
+                        : styles.dotActive),
                   ]}
                 />
               ))}
@@ -212,15 +331,32 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
 
             <View style={styles.btnRow}>
               {currentStepIndex > 0 && (
-                <TouchableOpacity onPress={handlePrev} style={styles.backBtn}>
-                  <Text style={styles.backBtnText}>Back</Text>
+                <TouchableOpacity
+                  onPress={handlePrev}
+                  style={[
+                    styles.backBtn,
+                    isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+                  ]}
+                >
+                  <Text style={[styles.backBtnText, isLightMode && { color: '#475569', fontWeight: '700' }]}>
+                    Back
+                  </Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 onPress={handleNext}
-                style={[styles.nextBtn, isRed && styles.nextBtnRed]}
+                style={[
+                  styles.nextBtn,
+                  isLightMode && { backgroundColor: '#2B3990' },
+                  isRed && !isLightMode && styles.nextBtnRed,
+                ]}
               >
-                <Text style={[styles.nextBtnText, isRed && { color: '#050505', fontWeight: '800' }]}>
+                <Text
+                  style={[
+                    styles.nextBtnText,
+                    isRed && !isLightMode && { color: '#050505', fontWeight: '800' },
+                  ]}
+                >
                   {currentStepIndex === steps.length - 1 ? 'Got it!' : 'Next'}
                 </Text>
               </TouchableOpacity>

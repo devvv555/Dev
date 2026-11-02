@@ -206,6 +206,20 @@ export interface StudentRecord {
 }
 
 export const STUDENT_REGISTRY: Record<string, StudentRecord> = {
+  "GUEST": {
+    "rollNo": "GUEST",
+    "batches": {
+      "MCOB": "MCOB1",
+      "ADM": "ADM1",
+      "MC": "MC1",
+      "SSM": "SSM1",
+      "BS": "BS1",
+      "EDM": "EDM1",
+      "LA": "LA1",
+      "SSA": "SSA1",
+      "SPORTS": "SPORTS1"
+    }
+  },
   "D26AA01": {
     "rollNo": "D26AA01",
     "batches": {

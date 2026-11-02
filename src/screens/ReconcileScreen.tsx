@@ -1629,16 +1629,41 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       {/* Studzone Automated Extractor Modal */}
       <Modal visible={isStudzoneModalVisible} animationType="fade" transparent>
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
           <ScrollView contentContainerStyle={styles.modalScrollContent}>
-            <View style={styles.modalCard}>
-              <View style={styles.studzoneModalHeader}>
-                <View style={styles.studzoneModalIconCircle}>
+            <View
+              style={[
+                styles.modalCard,
+                isLightMode && {
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#CBD5E1',
+                  shadowColor: '#64748B',
+                  shadowOpacity: 0.15,
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowRadius: 16,
+                  elevation: 8,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.studzoneModalHeader,
+                  isLightMode && { borderBottomColor: '#E2E8F0' },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.studzoneModalIconCircle,
+                    isLightMode && { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' },
+                  ]}
+                >
                   <Text style={styles.studzoneModalIcon}>🎓</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.modalTitle}>PSG Studzone Extractor</Text>
-                  <Text style={styles.studzoneModalSub}>
+                  <Text style={[styles.modalTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
+                    PSG Studzone Extractor
+                  </Text>
+                  <Text style={[styles.studzoneModalSub, isLightMode && { color: '#64748B' }]}>
                     Secure live portal extraction
                   </Text>
                 </View>
@@ -1649,84 +1674,140 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                       setExtractedRecords(null);
                     }
                   }}
-                  style={styles.closeModalBtn}
+                  style={[
+                    styles.closeModalBtn,
+                    isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+                  ]}
                 >
-                  <Text style={styles.closeModalBtnText}>X</Text>
+                  <Text style={[styles.closeModalBtnText, isLightMode && { color: '#64748B' }]}>✕</Text>
                 </TouchableOpacity>
               </View>
 
               {!extractedRecords ? (
                 <>
                   {/* Credential Inputs */}
-                  <View style={styles.modalSection}>
-                    <Text style={styles.inputLabel}>Student Roll Number</Text>
+                  <View
+                    style={[
+                      styles.modalSection,
+                      isLightMode && {
+                        backgroundColor: '#F8FAFC',
+                        borderColor: '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.inputLabel, isLightMode && { color: '#475569' }]}>
+                      Student Roll Number
+                    </Text>
                     <TextInput
-                      style={styles.textInput}
+                      style={[
+                        styles.textInput,
+                        isLightMode && {
+                          backgroundColor: '#FFFFFF',
+                          borderColor: '#CBD5E1',
+                          color: '#0F172A',
+                        },
+                      ]}
                       autoCapitalize="characters"
                       value={studzoneRollNo}
                       onChangeText={(val) => setStudzoneRollNo(val.toUpperCase())}
                       placeholder="e.g. 26AB12"
-                      placeholderTextColor="#64748B"
+                      placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                       editable={!isExtracting}
                     />
 
-                    <Text style={styles.inputLabel}>
+                    <Text style={[styles.inputLabel, isLightMode && { color: '#475569' }]}>
                       Studzone Password (Date of Birth)
                     </Text>
-                    <View style={styles.passwordInputContainer}>
+                    <View
+                      style={[
+                        styles.passwordInputContainer,
+                        isLightMode && {
+                          backgroundColor: '#FFFFFF',
+                          borderColor: '#CBD5E1',
+                        },
+                      ]}
+                    >
                       <TextInput
-                        style={[styles.textInput, { flex: 1, borderWidth: 0 }]}
+                        style={[
+                          styles.textInput,
+                          { flex: 1, borderWidth: 0 },
+                          isLightMode && { backgroundColor: 'transparent', color: '#0F172A' },
+                        ]}
                         secureTextEntry={!showPassword}
                         autoCapitalize="characters"
                         value={studzonePassword}
                         onChangeText={(val) => setStudzonePassword(val.toUpperCase())}
                         placeholder="e.g. 01JAN04"
-                        placeholderTextColor="#64748B"
+                        placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                         editable={!isExtracting}
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
                         style={styles.eyeBtn}
                       >
-                        <Text style={styles.eyeText}>{showPassword ? 'Show' : 'Hide'}</Text>
+                        <Text style={[styles.eyeText, isLightMode && { color: '#2563EB' }]}>
+                          {showPassword ? 'Hide' : 'Show'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
 
-                    <View style={styles.dobHintBox}>
-                      <Text style={styles.dobHintTitle}>Password Format Hint:</Text>
-                      <Text style={styles.dobHintText}>
+                    <View
+                      style={[
+                        styles.dobHintBox,
+                        isLightMode && {
+                          backgroundColor: '#EFF6FF',
+                          borderColor: '#BFDBFE',
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.dobHintTitle, isLightMode && { color: '#1E40AF' }]}>
+                        Password Format Hint:
+                      </Text>
+                      <Text style={[styles.dobHintText, isLightMode && { color: '#1E3A8A' }]}>
                         Password is your Date of Birth in format{' '}
-                        <Text style={styles.boldText}>DDMMMYY</Text>. For example, if you were born on{' '}
-                        <Text style={styles.boldText}>1st January 2004</Text>, enter{' '}
-                        <Text style={styles.boldText}>01JAN04</Text>.
+                        <Text style={[styles.boldText, isLightMode && { color: '#1E3A8A' }]}>DDMMMYY</Text>. For example, if you were born on{' '}
+                        <Text style={[styles.boldText, isLightMode && { color: '#1E3A8A' }]}>1st January 2004</Text>, enter{' '}
+                        <Text style={[styles.boldText, isLightMode && { color: '#1E3A8A' }]}>01JAN04</Text>.
                       </Text>
                     </View>
 
-                    <View style={styles.securityWarningBox}>
-                      <Text style={styles.securityWarningText}>
+                    <View
+                      style={[
+                        styles.securityWarningBox,
+                        isLightMode && {
+                          backgroundColor: '#FFFBEB',
+                          borderColor: '#FDE68A',
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.securityWarningText, isLightMode && { color: '#92400E' }]}>
                         Caution: Studzone locks student accounts after 5 consecutive incorrect password attempts.
                       </Text>
                     </View>
 
                     {/* Options */}
                     <View style={styles.optionRow}>
-                      <Text style={styles.optionLabel}>Remember password on this device</Text>
+                      <Text style={[styles.optionLabel, isLightMode && { color: '#475569' }]}>
+                        Remember password on this device
+                      </Text>
                       <Switch
                         value={rememberCreds}
                         onValueChange={setRememberCreds}
-                        trackColor={{ false: '#334155', true: '#2563EB' }}
-                        thumbColor={rememberCreds ? '#38BDF8' : '#94A3B8'}
+                        trackColor={{ false: isLightMode ? '#CBD5E1' : '#334155', true: '#2563EB' }}
+                        thumbColor={rememberCreds ? (isLightMode ? '#FFFFFF' : '#38BDF8') : (isLightMode ? '#94A3B8' : '#94A3B8')}
                         disabled={isExtracting}
                       />
                     </View>
 
                     <View style={styles.optionRow}>
-                      <Text style={styles.optionLabel}>Also update App counts to match Studzone</Text>
+                      <Text style={[styles.optionLabel, isLightMode && { color: '#475569' }]}>
+                        Also update App counts to match Studzone
+                      </Text>
                       <Switch
                         value={syncAppAttendanceToo}
                         onValueChange={setSyncAppAttendanceToo}
-                        trackColor={{ false: '#334155', true: '#2563EB' }}
-                        thumbColor={syncAppAttendanceToo ? '#38BDF8' : '#94A3B8'}
+                        trackColor={{ false: isLightMode ? '#CBD5E1' : '#334155', true: '#2563EB' }}
+                        thumbColor={syncAppAttendanceToo ? (isLightMode ? '#FFFFFF' : '#38BDF8') : (isLightMode ? '#94A3B8' : '#94A3B8')}
                         disabled={isExtracting}
                       />
                     </View>
@@ -1734,9 +1815,17 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
                   {/* Extraction Progress */}
                   {isExtracting && (
-                    <View style={styles.extractingProgressBox}>
-                      <ActivityIndicator size="small" color="#38BDF8" />
-                      <Text style={styles.extractingProgressText}>
+                    <View
+                      style={[
+                        styles.extractingProgressBox,
+                        isLightMode && {
+                          backgroundColor: '#EFF6FF',
+                          borderColor: '#BFDBFE',
+                        },
+                      ]}
+                    >
+                      <ActivityIndicator size="small" color={isLightMode ? '#2563EB' : '#38BDF8'} />
+                      <Text style={[styles.extractingProgressText, isLightMode && { color: '#1E40AF' }]}>
                         {extractionStatusText}
                       </Text>
                     </View>
@@ -1744,14 +1833,23 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
                   <View style={styles.modalActions}>
                     <TouchableOpacity
-                      style={styles.modalCancelBtn}
+                      style={[
+                        styles.modalCancelBtn,
+                        isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+                      ]}
                       onPress={() => setIsStudzoneModalVisible(false)}
                       disabled={isExtracting}
                     >
-                      <Text style={styles.modalCancelText}>Cancel</Text>
+                      <Text style={[styles.modalCancelText, isLightMode && { color: '#475569' }]}>
+                        Cancel
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.modalSubmitBtn, isExtracting && { opacity: 0.6 }]}
+                      style={[
+                        styles.modalSubmitBtn,
+                        isLightMode && { backgroundColor: '#2B3990' },
+                        isExtracting && { opacity: 0.6 },
+                      ]}
                       onPress={handleStartStudzoneExtraction}
                       disabled={isExtracting}
                     >
@@ -1765,38 +1863,61 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                 /* Extracted Preview View */
                 <>
                   <View style={styles.successPreviewHeader}>
-                    <Text style={styles.successPreviewTitle}>
+                    <Text style={[styles.successPreviewTitle, isLightMode && { color: '#047857' }]}>
                       Extracted {extractedRecords.length} Subjects Successfully!
                     </Text>
-                    <View style={[styles.periodRangeCard, { marginTop: 8, marginBottom: 8, backgroundColor: '#0F172A' }]}>
+                    <View
+                      style={[
+                        styles.periodRangeCard,
+                        { marginTop: 8, marginBottom: 8 },
+                        isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' },
+                      ]}
+                    >
                       <View style={styles.periodCol}>
-                        <Text style={styles.periodHeaderLabel}>ATTENDANCE FROM</Text>
-                        <Text style={styles.periodDateValue}>
+                        <Text style={[styles.periodHeaderLabel, isLightMode && { color: '#64748B' }]}>
+                          ATTENDANCE FROM
+                        </Text>
+                        <Text style={[styles.periodDateValue, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>
                           {extractedAttendanceFrom || '17-08-2026'}
                         </Text>
                       </View>
-                      <View style={styles.periodDividerLine} />
+                      <View style={[styles.periodDividerLine, isLightMode && { backgroundColor: '#CBD5E1' }]} />
                       <View style={styles.periodCol}>
-                        <Text style={styles.periodHeaderLabel}>ATTENDANCE TO</Text>
-                        <Text style={[styles.periodDateValue, { color: '#38BDF8' }]}>
+                        <Text style={[styles.periodHeaderLabel, isLightMode && { color: '#64748B' }]}>
+                          ATTENDANCE TO
+                        </Text>
+                        <Text style={[styles.periodDateValue, { color: isLightMode ? '#2B3990' : '#38BDF8', fontWeight: isLightMode ? '800' : 'normal' }]}>
                           {extractedAttendanceTo || '10-10-2026'}
                         </Text>
                       </View>
                     </View>
-                    <Text style={styles.successPreviewSubtitle}>
+                    <Text style={[styles.successPreviewSubtitle, isLightMode && { color: '#64748B' }]}>
                       Official attendance report from PSG Studzone:
                     </Text>
                   </View>
 
                   <ScrollView style={styles.previewList} nestedScrollEnabled>
                     {extractedRecords.map((rec, idx) => (
-                      <View key={idx} style={styles.previewItem}>
+                      <View
+                        key={idx}
+                        style={[
+                          styles.previewItem,
+                          isLightMode && {
+                            backgroundColor: '#F8FAFC',
+                            borderColor: '#E2E8F0',
+                          },
+                        ]}
+                      >
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.previewCode}>{rec.courseCode}</Text>
+                          <Text style={[styles.previewCode, isLightMode && { color: '#2B3990', fontWeight: '800' }]}>
+                            {rec.courseCode}
+                          </Text>
                           {rec.courseName ? (
-                            <Text style={styles.previewName}>{rec.courseName}</Text>
+                            <Text style={[styles.previewName, isLightMode && { color: '#0F172A', fontWeight: '700' }]}>
+                              {rec.courseName}
+                            </Text>
                           ) : null}
-                          <Text style={styles.previewStats}>
+                          <Text style={[styles.previewStats, isLightMode && { color: '#475569' }]}>
                             Attended: {rec.attendedClasses} / {rec.totalClasses} hrs
                           </Text>
                         </View>
