@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {
 } from '../data/academicCalendarData';
 import { Subject, TimetableSlot } from '../types';
 import { toNewRollNo } from '../data/psgimMasterStudents';
+import { ThemeManager } from '../constants/theme';
 
 interface CalendarScreenProps {
   subjects?: Subject[];
@@ -53,6 +54,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   const [filter, setFilter] = useState<'ALL' | 'HOLIDAY' | 'EXAM' | 'EVENT'>('HOLIDAY');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<AcademicCalendarItem | null>(null);
+  const [themeMode, setThemeMode] = useState<'LIGHT' | 'DARK'>(ThemeManager.getMode());
+  const isLightMode = themeMode === 'LIGHT';
+
+  useEffect(() => {
+    const unsub = ThemeManager.subscribe((mode) => setThemeMode(mode));
+    return unsub;
+  }, []);
 
 
   const handleRefresh = async () => {
@@ -132,15 +140,15 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
   return (
     <ScrollView
-      style={[styles.container, isEnhancedSuit && { backgroundColor: '#050505' }]}
+      style={[styles.container, isLightMode ? { backgroundColor: '#F1F5F9' } : isEnhancedSuit && { backgroundColor: '#050505' }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={isEnhancedSuit ? '#10B981' : '#38BDF8'}
-          colors={isEnhancedSuit ? ['#10B981', '#121212'] : ['#38BDF8', '#2563EB']}
-          progressBackgroundColor={isEnhancedSuit ? '#121212' : '#1E293B'}
+          tintColor={isLightMode ? '#2B3990' : isEnhancedSuit ? '#10B981' : '#38BDF8'}
+          colors={isLightMode ? ['#2B3990', '#3B82F6'] : isEnhancedSuit ? ['#10B981', '#121212'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isLightMode ? '#FFFFFF' : isEnhancedSuit ? '#121212' : '#1E293B'}
         />
       }
     >
@@ -149,21 +157,30 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
         {onBack && (
           <TouchableOpacity
             onPress={onBack}
-            style={[styles.backBtn, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1 }]}
+            style={[
+              styles.backBtn,
+              isLightMode && { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', borderWidth: 1 },
+              isEnhancedSuit && !isLightMode && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1 }
+            ]}
             activeOpacity={0.7}
           >
-            <Text style={[styles.backBtnText, isEnhancedSuit && { color: '#10B981' }]}>← Back</Text>
+            <Text style={[styles.backBtnText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>← Back</Text>
           </TouchableOpacity>
         )}
         <View style={styles.headerTitleRow}>
-          <Text style={[styles.headerTitle, isEnhancedSuit && { color: '#10B981' }]}>Academic Calendar 2026–27</Text>
+          <Text style={[styles.headerTitle, isLightMode ? { color: '#0F172A', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' }]}>Academic Calendar 2026–27</Text>
           {studentRollNo ? (
-            <View style={[styles.rollBadge, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#10B981' }]}>
-              <Text style={[styles.rollBadgeText, isEnhancedSuit && { color: '#10B981' }]}>Roll No: {toNewRollNo(studentRollNo)}</Text>
+            <View style={[
+              styles.rollBadge,
+              isLightMode
+                ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1', borderWidth: 1 }
+                : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#10B981' }
+            ]}>
+              <Text style={[styles.rollBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>Roll No: {toNewRollNo(studentRollNo)}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={[styles.headerSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
+        <Text style={[styles.headerSubtitle, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
           {studentRollNo ? `Roll No: ${toNewRollNo(studentRollNo)} • ` : ''}Official schedule, holidays, exam blackout dates & long weekend trip planner.
         </Text>
       </View>
@@ -173,44 +190,67 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       {nextHolidayInfo && (
         <View style={[
           styles.spotlightCard,
-          isEnhancedSuit && {
-            backgroundColor: '#121212',
-            borderColor: '#262626',
-            borderWidth: 1.5,
-          }
+          isLightMode
+            ? {
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E2E8F0',
+                borderWidth: 1,
+                shadowColor: '#64748B',
+                shadowOpacity: 0.08,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 6,
+                elevation: 2,
+              }
+            : isEnhancedSuit && {
+                backgroundColor: '#121212',
+                borderColor: '#262626',
+                borderWidth: 1.5,
+              }
         ]}>
           <View style={styles.spotlightHeaderRow}>
-            <View style={[styles.spotlightIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981', borderWidth: 1 }]}>
-              <Text style={[styles.spotlightIconText, isEnhancedSuit && { color: '#10B981' }]}>CAL</Text>
+            <View style={[
+              styles.spotlightIconCircle,
+              isLightMode && { backgroundColor: '#ECFDF5', borderColor: '#10B981', borderWidth: 1 },
+              isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981', borderWidth: 1 }
+            ]}>
+              <Text style={[styles.spotlightIconText, isLightMode ? { color: '#065F46', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>CAL</Text>
             </View>
             <View style={styles.spotlightInfo}>
-              <Text style={[styles.spotlightTag, isEnhancedSuit && { color: '#10B981' }]}>
+              <Text style={[styles.spotlightTag, isLightMode ? { color: '#047857', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>
                 {nextHolidayInfo.daysRemaining === 0
                   ? 'TODAY IS A HOLIDAY!'
                   : nextHolidayInfo.daysRemaining === 1
                   ? 'HOLIDAY TOMORROW!'
                   : `NEXT HOLIDAY IN ${nextHolidayInfo.daysRemaining} DAYS`}
               </Text>
-              <Text style={[styles.spotlightTitle, isEnhancedSuit && { color: '#10B981' }]} numberOfLines={1}>
+              <Text style={[styles.spotlightTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]} numberOfLines={1}>
                 {nextHolidayInfo.holiday.title}
               </Text>
-              <Text style={[styles.spotlightDate, isEnhancedSuit && { color: '#9CA3AF' }]}>
+              <Text style={[styles.spotlightDate, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
                 {formatDisplayDate(nextHolidayInfo.holiday.date, nextHolidayInfo.holiday.endDate)} • {nextHolidayInfo.holiday.day}
               </Text>
             </View>
           </View>
 
           {nextHolidayInfo.holiday.longWeekendTag && (
-            <View style={[styles.longWeekendBanner, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderLeftColor: '#10B981' }]}>
-              <Text style={[styles.longWeekendBannerText, isEnhancedSuit && { color: '#10B981' }]}>
+            <View style={[
+              styles.longWeekendBanner,
+              isLightMode && { backgroundColor: '#FEF3C7', borderLeftColor: '#F59E0B' },
+              isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderLeftColor: '#10B981' }
+            ]}>
+              <Text style={[styles.longWeekendBannerText, isLightMode ? { color: '#B45309', fontWeight: '700' } : isEnhancedSuit && { color: '#10B981' }]}>
                 {nextHolidayInfo.holiday.longWeekendTag} • {nextHolidayInfo.holiday.description}
               </Text>
             </View>
           )}
 
           {nextHolidayInfo.holiday.recommendedSmartLeave && (
-            <View style={[styles.smartLeaveBox, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}>
-              <Text style={[styles.smartLeaveText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <View style={[
+              styles.smartLeaveBox,
+              isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' },
+              isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
+            ]}>
+              <Text style={[styles.smartLeaveText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
                 {nextHolidayInfo.holiday.recommendedSmartLeave}
               </Text>
             </View>
@@ -224,7 +264,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           style={[
             styles.filterChip,
             filter === 'HOLIDAY' && styles.filterChipActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'HOLIDAY'
+                ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                : { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'HOLIDAY'
                 ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                 : { backgroundColor: '#121212', borderColor: '#262626' }
@@ -236,7 +281,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           <Text style={[
             styles.filterChipText,
             filter === 'HOLIDAY' && styles.filterChipTextActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'HOLIDAY'
+                ? { color: '#FFFFFF', fontWeight: '800' }
+                : { color: '#64748B', fontWeight: '600' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'HOLIDAY'
                 ? { color: '#050505', fontWeight: '800' }
                 : { color: '#10B981' }
@@ -250,7 +300,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           style={[
             styles.filterChip,
             filter === 'EXAM' && styles.filterChipActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'EXAM'
+                ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                : { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'EXAM'
                 ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                 : { backgroundColor: '#121212', borderColor: '#262626' }
@@ -262,7 +317,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           <Text style={[
             styles.filterChipText,
             filter === 'EXAM' && styles.filterChipTextActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'EXAM'
+                ? { color: '#FFFFFF', fontWeight: '800' }
+                : { color: '#64748B', fontWeight: '600' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'EXAM'
                 ? { color: '#050505', fontWeight: '800' }
                 : { color: '#10B981' }
@@ -276,7 +336,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           style={[
             styles.filterChip,
             filter === 'EVENT' && styles.filterChipActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'EVENT'
+                ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                : { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'EVENT'
                 ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                 : { backgroundColor: '#121212', borderColor: '#262626' }
@@ -288,7 +353,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           <Text style={[
             styles.filterChipText,
             filter === 'EVENT' && styles.filterChipTextActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'EVENT'
+                ? { color: '#FFFFFF', fontWeight: '800' }
+                : { color: '#64748B', fontWeight: '600' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'EVENT'
                 ? { color: '#050505', fontWeight: '800' }
                 : { color: '#10B981' }
@@ -302,7 +372,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           style={[
             styles.filterChip,
             filter === 'ALL' && styles.filterChipActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'ALL'
+                ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                : { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'ALL'
                 ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                 : { backgroundColor: '#121212', borderColor: '#262626' }
@@ -314,7 +389,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           <Text style={[
             styles.filterChipText,
             filter === 'ALL' && styles.filterChipTextActive,
-            isEnhancedSuit && (
+            isLightMode && (
+              filter === 'ALL'
+                ? { color: '#FFFFFF', fontWeight: '800' }
+                : { color: '#64748B', fontWeight: '600' }
+            ),
+            isEnhancedSuit && !isLightMode && (
               filter === 'ALL'
                 ? { color: '#050505', fontWeight: '800' }
                 : { color: '#10B981' }
@@ -348,7 +428,18 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
               style={[
                 styles.itemCard,
                 isHoliday && styles.itemCardHolidayClickable,
-                isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }
+                isLightMode
+                  ? {
+                      backgroundColor: '#FFFFFF',
+                      borderColor: '#E2E8F0',
+                      borderWidth: 1,
+                      shadowColor: '#64748B',
+                      shadowOpacity: 0.06,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowRadius: 6,
+                      elevation: 2,
+                    }
+                  : isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }
               ]}
               activeOpacity={isHoliday ? 0.75 : 1}
               onPress={() => {
@@ -364,12 +455,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                 <View style={[
                   styles.dateBlock,
                   isHoliday && styles.dateBlockHoliday,
-                  isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626', borderWidth: 1 }
+                  isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0', borderWidth: 1 },
+                  isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626', borderWidth: 1 }
                 ]}>
-                  <Text style={[styles.dateBlockMonth, isEnhancedSuit && { color: '#10B981' }]}>{monthLabel}</Text>
-                  <Text style={[styles.dateBlockDay, isEnhancedSuit && { color: '#10B981' }]}>{dayNumber}</Text>
+                  <Text style={[styles.dateBlockMonth, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#10B981' }]}>{monthLabel}</Text>
+                  <Text style={[styles.dateBlockDay, isLightMode ? { color: '#0F172A', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' }]}>{dayNumber}</Text>
                 </View>
-                <Text style={[styles.itemDayName, isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
+                <Text style={[styles.itemDayName, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
                   {item.day.slice(0, 3)}
                 </Text>
               </View>
@@ -383,27 +475,39 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                   </View>
 
                   {item.longWeekendTag && (
-                    <View style={[styles.longWeekendPill, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                      <Text style={[styles.longWeekendPillText, isEnhancedSuit && { color: '#10B981' }]}>{item.longWeekendTag}</Text>
+                    <View style={[
+                      styles.longWeekendPill,
+                      isLightMode && { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                    ]}>
+                      <Text style={[styles.longWeekendPillText, isLightMode ? { color: '#B45309' } : isEnhancedSuit && { color: '#10B981' }]}>{item.longWeekendTag}</Text>
                     </View>
                   )}
 
                   {isHoliday && (
-                    <View style={[styles.tapToPlanPill, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                      <Text style={[styles.tapToPlanText, isEnhancedSuit && { color: '#10B981' }]}>Smart Leave Planner ›</Text>
+                    <View style={[
+                      styles.tapToPlanPill,
+                      isLightMode && { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                    ]}>
+                      <Text style={[styles.tapToPlanText, isLightMode ? { color: '#2B3990', fontWeight: '700' } : isEnhancedSuit && { color: '#10B981' }]}>Smart Leave Planner ›</Text>
                     </View>
                   )}
                 </View>
 
-                <Text style={[styles.itemTitle, isEnhancedSuit && { color: '#10B981' }]}>{item.title}</Text>
+                <Text style={[styles.itemTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{item.title}</Text>
 
                 {item.description && (
-                  <Text style={[styles.itemDescription, isEnhancedSuit && { color: '#9CA3AF' }]}>{item.description}</Text>
+                  <Text style={[styles.itemDescription, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#9CA3AF' }]}>{item.description}</Text>
                 )}
 
                 {item.recommendedSmartLeave && (
-                  <View style={[styles.smartLeaveBox, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}>
-                    <Text style={[styles.smartLeaveText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                  <View style={[
+                    styles.smartLeaveBox,
+                    isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' },
+                    isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
+                  ]}>
+                    <Text style={[styles.smartLeaveText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
                       {item.recommendedSmartLeave}
                     </Text>
                   </View>

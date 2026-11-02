@@ -581,7 +581,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     (!attendanceWindow.expiresAt || new Date(attendanceWindow.expiresAt).getTime() > Date.now())
   );
 
-  const isDayUnlocked = unlockedDays.includes(todayDate);
+  const isDayUnlocked = unlockedDays.includes(todayDate) || Boolean(
+    attendanceWindow &&
+    attendanceWindow.status === 'OPEN' &&
+    attendanceWindow.isDayUnlocked &&
+    (!attendanceWindow.date || attendanceWindow.date === todayDate)
+  );
 
   // Calculate if the currently selected slot is locked
   const lockInfo = currentSlot

@@ -350,6 +350,27 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
     });
   };
 
+  // Action 4: Unlock Entire Day Attendance (Admin Override)
+  const handleTriggerUnlockEntireDay = () => {
+    const todayDate = new Date().toISOString().split('T')[0];
+    setConfirmModalConfig({
+      visible: true,
+      title: 'Unlock Entire Day Attendance for All Students?',
+      description: `This will lift all timer and cloud locks for ${todayDate}. Every student in the cohort will be allowed to freely record, edit, or adjust their attendance for all periods today. A broadcast notification will also be sent.`,
+      actionLabel: 'Confirm & Unlock Entire Day',
+      actionColor: '#10B981',
+      onConfirm: async () => {
+        setIsPerformingAction(true);
+        try {
+          await CloudSyncService.unlockAllStudentsDayAttendance(todayDate);
+        } finally {
+          setIsPerformingAction(false);
+          setConfirmModalConfig((prev) => ({ ...prev, visible: false }));
+        }
+      },
+    });
+  };
+
   const handleVerifyPin = () => {
     setPinError(null);
     if (pinInput.trim() === CORRECT_ADMIN_PIN) {
@@ -849,6 +870,30 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({
                       >
                         <Text style={styles.actionButtonText}>
                           Upload & Permanently Lock to Cloud
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Button 4: Unlock Entire Day Attendance */}
+                    <View style={styles.controlActionBlock}>
+                      <View style={styles.actionBlockHeader}>
+                        <View style={[styles.actionBlockNumberBadge, { backgroundColor: '#10B981' }]}>
+                          <Text style={styles.actionBlockNumberText}>4</Text>
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <Text style={styles.actionBlockTitle}>Unlock Entire Day Attendance</Text>
+                          <Text style={styles.actionBlockDesc}>
+                            Admin Override: Unlocks all class periods for today across all students, lifting timer restrictions and cloud locks so students can freely mark or rectify attendance.
+                          </Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.actionButtonGreen]}
+                        onPress={handleTriggerUnlockEntireDay}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.actionButtonText}>
+                          🔓 Unlock Entire Day Attendance for All
                         </Text>
                       </TouchableOpacity>
                     </View>

@@ -362,6 +362,66 @@ export const CloudSyncService = {
   },
 
   /**
+   * Unlocks the entire day's attendance across all students and broadcasts the unlock signal.
+   */
+  async unlockAllStudentsDayAttendance(dateStr: string): Promise<void> {
+    try {
+      // 1. Set window to OPEN for the entire day (extended 1440 mins = 24 hrs)
+      const windowRef = doc(db, 'system_updates', 'attendance_window');
+      await setDoc(
+        windowRef,
+        {
+          status: 'OPEN',
+          date: dateStr,
+          durationMinutes: 1440,
+          durationSeconds: 1440 * 60,
+          openedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          lockedUntilPortalUpdate: false,
+          isDayUnlocked: true,
+          message: `Admin Override: Attendance for the entire day (${dateStr}) has been unlocked. All students can freely edit or record attendance.`,
+          timestamp: Date.now(),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      // 2. Broadcast high-priority notification to all students
+      const alertRef = doc(db, 'system_updates', 'live_notification_broadcast');
+      await setDoc(
+        alertRef,
+        {
+          title: "Admin Notice: Entire Day Attendance Unlocked",
+          body: `Admin has unlocked attendance for all periods on ${dateStr}. You can now record or update your attendance.`,
+          vibrate: [0, 400, 150, 400],
+          target: 'ALL_STUDENTS',
+          tag: `attendance-unlocked-day-${dateStr}-${Date.now()}`,
+          timestamp: Date.now(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        },
+        { merge: true }
+      );
+
+      // 3. Clear cloud lock on global sync state
+      const syncRef = doc(db, 'system_updates', 'latest_attendance_sync');
+      await setDoc(
+        syncRef,
+        {
+          status: 'UNLOCKED_BY_ADMIN',
+          lockedUntilPortalUpdate: false,
+          isDayUnlocked: true,
+          date: dateStr,
+          updatedAt: new Date().toISOString(),
+          timestamp: Date.now(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] unlockAllStudentsDayAttendance failed:', e);
+    }
+  },
+
+  /**
    * Subscribes to real-time 5-minute final attendance window signals from Firestore.
    */
   listenToAttendanceWindow(
