@@ -896,31 +896,39 @@ export default function App() {
               isLightMode ? { color: '#64748B', fontWeight: '600' } : isEnhancedSuit && { color: '#10B981' },
             ]}
           >
-            {isEnhancedSuit ? 'Mark III Tactical Armor • Karen AI' : 'PSGIM Campus Super-App • I MBA'}
+            {activeRollNo?.toUpperCase() === 'GUEST'
+              ? 'Institutional Inspection • Faculty & Admin Preview'
+              : isEnhancedSuit
+              ? 'Mark III Tactical Armor • Karen AI'
+              : 'PSGIM Campus Super-App • I MBA'}
           </Text>
-          <TouchableOpacity
+          <View
             style={[
               styles.studentBadge,
-              isLightMode
+              activeRollNo?.toUpperCase() === 'GUEST'
+                ? { backgroundColor: 'rgba(245, 158, 11, 0.18)', borderColor: '#F59E0B' }
+                : isLightMode
                 ? { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }
                 : isEnhancedSuit && {
                     backgroundColor: 'rgba(16, 185, 129, 0.15)',
                     borderColor: '#10B981',
                   }
             ]}
-            onPress={() => setShowProfileMenu((prev) => !prev)}
-            activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.studentBadgeText,
-                isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' },
+                activeRollNo?.toUpperCase() === 'GUEST'
+                  ? { color: '#F59E0B', fontWeight: '800' }
+                  : isLightMode
+                  ? { color: '#2B3990', fontWeight: '800' }
+                  : isEnhancedSuit && { color: '#10B981' },
               ]}
               numberOfLines={1}
             >
-              {activeRollNo ? `Roll: ${toNewRollNo(activeRollNo)}` : 'Profile'} {showProfileMenu ? '▲' : '▼'}
+              {activeRollNo?.toUpperCase() === 'GUEST' ? '🏛️ Guest Mode' : activeRollNo ? `Roll: ${toNewRollNo(activeRollNo)}` : 'Student'}
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Dropdown Menu */}
@@ -1028,6 +1036,27 @@ export default function App() {
             >
               <Text style={[styles.profileDropdownTitle, isLightMode && { color: '#0F172A' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>⚖️ Attendance Dispute Report</Text>
               <Text style={[styles.profileDropdownSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>Official Dossier & Discrepancies</Text>
+            </TouchableOpacity>
+
+            {/* Switch to Guest or Student Mode */}
+            <TouchableOpacity
+              style={styles.profileDropdownItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                if (activeRollNo?.toUpperCase() === 'GUEST') {
+                  handleLogout();
+                } else {
+                  handleLoginSuccess('GUEST');
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.profileDropdownTitle, { color: '#F59E0B' }]}>
+                {activeRollNo?.toUpperCase() === 'GUEST' ? '🎓 Exit Guest • Student Login' : '🏛️ Switch to Guest / Teacher Mode'}
+              </Text>
+              <Text style={[styles.profileDropdownSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
+                {activeRollNo?.toUpperCase() === 'GUEST' ? 'Log into a specific student roll number' : 'Preview as Faculty, Admin or Inspector'}
+              </Text>
             </TouchableOpacity>
 
             <View style={[styles.profileDropdownDivider, isLightMode ? { backgroundColor: '#E2E8F0' } : isEnhancedSuit && { backgroundColor: '#262626' }]} />

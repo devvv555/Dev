@@ -1,4 +1,4 @@
-const CACHE_NAME = 'psgim-one-v43';
+const CACHE_NAME = 'psgim-one-v44';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
