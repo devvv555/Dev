@@ -16,7 +16,7 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
 
   // Determine bar color
   const getBarColor = () => {
-    if (status === 'SAFE_STANDARD') return isEnhancedSuit ? '#F7C700' : '#10B981';
+    if (status === 'SAFE_STANDARD') return isEnhancedSuit ? '#4361EE' : '#10B981';
     if (status === 'SAFE_MEDICAL') return '#06B6D4';  // Cyan / Medical safe
     return '#EF4444'; // Red
   };
@@ -33,13 +33,13 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
           </Text>
         </View>
 
-        <Text style={[styles.targetIndicatorText, isEnhancedSuit && { color: '#F7C700' }]}>
+        <Text style={[styles.targetIndicatorText, isEnhancedSuit && { color: '#4361EE' }]}>
           Target: 75%
         </Text>
       </View>
 
       {/* The Gauge Track */}
-      <View style={[styles.trackContainer, isEnhancedSuit && { backgroundColor: '#4D0907' }]}>
+      <View style={[styles.trackContainer, isEnhancedSuit && { backgroundColor: '#0B0E17' }]}>
         {/* Fill Bar */}
         <View 
           style={[
@@ -50,9 +50,9 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
 
         {/* 75% Standard Line Marker */}
         <View style={[styles.marker, { left: '75%' }]}>
-          <View style={[styles.markerLine, { backgroundColor: isEnhancedSuit ? '#F7C700' : '#FBBF24' }]} />
+          <View style={[styles.markerLine, { backgroundColor: isEnhancedSuit ? '#4361EE' : '#FBBF24' }]} />
           {!compact && (
-            <Text style={[styles.markerLabel, { color: isEnhancedSuit ? '#F7C700' : '#FBBF24' }]}>75%</Text>
+            <Text style={[styles.markerLabel, { color: isEnhancedSuit ? '#4361EE' : '#FBBF24' }]}>75%</Text>
           )}
         </View>
       </View>
@@ -61,8 +61,8 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
       {!compact && (
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: isEnhancedSuit ? '#F7C700' : '#FBBF24' }]} />
-            <Text style={[styles.legendText, isEnhancedSuit && { color: '#E8CA72' }]}>75% Standard Minimum Safe Line</Text>
+            <View style={[styles.legendDot, { backgroundColor: isEnhancedSuit ? '#4361EE' : '#FBBF24' }]} />
+            <Text style={[styles.legendText, isEnhancedSuit && { color: '#A0ABC0' }]}>75% Standard Minimum Safe Line</Text>
           </View>
         </View>
       )}
