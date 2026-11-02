@@ -766,9 +766,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={isEnhancedSuit ? '#4361EE' : '#38BDF8'}
-          colors={isEnhancedSuit ? ['#4361EE', '#DC2626'] : ['#38BDF8', '#2563EB']}
-          progressBackgroundColor={isEnhancedSuit ? '#141927' : '#1E293B'}
+          tintColor={isEnhancedSuit ? '#10B981' : '#38BDF8'}
+          colors={isEnhancedSuit ? ['#10B981', '#DC2626'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isEnhancedSuit ? '#121212' : '#1E293B'}
         />
       }
     >
@@ -776,8 +776,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.welcomeCard,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
           shadowColor: '#000',
         }
@@ -787,26 +787,26 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             style={[
               styles.welcomeAvatar,
               isEnhancedSuit && {
-                backgroundColor: 'rgba(67, 97, 238, 0.2)',
-                borderColor: '#4361EE',
+                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                borderColor: '#10B981',
               }
             ]}
             onPress={() => setShowDigitalIdModal(true)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.welcomeAvatarText, isEnhancedSuit && { color: '#4361EE' }]}>
+            <Text style={[styles.welcomeAvatarText, isEnhancedSuit && { color: '#10B981' }]}>
               {studentName ? studentName.charAt(0) : 'S'}
             </Text>
           </TouchableOpacity>
           <View style={styles.welcomeInfo}>
-            <Text style={[styles.welcomeGreeting, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.welcomeGreeting, isEnhancedSuit && { color: '#9CA3AF' }]}>
               {isEnhancedSuit ? 'Tactical HUD Active,' : 'Welcome,'}
             </Text>
             <Text style={[styles.welcomeName, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
               {studentName || 'Student'}
             </Text>
-            <Text style={[styles.welcomeSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
-              <Text style={[styles.welcomeRoll, isEnhancedSuit && { color: '#4361EE' }]}>
+            <Text style={[styles.welcomeSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
+              <Text style={[styles.welcomeRoll, isEnhancedSuit && { color: '#10B981' }]}>
                 Roll No: {toNewRollNo(studentRollNo)}
               </Text>
               {profile.section ? ` • ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark Mark III' : 'MBA (2026–28)'}
@@ -817,14 +817,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               style={[
                 styles.welcomeAdminBadge,
                 isEnhancedSuit && {
-                  backgroundColor: 'rgba(67, 97, 238, 0.15)',
-                  borderColor: '#4361EE',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  borderColor: '#10B981',
                 }
               ]}
               onPress={onOpenAdmin}
               activeOpacity={0.7}
             >
-              <Text style={[styles.welcomeAdminBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>
+              <Text style={[styles.welcomeAdminBadgeText, isEnhancedSuit && { color: '#10B981' }]}>
                 Admin
               </Text>
             </TouchableOpacity>
@@ -832,24 +832,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
 
         {/* Verified Student Details Row */}
-        <View style={[styles.profileDetailsRow, isEnhancedSuit && { borderTopColor: '#222B45' }]}>
+        <View style={[styles.profileDetailsRow, isEnhancedSuit && { borderTopColor: '#262626' }]}>
           {studentRollNo ? (
-            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#222B45' }]}>
-              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#4361EE' }]}>
+            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#262626' }]}>
+              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#10B981' }]}>
                 Roll No: {toNewRollNo(studentRollNo)}
               </Text>
             </View>
           ) : null}
           {profile.email ? (
-            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#222B45' }]}>
-              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#A0ABC0' }]} numberOfLines={1}>
+            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#262626' }]}>
+              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
                 {profile.email}
               </Text>
             </View>
           ) : null}
           {isEnhancedSuit && (
-            <View style={[styles.profilePill, { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-              <Text style={{ color: '#4361EE', fontSize: 11, fontWeight: '800' }}>
+            <View style={[styles.profilePill, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+              <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '800' }}>
                 STARK 576 ACTIVE
               </Text>
             </View>
@@ -883,8 +883,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           style={[
             styles.weekdayNotifCard,
             isEnhancedSuit && {
-              backgroundColor: '#141927',
-              borderColor: '#222B45',
+              backgroundColor: '#121212',
+              borderColor: '#262626',
               borderWidth: 1.5,
             }
           ]}
@@ -894,25 +894,25 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.weekdayNotifTop}>
             <View style={[
               styles.weekdayNotifBadge,
-              isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }
+              isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
             ]}>
-              <Text style={[styles.weekdayNotifBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>
+              <Text style={[styles.weekdayNotifBadgeText, isEnhancedSuit && { color: '#10B981' }]}>
                 HOLIDAY ALERT • {weekdayHolidayAlert.daysRemaining === 0 ? 'TODAY' : weekdayHolidayAlert.daysRemaining === 1 ? 'TOMORROW' : `IN ${weekdayHolidayAlert.daysRemaining} DAYS`}
               </Text>
             </View>
-            <Text style={[styles.weekdayNotifLink, isEnhancedSuit && { color: '#4361EE' }]}>View Calendar →</Text>
+            <Text style={[styles.weekdayNotifLink, isEnhancedSuit && { color: '#10B981' }]}>View Calendar →</Text>
           </View>
 
-          <Text style={[styles.weekdayNotifTitle, isEnhancedSuit && { color: '#4361EE' }]}>
+          <Text style={[styles.weekdayNotifTitle, isEnhancedSuit && { color: '#10B981' }]}>
             {weekdayHolidayAlert.holiday.title} ({formatDateDMY(weekdayHolidayAlert.holiday.date)} • {weekdayHolidayAlert.holiday.day})
           </Text>
 
           {/* Academic calendar pre-accounted message */}
           <View style={[
             styles.weekdayNotifAccountedBox,
-            isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+            isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
           ]}>
-            <Text style={[styles.weekdayNotifAccountedText, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.weekdayNotifAccountedText, isEnhancedSuit && { color: '#9CA3AF' }]}>
               ✓ {weekdayHolidayAlert.accountingNote}
             </Text>
           </View>
@@ -921,13 +921,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {weekdayHolidayAlert.expectedMakeupClasses && weekdayHolidayAlert.expectedMakeupClasses.length > 0 && (
             <View style={[
               styles.makeupClassesBox,
-              isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+              isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
             ]}>
               <View style={styles.makeupClassesHeader}>
-                <Text style={[styles.makeupClassesBadge, isEnhancedSuit && { color: '#4361EE' }]}>
+                <Text style={[styles.makeupClassesBadge, isEnhancedSuit && { color: '#10B981' }]}>
                   {weekdayHolidayAlert.totalExpectedHours} {weekdayHolidayAlert.totalExpectedHours === 1 ? 'HOUR' : 'HOURS'} EXPECTED AFTER COLLEGE
                 </Text>
-                <Text style={[styles.makeupClassesSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                <Text style={[styles.makeupClassesSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
                   {weekdayHolidayAlert.expectedMakeupClasses.length} regular periods will be compensated:
                 </Text>
               </View>
@@ -936,14 +936,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 {weekdayHolidayAlert.expectedMakeupClasses.map((item, idx) => (
                   <View key={idx} style={[
                     styles.makeupClassItem,
-                    isEnhancedSuit && { borderTopColor: '#222B45' }
+                    isEnhancedSuit && { borderTopColor: '#262626' }
                   ]}>
                     <View style={styles.makeupClassItemInfo}>
-                      <Text style={[styles.makeupClassCode, isEnhancedSuit && { color: '#4361EE' }]}>{item.code}</Text>
-                      <Text style={[styles.makeupClassName, isEnhancedSuit && { color: '#4361EE' }]} numberOfLines={1}>
+                      <Text style={[styles.makeupClassCode, isEnhancedSuit && { color: '#10B981' }]}>{item.code}</Text>
+                      <Text style={[styles.makeupClassName, isEnhancedSuit && { color: '#10B981' }]} numberOfLines={1}>
                         {item.subjectName}
                       </Text>
-                      <Text style={[styles.makeupClassTime, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                      <Text style={[styles.makeupClassTime, isEnhancedSuit && { color: '#9CA3AF' }]}>
                         Original slot: {item.originalTime} • {item.hours} {item.hours === 1 ? 'hr' : 'hrs'}
                       </Text>
                     </View>
@@ -951,7 +951,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     <TouchableOpacity
                       style={[
                         styles.makeupMarkBtn,
-                        isEnhancedSuit && { backgroundColor: '#4361EE' }
+                        isEnhancedSuit && { backgroundColor: '#10B981' }
                       ]}
                       activeOpacity={0.8}
                       onPress={(e) => {
@@ -960,7 +960,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         setShowRescheduledModal(true);
                       }}
                     >
-                      <Text style={[styles.makeupMarkBtnText, isEnhancedSuit && { color: '#0B0E17', fontWeight: '800' }]}>Mark Attendance</Text>
+                      <Text style={[styles.makeupMarkBtnText, isEnhancedSuit && { color: '#050505', fontWeight: '800' }]}>Mark Attendance</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -975,8 +975,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           style={[
             styles.holidayBannerCard,
             isEnhancedSuit && {
-              backgroundColor: '#141927',
-              borderColor: '#222B45',
+              backgroundColor: '#121212',
+              borderColor: '#262626',
               borderWidth: 1.5,
             }
           ]}
@@ -988,18 +988,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <View style={styles.holidayBadgeRow}>
                 <Text style={[
                   styles.holidayCountdownBadge,
-                  isEnhancedSuit && { color: '#0B0E17', backgroundColor: '#4361EE' }
+                  isEnhancedSuit && { color: '#050505', backgroundColor: '#10B981' }
                 ]}>
                   ACADEMIC CALENDAR & HOLIDAYS
                 </Text>
                 {nextHolidayInfo.holiday.longWeekendTag && (
                   <View style={[
                     styles.holidayWeekendPill,
-                    isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }
+                    isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                   ]}>
                     <Text style={[
                       styles.holidayWeekendPillText,
-                      isEnhancedSuit && { color: '#4361EE' }
+                      isEnhancedSuit && { color: '#10B981' }
                     ]}>
                       {nextHolidayInfo.holiday.longWeekendTag}
                     </Text>
@@ -1008,13 +1008,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </View>
               <Text style={[
                 styles.holidayBannerTitle,
-                isEnhancedSuit && { color: '#4361EE' }
+                isEnhancedSuit && { color: '#10B981' }
               ]} numberOfLines={1}>
                 Next: {nextHolidayInfo.holiday.title} ({formatDateDMY(nextHolidayInfo.holiday.date)} • {nextHolidayInfo.holiday.day})
               </Text>
             </View>
           </View>
-          <Text style={[styles.holidayBannerChevron, isEnhancedSuit && { color: '#4361EE' }]}>→</Text>
+          <Text style={[styles.holidayBannerChevron, isEnhancedSuit && { color: '#10B981' }]}>→</Text>
         </TouchableOpacity>
       ) : null}
 
@@ -1022,8 +1022,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.summaryCard,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
           shadowColor: '#000',
         }
@@ -1031,7 +1031,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={styles.summaryTopRow}>
           <View>
             <Text style={[styles.summaryTitle, isEnhancedSuit && { color: '#FFFFFF' }]}>Overall Attendance</Text>
-            <Text style={[styles.summarySubtitle, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.summarySubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
               {overall.totalAttended} of {overall.totalHeld} total hours attended
             </Text>
           </View>
@@ -1040,10 +1040,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <View style={[
                 styles.activeMedBadge,
                 isEnhancedSuit
-                  ? { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }
+                  ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                   : { backgroundColor: '#064E3B', borderColor: '#059669' }
               ]}>
-                <Text style={[styles.activeMedBadgeText, isEnhancedSuit ? { color: '#4361EE' } : { color: '#34D399' }]}>
+                <Text style={[styles.activeMedBadgeText, isEnhancedSuit ? { color: '#10B981' } : { color: '#34D399' }]}>
                   {isEnhancedSuit ? 'Stark Safe (≥75%)' : 'Target Safe (≥75%)'}
                 </Text>
               </View>
@@ -1057,7 +1057,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <AttendanceGauge metrics={overall} isEnhancedSuit={isEnhancedSuit} />
 
-        <View style={[styles.summaryFooter, isEnhancedSuit && { borderTopColor: '#222B45' }]}>
+        <View style={[styles.summaryFooter, isEnhancedSuit && { borderTopColor: '#262626' }]}>
           <Text style={[styles.summaryFooterText, isEnhancedSuit && { color: '#FFFFFF' }]}>{overall.summaryMessage}</Text>
         </View>
       </View>
@@ -1066,8 +1066,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.promptSimulatorCard,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
         }
       ]}>
@@ -1075,10 +1075,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={{ marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#4361EE' }]}>
+              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#10B981' }]}>
                 {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
               </Text>
-              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#64748B' }, isEnhancedSuit && { color: '#A0ABC0' }]}>
+              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#64748B' }, isEnhancedSuit && { color: '#9CA3AF' }]}>
                 • {displayDateFormatted}
               </Text>
             </View>
@@ -1096,15 +1096,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       borderColor: viewingNextDay ? '#6366F1' : '#334155',
                     },
                     isEnhancedSuit && {
-                      backgroundColor: viewingNextDay ? '#4361EE' : '#0B0E17',
-                      borderColor: '#222B45',
+                      backgroundColor: viewingNextDay ? '#10B981' : '#050505',
+                      borderColor: '#262626',
                     }
                   ]}
                   activeOpacity={0.7}
                 >
                   <Text style={[
                     { fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#A5B4FC' : '#94A3B8' },
-                    isEnhancedSuit && { color: viewingNextDay ? '#0B0E17' : '#4361EE' }
+                    isEnhancedSuit && { color: viewingNextDay ? '#050505' : '#10B981' }
                   ]}>
                     {viewingNextDay ? '← View Today' : 'Preview Next Day →'}
                   </Text>
@@ -1112,11 +1112,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               )}
               <View style={[
                 { backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' },
-                isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+                isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
               ]}>
                 <Text style={[
                   { fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#818CF8' : '#38BDF8' },
-                  isEnhancedSuit && { color: '#4361EE' }
+                  isEnhancedSuit && { color: '#10B981' }
                 ]}>
                   {viewingNextDay ? 'UPCOMING DAY' : 'LIVE REAL-TIME'}
                 </Text>
@@ -1127,12 +1127,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {isWeekendOrNoClass ? (
             <View style={[
               { backgroundColor: '#1E293B', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#334155', alignItems: 'center', marginTop: 10 },
-              isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+              isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
             ]}>
-              <Text style={[{ fontSize: 16, fontWeight: '800', color: '#F1F5F9', marginBottom: 4 }, isEnhancedSuit && { color: '#4361EE' }]}>
+              <Text style={[{ fontSize: 16, fontWeight: '800', color: '#F1F5F9', marginBottom: 4 }, isEnhancedSuit && { color: '#10B981' }]}>
                 No Classes Scheduled Today ({currentDayName})
               </Text>
-              <Text style={[{ fontSize: 12, color: '#94A3B8', textAlign: 'center' }, isEnhancedSuit && { color: '#A0ABC0' }]}>
+              <Text style={[{ fontSize: 12, color: '#94A3B8', textAlign: 'center' }, isEnhancedSuit && { color: '#9CA3AF' }]}>
                 Enjoy your weekend break! Classes resume on Monday as per official college timetable.
               </Text>
             </View>
@@ -1147,15 +1147,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   {slotStatus.tag}
                 </Text>
               </View>
-              <Text style={[styles.simulatorTime, isEnhancedSuit && { color: '#4361EE' }]}>
+              <Text style={[styles.simulatorTime, isEnhancedSuit && { color: '#10B981' }]}>
                 {currentSlot ? `${currentSlot.startTime} - ${currentSlot.endTime}` : ''}
               </Text>
             </View>
 
-            <Text style={[styles.simulatorTitle, isEnhancedSuit && { color: '#4361EE' }]}>
+            <Text style={[styles.simulatorTitle, isEnhancedSuit && { color: '#10B981' }]}>
               {currentSubject ? `${currentSubject.name}` : 'No Class in Session'}
             </Text>
-            <Text style={[styles.simulatorSubDetail, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.simulatorSubDetail, isEnhancedSuit && { color: '#9CA3AF' }]}>
               {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
             </Text>
             {currentSlot && (currentSlot.faculty || currentSubject?.faculty) ? (
@@ -1164,12 +1164,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 activeOpacity={0.7}
                 onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
               >
-                <Text style={[styles.hourlyFacultyText, isEnhancedSuit && { color: '#A0ABC0' }]}>
-                  Teaching Faculty: <Text style={[styles.hourlyFacultyHighlight, isEnhancedSuit && { color: '#4361EE' }]}>{currentSlot.faculty || currentSubject?.faculty}</Text>
+                <Text style={[styles.hourlyFacultyText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                  Teaching Faculty: <Text style={[styles.hourlyFacultyHighlight, isEnhancedSuit && { color: '#10B981' }]}>{currentSlot.faculty || currentSubject?.faculty}</Text>
                 </Text>
               </TouchableOpacity>
             ) : null}
-            <Text style={[styles.simulatorSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.simulatorSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
               {slotStatus.message}
             </Text>
           </>
@@ -1201,8 +1201,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
                     isEnhancedSuit && (
                       isSelected
-                        ? { backgroundColor: '#4361EE', borderColor: '#4361EE' }
-                        : { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+                        ? { backgroundColor: '#10B981', borderColor: '#10B981' }
+                        : { backgroundColor: '#050505', borderColor: '#262626' }
                     )
                   ]}
                   onPress={() => setSelectedSlotIndex(index)}
@@ -1212,7 +1212,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     style={[
                       styles.periodPillTime,
                       isSelected && styles.periodPillTextActive,
-                      isEnhancedSuit && (isSelected ? { color: '#0B0E17', fontWeight: '800' } : { color: '#4361EE' })
+                      isEnhancedSuit && (isSelected ? { color: '#050505', fontWeight: '800' } : { color: '#10B981' })
                     ]}
                   >
                     {slot.startTime}
@@ -1221,17 +1221,17 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     style={[
                       styles.periodPillCode,
                       isSelected && styles.periodPillTextActive,
-                      isEnhancedSuit && (isSelected ? { color: '#0B0E17', fontWeight: '800' } : { color: '#4361EE' })
+                      isEnhancedSuit && (isSelected ? { color: '#050505', fontWeight: '800' } : { color: '#10B981' })
                     ]}
                   >
                     {slotSub?.code || 'CLASS'}
                   </Text>
                   {isSportsSlot ? (
-                    <Text style={[styles.periodPillStatus, { color: isEnhancedSuit ? '#4361EE' : '#818CF8' }]}>
+                    <Text style={[styles.periodPillStatus, { color: isEnhancedSuit ? '#10B981' : '#818CF8' }]}>
                       No Attendance
                     </Text>
                   ) : rec ? (
-                    <Text style={[styles.periodPillStatus, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                    <Text style={[styles.periodPillStatus, isEnhancedSuit && { color: '#9CA3AF' }]}>
                       {rec.status === 'attended' ? 'Attended' : rec.status === 'bunked' ? 'Missed' : 'Free'}
                     </Text>
                   ) : null}
@@ -1371,25 +1371,25 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {slotReminders.length > 0 && (
                 <View style={[
                   styles.activeRemindersBox,
-                  isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+                  isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
                 ]}>
-                  <Text style={[styles.activeRemindersTitle, isEnhancedSuit && { color: '#4361EE' }]}>
+                  <Text style={[styles.activeRemindersTitle, isEnhancedSuit && { color: '#10B981' }]}>
                     Tasks / Instructions for this Class:
                   </Text>
                   {slotReminders.map((rem) => (
                     <View key={rem.id} style={[
                       styles.reminderRowItem,
-                      isEnhancedSuit && { borderBottomColor: '#222B45' }
+                      isEnhancedSuit && { borderBottomColor: '#262626' }
                     ]}>
                       <TouchableOpacity
                         onPress={() => handleToggleReminder(rem.id)}
                         style={[
                           styles.reminderCheckBtn,
-                          isEnhancedSuit && { backgroundColor: '#141927' }
+                          isEnhancedSuit && { backgroundColor: '#121212' }
                         ]}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.reminderCheckIcon, isEnhancedSuit && { color: '#4361EE' }]}>
+                        <Text style={[styles.reminderCheckIcon, isEnhancedSuit && { color: '#10B981' }]}>
                           {rem.completed ? '[DONE]' : '[TODO]'}
                         </Text>
                       </TouchableOpacity>
@@ -1399,13 +1399,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                           style={[
                             styles.reminderNoteText,
                             rem.completed && styles.reminderNoteTextCompleted,
-                            isEnhancedSuit && { color: '#4361EE' },
+                            isEnhancedSuit && { color: '#10B981' },
                             isEnhancedSuit && rem.completed && { color: '#8E9BB0' },
                           ]}
                         >
                           {rem.note}
                         </Text>
-                        <Text style={[styles.reminderTimingText, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                        <Text style={[styles.reminderTimingText, isEnhancedSuit && { color: '#9CA3AF' }]}>
                           {rem.dueTiming === 'PREV_NIGHT_8PM'
                             ? 'Previous Night at 8:00 PM'
                             : rem.dueTiming === 'NEXT_CLASS'
@@ -1424,7 +1424,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         style={styles.reminderDeleteAction}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.reminderDeleteActionText, isEnhancedSuit && { color: '#4361EE' }]}>X</Text>
+                        <Text style={[styles.reminderDeleteActionText, isEnhancedSuit && { color: '#10B981' }]}>X</Text>
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -1435,8 +1435,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 style={[
                   styles.addReminderTriggerBtn,
                   isEnhancedSuit && {
-                    backgroundColor: '#0B0E17',
-                    borderColor: '#222B45',
+                    backgroundColor: '#050505',
+                    borderColor: '#262626',
                   }
                 ]}
                 onPress={() => {
@@ -1447,7 +1447,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.addReminderTriggerText, isEnhancedSuit && { color: '#4361EE' }]}>
+                <Text style={[styles.addReminderTriggerText, isEnhancedSuit && { color: '#10B981' }]}>
                   + Set Task / Reminder for Next Class
                 </Text>
               </TouchableOpacity>
@@ -1462,30 +1462,30 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.connectSection,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
         }
       ]}>
         <View style={styles.connectHeaderRow}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }]}>
+          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
             <Text style={styles.connectIcon}>📚</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.connectSectionTitle, isEnhancedSuit && { color: '#4361EE' }]}>Moodle Course Assignments</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>LMS DEADLINES</Text>
+              <Text style={[styles.connectSectionTitle, isEnhancedSuit && { color: '#10B981' }]}>Moodle Course Assignments</Text>
+              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>LMS DEADLINES</Text>
               </View>
             </View>
-            <Text style={[styles.connectSectionSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.connectSectionSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
               lms.psgim.ac.in • Active faculty coursework submissions
             </Text>
           </View>
         </View>
 
         {assignments.length === 0 ? (
-          <Text style={[styles.connectEmptyText, isEnhancedSuit && { color: '#A0ABC0' }]}>No pending assignments on Moodle.</Text>
+          <Text style={[styles.connectEmptyText, isEnhancedSuit && { color: '#9CA3AF' }]}>No pending assignments on Moodle.</Text>
         ) : (
           assignments.slice(0, 3).map((asg) => {
             const isSubmitted = asg.status === 'SUBMITTED';
@@ -1503,20 +1503,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   styles.assignmentCard,
                   isSubmitted && { borderColor: '#10B981', backgroundColor: '#064E3B15' },
                   isEnhancedSuit && {
-                    backgroundColor: '#0B0E17',
-                    borderColor: isSubmitted ? '#10B981' : '#222B45',
+                    backgroundColor: '#050505',
+                    borderColor: isSubmitted ? '#10B981' : '#262626',
                   }
                 ]}
               >
                 <View style={styles.assignmentHeaderRow}>
-                  <View style={[styles.asgCodeBadge, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }]}>
-                    <Text style={[styles.asgCodeText, isEnhancedSuit && { color: '#4361EE' }]}>{asg.courseCode}</Text>
+                  <View style={[styles.asgCodeBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                    <Text style={[styles.asgCodeText, isEnhancedSuit && { color: '#10B981' }]}>{asg.courseCode}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.asgTitle, isEnhancedSuit && { color: '#4361EE' }]} numberOfLines={2}>
+                    <Text style={[styles.asgTitle, isEnhancedSuit && { color: '#10B981' }]} numberOfLines={2}>
                       {asg.title}
                     </Text>
-                    <Text style={[styles.asgCourseName, isEnhancedSuit && { color: '#A0ABC0' }]}>{asg.courseName}</Text>
+                    <Text style={[styles.asgCourseName, isEnhancedSuit && { color: '#9CA3AF' }]}>{asg.courseName}</Text>
                   </View>
                   <View
                     style={[
@@ -1536,9 +1536,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   </View>
                 </View>
 
-                <View style={[styles.asgFooterRow, isEnhancedSuit && { borderTopColor: '#222B45' }]}>
-                  <Text style={[styles.asgDueText, isEnhancedSuit && { color: '#4361EE' }]}>Due: {dueDateFormatted}</Text>
-                  <Text style={[styles.asgFilesText, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                <View style={[styles.asgFooterRow, isEnhancedSuit && { borderTopColor: '#262626' }]}>
+                  <Text style={[styles.asgDueText, isEnhancedSuit && { color: '#10B981' }]}>Due: {dueDateFormatted}</Text>
+                  <Text style={[styles.asgFilesText, isEnhancedSuit && { color: '#9CA3AF' }]}>
                     Max {asg.maxFiles} files ({asg.acceptedFileTypes.join(', ')})
                   </Text>
                 </View>
@@ -1552,23 +1552,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.connectSection,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
         }
       ]}>
         <View style={styles.connectHeaderRow}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }]}>
+          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
             <Text style={styles.connectIcon}>📢</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.connectSectionTitle, isEnhancedSuit && { color: '#4361EE' }]}>PSGIM Connect Announcements</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>ANNOUNCEMENTS • LIVE</Text>
+              <Text style={[styles.connectSectionTitle, isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect Announcements</Text>
+              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>ANNOUNCEMENTS • LIVE</Text>
               </View>
             </View>
-            <Text style={[styles.connectSectionSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.connectSectionSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
               tqm.psginstitutions.in • Official campus notices & circulars
             </Text>
           </View>
@@ -1584,8 +1584,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 announcementFilter === cat && styles.connectCategoryChipActive,
                 isEnhancedSuit && (
                   announcementFilter === cat
-                    ? { backgroundColor: '#4361EE', borderColor: '#4361EE' }
-                    : { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+                    ? { backgroundColor: '#10B981', borderColor: '#10B981' }
+                    : { backgroundColor: '#050505', borderColor: '#262626' }
                 )
               ]}
               onPress={() => setAnnouncementFilter(cat)}
@@ -1597,8 +1597,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   announcementFilter === cat && styles.connectCategoryChipTextActive,
                   isEnhancedSuit && (
                     announcementFilter === cat
-                      ? { color: '#0B0E17', fontWeight: '800' }
-                      : { color: '#4361EE' }
+                      ? { color: '#050505', fontWeight: '800' }
+                      : { color: '#10B981' }
                   )
                 ]}
               >
@@ -1609,7 +1609,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
 
         {announcements.filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter).length === 0 ? (
-          <Text style={[styles.connectEmptyText, isEnhancedSuit && { color: '#A0ABC0' }]}>No announcements found in this category.</Text>
+          <Text style={[styles.connectEmptyText, isEnhancedSuit && { color: '#9CA3AF' }]}>No announcements found in this category.</Text>
         ) : (
           announcements
             .filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter)
@@ -1629,23 +1629,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
       {/* MCU AI Fleet Companion Card - Strictly Visible in Enhanced Suit Mode Only */}
       {isEnhancedSuit && (
-        <View style={[styles.mcuAiCard, { backgroundColor: '#141927', borderColor: '#222B45', borderWidth: 1.5 }]}>
+        <View style={[styles.mcuAiCard, { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }]}>
           <View style={styles.mcuAiHeaderRow}>
-            <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(67, 97, 238, 0.2)', borderColor: '#4361EE', borderWidth: 1 }]}>
-              <Text style={[styles.mcuAiAvatarText, { color: '#4361EE' }]}>MK3</Text>
+            <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981', borderWidth: 1 }]}>
+              <Text style={[styles.mcuAiAvatarText, { color: '#10B981' }]}>MK3</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.mcuAiTitle, { color: '#F0F2FA' }]}>
+                <Text style={[styles.mcuAiTitle, { color: '#F8FAFC' }]}>
                   Stark Protocol: Enhanced Suit
                 </Text>
-                <View style={[styles.mcuAiActiveBadge, { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-                  <Text style={[styles.mcuAiActiveBadgeText, { color: '#4361EE' }]}>
+                <View style={[styles.mcuAiActiveBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+                  <Text style={[styles.mcuAiActiveBadgeText, { color: '#10B981' }]}>
                     MARK III ACTIVE
                   </Text>
                 </View>
               </View>
-              <Text style={[styles.mcuAiSubtitle, { color: '#A0ABC0' }]}>
+              <Text style={[styles.mcuAiSubtitle, { color: '#9CA3AF' }]}>
                 Mark III Tactical Armor • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh
               </Text>
             </View>
@@ -1653,7 +1653,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
           <View style={styles.mcuAiActionsRow}>
             <TouchableOpacity
-              style={[styles.mcuAiBtnPrimary, { backgroundColor: '#4361EE', borderColor: '#4361EE' }]}
+              style={[styles.mcuAiBtnPrimary, { backgroundColor: '#10B981', borderColor: '#10B981' }]}
               onPress={() => setShowKarenGuide(true)}
               activeOpacity={0.8}
             >
@@ -1663,7 +1663,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <TouchableOpacity
               style={[
                 styles.mcuAiBtnSecondary,
-                { borderColor: '#222B45', backgroundColor: '#0B0E17' }
+                { borderColor: '#262626', backgroundColor: '#050505' }
               ]}
               onPress={() => {
                 if (onOpenEnhancedHub) {
@@ -1674,19 +1674,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#4361EE', fontWeight: '800' }]}>Enhanced Suit Hub</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#10B981', fontWeight: '800' }]}>Enhanced Suit Hub</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.mcuAiBtnSecondary, { borderColor: '#222B45', backgroundColor: '#0B0E17' }]}
+              style={[styles.mcuAiBtnSecondary, { borderColor: '#262626', backgroundColor: '#050505' }]}
               onPress={() => setShowWhatIfForecaster(true)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#4361EE', fontWeight: '800' }]}>What-If Forecaster</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#10B981', fontWeight: '800' }]}>What-If Forecaster</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.mcuAiBtnSecondary, { borderColor: '#FF4D6D', backgroundColor: 'rgba(255, 77, 109, 0.15)' }]}
+              style={[styles.mcuAiBtnSecondary, { borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}
               onPress={async () => {
                 try {
                   Vibration.vibrate(40);
@@ -1697,7 +1697,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FF4D6D', fontWeight: '600' }]}>Training Wheels</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#EF4444', fontWeight: '600' }]}>Training Wheels</Text>
             </TouchableOpacity>
 
             {onOpenAdmin && (
@@ -1724,8 +1724,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               filter === tab && styles.filterChipActive,
               isEnhancedSuit && (
                 filter === tab
-                  ? { backgroundColor: '#4361EE', borderColor: '#4361EE' }
-                  : { backgroundColor: '#141927', borderColor: '#222B45' }
+                  ? { backgroundColor: '#10B981', borderColor: '#10B981' }
+                  : { backgroundColor: '#121212', borderColor: '#262626' }
               )
             ]}
           >
@@ -1734,8 +1734,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               filter === tab && styles.filterChipTextActive,
               isEnhancedSuit && (
                 filter === tab
-                  ? { color: '#0B0E17', fontWeight: '800' }
-                  : { color: '#4361EE' }
+                  ? { color: '#050505', fontWeight: '800' }
+                  : { color: '#10B981' }
               )
             ]}>
               {tab === 'ALL' && 'All Subjects'}

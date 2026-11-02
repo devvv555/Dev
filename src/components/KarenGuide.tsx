@@ -158,7 +158,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
             </View>
             <View style={styles.headerTitles}>
               <Text style={styles.karenTitle}>Karen Guide</Text>
-              <Text style={[styles.karenSub, isRed && { color: '#4361EE' }]}>
+              <Text style={[styles.karenSub, isRed && { color: '#10B981' }]}>
                 {isRed ? 'Stark Suit AI Companion // Level 2' : 'Your Suit AI Assistant'}
               </Text>
             </View>
@@ -169,7 +169,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
 
           {/* Privacy Guarantee Banner */}
           <View style={[styles.privacyBanner, isRed && styles.privacyBannerRed]}>
-            <Text style={[styles.privacyText, isRed && { color: '#4361EE' }]}>
+            <Text style={[styles.privacyText, isRed && { color: '#10B981' }]}>
               {isRed
                 ? 'STARK PROTOCOL LEVEL 2: All enhanced capabilities online.'
                 : 'Privacy Guarantee: Zero sensitive data or credentials are displayed or shared.'}
@@ -179,7 +179,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
           {/* Step Body */}
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             <View style={[styles.stepBadge, isRed && styles.stepBadgeRed]}>
-              <Text style={[styles.stepBadgeText, isRed && { color: '#4361EE' }]}>
+              <Text style={[styles.stepBadgeText, isRed && { color: '#10B981' }]}>
                 {step.badge}
               </Text>
             </View>
@@ -191,8 +191,8 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
             <Text style={styles.stepDescription}>{step.description}</Text>
 
             <View style={[styles.tipBox, isRed && styles.tipBoxRed]}>
-              <Text style={[styles.tipLabel, isRed && { color: '#4361EE' }]}>PRO TIP</Text>
-              <Text style={[styles.tipText, isRed && { color: '#4361EE' }]}>{step.tip}</Text>
+              <Text style={[styles.tipLabel, isRed && { color: '#10B981' }]}>PRO TIP</Text>
+              <Text style={[styles.tipText, isRed && { color: '#10B981' }]}>{step.tip}</Text>
             </View>
           </ScrollView>
 
@@ -220,7 +220,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
                 onPress={handleNext}
                 style={[styles.nextBtn, isRed && styles.nextBtnRed]}
               >
-                <Text style={[styles.nextBtnText, isRed && { color: '#0B0E17', fontWeight: '800' }]}>
+                <Text style={[styles.nextBtnText, isRed && { color: '#050505', fontWeight: '800' }]}>
                   {currentStepIndex === steps.length - 1 ? 'Got it!' : 'Next'}
                 </Text>
               </TouchableOpacity>
@@ -251,8 +251,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardRed: {
-    backgroundColor: '#141927',
-    borderColor: '#222B45',
+    backgroundColor: '#121212',
+    borderColor: '#262626',
     borderWidth: 1.5,
   },
   header: {
@@ -264,8 +264,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F172A',
   },
   headerRed: {
-    backgroundColor: '#0B0E17',
-    borderBottomColor: '#222B45',
+    backgroundColor: '#050505',
+    borderBottomColor: '#262626',
   },
   karenAvatar: {
     width: 40,
@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   karenAvatarRed: {
-    backgroundColor: 'rgba(67, 97, 238, 0.15)',
-    borderColor: '#4361EE',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10B981',
     borderWidth: 1.5,
   },
   karenAvatarText: {
@@ -305,8 +305,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
   },
   closeBtnRed: {
-    backgroundColor: '#141927',
-    borderColor: '#222B45',
+    backgroundColor: '#121212',
+    borderColor: '#262626',
     borderWidth: 1,
   },
   closeBtnText: {
@@ -322,8 +322,8 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(56, 189, 248, 0.15)',
   },
   privacyBannerRed: {
-    backgroundColor: 'rgba(67, 97, 238, 0.08)',
-    borderBottomColor: 'rgba(67, 97, 238, 0.2)',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderBottomColor: 'rgba(16, 185, 129, 0.2)',
   },
   privacyText: {
     color: '#BAE6FD',
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   stepBadgeRed: {
-    backgroundColor: 'rgba(67, 97, 238, 0.15)',
-    borderColor: '#4361EE',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10B981',
   },
   stepBadgeText: {
     color: '#38BDF8',
@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
     borderLeftColor: '#38BDF8',
   },
   tipBoxRed: {
-    backgroundColor: '#0B0E17',
-    borderLeftColor: '#4361EE',
+    backgroundColor: '#050505',
+    borderLeftColor: '#10B981',
   },
   tipLabel: {
     color: '#38BDF8',
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   dotActiveRed: {
-    backgroundColor: '#4361EE',
+    backgroundColor: '#10B981',
     width: 20,
   },
   btnRow: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0284C7',
   },
   nextBtnRed: {
-    backgroundColor: '#4361EE',
+    backgroundColor: '#10B981',
   },
   nextBtnText: {
     color: '#FFFFFF',

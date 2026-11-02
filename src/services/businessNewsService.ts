@@ -8,7 +8,7 @@
 
 export interface NewsArticle {
   id: string;
-  source: 'The Hindu' | 'BusinessLine' | 'Business Standard' | 'Economic Times' | 'Mint';
+  source: 'The Hindu' | 'BusinessLine' | 'Business Standard' | 'Economic Times' | 'Mint' | 'Preparoo DayStarter';
   title: string;
   summary: string;
   category: 'ECONOMY' | 'MARKETS' | 'CORPORATE' | 'TECH' | 'POLICY';
@@ -23,6 +23,32 @@ export interface NewsArticle {
 export const REFRESH_INTERVAL_SECONDS = 15 * 60; // 15 minutes = 900 seconds
 
 const BUSINESS_NEWS_POOL: NewsArticle[] = [
+  {
+    id: 'news_ds_01',
+    source: 'Preparoo DayStarter',
+    title: 'FIIs & DIIs both net buyers as Nifty reclaims 22,900 on Fed pause',
+    summary: 'Foreign institutions pumped ₹1,113 Cr while domestic institutions bought ₹1,924 Cr of shares after US Fed held interest rates at 3.75%-4.00%. Derivatives PCR rose to 1.31.',
+    category: 'MARKETS',
+    publishedAt: 'Today, 08:00 AM',
+    publishedDate: 'Today, 08:00 AM',
+    url: 'https://fin.preparoo.app/daystarter-october-30-2026',
+    articleUrl: 'https://fin.preparoo.app/daystarter-october-30-2026',
+    readingTimeMin: 2,
+    mbaTakeaway: 'ADM & Securities: Impact of institutional cash inflows vs options positioning on short-term market momentum.',
+  },
+  {
+    id: 'news_ds_02',
+    source: 'Preparoo DayStarter',
+    title: 'IndiGo narrows net loss to ₹1,879 Cr as fuel claims 43 paise of every revenue rupee',
+    summary: 'Total income rose 24% to ₹24,312 Cr for the airline, but elevated aviation turbine fuel prices accounted for nearly ₹10,000 Cr of total operational expenditure.',
+    category: 'CORPORATE',
+    publishedAt: 'Today, 08:00 AM',
+    publishedDate: 'Today, 08:00 AM',
+    url: 'https://fin.preparoo.app/daystarter-october-30-2026',
+    articleUrl: 'https://fin.preparoo.app/daystarter-october-30-2026',
+    readingTimeMin: 3,
+    mbaTakeaway: 'MCOB & Operations: Operating leverage, break-even passenger load factor, and commodity price hedging.',
+  },
   {
     id: 'news_01',
     source: 'BusinessLine',

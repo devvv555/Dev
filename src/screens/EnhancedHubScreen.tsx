@@ -14,6 +14,11 @@ import {
   NewsArticle,
 } from '../services/businessNewsService';
 import {
+  MarketQuotesService,
+  MarketQuote,
+  DaystarterBriefing,
+} from '../services/marketQuotesService';
+import {
   CampusLifeFeaturesEngine,
   CanteenRushStatus,
   FacultyOfficeHourSlot,
@@ -55,6 +60,11 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   );
   const [isRefreshingNews, setIsRefreshingNews] = useState<boolean>(false);
 
+  // Live Market Quotes & Daystarter State
+  const [marketQuotes, setMarketQuotes] = useState<MarketQuote[]>([]);
+  const [daystarter, setDaystarter] = useState<DaystarterBriefing | null>(null);
+  const [quoteCategoryFilter, setQuoteCategoryFilter] = useState<'ALL' | 'INDEX' | 'STOCK' | 'COMMODITY'>('ALL');
+
   const [canteenStatus, setCanteenStatus] = useState<CanteenRushStatus | null>(null);
   const [xeroxStatus, setXeroxStatus] = useState<XeroxRushStatus | null>(null);
   const [facultySlots, setFacultySlots] = useState<FacultyOfficeHourSlot[]>([]);
@@ -93,10 +103,12 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
     setIsRefreshingNews(true);
     const updated = BusinessNewsService.getLatestHeadlines(true);
     setNews(updated);
+    setMarketQuotes(MarketQuotesService.getQuotes());
+    setDaystarter(MarketQuotesService.getDaystarterBriefing());
     setNewsLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     setNewsCountdownSeconds(BusinessNewsService.getRefreshIntervalSeconds());
     if (manual) {
-      setActionNotice('Live Business News Feed refreshed successfully.');
+      setActionNotice('Live Business News & Stock Quotes refreshed successfully.');
       setTimeout(() => setActionNotice(null), 3000);
     }
     setTimeout(() => setIsRefreshingNews(false), 350);
@@ -110,6 +122,8 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
 
   const loadAllData = async () => {
     setNews(BusinessNewsService.getLatestHeadlines());
+    setMarketQuotes(MarketQuotesService.getQuotes());
+    setDaystarter(MarketQuotesService.getDaystarterBriefing());
     setCanteenStatus(CampusLifeFeaturesEngine.getCanteenRushStatus(selectedCanteenId));
     setXeroxStatus(CampusLifeFeaturesEngine.getXeroxRushStatus());
     setFacultySlots(CampusLifeFeaturesEngine.getFacultyOfficeSlots());
@@ -269,6 +283,185 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
               </View>
             </View>
 
+            {/* ============================================================ */}
+            {/* LIVE MARKET PULSE & INDICES TICKER */}
+            {/* ============================================================ */}
+            <View style={styles.marketTickerCard}>
+              <View style={styles.marketTickerHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={[styles.marketStatusIndicator, { backgroundColor: MarketQuotesService.getMarketSessionText().badgeColor }]} />
+                  <Text style={styles.marketTickerTitle}>
+                    {MarketQuotesService.getMarketSessionText().text}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.nseindia.com')}>
+                  <Text style={styles.marketSourceTag}>Source: NSE / BSE ↗</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Category Pills */}
+              <View style={styles.quotePillRow}>
+                {(['ALL', 'INDEX', 'STOCK', 'COMMODITY'] as const).map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.quotePill, quoteCategoryFilter === cat && styles.quotePillActive]}
+                    onPress={() => setQuoteCategoryFilter(cat)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.quotePillText, quoteCategoryFilter === cat && styles.quotePillTextActive]}>
+                      {cat === 'ALL' ? 'Watchlist' : cat === 'INDEX' ? 'Indices' : cat === 'STOCK' ? 'MBA Stocks' : 'Commodities'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Horizontal Scrollable Quotes Bar */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quotesScrollContainer}>
+                {marketQuotes
+                  .filter((q) => quoteCategoryFilter === 'ALL' || q.category === quoteCategoryFilter)
+                  .map((q) => {
+                    const isPositive = q.change >= 0;
+                    return (
+                      <TouchableOpacity
+                        key={q.symbol}
+                        style={styles.quoteCard}
+                        onPress={() => Linking.openURL(q.sourceUrl)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.quoteCardTop}>
+                          <Text style={styles.quoteSymbol}>{q.symbol}</Text>
+                          <Text style={[styles.quoteBadge, isPositive ? styles.quoteBadgeUp : styles.quoteBadgeDown]}>
+                            {isPositive ? '▲' : '▼'} {Math.abs(q.changePercent).toFixed(2)}%
+                          </Text>
+                        </View>
+                        <Text style={styles.quoteName} numberOfLines={1}>{q.name}</Text>
+                        <View style={styles.quotePriceRow}>
+                          <Text style={styles.quotePrice}>
+                            {q.currency === 'INR' ? '₹' : '$'}{q.price.toLocaleString('en-IN')}
+                          </Text>
+                          <Text style={[styles.quoteChange, isPositive ? styles.quoteTextUp : styles.quoteTextDown]}>
+                            {isPositive ? '+' : ''}{q.change.toFixed(2)}
+                          </Text>
+                        </View>
+                        <Text style={styles.quoteSourceText}>Source: {q.source}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+              </ScrollView>
+            </View>
+
+            {/* ============================================================ */}
+            {/* 08:00 AM DAILY DAYSTARTER EXECUTIVE BRIEFING */}
+            {/* ============================================================ */}
+            {daystarter && (
+              <View style={styles.daystarterCard}>
+                <View style={styles.daystarterHeader}>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.daystarterBadgeRow}>
+                      <View style={styles.daystarterLiveBadge}>
+                        <Text style={styles.daystarterLiveBadgeText}>🌅 08:00 AM BRIEFING</Text>
+                      </View>
+                      <Text style={styles.daystarterEditionDate}>{daystarter.editionDate}</Text>
+                    </View>
+                    <Text style={styles.daystarterHeadline}>{daystarter.headline}</Text>
+                  </View>
+                </View>
+
+                {/* Explicit Source Attribution Banner */}
+                <View style={styles.daystarterSourceBox}>
+                  <Text style={styles.daystarterSourceLabel}>Official Sources & Citations:</Text>
+                  <TouchableOpacity
+                    style={styles.daystarterSourceLinkRow}
+                    onPress={() => Linking.openURL(daystarter.sourceUrl)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.daystarterSourceLink}>
+                      🔗 {daystarter.sourceName} • {daystarter.volumeNo} ↗
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.daystarterSummaryText}>{daystarter.marketSummary}</Text>
+
+                {/* 3 Core Anchor Stats Grid */}
+                <View style={styles.anchorStatsGrid}>
+                  {daystarter.anchorStats.map((stat, idx) => (
+                    <View key={idx} style={styles.anchorStatBox}>
+                      <Text style={styles.anchorStatLabel}>{stat.label}</Text>
+                      <Text style={styles.anchorStatValue}>{stat.value}</Text>
+                      <Text style={[styles.anchorStatChange, stat.isPositive ? styles.quoteTextUp : styles.quoteTextDown]}>
+                        {stat.changeText}
+                      </Text>
+                      <Text style={styles.anchorStatSubtext} numberOfLines={2}>{stat.subtext}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Institutional Cash Flows */}
+                <View style={styles.flowsCard}>
+                  <Text style={styles.flowsTitle}>📊 Institutional Cash Flows & Derivatives:</Text>
+                  <View style={styles.flowsRow}>
+                    <View style={styles.flowMetric}>
+                      <Text style={styles.flowLabel}>FII Net Cash</Text>
+                      <Text style={[styles.flowVal, { color: '#34D399' }]}>+₹{daystarter.fiiDiiFlows.fiiNetCr} Cr</Text>
+                    </View>
+                    <View style={styles.flowMetric}>
+                      <Text style={styles.flowLabel}>DII Net Cash</Text>
+                      <Text style={[styles.flowVal, { color: '#34D399' }]}>+₹{daystarter.fiiDiiFlows.diiNetCr} Cr</Text>
+                    </View>
+                    <View style={styles.flowMetric}>
+                      <Text style={styles.flowLabel}>Options PCR</Text>
+                      <Text style={[styles.flowVal, { color: '#38BDF8' }]}>{daystarter.fiiDiiFlows.optionsPcr}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.flowsSourceText}>Source: {daystarter.fiiDiiFlows.source}</Text>
+                </View>
+
+                {/* Top Macro Pointers */}
+                <View style={styles.macroPointersBox}>
+                  <Text style={styles.macroPointersTitle}>🏛️ Key Macro & Regulatory Insights:</Text>
+                  {daystarter.macroPointers.map((p, i) => (
+                    <View key={i} style={styles.macroPointerItem}>
+                      <Text style={styles.macroBullet}>•</Text>
+                      <Text style={styles.macroPointerText}>{p}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Corporate Earnings Highlights */}
+                <View style={styles.corporateBox}>
+                  <Text style={styles.corporateTitle}>🏢 Corporate Action & Results Scorecard:</Text>
+                  {daystarter.corporateHighlights.map((corp, i) => (
+                    <View key={i} style={styles.corporateItem}>
+                      <View style={styles.corpHeaderRow}>
+                        <Text style={styles.corpCompanyName}>{corp.company}</Text>
+                        <View style={styles.corpTag}>
+                          <Text style={styles.corpTagText}>{corp.tag}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.corpResultText}>{corp.result}</Text>
+                      <Text style={styles.corpDetailText}>{corp.detail}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Read Full Edition Button */}
+                <TouchableOpacity
+                  style={styles.daystarterReadBtn}
+                  onPress={() => Linking.openURL(daystarter.sourceUrl)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.daystarterReadBtnText}>
+                    📖 Open Full Preparoo DayStarter Brief Edition ↗
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={{ marginTop: 10, marginBottom: 8 }}>
+              <Text style={styles.sectionSubtitle}>📰 Business Press Feed & Managerial Analyses</Text>
+            </View>
+
             {news.map((item) => (
               <View key={item.id} style={styles.card}>
                 <View style={styles.cardHeaderRow}>
@@ -286,7 +479,11 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
                 {item.articleUrl ? (
                   <TouchableOpacity
                     style={styles.newsReadMoreBtn}
-                    onPress={() => Linking.openURL(item.articleUrl)}
+                    onPress={() => {
+                      if (item.articleUrl) {
+                        Linking.openURL(item.articleUrl);
+                      }
+                    }}
                   >
                     <Text style={styles.newsReadMoreText}>Read Full Source Article</Text>
                   </TouchableOpacity>
@@ -890,15 +1087,15 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
   },
   topHeader: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#222B45',
+    borderBottomColor: '#262626',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -906,12 +1103,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#4361EE',
+    color: '#10B981',
     letterSpacing: 1.1,
   },
   headerSubtitle: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   badgeLive: {
@@ -929,21 +1126,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   noticeBanner: {
-    backgroundColor: 'rgba(67, 97, 238, 0.15)',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     borderBottomWidth: 1,
-    borderBottomColor: '#4361EE',
+    borderBottomColor: '#10B981',
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   noticeText: {
-    color: '#4361EE',
+    color: '#10B981',
     fontSize: 12,
     fontWeight: '700',
   },
   navBarWrapper: {
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderBottomWidth: 1,
-    borderBottomColor: '#222B45',
+    borderBottomColor: '#262626',
   },
   navBarContent: {
     paddingHorizontal: 12,
@@ -955,18 +1152,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
   },
   navPillActive: {
-    backgroundColor: '#4361EE',
-    borderColor: '#4361EE',
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
   },
   navPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   navPillTextActive: {
     color: '#FFFFFF',
@@ -985,22 +1182,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   sectionCaption: {
     fontSize: 12,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 4,
     lineHeight: 17,
   },
   newsSyncBar: {
     marginTop: 10,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1021,32 +1218,32 @@ const styles = StyleSheet.create({
   newsSyncText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     letterSpacing: 0.5,
   },
   newsRefreshBtn: {
-    backgroundColor: 'rgba(67, 97, 238, 0.15)',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     borderWidth: 1,
-    borderColor: '#4361EE',
+    borderColor: '#10B981',
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   newsRefreshBtnActive: {
-    backgroundColor: '#222B45',
+    backgroundColor: '#262626',
   },
   newsRefreshBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#4361EE',
+    color: '#10B981',
     letterSpacing: 0.8,
   },
   card: {
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     marginBottom: 14,
   },
   cardHeaderRow: {
@@ -1058,43 +1255,43 @@ const styles = StyleSheet.create({
   newsSource: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#4361EE',
+    color: '#10B981',
     letterSpacing: 0.8,
   },
   newsDate: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   newsTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 6,
     lineHeight: 20,
   },
   newsSummary: {
     fontSize: 12,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     lineHeight: 18,
     marginBottom: 10,
   },
   takeawayBox: {
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#4361EE',
+    borderLeftColor: '#10B981',
     marginBottom: 10,
   },
   takeawayLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 2,
   },
   takeawayText: {
     fontSize: 12,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     lineHeight: 17,
   },
   newsReadMoreBtn: {
@@ -1104,7 +1301,7 @@ const styles = StyleSheet.create({
   newsReadMoreText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#4361EE',
+    color: '#10B981',
     textDecorationLine: 'underline',
   },
   subTabRow: {
@@ -1116,19 +1313,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 9,
     borderRadius: 8,
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     alignItems: 'center',
   },
   subTabBtnActive: {
-    backgroundColor: '#4361EE',
-    borderColor: '#4361EE',
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
   },
   subTabBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   subTabBtnTextActive: {
     color: '#FFFFFF',
@@ -1143,32 +1340,32 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 7,
     borderRadius: 6,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     alignItems: 'center',
   },
   canteenChipActive: {
-    backgroundColor: 'rgba(67, 97, 238, 0.15)',
-    borderColor: '#4361EE',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10B981',
   },
   canteenChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   canteenChipTextActive: {
-    color: '#4361EE',
+    color: '#10B981',
     fontWeight: '800',
   },
   canteenName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   canteenTagline: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   queueBadge: {
@@ -1184,7 +1381,7 @@ const styles = StyleSheet.create({
   },
   canteenMsg: {
     fontSize: 12,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 8,
     marginBottom: 12,
     lineHeight: 18,
@@ -1196,40 +1393,40 @@ const styles = StyleSheet.create({
   },
   infoCol: {
     flex: 1,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 6,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
   },
   infoLabel: {
     fontSize: 10,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginBottom: 2,
   },
   infoVal: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#4361EE',
+    color: '#10B981',
   },
   foodNoticeBox: {
-    backgroundColor: 'rgba(67, 97, 238, 0.08)',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#4361EE',
+    borderLeftColor: '#10B981',
     marginTop: 6,
     marginBottom: 10,
   },
   foodNoticeTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 2,
   },
   foodNoticeBody: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     lineHeight: 16,
   },
   specialtiesBox: {
@@ -1238,7 +1435,7 @@ const styles = StyleSheet.create({
   specialtiesTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 6,
   },
   specialtiesRow: {
@@ -1247,29 +1444,29 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   specialtyChip: {
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
   },
   specialtyChipText: {
     fontSize: 10,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   rateCardBox: {
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     marginTop: 10,
   },
   rateCardTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 6,
   },
   rateGrid: {
@@ -1277,17 +1474,17 @@ const styles = StyleSheet.create({
   },
   rateItem: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   calculatorTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 4,
   },
   calculatorSubtitle: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     lineHeight: 16,
     marginBottom: 14,
   },
@@ -1302,15 +1499,15 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#4361EE',
+    color: '#10B981',
     marginBottom: 4,
   },
   textInput: {
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     borderRadius: 8,
-    color: '#4361EE',
+    color: '#10B981',
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
@@ -1325,30 +1522,30 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 6,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     alignItems: 'center',
   },
   toggleBtnActive: {
-    backgroundColor: 'rgba(67, 97, 238, 0.15)',
-    borderColor: '#4361EE',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10B981',
   },
   toggleBtnText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   toggleBtnTextActive: {
-    color: '#4361EE',
+    color: '#10B981',
     fontWeight: '800',
   },
   totalBox: {
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 8,
     padding: 12,
     borderWidth: 1.5,
-    borderColor: '#4361EE',
+    borderColor: '#10B981',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1358,17 +1555,17 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   totalNote: {
     fontSize: 10,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   totalAmount: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#4361EE',
+    color: '#10B981',
   },
   xeroxActionRow: {
     flexDirection: 'row',
@@ -1378,16 +1575,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     alignItems: 'center',
     justifyContent: 'center',
   },
   qrBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   sendWhatsAppBtn: {
     flex: 1.2,
@@ -1403,32 +1600,32 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   qrDisplayCard: {
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 8,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
     marginTop: 14,
     alignItems: 'center',
   },
   qrCardTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   qrCardSubtitle: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
     marginBottom: 12,
   },
   mockQrPlaceholder: {
     width: 180,
     height: 180,
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#4361EE',
+    borderColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
@@ -1436,7 +1633,7 @@ const styles = StyleSheet.create({
   mockQrText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#4361EE',
+    color: '#10B981',
     letterSpacing: 1,
   },
   mockQrSub: {
@@ -1447,7 +1644,7 @@ const styles = StyleSheet.create({
   },
   qrInstructions: {
     fontSize: 10,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 15,
@@ -1455,11 +1652,11 @@ const styles = StyleSheet.create({
   facName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   facSubject: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   availBadge: {
@@ -1480,43 +1677,43 @@ const styles = StyleSheet.create({
   },
   facDetailItem: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   facCabin: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 4,
     marginBottom: 10,
   },
   bookSlotBtn: {
-    backgroundColor: '#4361EE',
+    backgroundColor: '#10B981',
     paddingVertical: 9,
     borderRadius: 6,
     alignItems: 'center',
   },
   bookSlotBtnDisabled: {
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     borderWidth: 1,
-    borderColor: '#222B45',
+    borderColor: '#262626',
   },
   bookSlotBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0B0E17',
+    color: '#050505',
   },
   sylCode: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#4361EE',
+    color: '#10B981',
   },
   sylTitle: {
     fontSize: 13,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   progressBarTrack: {
     height: 8,
-    backgroundColor: '#0B0E17',
+    backgroundColor: '#050505',
     borderRadius: 4,
     marginTop: 10,
     marginBottom: 10,
@@ -1524,7 +1721,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#4361EE',
+    backgroundColor: '#10B981',
     borderRadius: 4,
   },
   sylMetricsGrid: {
@@ -1536,41 +1733,419 @@ const styles = StyleSheet.create({
   },
   sylMetricLabel: {
     fontSize: 10,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
   },
   sylMetricVal: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
     marginTop: 2,
   },
   bookTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
   },
   bookAuthor: {
     fontSize: 11,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   bookAccession: {
     fontSize: 10,
-    color: '#A0ABC0',
+    color: '#9CA3AF',
     marginTop: 1,
   },
   bookRenewBtn: {
     marginTop: 10,
-    backgroundColor: '#141927',
+    backgroundColor: '#121212',
     paddingVertical: 8,
     borderRadius: 6,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#4361EE',
+    borderColor: '#10B981',
   },
   bookRenewBtnText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#4361EE',
+    color: '#10B981',
+  },
+  // Market Ticker & Live Quotes Styles
+  marketTickerCard: {
+    backgroundColor: '#121212',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#262626',
+    marginBottom: 14,
+  },
+  marketTickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  marketStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  marketTickerTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: 0.3,
+  },
+  marketSourceTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#38BDF8',
+  },
+  quotePillRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  quotePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#050505',
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  quotePillActive: {
+    backgroundColor: '#1E293B',
+    borderColor: '#38BDF8',
+  },
+  quotePillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  quotePillTextActive: {
+    color: '#38BDF8',
+  },
+  quotesScrollContainer: {
+    gap: 10,
+    paddingBottom: 4,
+  },
+  quoteCard: {
+    backgroundColor: '#050505',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#262626',
+    width: 145,
+  },
+  quoteCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  quoteSymbol: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#F8FAFC',
+  },
+  quoteBadge: {
+    fontSize: 10,
+    fontWeight: '800',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  quoteBadgeUp: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    color: '#34D399',
+  },
+  quoteBadgeDown: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    color: '#F87171',
+  },
+  quoteName: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginBottom: 6,
+  },
+  quotePriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  quotePrice: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#F8FAFC',
+  },
+  quoteChange: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  quoteTextUp: {
+    color: '#34D399',
+  },
+  quoteTextDown: {
+    color: '#F87171',
+  },
+  quoteSourceText: {
+    fontSize: 8.5,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  // Daystarter Briefing Styles
+  daystarterCard: {
+    backgroundColor: '#050505',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    marginBottom: 16,
+  },
+  daystarterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  daystarterBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  daystarterLiveBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  daystarterLiveBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#38BDF8',
+    letterSpacing: 0.5,
+  },
+  daystarterEditionDate: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  daystarterHeadline: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    lineHeight: 22,
+  },
+  daystarterSourceBox: {
+    backgroundColor: '#121212',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#38BDF8',
+    marginVertical: 10,
+  },
+  daystarterSourceLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  daystarterSourceLinkRow: {
+    marginTop: 2,
+  },
+  daystarterSourceLink: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#38BDF8',
+  },
+  daystarterSummaryText: {
+    fontSize: 12,
+    color: '#CBD5E1',
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  anchorStatsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  anchorStatBox: {
+    flex: 1,
+    backgroundColor: '#121212',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  anchorStatLabel: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+  },
+  anchorStatValue: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#F8FAFC',
+    marginTop: 2,
+  },
+  anchorStatChange: {
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: 1,
+  },
+  anchorStatSubtext: {
+    fontSize: 9,
+    color: '#64748B',
+    marginTop: 3,
+    lineHeight: 12,
+  },
+  flowsCard: {
+    backgroundColor: '#121212',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#262626',
+    marginBottom: 12,
+  },
+  flowsTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    marginBottom: 8,
+  },
+  flowsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  flowMetric: {
+    flex: 1,
+  },
+  flowLabel: {
+    fontSize: 10,
+    color: '#94A3B8',
+  },
+  flowVal: {
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  flowsSourceText: {
+    fontSize: 9,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  macroPointersBox: {
+    backgroundColor: '#121212',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#262626',
+    marginBottom: 12,
+  },
+  macroPointersTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    marginBottom: 8,
+  },
+  macroPointerItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 6,
+  },
+  macroBullet: {
+    color: '#38BDF8',
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  macroPointerText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#CBD5E1',
+    lineHeight: 16,
+  },
+  corporateBox: {
+    backgroundColor: '#121212',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#262626',
+    marginBottom: 12,
+  },
+  corporateTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    marginBottom: 8,
+  },
+  corporateItem: {
+    backgroundColor: '#050505',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#38BDF8',
+  },
+  corpHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  corpCompanyName: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#F8FAFC',
+  },
+  corpTag: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  corpTagText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#38BDF8',
+  },
+  corpResultText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#34D399',
+    marginTop: 2,
+  },
+  corpDetailText: {
+    fontSize: 10.5,
+    color: '#94A3B8',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  daystarterReadBtn: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  daystarterReadBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#38BDF8',
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: 0.3,
   },
 });

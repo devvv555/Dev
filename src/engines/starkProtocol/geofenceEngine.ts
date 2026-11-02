@@ -35,22 +35,23 @@ export interface RoomFloor3DConfig {
 }
 
 // Key Geofence Landmarks for PSGIM Campus
+// User GPS calibration for LH-109 (Floor 1) and LH-405 (Floor 4): 11.0229155 N, 77.0028685 E
 export const PSGIM_ZONES: Record<string, GeofenceZone> = {
   MAIN_CAMPUS: {
     id: 'psgim_main',
     name: 'PSGIM Main Campus Perimeter',
-    latitude: 11.0245,
-    longitude: 77.0028,
-    radiusMeters: 300, // Entire campus perimeter
+    latitude: 11.0229155,
+    longitude: 77.0028685,
+    radiusMeters: 250, // Entire campus perimeter
     description: 'PSG Institute of Management, Peelamedu, Coimbatore',
   },
   MBA_ACADEMIC_BLOCK: {
     id: 'psgim_academic_block',
-    name: 'MBA Academic Classrooms (Batches A/B/C/D)',
-    latitude: 11.0247,
-    longitude: 77.0025,
-    radiusMeters: 80, // High-precision classroom zone
-    description: 'Ground & Upper floors MBA lecture halls',
+    name: 'MBA Academic Block (LH-109 & LH-405 Wing)',
+    latitude: 11.0229155,
+    longitude: 77.0028685,
+    radiusMeters: 60, // High-precision classroom zone
+    description: 'Ground & Upper floors MBA lecture halls (LH-109 & LH-405)',
   },
   LIBRARY_SEMINAR: {
     id: 'psgim_seminar_hall',
@@ -60,6 +61,16 @@ export const PSGIM_ZONES: Record<string, GeofenceZone> = {
     radiusMeters: 75,
     description: 'Auditoriums and reference library',
   },
+};
+
+// Precise room GPS pins calibrated from physical measurement
+// LH-109 / LH-405: 11.0229155, 77.0028685 (West Wing)
+// LH-101 / LH-401: 11.022979, 77.003295   (East Wing, ~47m apart)
+export const ROOM_COORDINATES: Record<string, { latitude: number; longitude: number; radiusMeters: number }> = {
+  'LH-109': { latitude: 11.0229155, longitude: 77.0028685, radiusMeters: 30 },
+  'LH-405': { latitude: 11.0229155, longitude: 77.0028685, radiusMeters: 30 },
+  'LH-101': { latitude: 11.022979, longitude: 77.003295, radiusMeters: 30 },
+  'LH-401': { latitude: 11.022979, longitude: 77.003295, radiusMeters: 30 },
 };
 
 // 3D Floor Profiles for Vertical Stack Classrooms
@@ -142,11 +153,18 @@ export const GeofenceEngine = {
     targetRoom?: string
   ): GeofenceVerificationResult {
     const zone = PSGIM_ZONES[targetZoneKey] || PSGIM_ZONES.MBA_ACADEMIC_BLOCK;
+    const cleanRoom = (targetRoom || '').toUpperCase().trim();
+    const roomCoord = ROOM_COORDINATES[cleanRoom];
+    const targetLat = roomCoord ? roomCoord.latitude : zone.latitude;
+    const targetLon = roomCoord ? roomCoord.longitude : zone.longitude;
+    const allowedRadius = roomCoord ? roomCoord.radiusMeters : zone.radiusMeters;
+    const zoneDisplayName = roomCoord ? `${cleanRoom}` : zone.name;
+
     const distance = this.calculateDistanceMeters(
       currentLocation.latitude,
       currentLocation.longitude,
-      zone.latitude,
-      zone.longitude
+      targetLat,
+      targetLon
     );
 
     const accuracy = currentLocation.accuracyMeters || 10;
@@ -166,7 +184,7 @@ export const GeofenceEngine = {
       };
     }
 
-    const isInside2D = distance <= zone.radiusMeters;
+    const isInside2D = distance <= allowedRadius;
     if (!isInside2D) {
       return {
         isWithinCampus: false,
@@ -176,7 +194,7 @@ export const GeofenceEngine = {
         deviceAccuracyMeters: accuracy,
         isMockLocationDetected: isMock,
         status: 'OUTSIDE_CAMPUS',
-        message: `Outside perimeter. You are ${distance}m away from ${zone.name} (Max allowed: ${zone.radiusMeters}m).`,
+        message: `Outside perimeter. You are ${distance}m away from ${zoneDisplayName} (Max allowed: ${allowedRadius}m).`,
       };
     }
 
@@ -187,7 +205,6 @@ export const GeofenceEngine = {
 
     const alt = currentLocation.altitudeMeters;
     const altAccuracy = currentLocation.altitudeAccuracyMeters;
-    const cleanRoom = (targetRoom || '').toUpperCase().trim();
     const floorConfig = CLASSROOM_3D_FLOORS[cleanRoom];
 
     if (alt !== null && alt !== undefined && floorConfig) {
@@ -280,5 +297,21 @@ export const GeofenceEngine = {
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 }
       );
     });
+  },
+
+  /**
+   * Identifies which classroom center the student is closest to
+   */
+  getClosestRoom(coords: Coordinates): { room: string; distanceMeters: number } {
+    let closestRoom = 'LH-101';
+    let minDistance = Infinity;
+    for (const [room, config] of Object.entries(ROOM_COORDINATES)) {
+      const d = this.calculateDistanceMeters(coords.latitude, coords.longitude, config.latitude, config.longitude);
+      if (d < minDistance) {
+        minDistance = d;
+        closestRoom = room;
+      }
+    }
+    return { room: closestRoom, distanceMeters: minDistance };
   },
 };

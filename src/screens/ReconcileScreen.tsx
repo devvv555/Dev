@@ -815,16 +815,16 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
   return (
     <ScrollView
-      style={[styles.container, isEnhancedSuit && { backgroundColor: '#0B0E17' }]}
+      style={[styles.container, isEnhancedSuit && { backgroundColor: '#050505' }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         onRefresh ? (
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handlePullRefresh}
-            colors={isEnhancedSuit ? ['#4361EE', '#141927'] : ['#38BDF8', '#2563EB']}
-            tintColor={isEnhancedSuit ? '#4361EE' : '#38BDF8'}
-            progressBackgroundColor={isEnhancedSuit ? '#141927' : '#1E293B'}
+            colors={isEnhancedSuit ? ['#10B981', '#121212'] : ['#38BDF8', '#2563EB']}
+            tintColor={isEnhancedSuit ? '#10B981' : '#38BDF8'}
+            progressBackgroundColor={isEnhancedSuit ? '#121212' : '#1E293B'}
           />
         ) : undefined
       }
@@ -832,14 +832,14 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Text style={[styles.headerTitle, isEnhancedSuit && { color: '#4361EE' }]}>Campus Portals & Sync</Text>
+          <Text style={[styles.headerTitle, isEnhancedSuit && { color: '#10B981' }]}>Campus Portals & Sync</Text>
           {activeRollNo ? (
-            <View style={[styles.rollBadge, isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#4361EE' }]}>
-              <Text style={[styles.rollBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>Roll No: {toNewRollNo(activeRollNo)}</Text>
+            <View style={[styles.rollBadge, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#10B981' }]}>
+              <Text style={[styles.rollBadgeText, isEnhancedSuit && { color: '#10B981' }]}>Roll No: {toNewRollNo(activeRollNo)}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={[styles.headerSubtitle, isEnhancedSuit && { color: '#A0ABC0' }]}>
+        <Text style={[styles.headerSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
           {activeRollNo ? `Roll No: ${toNewRollNo(activeRollNo)} • ` : ''}Unified access to official PSG systems: Studzone Attendance, Moodle & Overlap Verification.
         </Text>
       </View>
@@ -848,50 +848,50 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={[
         styles.studzoneCard,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
         }
       ]}>
         <View style={styles.studzoneCardHeader}>
-          <View style={[styles.studzoneIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }]}>
+          <View style={[styles.studzoneIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
             <Text style={styles.studzoneCardIcon}>🎓</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
-              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#4361EE' }]}>PSG Studzone Extractor</Text>
-              <View style={[styles.liveBadge, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-                <Text style={[styles.liveBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>OFFICIAL PORTAL</Text>
+              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#10B981' }]}>PSG Studzone Extractor</Text>
+              <View style={[styles.liveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+                <Text style={[styles.liveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>OFFICIAL PORTAL</Text>
               </View>
             </View>
-            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
               ecampus.psgtech.ac.in/studzone
             </Text>
           </View>
         </View>
 
-        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#A0ABC0' }]}>
+        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#9CA3AF' }]}>
           Automatically pull your official subject-wise attended and total hours directly from your college portal.
         </Text>
 
         {/* Official Portal Attendance Period Banner */}
-        <View style={[styles.lastUpdatedBanner, isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }]}>
+        <View style={[styles.lastUpdatedBanner, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}>
           <View style={styles.lastUpdatedPulseRow}>
-            <View style={[styles.livePulseDot, isEnhancedSuit && { backgroundColor: '#4361EE' }]} />
-            <Text style={[styles.lastUpdatedLabel, isEnhancedSuit && { color: '#4361EE' }]}>COLLEGE PORTAL ATTENDANCE PERIOD</Text>
+            <View style={[styles.livePulseDot, isEnhancedSuit && { backgroundColor: '#10B981' }]} />
+            <Text style={[styles.lastUpdatedLabel, isEnhancedSuit && { color: '#10B981' }]}>COLLEGE PORTAL ATTENDANCE PERIOD</Text>
           </View>
 
-          <View style={[styles.periodRangeCard, isEnhancedSuit && { backgroundColor: '#141927', borderColor: '#222B45' }]}>
+          <View style={[styles.periodRangeCard, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }]}>
             <View style={styles.periodCol}>
-              <Text style={[styles.periodHeaderLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>ATTENDANCE FROM</Text>
-              <Text style={[styles.periodDateValue, isEnhancedSuit && { color: '#4361EE' }]}>
+              <Text style={[styles.periodHeaderLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>ATTENDANCE FROM</Text>
+              <Text style={[styles.periodDateValue, isEnhancedSuit && { color: '#10B981' }]}>
                 {lastSyncInfo?.attendanceFrom || '17-08-2026'}
               </Text>
             </View>
-            <View style={[styles.periodDividerLine, isEnhancedSuit && { backgroundColor: '#222B45' }]} />
+            <View style={[styles.periodDividerLine, isEnhancedSuit && { backgroundColor: '#262626' }]} />
             <View style={styles.periodCol}>
-              <Text style={[styles.periodHeaderLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>ATTENDANCE TO</Text>
-              <Text style={[styles.periodDateValue, { color: isEnhancedSuit ? '#4361EE' : '#38BDF8' }]}>
+              <Text style={[styles.periodHeaderLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>ATTENDANCE TO</Text>
+              <Text style={[styles.periodDateValue, { color: isEnhancedSuit ? '#10B981' : '#38BDF8' }]}>
                 {lastSyncInfo?.attendanceTo || '10-10-2026'}
               </Text>
             </View>
@@ -899,38 +899,38 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
           {lastSyncInfo ? (
             <View style={styles.lastUpdatedDetails}>
-              <Text style={[styles.lastUpdatedWho, isEnhancedSuit && { color: '#A0ABC0' }]}>
-                Last Extracted by: <Text style={[styles.studentNameText, isEnhancedSuit && { color: '#4361EE' }]}>{lastSyncInfo.studentName || (lastSyncInfo.rollNo ? toNewRollNo(lastSyncInfo.rollNo) : 'Student')}</Text>
+              <Text style={[styles.lastUpdatedWho, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                Last Extracted by: <Text style={[styles.studentNameText, isEnhancedSuit && { color: '#10B981' }]}>{lastSyncInfo.studentName || (lastSyncInfo.rollNo ? toNewRollNo(lastSyncInfo.rollNo) : 'Student')}</Text>
                 {lastSyncInfo.subjectsCount ? ` • ${lastSyncInfo.subjectsCount} subjects` : ''}
                 {lastSyncInfo.lastSyncedAt ? ` • Synced ${new Date(lastSyncInfo.lastSyncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''}
               </Text>
               {(lastSyncInfo as any)?.status === 'COMPLETED_AND_LOCKED' && (
                 <View style={[
                   { marginTop: 8, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6, backgroundColor: 'rgba(56, 189, 248, 0.15)', borderWidth: 1, borderColor: '#38BDF8', alignSelf: 'flex-start' },
-                  isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }
+                  isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                 ]}>
-                  <Text style={[{ color: '#38BDF8', fontSize: 11, fontWeight: '700' }, isEnhancedSuit && { color: '#4361EE' }]}>
+                  <Text style={[{ color: '#38BDF8', fontSize: 11, fontWeight: '700' }, isEnhancedSuit && { color: '#10B981' }]}>
                     Cloud Sync Complete • Attendance Locked Until Next Portal Update
                   </Text>
                 </View>
               )}
             </View>
           ) : (
-            <Text style={[styles.lastUpdatedEmpty, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.lastUpdatedEmpty, isEnhancedSuit && { color: '#9CA3AF' }]}>
               Portal not checked yet today. Be the first to connect & extract attendance from the college portal!
             </Text>
           )}
         </View>
 
         <TouchableOpacity
-          style={[styles.studzoneSyncButton, isEnhancedSuit && { backgroundColor: '#4361EE' }]}
+          style={[styles.studzoneSyncButton, isEnhancedSuit && { backgroundColor: '#10B981' }]}
           onPress={() => {
             setExtractedRecords(null);
             setIsStudzoneModalVisible(true);
           }}
           activeOpacity={0.8}
         >
-          <Text style={[styles.studzoneSyncButtonText, isEnhancedSuit && { color: '#0B0E17', fontWeight: '800' }]}>Connect & Extract Attendance</Text>
+          <Text style={[styles.studzoneSyncButtonText, isEnhancedSuit && { color: '#050505', fontWeight: '800' }]}>Connect & Extract Attendance</Text>
         </TouchableOpacity>
       </View>
 
@@ -938,58 +938,58 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={[
         styles.psgimConnectCard,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
         }
       ]}>
         <View style={styles.studzoneCardHeader}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }]}>
+          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
             <Text style={styles.studzoneCardIcon}>📚</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
-              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#4361EE' }]}>PSGIM Moodle (LMS)</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>COURSE WORK & DEADLINES</Text>
+              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#10B981' }]}>PSGIM Moodle (LMS)</Text>
+              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>COURSE WORK & DEADLINES</Text>
               </View>
             </View>
-            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
               lms.psgim.ac.in
             </Text>
           </View>
         </View>
 
-        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#A0ABC0' }]}>
+        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#9CA3AF' }]}>
           Real-time integration with PSGIM Moodle. Receive native phone tray notifications immediately whenever faculty make changes, post upcoming assignments, or reschedule class deadlines.
         </Text>
 
-        <View style={[styles.moodleCredsSummaryBox, isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }]}>
+        <View style={[styles.moodleCredsSummaryBox, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Student Roll Number:</Text>
-            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#4361EE' : '#38BDF8', fontWeight: '800' }]}>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Student Roll Number:</Text>
+            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#10B981' : '#38BDF8', fontWeight: '800' }]}>
               Roll No: {toNewRollNo(activeRollNo)}
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>LMS Bridge Mode:</Text>
-            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#4361EE' : '#34D399', fontWeight: '700' }]}>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>LMS Bridge Mode:</Text>
+            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#10B981' : '#34D399', fontWeight: '700' }]}>
               Automatic Server Gateway
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Moodle Password:</Text>
-            <Text style={[styles.moodleCredsValue, isEnhancedSuit && { color: '#4361EE' }]}>•••••••• ({lmsPassword || 'Welcome@123'})</Text>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Moodle Password:</Text>
+            <Text style={[styles.moodleCredsValue, isEnhancedSuit && { color: '#10B981' }]}>•••••••• ({lmsPassword || 'Welcome@123'})</Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Phone Notifications:</Text>
-            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#4361EE' : '#34D399', fontWeight: '800' }]}>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Phone Notifications:</Text>
+            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#10B981' : '#34D399', fontWeight: '800' }]}>
               Active on Phone Tray
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Night Auto-Sync Window:</Text>
-            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#4361EE' : '#38BDF8', fontWeight: '700' }]}>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Night Auto-Sync Window:</Text>
+            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#10B981' : '#38BDF8', fontWeight: '700' }]}>
               {LmsService.getOffPeakSlotForStudent(activeRollNo).timeString} (57s Stagger)
             </Text>
           </View>
@@ -997,27 +997,27 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
         <View style={styles.moodleActionsRow}>
           <TouchableOpacity
-            style={[styles.moodleEditCredsBtn, isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }]}
+            style={[styles.moodleEditCredsBtn, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}
             onPress={() => setShowLmsCredsModal(true)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.moodleEditCredsBtnText, isEnhancedSuit && { color: '#4361EE' }]}>Moodle Password</Text>
+            <Text style={[styles.moodleEditCredsBtnText, isEnhancedSuit && { color: '#10B981' }]}>Moodle Password</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.moodleSyncBtn,
               isLmsSyncing && { opacity: 0.7 },
-              { backgroundColor: isEnhancedSuit ? '#4361EE' : '#0284C7' }
+              { backgroundColor: isEnhancedSuit ? '#10B981' : '#0284C7' }
             ]}
             onPress={handleSyncLms}
             disabled={isLmsSyncing}
             activeOpacity={0.8}
           >
             {isLmsSyncing ? (
-              <ActivityIndicator size="small" color={isEnhancedSuit ? '#0B0E17' : '#FFFFFF'} />
+              <ActivityIndicator size="small" color={isEnhancedSuit ? '#050505' : '#FFFFFF'} />
             ) : (
-              <Text style={[styles.moodleSyncBtnText, isEnhancedSuit && { color: '#0B0E17', fontWeight: '800' }]}>Sync Moodle Deadlines</Text>
+              <Text style={[styles.moodleSyncBtnText, isEnhancedSuit && { color: '#050505', fontWeight: '800' }]}>Sync Moodle Deadlines</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1027,29 +1027,29 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       <View style={[
         styles.psgimConnectCard,
         isEnhancedSuit && {
-          backgroundColor: '#141927',
-          borderColor: '#222B45',
+          backgroundColor: '#121212',
+          borderColor: '#262626',
           borderWidth: 1.5,
         }
       ]}>
         <View style={styles.studzoneCardHeader}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }]}>
+          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
             <Text style={styles.studzoneCardIcon}>📢</Text>
           </View>
           <View style={styles.studzoneTitleCol}>
             <View style={styles.studzoneBadgeRow}>
-              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#4361EE' }]}>PSGIM Connect</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>OFFICIAL PORTAL</Text>
+              <Text style={[styles.studzoneCardTitle, isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect</Text>
+              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>OFFICIAL PORTAL</Text>
               </View>
             </View>
-            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#A0ABC0' }]}>
+            <Text style={[styles.studzoneCardSubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
               tqm.psginstitutions.in/psgimconnect
             </Text>
           </View>
         </View>
 
-        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#A0ABC0' }]}>
+        <Text style={[styles.studzoneDescription, isEnhancedSuit && { color: '#9CA3AF' }]}>
           Official college announcements, event flyers & Student Council notices. Circulars are streamed live. Register Number linking is mandatory for official records and section notices.
         </Text>
 
@@ -1065,62 +1065,62 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           </TouchableOpacity>
         )}
 
-        <View style={[styles.moodleCredsSummaryBox, isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }]}>
+        <View style={[styles.moodleCredsSummaryBox, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Register Number (Mandatory):</Text>
-            <Text style={[styles.moodleCredsValue, !connectRegisterNo && { color: '#F87171' }, isEnhancedSuit && connectRegisterNo && { color: '#4361EE' }]}>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Register Number (Mandatory):</Text>
+            <Text style={[styles.moodleCredsValue, !connectRegisterNo && { color: '#F87171' }, isEnhancedSuit && connectRegisterNo && { color: '#10B981' }]}>
               {connectRegisterNo || 'Not Linked (Mandatory)'}
             </Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Portal Password:</Text>
-            <Text style={[styles.moodleCredsValue, isEnhancedSuit && { color: '#4361EE' }]}>•••••••• ({connectPassword || 'Welcome@123'})</Text>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Portal Password:</Text>
+            <Text style={[styles.moodleCredsValue, isEnhancedSuit && { color: '#10B981' }]}>•••••••• ({connectPassword || 'Welcome@123'})</Text>
           </View>
           <View style={styles.moodleCredsRow}>
-            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Feed Status:</Text>
-            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#4361EE' : '#34D399' }]}>Live & Connected</Text>
+            <Text style={[styles.moodleCredsLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Feed Status:</Text>
+            <Text style={[styles.moodleCredsValue, { color: isEnhancedSuit ? '#10B981' : '#34D399' }]}>Live & Connected</Text>
           </View>
         </View>
 
         <View style={styles.moodleActionsRow}>
           <TouchableOpacity
-            style={[styles.moodleEditCredsBtn, isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }]}
+            style={[styles.moodleEditCredsBtn, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}
             onPress={() => setShowConnectModal(true)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.moodleEditCredsBtnText, isEnhancedSuit && { color: '#4361EE' }]}>Register No Settings</Text>
+            <Text style={[styles.moodleEditCredsBtnText, isEnhancedSuit && { color: '#10B981' }]}>Register No Settings</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.moodleSyncBtn,
               isConnectSyncing && { opacity: 0.7 },
-              isEnhancedSuit && { backgroundColor: '#4361EE' }
+              isEnhancedSuit && { backgroundColor: '#10B981' }
             ]}
             onPress={handleSyncConnect}
             disabled={isConnectSyncing}
             activeOpacity={0.8}
           >
             {isConnectSyncing ? (
-              <ActivityIndicator size="small" color={isEnhancedSuit ? '#0B0E17' : '#FFFFFF'} />
+              <ActivityIndicator size="small" color={isEnhancedSuit ? '#050505' : '#FFFFFF'} />
             ) : (
-              <Text style={[styles.moodleSyncBtnText, isEnhancedSuit && { color: '#0B0E17', fontWeight: '800' }]}>Fetch Announcements</Text>
+              <Text style={[styles.moodleSyncBtnText, isEnhancedSuit && { color: '#050505', fontWeight: '800' }]}>Fetch Announcements</Text>
             )}
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Information Tip */}
-      <View style={[styles.infoBanner, isEnhancedSuit && { backgroundColor: '#141927', borderColor: '#222B45' }]}>
+      <View style={[styles.infoBanner, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }]}>
         <Text style={styles.infoBannerIcon}>💡</Text>
-        <Text style={[styles.infoBannerText, isEnhancedSuit && { color: '#A0ABC0' }]}>
-          The <Text style={[styles.boldText, isEnhancedSuit && { color: '#4361EE' }]}>Hourly App</Text> logs each period real-time. The <Text style={[styles.boldText, isEnhancedSuit && { color: '#4361EE' }]}>College ERP</Text> represents your official baseline. Tap "Edit" on any subject below to make manual adjustments.
+        <Text style={[styles.infoBannerText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+          The <Text style={[styles.boldText, isEnhancedSuit && { color: '#10B981' }]}>Hourly App</Text> logs each period real-time. The <Text style={[styles.boldText, isEnhancedSuit && { color: '#10B981' }]}>College ERP</Text> represents your official baseline. Tap "Edit" on any subject below to make manual adjustments.
         </Text>
       </View>
 
       {/* Main Subjects Table */}
-      <View style={[styles.tableCard, isEnhancedSuit && { backgroundColor: '#141927', borderColor: '#222B45', borderWidth: 1.5 }]}>
-        <Text style={[styles.tableTitle, isEnhancedSuit && { color: '#4361EE' }]}>Subject Attendance & Reconciliation</Text>
+      <View style={[styles.tableCard, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }]}>
+        <Text style={[styles.tableTitle, isEnhancedSuit && { color: '#10B981' }]}>Subject Attendance & Reconciliation</Text>
 
         {subjects.map((sub) => {
           // Calculate today's additional logged hours for this subject
@@ -1149,30 +1149,30 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           const isSports = sub.noAttendance || sub.code === 'SPORTS' || sub.id === 'sub_sports';
 
           return (
-            <View key={sub.id} style={[styles.rowItem, isEnhancedSuit && { borderBottomColor: '#222B45' }]}>
+            <View key={sub.id} style={[styles.rowItem, isEnhancedSuit && { borderBottomColor: '#262626' }]}>
               <View style={styles.rowTop}>
                 <View style={styles.subjectTitleContainer}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={[styles.subjectCode, isEnhancedSuit && { color: '#4361EE' }]}>{sub.code}</Text>
+                    <Text style={[styles.subjectCode, isEnhancedSuit && { color: '#10B981' }]}>{sub.code}</Text>
                     {isSports && (
                       <View style={[
                         { backgroundColor: 'rgba(168, 85, 247, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#A855F7' },
-                        isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }
+                        isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                       ]}>
-                        <Text style={[{ color: '#D8B4FE', fontSize: 10, fontWeight: '700' }, isEnhancedSuit && { color: '#4361EE' }]}>NO ATTENDANCE</Text>
+                        <Text style={[{ color: '#D8B4FE', fontSize: 10, fontWeight: '700' }, isEnhancedSuit && { color: '#10B981' }]}>NO ATTENDANCE</Text>
                       </View>
                     )}
                   </View>
-                  <Text style={[styles.subjectName, isEnhancedSuit && { color: '#4361EE' }]}>{sub.name}</Text>
+                  <Text style={[styles.subjectName, isEnhancedSuit && { color: '#10B981' }]}>{sub.name}</Text>
                 </View>
 
                 {!isSports && (
                   <TouchableOpacity
-                    style={[styles.syncBtn, isEnhancedSuit && { backgroundColor: '#4361EE' }]}
+                    style={[styles.syncBtn, isEnhancedSuit && { backgroundColor: '#10B981' }]}
                     onPress={() => handleOpenEdit(sub)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.syncBtnText, isEnhancedSuit && { color: '#0B0E17', fontWeight: '800' }]}>Edit</Text>
+                    <Text style={[styles.syncBtnText, isEnhancedSuit && { color: '#050505', fontWeight: '800' }]}>Edit</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1180,9 +1180,9 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
               {isSports ? (
                 <View style={[
                   { backgroundColor: 'rgba(168, 85, 247, 0.08)', borderRadius: 8, padding: 10, marginTop: 8, borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)' },
-                  isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+                  isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
                 ]}>
-                  <Text style={[{ color: '#E9D5FF', fontSize: 12, fontWeight: '600' }, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                  <Text style={[{ color: '#E9D5FF', fontSize: 12, fontWeight: '600' }, isEnhancedSuit && { color: '#9CA3AF' }]}>
                     Physical Education & Sports - Not tracked in the ERP.
                   </Text>
                 </View>
@@ -1191,43 +1191,43 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.colBox,
-                      { backgroundColor: isEnhancedSuit ? '#0B0E17' : 'rgba(56, 189, 248, 0.05)', borderRadius: 8, padding: 4 },
-                      isEnhancedSuit && { borderWidth: 1, borderColor: '#222B45' }
+                      { backgroundColor: isEnhancedSuit ? '#050505' : 'rgba(56, 189, 248, 0.05)', borderRadius: 8, padding: 4 },
+                      isEnhancedSuit && { borderWidth: 1, borderColor: '#262626' }
                     ]}
                     onPress={() => setViewingRecordedSubject(sub)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Hourly App</Text>
-                    <Text style={[styles.colValue, { textDecorationLine: 'underline' }, isEnhancedSuit && { color: '#4361EE' }]}>
+                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Hourly App</Text>
+                    <Text style={[styles.colValue, { textDecorationLine: 'underline' }, isEnhancedSuit && { color: '#10B981' }]}>
                       {effectiveAppAttended} / {effectiveAppTotal}
                     </Text>
-                    <Text style={[styles.colPct, isEnhancedSuit && { color: '#4361EE' }]}>{appPct.toFixed(1)}%</Text>
+                    <Text style={[styles.colPct, isEnhancedSuit && { color: '#10B981' }]}>{appPct.toFixed(1)}%</Text>
                   </TouchableOpacity>
 
-                  <View style={[styles.colDivider, isEnhancedSuit && { backgroundColor: '#222B45' }]} />
+                  <View style={[styles.colDivider, isEnhancedSuit && { backgroundColor: '#262626' }]} />
 
-                  <View style={[styles.colBox, isEnhancedSuit && { backgroundColor: '#0B0E17', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#222B45' }]}>
-                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>College ERP</Text>
-                    <Text style={[styles.colValue, isEnhancedSuit && { color: '#4361EE' }]}>
+                  <View style={[styles.colBox, isEnhancedSuit && { backgroundColor: '#050505', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#262626' }]}>
+                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>College ERP</Text>
+                    <Text style={[styles.colValue, isEnhancedSuit && { color: '#10B981' }]}>
                       {sub.officialAttended} / {sub.officialTotal}
                     </Text>
-                    <Text style={[styles.colPct, isEnhancedSuit && { color: '#4361EE' }]}>{erpPct.toFixed(1)}%</Text>
+                    <Text style={[styles.colPct, isEnhancedSuit && { color: '#10B981' }]}>{erpPct.toFixed(1)}%</Text>
                   </View>
 
-                  <View style={[styles.colDivider, isEnhancedSuit && { backgroundColor: '#222B45' }]} />
+                  <View style={[styles.colDivider, isEnhancedSuit && { backgroundColor: '#262626' }]} />
 
-                  <View style={[styles.colBox, isEnhancedSuit && { backgroundColor: '#0B0E17', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#222B45' }]}>
-                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#A0ABC0' }]}>Delta / Status</Text>
+                  <View style={[styles.colBox, isEnhancedSuit && { backgroundColor: '#050505', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#262626' }]}>
+                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Delta / Status</Text>
                     <Text
                       style={[
                         styles.colValue,
                         classDiff > 0 ? styles.deltaPositive : styles.deltaEven,
-                        isEnhancedSuit && { color: '#4361EE' }
+                        isEnhancedSuit && { color: '#10B981' }
                       ]}
                     >
                       {classDiff > 0 ? `+${classDiff} hrs held` : 'In sync'}
                     </Text>
-                    <Text style={[styles.deltaSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
+                    <Text style={[styles.deltaSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
                       {attendedDiff > 0 ? `+${attendedDiff} hrs present` : 'Matches'}
                     </Text>
                   </View>
@@ -1270,21 +1270,21 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                   <TouchableOpacity
                     style={[
                       { marginTop: 8, padding: 9, borderRadius: 8, backgroundColor: 'rgba(56, 189, 248, 0.08)', borderWidth: 1, borderColor: '#0284C7', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-                      isEnhancedSuit && { backgroundColor: '#0B0E17', borderColor: '#222B45' }
+                      isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
                     ]}
                     onPress={() => setViewingRecordedSubject(sub)}
                     activeOpacity={0.8}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={[{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }, isEnhancedSuit && { color: '#4361EE' }]}>
+                      <Text style={[{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }, isEnhancedSuit && { color: '#10B981' }]}>
                         Post-Portal (From {displayFromDate} Onwards): {attendedSincePortal} / {totalSincePortal} hrs attended
                       </Text>
                     </View>
                     <View style={[
                       { backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 },
-                      isEnhancedSuit && { backgroundColor: 'rgba(67, 97, 238, 0.15)' }
+                      isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
                     ]}>
-                      <Text style={[{ color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#4361EE' }]}>
+                      <Text style={[{ color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#10B981' }]}>
                         {isCloudLocked ? 'CLOUD STORED & LOCKED' : 'CLOUD SYNCED'}
                       </Text>
                     </View>
