@@ -866,7 +866,7 @@ export default function App() {
         {/* Row 2: Cohort Sub-bar & Logged In Student Identity */}
         <View style={[styles.headerSubRow, isEnhancedSuit && { borderTopColor: 'rgba(34, 43, 69, 0.6)', backgroundColor: '#141927' }]}>
           <Text style={[styles.appTagline, isEnhancedSuit && { color: '#4361EE' }]}>
-            {isEnhancedSuit ? 'Mark XLVII Tactical Armor • Karen AI' : 'PSGIM Campus Super-App • I MBA'}
+            {isEnhancedSuit ? 'Mark III Tactical Armor • Karen AI' : 'PSGIM Campus Super-App • I MBA'}
           </Text>
           <TouchableOpacity
             style={[

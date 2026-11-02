@@ -766,9 +766,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={isEnhancedSuit ? '#FACC15' : '#38BDF8'}
-          colors={isEnhancedSuit ? ['#FACC15', '#DC2626'] : ['#38BDF8', '#2563EB']}
-          progressBackgroundColor={isEnhancedSuit ? '#1A0404' : '#1E293B'}
+          tintColor={isEnhancedSuit ? '#4361EE' : '#38BDF8'}
+          colors={isEnhancedSuit ? ['#4361EE', '#DC2626'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isEnhancedSuit ? '#141927' : '#1E293B'}
         />
       }
     >
@@ -776,8 +776,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.welcomeCard,
         isEnhancedSuit && {
-          backgroundColor: '#1A0404',
-          borderColor: '#7F1D1D',
+          backgroundColor: '#141927',
+          borderColor: '#222B45',
           borderWidth: 1.5,
           shadowColor: '#000',
         }
@@ -787,29 +787,29 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             style={[
               styles.welcomeAvatar,
               isEnhancedSuit && {
-                backgroundColor: 'rgba(250, 204, 21, 0.2)',
-                borderColor: '#FACC15',
+                backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                borderColor: '#4361EE',
               }
             ]}
             onPress={() => setShowDigitalIdModal(true)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.welcomeAvatarText, isEnhancedSuit && { color: '#FACC15' }]}>
+            <Text style={[styles.welcomeAvatarText, isEnhancedSuit && { color: '#4361EE' }]}>
               {studentName ? studentName.charAt(0) : 'S'}
             </Text>
           </TouchableOpacity>
           <View style={styles.welcomeInfo}>
-            <Text style={[styles.welcomeGreeting, isEnhancedSuit && { color: '#FCA5A5' }]}>
+            <Text style={[styles.welcomeGreeting, isEnhancedSuit && { color: '#A0ABC0' }]}>
               {isEnhancedSuit ? 'Tactical HUD Active,' : 'Welcome,'}
             </Text>
             <Text style={[styles.welcomeName, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
               {studentName || 'Student'}
             </Text>
-            <Text style={[styles.welcomeSub, isEnhancedSuit && { color: '#FCA5A5' }]}>
-              <Text style={[styles.welcomeRoll, isEnhancedSuit && { color: '#FACC15' }]}>
+            <Text style={[styles.welcomeSub, isEnhancedSuit && { color: '#A0ABC0' }]}>
+              <Text style={[styles.welcomeRoll, isEnhancedSuit && { color: '#4361EE' }]}>
                 Roll No: {toNewRollNo(studentRollNo)}
               </Text>
-              {profile.section ? ` • ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark Mark XLVII' : 'MBA (2026–28)'}
+              {profile.section ? ` • ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark Mark III' : 'MBA (2026–28)'}
             </Text>
           </View>
           {onOpenAdmin && (
@@ -817,14 +817,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               style={[
                 styles.welcomeAdminBadge,
                 isEnhancedSuit && {
-                  backgroundColor: 'rgba(250, 204, 21, 0.15)',
-                  borderColor: '#FACC15',
+                  backgroundColor: 'rgba(67, 97, 238, 0.15)',
+                  borderColor: '#4361EE',
                 }
               ]}
               onPress={onOpenAdmin}
               activeOpacity={0.7}
             >
-              <Text style={[styles.welcomeAdminBadgeText, isEnhancedSuit && { color: '#FACC15' }]}>
+              <Text style={[styles.welcomeAdminBadgeText, isEnhancedSuit && { color: '#4361EE' }]}>
                 Admin
               </Text>
             </TouchableOpacity>
@@ -832,24 +832,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
 
         {/* Verified Student Details Row */}
-        <View style={[styles.profileDetailsRow, isEnhancedSuit && { borderTopColor: '#7F1D1D' }]}>
+        <View style={[styles.profileDetailsRow, isEnhancedSuit && { borderTopColor: '#222B45' }]}>
           {studentRollNo ? (
-            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#7F1D1D' }]}>
-              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#FACC15' }]}>
+            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#222B45' }]}>
+              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#4361EE' }]}>
                 Roll No: {toNewRollNo(studentRollNo)}
               </Text>
             </View>
           ) : null}
           {profile.email ? (
-            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#7F1D1D' }]}>
-              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#FCA5A5' }]} numberOfLines={1}>
+            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#222B45' }]}>
+              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#A0ABC0' }]} numberOfLines={1}>
                 {profile.email}
               </Text>
             </View>
           ) : null}
           {isEnhancedSuit && (
-            <View style={[styles.profilePill, { backgroundColor: 'rgba(250, 204, 21, 0.15)', borderColor: '#FACC15' }]}>
-              <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '800' }}>
+            <View style={[styles.profilePill, { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
+              <Text style={{ color: '#4361EE', fontSize: 11, fontWeight: '800' }}>
                 STARK 576 ACTIVE
               </Text>
             </View>
@@ -1022,8 +1022,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.summaryCard,
         isEnhancedSuit && {
-          backgroundColor: '#1A0404',
-          borderColor: '#7F1D1D',
+          backgroundColor: '#141927',
+          borderColor: '#222B45',
           borderWidth: 1.5,
           shadowColor: '#000',
         }
@@ -1031,7 +1031,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={styles.summaryTopRow}>
           <View>
             <Text style={[styles.summaryTitle, isEnhancedSuit && { color: '#FFFFFF' }]}>Overall Attendance</Text>
-            <Text style={[styles.summarySubtitle, isEnhancedSuit && { color: '#FCA5A5' }]}>
+            <Text style={[styles.summarySubtitle, isEnhancedSuit && { color: '#A0ABC0' }]}>
               {overall.totalAttended} of {overall.totalHeld} total hours attended
             </Text>
           </View>
@@ -1040,10 +1040,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <View style={[
                 styles.activeMedBadge,
                 isEnhancedSuit
-                  ? { backgroundColor: 'rgba(250, 204, 21, 0.15)', borderColor: '#FACC15' }
+                  ? { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }
                   : { backgroundColor: '#064E3B', borderColor: '#059669' }
               ]}>
-                <Text style={[styles.activeMedBadgeText, isEnhancedSuit ? { color: '#FACC15' } : { color: '#34D399' }]}>
+                <Text style={[styles.activeMedBadgeText, isEnhancedSuit ? { color: '#4361EE' } : { color: '#34D399' }]}>
                   {isEnhancedSuit ? 'Stark Safe (≥75%)' : 'Target Safe (≥75%)'}
                 </Text>
               </View>
@@ -1057,7 +1057,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <AttendanceGauge metrics={overall} isEnhancedSuit={isEnhancedSuit} />
 
-        <View style={[styles.summaryFooter, isEnhancedSuit && { borderTopColor: '#7F1D1D' }]}>
+        <View style={[styles.summaryFooter, isEnhancedSuit && { borderTopColor: '#222B45' }]}>
           <Text style={[styles.summaryFooterText, isEnhancedSuit && { color: '#FFFFFF' }]}>{overall.summaryMessage}</Text>
         </View>
       </View>
@@ -1066,8 +1066,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <View style={[
         styles.promptSimulatorCard,
         isEnhancedSuit && {
-          backgroundColor: '#1A0404',
-          borderColor: '#7F1D1D',
+          backgroundColor: '#141927',
+          borderColor: '#222B45',
           borderWidth: 1.5,
         }
       ]}>
@@ -1075,10 +1075,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={{ marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#FACC15' }]}>
+              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#4361EE' }]}>
                 {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
               </Text>
-              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#64748B' }, isEnhancedSuit && { color: '#FCA5A5' }]}>
+              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#64748B' }, isEnhancedSuit && { color: '#A0ABC0' }]}>
                 • {displayDateFormatted}
               </Text>
             </View>
@@ -1629,41 +1629,41 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
       {/* MCU AI Fleet Companion Card - Strictly Visible in Enhanced Suit Mode Only */}
       {isEnhancedSuit && (
-        <View style={[styles.mcuAiCard, { backgroundColor: '#1A0404', borderColor: '#7F1D1D', borderWidth: 1.5 }]}>
+        <View style={[styles.mcuAiCard, { backgroundColor: '#141927', borderColor: '#222B45', borderWidth: 1.5 }]}>
           <View style={styles.mcuAiHeaderRow}>
-            <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(250, 204, 21, 0.2)', borderColor: '#FACC15', borderWidth: 1 }]}>
-              <Text style={[styles.mcuAiAvatarText, { color: '#FACC15' }]}>SP</Text>
+            <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(67, 97, 238, 0.2)', borderColor: '#4361EE', borderWidth: 1 }]}>
+              <Text style={[styles.mcuAiAvatarText, { color: '#4361EE' }]}>MK3</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.mcuAiTitle, { color: '#FFFFFF' }]}>
+                <Text style={[styles.mcuAiTitle, { color: '#F0F2FA' }]}>
                   Stark Protocol: Enhanced Suit
                 </Text>
-                <View style={[styles.mcuAiActiveBadge, { backgroundColor: 'rgba(250, 204, 21, 0.15)', borderColor: '#FACC15' }]}>
-                  <Text style={[styles.mcuAiActiveBadgeText, { color: '#FACC15' }]}>
-                    STARK RED & GOLD
+                <View style={[styles.mcuAiActiveBadge, { backgroundColor: 'rgba(67, 97, 238, 0.15)', borderColor: '#4361EE' }]}>
+                  <Text style={[styles.mcuAiActiveBadgeText, { color: '#4361EE' }]}>
+                    MARK III ACTIVE
                   </Text>
                 </View>
               </View>
-              <Text style={[styles.mcuAiSubtitle, { color: '#FCA5A5' }]}>
-                Mark XLVII Tactical Armor • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh
+              <Text style={[styles.mcuAiSubtitle, { color: '#A0ABC0' }]}>
+                Mark III Tactical Armor • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh
               </Text>
             </View>
           </View>
 
           <View style={styles.mcuAiActionsRow}>
             <TouchableOpacity
-              style={[styles.mcuAiBtnPrimary, { backgroundColor: '#FACC15', borderColor: '#FACC15' }]}
+              style={[styles.mcuAiBtnPrimary, { backgroundColor: '#4361EE', borderColor: '#4361EE' }]}
               onPress={() => setShowKarenGuide(true)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnPrimaryText, { color: '#0B0202', fontWeight: '800' }]}>Talk to Karen Guide</Text>
+              <Text style={[styles.mcuAiBtnPrimaryText, { color: '#FFFFFF', fontWeight: '800' }]}>Talk to Karen Guide</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.mcuAiBtnSecondary,
-                { borderColor: '#FACC15', backgroundColor: 'rgba(250, 204, 21, 0.12)' }
+                { borderColor: '#222B45', backgroundColor: '#0B0E17' }
               ]}
               onPress={() => {
                 if (onOpenEnhancedHub) {
@@ -1674,30 +1674,30 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FACC15', fontWeight: '800' }]}>Enhanced Suit Hub</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#4361EE', fontWeight: '800' }]}>Enhanced Suit Hub</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.mcuAiBtnSecondary, { borderColor: '#FACC15', backgroundColor: 'rgba(250, 204, 21, 0.12)' }]}
+              style={[styles.mcuAiBtnSecondary, { borderColor: '#222B45', backgroundColor: '#0B0E17' }]}
               onPress={() => setShowWhatIfForecaster(true)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FACC15', fontWeight: '800' }]}>What-If Forecaster</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#4361EE', fontWeight: '800' }]}>What-If Forecaster</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.mcuAiBtnSecondary, { borderColor: '#7F1D1D', backgroundColor: '#260606' }]}
+              style={[styles.mcuAiBtnSecondary, { borderColor: '#FF4D6D', backgroundColor: 'rgba(255, 77, 109, 0.15)' }]}
               onPress={async () => {
                 try {
                   Vibration.vibrate(40);
                 } catch {}
                 await ProtocolGate.engageTrainingWheels();
                 setIsEnhancedSuit(false);
-                Alert.alert('Training Wheels Re-engaged', 'Suit reset to standard blue student interface.');
+                Alert.alert('Training Wheels Re-engaged', 'Suit reset to standard student interface.');
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FCA5A5', fontWeight: '600' }]}>🛡️ Training Wheels</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#FF4D6D', fontWeight: '600' }]}>Training Wheels</Text>
             </TouchableOpacity>
 
             {onOpenAdmin && (
