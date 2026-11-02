@@ -902,13 +902,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 Email · {profile.email}
               </Text>
             ) : null}
-            <Text
-              style={[
-                isLightMode ? { color: '#0F172A', fontSize: 11, fontWeight: '600', marginTop: 1 } : { color: '#9CA3AF', fontSize: 11 },
-              ]}
-            >
-              Status: <Text style={{ color: '#10B981', fontWeight: '800' }}>Mint Green</Text>
-            </Text>
           </View>
           {onOpenAdmin && (
             <TouchableOpacity
