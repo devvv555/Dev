@@ -442,7 +442,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const currentSlot = activeDaySlots[activeIndex] || timetable[0];
   const currentSubject = subjects.find((s) => s.id === currentSlot?.subjectId);
 
-  // Status badge calculation
+  // Status badge calculation (clean labels without dynamic live minute countdowns)
   const getSlotStatus = () => {
     if (!currentSlot) return { tag: 'SCHEDULED', color: '#818CF8', message: 'No classes scheduled.' };
     const start = timeToMinutes(currentSlot.startTime);
@@ -450,24 +450,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const isToday = currentSlot.day.toLowerCase() === currentDayName.toLowerCase();
 
     if (!isTodayConcluded && isToday && currentMinutes >= start && currentMinutes < end) {
-      const left = end - currentMinutes;
       return {
-        tag: `LIVE NOW (${left}m left)`,
+        tag: 'IN SESSION',
         color: '#EF4444',
         message: 'This class is currently in session. Mark your attendance when completed:',
       };
     }
     if (!isTodayConcluded && isToday && currentMinutes >= end && currentMinutes <= end + 60) {
       return {
-        tag: 'CLASS JUST ENDED',
+        tag: 'CONCLUDED',
         color: '#F59E0B',
-        message: 'This class has just ended. Did you attend or miss it?',
+        message: 'This class has concluded. Did you attend or miss it?',
       };
     }
     if (!isTodayConcluded && isToday && currentMinutes < start) {
-      const startsIn = start - currentMinutes;
       return {
-        tag: `STARTS IN ${startsIn}m`,
+        tag: 'UPCOMING',
         color: '#38BDF8',
         message: `Upcoming class today at ${currentSlot.startTime}. Pre-log or plan your attendance:`,
       };
@@ -1313,19 +1311,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   </Text>
                 </TouchableOpacity>
               )}
-              <View style={[
-                { backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' },
-                isLightMode && { backgroundColor: '#EEF2FF', borderColor: '#E0E7FF' },
-                isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
-              ]}>
-                <Text style={[
-                  { fontSize: 10, fontWeight: '800', color: viewingNextDay ? '#818CF8' : '#38BDF8' },
-                  isLightMode && { color: '#2B3990' },
-                  isEnhancedSuit && !isLightMode && { color: '#10B981' }
-                ]}>
-                  {viewingNextDay ? 'UPCOMING DAY' : 'LIVE REAL-TIME'}
-                </Text>
-              </View>
             </View>
           </View>
 
@@ -1386,7 +1371,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </Text>
             {currentSlot && (currentSlot.faculty || currentSubject?.faculty) ? (
               <TouchableOpacity
-                style={styles.hourlyFacultyTouch}
+                style={[
+                  styles.hourlyFacultyTouch,
+                  isLightMode && { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' },
+                ]}
                 activeOpacity={0.7}
                 onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
               >
@@ -1438,6 +1426,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     isLightMode && (
                       isSelected
                         ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                        : rec?.status === 'attended'
+                        ? { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }
+                        : rec?.status === 'bunked'
+                        ? { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }
+                        : rec?.status === 'cancelled'
+                        ? { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }
                         : { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
                     ),
                     isEnhancedSuit && !isLightMode && (
@@ -1474,10 +1468,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       No Attendance
                     </Text>
                   ) : rec ? (
-                    <Text style={[styles.periodPillStatus, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
-                      {rec.status === 'attended' ? 'Attended' : rec.status === 'bunked' ? 'Missed' : 'Free'}
+                    <Text style={[
+                      styles.periodPillStatus,
+                      isSelected
+                        ? { color: '#FFFFFF' }
+                        : rec.status === 'attended'
+                        ? { color: isLightMode ? '#059669' : '#34D399', fontWeight: '700' }
+                        : rec.status === 'bunked'
+                        ? { color: isLightMode ? '#DC2626' : '#F87171', fontWeight: '700' }
+                        : { color: isLightMode ? '#64748B' : '#94A3B8', fontWeight: '700' }
+                    ]}>
+                      {rec.status === 'attended' ? '✅ Attended' : rec.status === 'bunked' ? '❌ Missed' : '⚪ Free'}
                     </Text>
-                  ) : null}
+                  ) : (
+                    <Text style={[
+                      styles.periodPillStatus,
+                      isSelected
+                        ? { color: isLightMode ? 'rgba(255,255,255,0.85)' : '#050505' }
+                        : { color: isLightMode ? '#94A3B8' : '#64748B' }
+                    ]}>
+                      ⏳ Unmarked
+                    </Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -1493,38 +1505,58 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               !isCurrentSlotLocked && currentRecord.status === 'attended' && styles.lockedBannerAttended,
               !isCurrentSlotLocked && currentRecord.status === 'bunked' && styles.lockedBannerBunked,
               !isCurrentSlotLocked && currentRecord.status === 'cancelled' && styles.lockedBannerCancelled,
+              isLightMode && (
+                isCurrentSlotLocked
+                  ? { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD', borderWidth: 1.5 }
+                  : currentRecord.status === 'attended'
+                  ? { backgroundColor: '#ECFDF5', borderColor: '#6EE7B7' }
+                  : currentRecord.status === 'bunked'
+                  ? { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }
+                  : { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
+              ),
             ]}
           >
             <View style={styles.lockedBannerRow}>
               <Text style={styles.lockedBannerIcon}>
-                {isCurrentSlotLocked ? '[LOCKED]' : currentRecord.status === 'attended' ? '[ATTENDED]' : currentRecord.status === 'bunked' ? '[MISSED]' : '[FREE]'}
+                {isCurrentSlotLocked ? '🔒' : currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
               </Text>
               <View style={styles.lockedBannerTextContainer}>
-                <Text style={styles.lockedBannerTitle}>
+                <Text style={[
+                  styles.lockedBannerTitle,
+                  isLightMode && {
+                    color: isCurrentSlotLocked
+                      ? '#0369A1'
+                      : currentRecord.status === 'attended'
+                      ? '#065F46'
+                      : currentRecord.status === 'bunked'
+                      ? '#991B1B'
+                      : '#334155'
+                  }
+                ]}>
                   {currentRecord.status === 'attended' && `Recorded: Attended (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
                   {currentRecord.status === 'bunked' && `Recorded: Missed (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
                   {currentRecord.status === 'cancelled' && 'Recorded: Free / Cancelled'}
                 </Text>
                 {isCurrentSlotLocked ? (
                   <>
-                    <Text style={styles.lockedBannerSub}>
+                    <Text style={[styles.lockedBannerSub, isLightMode && { color: '#0C4A6E' }]}>
                       Class timer completed. Attendance has been synced to the cloud and locked. It cannot be altered until the college updates portal attendance.
                     </Text>
-                    <Text style={styles.lockedCloudBadge}>
+                    <Text style={[styles.lockedCloudBadge, isLightMode && { color: '#0284C7' }]}>
                       Synced to Cloud • Portal Update Pending
                     </Text>
                   </>
                 ) : isAttendanceWindowActive ? (
                   <>
-                    <Text style={[styles.lockedBannerSub, { color: '#6ee7b7', fontWeight: '700' }]}>
+                    <Text style={[styles.lockedBannerSub, { color: isLightMode ? '#047857' : '#6ee7b7', fontWeight: '700' }]}>
                       Live attendance window open. Closes in {Math.floor(windowRemainingSeconds / 60)}:{String(windowRemainingSeconds % 60).padStart(2, '0')}. You can mark or change your attendance now.
                     </Text>
-                    <Text style={[styles.lockedCloudBadge, { color: '#34d399', backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                    <Text style={[styles.lockedCloudBadge, { color: isLightMode ? '#059669' : '#34d399', backgroundColor: isLightMode ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.15)' }]}>
                       Window Active • Closes in {Math.floor(windowRemainingSeconds / 60)}m {windowRemainingSeconds % 60}s
                     </Text>
                   </>
                 ) : (
-                  <Text style={styles.lockedBannerSub}>
+                  <Text style={[styles.lockedBannerSub, isLightMode && { color: '#475569' }]}>
                     Daily attendance window open until 9:00 PM nightly cloud sync. Tap any option below to change or record status.
                   </Text>
                 )}
