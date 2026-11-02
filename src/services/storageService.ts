@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   PERIOD_RECORDS: '@attendance_monitor_period_records_',
   PERIOD_REMINDERS: '@attendance_monitor_period_reminders_',
   SURPLUS_ALERTS: '@attendance_monitor_surplus_alerts_',
+  UNLOCKED_DAYS: '@attendance_monitor_unlocked_days_',
 };
 
 export const INITIAL_SUBJECTS: Subject[] = [];
@@ -343,6 +344,52 @@ export const StorageService = {
       await this.saveSurplusAlerts(rollNo, updated);
     } catch (e) {
       console.warn('Error marking surplus alert notified:', e);
+    }
+  },
+
+  async getUnlockedDays(rollNo: string): Promise<string[]> {
+    try {
+      if (!rollNo) return [];
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.UNLOCKED_DAYS}${canonicalRoll}`;
+      const raw = await AsyncStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.warn('Error reading unlocked days:', e);
+      return [];
+    }
+  },
+
+  async unlockDay(rollNo: string, dateStr: string): Promise<string[]> {
+    try {
+      if (!rollNo || !dateStr) return [];
+      const current = await this.getUnlockedDays(rollNo);
+      if (!current.includes(dateStr)) {
+        const next = [...current, dateStr];
+        const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+        const key = `${STORAGE_KEYS.UNLOCKED_DAYS}${canonicalRoll}`;
+        await AsyncStorage.setItem(key, JSON.stringify(next));
+        return next;
+      }
+      return current;
+    } catch (e) {
+      console.warn('Error unlocking day in storage:', e);
+      return [];
+    }
+  },
+
+  async relockDay(rollNo: string, dateStr: string): Promise<string[]> {
+    try {
+      if (!rollNo || !dateStr) return [];
+      const current = await this.getUnlockedDays(rollNo);
+      const next = current.filter((d) => d !== dateStr);
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const key = `${STORAGE_KEYS.UNLOCKED_DAYS}${canonicalRoll}`;
+      await AsyncStorage.setItem(key, JSON.stringify(next));
+      return next;
+    } catch (e) {
+      console.warn('Error relocking day in storage:', e);
+      return [];
     }
   },
 };

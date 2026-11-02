@@ -208,10 +208,16 @@ export function isPeriodLocked(params: {
   subject?: Subject;
   now?: Date;
   isWindowOpen?: boolean;
+  isDayUnlocked?: boolean;
 }): { isLocked: boolean; reason?: string } {
-  const { slot, recordDate, subject, now = new Date(), isWindowOpen = false } = params;
+  const { slot, recordDate, subject, now = new Date(), isWindowOpen = false, isDayUnlocked = false } = params;
   if (!slot || !slot.endTime || !recordDate) {
     return { isLocked: false };
+  }
+
+  // If the user or admin explicitly unlocked attendance for the entire day, allow editing
+  if (isDayUnlocked) {
+    return { isLocked: false, reason: 'Attendance for this entire day has been unlocked.' };
   }
 
   // If live attendance window is currently OPEN for today, allow editing

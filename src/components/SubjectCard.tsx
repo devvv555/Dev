@@ -13,6 +13,7 @@ interface SubjectCardProps {
   onOpenCoursePlan?: (subjectCode: string, subjectName: string) => void;
   onEditFaculty?: (subject: Subject) => void;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
@@ -21,6 +22,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   onOpenCoursePlan,
   onEditFaculty,
   isEnhancedSuit = false,
+  isLightMode = false,
 }) => {
   const [showSessionsModal, setShowSessionsModal] = useState(false);
 
@@ -45,36 +47,60 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   return (
     <View style={[
       styles.card,
-      { borderLeftColor: isEnhancedSuit ? '#10B981' : subject.color },
-      isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }
+      { borderLeftColor: isLightMode ? '#2B3990' : isEnhancedSuit ? '#10B981' : subject.color },
+      isLightMode
+        ? {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E2E8F0',
+            borderWidth: 1,
+            shadowColor: '#64748B',
+            shadowOpacity: 0.08,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 8,
+            elevation: 2,
+          }
+        : isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }
     ]}>
       {/* Top Header */}
       <View style={styles.cardHeader}>
         <View style={styles.titleArea}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[styles.codeText, isEnhancedSuit && { color: '#10B981' }]}>{subject.code}</Text>
+            <Text style={[styles.codeText, isLightMode ? { color: '#64748B', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{subject.code}</Text>
             {isSports && (
-              <View style={[styles.batchPill, { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }]}>
-                <Text style={[styles.batchPillText, { color: '#818CF8' }]}>No Attendance</Text>
+              <View style={[
+                styles.batchPill,
+                isLightMode
+                  ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+                  : { backgroundColor: 'rgba(99, 102, 241, 0.18)', borderColor: '#6366F1' }
+              ]}>
+                <Text style={[styles.batchPillText, isLightMode ? { color: '#2B3990' } : { color: '#818CF8' }]}>No Attendance</Text>
               </View>
             )}
           </View>
-          <Text style={[styles.nameText, isEnhancedSuit && { color: '#F8FAFC' }]} numberOfLines={1}>
+          <Text style={[styles.nameText, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#F8FAFC' }]} numberOfLines={1}>
             {subject.name}
           </Text>
           {(subject.batch || subject.faculty) && (
             <View style={styles.batchInfoRow}>
               {subject.batch && (
-                <View style={[styles.batchPill, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                  <Text style={[styles.batchPillText, isEnhancedSuit && { color: '#10B981' }]}>{subject.batch}</Text>
+                <View style={[
+                  styles.batchPill,
+                  isLightMode
+                    ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+                    : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                ]}>
+                  <Text style={[styles.batchPillText, isLightMode ? { color: '#2B3990' } : isEnhancedSuit && { color: '#10B981' }]}>{subject.batch}</Text>
                 </View>
               )}
               <TouchableOpacity
                 onPress={() => onEditFaculty && onEditFaculty(subject)}
-                style={styles.facultyTouchBtn}
+                style={[
+                  styles.facultyTouchBtn,
+                  isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
+                ]}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.facultyText, isEnhancedSuit && { color: '#10B981' }]} numberOfLines={1}>
+                <Text style={[styles.facultyText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#10B981' }]} numberOfLines={1}>
                   {subject.faculty || 'Assign Faculty'} ✎
                 </Text>
               </TouchableOpacity>
@@ -86,15 +112,15 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Attendance Stats Row */}
       {isSports ? (
         <View style={styles.statsRow}>
-          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#F8FAFC' }]}>Physical Education & Wellness</Text>
-          <Text style={[styles.officialSyncText, isEnhancedSuit && { color: '#9CA3AF' }]}>Not tracked in the ERP</Text>
+          <Text style={[styles.classCountsText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#F8FAFC' }]}>Physical Education & Wellness</Text>
+          <Text style={[styles.officialSyncText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>Not tracked in the ERP</Text>
         </View>
       ) : (
         <View style={styles.statsRow}>
-          <Text style={[styles.classCountsText, isEnhancedSuit && { color: '#F8FAFC' }]}>
-            <Text style={[styles.attendedCount, isEnhancedSuit && { color: '#10B981' }]}>{subject.attended}</Text> / {subject.total} hrs attended
+          <Text style={[styles.classCountsText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#F8FAFC' }]}>
+            <Text style={[styles.attendedCount, isLightMode ? { color: '#0F172A', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' }]}>{subject.attended}</Text> / {subject.total} hrs attended
           </Text>
-          <Text style={[styles.officialSyncText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+          <Text style={[styles.officialSyncText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
             College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
           </Text>
         </View>
@@ -105,20 +131,28 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         <View
           style={[
             styles.statusBanner,
-            { backgroundColor: 'rgba(99, 102, 241, 0.12)', borderColor: 'rgba(99, 102, 241, 0.35)', marginTop: 8 }
+            isLightMode
+              ? { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0', borderWidth: 1, marginTop: 8 }
+              : { backgroundColor: 'rgba(99, 102, 241, 0.12)', borderColor: 'rgba(99, 102, 241, 0.35)', marginTop: 8 }
           ]}
         >
-          <Text style={[styles.statusBannerText, { color: '#C7D2FE' }]}>
+          <Text style={[styles.statusBannerText, isLightMode ? { color: '#475569' } : { color: '#C7D2FE' }]}>
             Not tracked in the ERP.
           </Text>
         </View>
       ) : (
         <>
-          <AttendanceGauge metrics={metrics} isEnhancedSuit={isEnhancedSuit} />
+          <AttendanceGauge metrics={metrics} isEnhancedSuit={isEnhancedSuit} isLightMode={isLightMode} />
           <View
             style={[
               styles.statusBanner,
-              metrics.status === 'SAFE_STANDARD'
+              isLightMode
+                ? {
+                    backgroundColor: metrics.status === 'SAFE_STANDARD' ? '#ECFDF5' : '#FEF2F2',
+                    borderColor: metrics.status === 'SAFE_STANDARD' ? '#A7F3D0' : '#FECACA',
+                    borderWidth: 1,
+                  }
+                : metrics.status === 'SAFE_STANDARD'
                 ? (isEnhancedSuit
                     ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                     : styles.statusBannerSafe)
@@ -129,7 +163,9 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           >
             <Text style={[
               styles.statusBannerText,
-              isEnhancedSuit && metrics.status === 'SAFE_STANDARD' && { color: '#10B981' }
+              isLightMode
+                ? { color: metrics.status === 'SAFE_STANDARD' ? '#065F46' : '#991B1B', fontWeight: '600' }
+                : isEnhancedSuit && metrics.status === 'SAFE_STANDARD' && { color: '#10B981' }
             ]}>
               {metrics.summaryMessage}
             </Text>
@@ -140,11 +176,16 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       {/* Course Plan & Continuous Assessment (CA) Pattern */}
       {onOpenCoursePlan && (
         <TouchableOpacity
-          style={[styles.coursePlanBtn, isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }]}
+          style={[
+            styles.coursePlanBtn,
+            isLightMode
+              ? { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', borderWidth: 1 }
+              : isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
+          ]}
           onPress={() => onOpenCoursePlan(subject.code, subject.name)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.coursePlanBtnText, isEnhancedSuit && { color: '#10B981' }]}>
+          <Text style={[styles.coursePlanBtnText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>
             Course Plan & CA Marks (50M Target) →
           </Text>
         </TouchableOpacity>

@@ -6,12 +6,14 @@ interface PsgimAnnouncementCardProps {
   announcement: PsgimAnnouncement;
   onPress: () => void;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
   announcement,
   onPress,
   isEnhancedSuit = false,
+  isLightMode = false,
 }) => {
   const isUrgent = announcement.priority === 'urgent';
   const isImportant = announcement.priority === 'important';
@@ -20,11 +22,22 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
     <TouchableOpacity
       style={[
         styles.card,
-        isEnhancedSuit && {
-          backgroundColor: '#050505',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOpacity: 0.08,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#050505',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+            }
       ]}
       onPress={onPress}
       activeOpacity={0.8}
@@ -32,17 +45,21 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
       <View style={styles.headerRow}>
         <View style={[
           styles.categoryBadge,
-          isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+          isLightMode
+            ? { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }
+            : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
         ]}>
-          <Text style={[styles.categoryBadgeText, isEnhancedSuit && { color: '#10B981' }]}>{announcement.category.toUpperCase()}</Text>
+          <Text style={[styles.categoryBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{announcement.category.toUpperCase()}</Text>
         </View>
 
         {announcement.is_pinned === 1 && (
           <View style={[
             styles.pinnedBadge,
-            isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' }
+            isLightMode
+              ? { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }
+              : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' }
           ]}>
-            <Text style={[styles.pinnedText, isEnhancedSuit && { color: '#10B981' }]}>[PINNED]</Text>
+            <Text style={[styles.pinnedText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#10B981' }]}>[PINNED]</Text>
           </View>
         )}
 
@@ -51,6 +68,8 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
             style={[
               styles.priorityBadge,
               isUrgent ? styles.priorityUrgent : styles.priorityImportant,
+              isLightMode && isImportant && { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' },
+              isLightMode && isUrgent && { backgroundColor: '#FEE2E2', borderColor: '#EF4444' },
               isEnhancedSuit && isUrgent && { backgroundColor: 'rgba(239, 68, 68, 0.25)', borderColor: '#EF4444' },
               isEnhancedSuit && isImportant && { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' },
             ]}
@@ -59,6 +78,8 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
               style={[
                 styles.priorityText,
                 isUrgent ? styles.priorityUrgentText : styles.priorityImportantText,
+                isLightMode && isImportant && { color: '#B45309' },
+                isLightMode && isUrgent && { color: '#DC2626' },
                 isEnhancedSuit && isImportant && { color: '#10B981' }
               ]}
             >
@@ -67,7 +88,7 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
           </View>
         )}
 
-        <Text style={[styles.dateText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+        <Text style={[styles.dateText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
           {new Date(announcement.publish_at).toLocaleDateString('en-IN', {
             day: 'numeric',
             month: 'short',
@@ -77,12 +98,12 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
 
       <View style={styles.bodyRow}>
         <View style={styles.textContainer}>
-          <Text style={[styles.title, isEnhancedSuit && { color: '#10B981' }]} numberOfLines={2}>
+          <Text style={[styles.title, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]} numberOfLines={2}>
             {announcement.title}
           </Text>
 
           {announcement.summary ? (
-            <Text style={[styles.summary, isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={2}>
+            <Text style={[styles.summary, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={2}>
               {announcement.summary}
             </Text>
           ) : null}
@@ -91,10 +112,10 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
           {(announcement.eventDate || announcement.venue) && (
             <View style={styles.scheduleRow}>
               {announcement.eventDate && (
-                <Text style={[styles.scheduleText, isEnhancedSuit && { color: '#10B981' }]}>Date: {announcement.eventDate}</Text>
+                <Text style={[styles.scheduleText, isLightMode ? { color: '#2B3990', fontWeight: '600' } : isEnhancedSuit && { color: '#10B981' }]}>Date: {announcement.eventDate}</Text>
               )}
               {announcement.venue && (
-                <Text style={[styles.scheduleText, isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
+                <Text style={[styles.scheduleText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
                   Venue: {announcement.venue}
                 </Text>
               )}
@@ -102,7 +123,7 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
           )}
 
           <View style={styles.authorRow}>
-            <Text style={[styles.authorText, isEnhancedSuit && { color: '#8E9BB0' }]}>By: {announcement.created_by}</Text>
+            <Text style={[styles.authorText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#8E9BB0' }]}>By: {announcement.created_by}</Text>
           </View>
         </View>
 
@@ -125,8 +146,8 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
         )}
       </View>
 
-      <View style={styles.footerRow}>
-        <Text style={styles.readMoreText}>View Circular & Poster →</Text>
+      <View style={[styles.footerRow, isLightMode && { borderTopColor: '#F1F5F9' }]}>
+        <Text style={[styles.readMoreText, isLightMode && { color: '#2B3990', fontWeight: '700' }]}>View Circular & Poster →</Text>
       </View>
     </TouchableOpacity>
   );

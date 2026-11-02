@@ -121,6 +121,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [selectedRescheduleSubjectId, setSelectedRescheduleSubjectId] = useState<string>('');
   const [rescheduleDate, setRescheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [rescheduleTime, setRescheduleTime] = useState<string>('16:45 - 17:45');
+  const [unlockedDays, setUnlockedDays] = useState<string[]>([]);
 
   const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
   const isLightMode = themeMode === 'LIGHT';
@@ -155,6 +156,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (studentRollNo) {
       StorageService.getPeriodReminders(studentRollNo).then(setReminders);
       StorageService.getSurplusAlerts(studentRollNo).then(setSurplusAlerts);
+      StorageService.getUnlockedDays(studentRollNo).then(setUnlockedDays);
       LmsService.getAssignments(studentRollNo).then(setAssignments);
       PsgimConnectService.getCredentials(studentRollNo).then((creds) => {
         setHasConnectRegisterNo(!!creds?.registerNo);
@@ -579,6 +581,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     (!attendanceWindow.expiresAt || new Date(attendanceWindow.expiresAt).getTime() > Date.now())
   );
 
+  const isDayUnlocked = unlockedDays.includes(todayDate);
+
   // Calculate if the currently selected slot is locked
   const lockInfo = currentSlot
     ? isPeriodLocked({
@@ -587,9 +591,34 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         subject: currentSubject,
         now,
         isWindowOpen: isAttendanceWindowActive,
+        isDayUnlocked,
       })
     : { isLocked: false };
   const isCurrentSlotLocked = lockInfo.isLocked;
+
+  const handleToggleUnlockEntireDay = async () => {
+    try {
+      Vibration.vibrate(40);
+    } catch {}
+
+    if (isDayUnlocked) {
+      // Re-lock
+      const updated = await StorageService.relockDay(studentRollNo, todayDate);
+      setUnlockedDays(updated);
+      Alert.alert(
+        'Attendance Re-Locked',
+        `Standard timer and cloud lock rules have been restored for ${todayDate}.`
+      );
+    } else {
+      // Unlock
+      const updated = await StorageService.unlockDay(studentRollNo, todayDate);
+      setUnlockedDays(updated);
+      Alert.alert(
+        'Entire Day Unlocked!',
+        `Attendance for all periods on ${todayDate} is now unlocked. You can freely edit or record any period attendance.`
+      );
+    }
+  };
 
   // Auto-sync completed slot attendance to the cloud once timer completes
   useEffect(() => {
@@ -699,6 +728,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         recordDate: todayDate,
         subject: currentSubject,
         isWindowOpen: isAttendanceWindowActive,
+        isDayUnlocked,
       });
       if (check.isLocked) {
         Alert.alert(
@@ -901,17 +931,33 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
 
         {/* Verified Student Details Row */}
-        <View style={[styles.profileDetailsRow, isEnhancedSuit && { borderTopColor: '#262626' }]}>
+        <View style={[styles.profileDetailsRow, isLightMode ? { borderTopColor: '#E2E8F0' } : isEnhancedSuit && { borderTopColor: '#262626' }]}>
           {studentRollNo ? (
-            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#262626' }]}>
-              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#10B981' }]}>
+            <View style={[
+              styles.profilePill,
+              isLightMode
+                ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+                : isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#262626' }
+            ]}>
+              <Text style={[
+                styles.profilePillText,
+                isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }
+              ]}>
                 Roll No: {toNewRollNo(studentRollNo)}
               </Text>
             </View>
           ) : null}
           {profile.email ? (
-            <View style={[styles.profilePill, isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#262626' }]}>
-              <Text style={[styles.profilePillText, isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
+            <View style={[
+              styles.profilePill,
+              isLightMode
+                ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+                : isEnhancedSuit && { backgroundColor: '#0B0202', borderColor: '#262626' }
+            ]}>
+              <Text style={[
+                styles.profilePillText,
+                isLightMode ? { color: '#2B3990', fontWeight: '600' } : isEnhancedSuit && { color: '#9CA3AF' }
+              ]} numberOfLines={1}>
                 {profile.email}
               </Text>
             </View>
@@ -928,20 +974,27 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {/* Latest Announcement Banner */}
         {announcements.length > 0 && (
           <TouchableOpacity
-            style={styles.welcomeAnnouncementBanner}
+            style={[
+              styles.welcomeAnnouncementBanner,
+              isLightMode && {
+                backgroundColor: '#EFF6FF',
+                borderColor: '#BFDBFE',
+                borderWidth: 1,
+              }
+            ]}
             onPress={() => {
               setSelectedNotice(announcements[0]);
               PsgimConnectService.markAnnouncementAsRead(announcements[0].id);
             }}
             activeOpacity={0.8}
           >
-            <View style={styles.welcomeAnnouncementBadge}>
+            <View style={[styles.welcomeAnnouncementBadge, isLightMode && { backgroundColor: '#2563EB' }]}>
               <Text style={styles.welcomeAnnouncementBadgeText}>ANNOUNCEMENT</Text>
             </View>
-            <Text style={styles.welcomeAnnouncementTitle} numberOfLines={1}>
+            <Text style={[styles.welcomeAnnouncementTitle, isLightMode && { color: '#1E3A8A', fontWeight: '700' }]} numberOfLines={1}>
               {announcements[0].title}
             </Text>
-            <Text style={styles.welcomeAnnouncementChevron}>View →</Text>
+            <Text style={[styles.welcomeAnnouncementChevron, isLightMode && { color: '#2563EB' }]}>View →</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -1043,11 +1096,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <TouchableOpacity
           style={[
             styles.holidayBannerCard,
-            isEnhancedSuit && {
-              backgroundColor: '#121212',
-              borderColor: '#262626',
-              borderWidth: 1.5,
-            }
+            isLightMode
+              ? {
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#E2E8F0',
+                  borderWidth: 1,
+                  shadowColor: '#64748B',
+                  shadowOpacity: 0.08,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowRadius: 6,
+                  elevation: 2,
+                }
+              : isEnhancedSuit && {
+                  backgroundColor: '#121212',
+                  borderColor: '#262626',
+                  borderWidth: 1.5,
+                }
           ]}
           onPress={onOpenCalendar}
           activeOpacity={0.8}
@@ -1057,18 +1121,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <View style={styles.holidayBadgeRow}>
                 <Text style={[
                   styles.holidayCountdownBadge,
-                  isEnhancedSuit && { color: '#050505', backgroundColor: '#10B981' }
+                  isLightMode && { color: '#047857', fontWeight: '800' },
+                  isEnhancedSuit && !isLightMode && { color: '#050505', backgroundColor: '#10B981' }
                 ]}>
                   ACADEMIC CALENDAR & HOLIDAYS
                 </Text>
                 {nextHolidayInfo.holiday.longWeekendTag && (
                   <View style={[
                     styles.holidayWeekendPill,
-                    isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                    isLightMode && { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' },
+                    isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                   ]}>
                     <Text style={[
                       styles.holidayWeekendPillText,
-                      isEnhancedSuit && { color: '#10B981' }
+                      isLightMode && { color: '#B45309' },
+                      isEnhancedSuit && !isLightMode && { color: '#10B981' }
                     ]}>
                       {nextHolidayInfo.holiday.longWeekendTag}
                     </Text>
@@ -1077,13 +1144,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </View>
               <Text style={[
                 styles.holidayBannerTitle,
-                isEnhancedSuit && { color: '#10B981' }
+                isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }
               ]} numberOfLines={1}>
                 Next: {nextHolidayInfo.holiday.title} ({formatDateDMY(nextHolidayInfo.holiday.date)} • {nextHolidayInfo.holiday.day})
               </Text>
             </View>
           </View>
-          <Text style={[styles.holidayBannerChevron, isEnhancedSuit && { color: '#10B981' }]}>→</Text>
+          <Text style={[styles.holidayBannerChevron, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>→</Text>
         </TouchableOpacity>
       ) : null}
 
@@ -1369,7 +1436,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     rec?.status === 'attended' && !isSelected && styles.periodPillMarkedAttended,
                     rec?.status === 'bunked' && !isSelected && styles.periodPillMarkedBunked,
                     rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
-                    isEnhancedSuit && (
+                    isLightMode && (
+                      isSelected
+                        ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                        : { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
+                    ),
+                    isEnhancedSuit && !isLightMode && (
                       isSelected
                         ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                         : { backgroundColor: '#050505', borderColor: '#262626' }
@@ -1382,7 +1454,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     style={[
                       styles.periodPillTime,
                       isSelected && styles.periodPillTextActive,
-                      isEnhancedSuit && (isSelected ? { color: '#050505', fontWeight: '800' } : { color: '#10B981' })
+                      isLightMode && (isSelected ? { color: '#FFFFFF' } : { color: '#64748B' }),
+                      isEnhancedSuit && !isLightMode && (isSelected ? { color: '#050505', fontWeight: '800' } : { color: '#10B981' })
                     ]}
                   >
                     {slot.startTime}
@@ -1391,17 +1464,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     style={[
                       styles.periodPillCode,
                       isSelected && styles.periodPillTextActive,
-                      isEnhancedSuit && (isSelected ? { color: '#050505', fontWeight: '800' } : { color: '#10B981' })
+                      isLightMode && (isSelected ? { color: '#FFFFFF', fontWeight: '800' } : { color: '#0F172A', fontWeight: '700' }),
+                      isEnhancedSuit && !isLightMode && (isSelected ? { color: '#050505', fontWeight: '800' } : { color: '#10B981' })
                     ]}
                   >
                     {slotSub?.code || 'CLASS'}
                   </Text>
                   {isSportsSlot ? (
-                    <Text style={[styles.periodPillStatus, { color: isEnhancedSuit ? '#10B981' : '#818CF8' }]}>
+                    <Text style={[styles.periodPillStatus, isLightMode ? { color: '#2B3990' } : { color: isEnhancedSuit ? '#10B981' : '#818CF8' }]}>
                       No Attendance
                     </Text>
                   ) : rec ? (
-                    <Text style={[styles.periodPillStatus, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                    <Text style={[styles.periodPillStatus, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
                       {rec.status === 'attended' ? 'Attended' : rec.status === 'bunked' ? 'Missed' : 'Free'}
                     </Text>
                   ) : null}
@@ -1529,6 +1603,33 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           )
         )}
 
+        {/* 1-Tap Unlock Entire Day Button */}
+        {!isWeekendOrNoClass && (
+          <View style={styles.unlockDayRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.unlockDayBtn,
+                isDayUnlocked ? styles.unlockDayBtnActive : styles.unlockDayBtnInactive,
+                isLightMode && (isDayUnlocked ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' } : { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }),
+                isEnhancedSuit && (isDayUnlocked ? { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' } : { backgroundColor: '#121212', borderColor: '#262626' }),
+              ]}
+              onPress={handleToggleUnlockEntireDay}
+            >
+              <Text
+                style={[
+                  styles.unlockDayBtnText,
+                  isDayUnlocked ? styles.unlockDayBtnTextActive : styles.unlockDayBtnTextInactive,
+                  isLightMode && (isDayUnlocked ? { color: '#059669' } : { color: '#475569' }),
+                  isEnhancedSuit && (isDayUnlocked ? { color: '#10B981' } : { color: '#9CA3AF' }),
+                ]}
+              >
+                {isDayUnlocked ? '🔓 Day Unlocked (Editing Allowed) • Tap to Relock' : '🔓 Unlock Attendance for Entire Day'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
 
         {/* Next Class Tasks & Reminders Section */}
         {!(isWeekendOrNoClass && selectedDay === currentDayName) && (() => {
@@ -1631,31 +1732,52 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* PSGIM Moodle • Upcoming Course Assignments & Deadlines */}
       <View style={[
         styles.connectSection,
-        isEnhancedSuit && {
-          backgroundColor: '#121212',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOpacity: 0.08,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 8,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#121212',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+            }
       ]}>
         <View style={styles.connectHeaderRow}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+          <View style={[
+            styles.connectIconCircle,
+            isLightMode
+              ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+              : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
+          ]}>
             <Text style={styles.connectIcon}>📚</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.connectSectionTitle, isEnhancedSuit && { color: '#10B981' }]}>Moodle Course Assignments</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>LMS DEADLINES</Text>
+              <Text style={[styles.connectSectionTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>Moodle Course Assignments</Text>
+              <View style={[
+                styles.connectLiveBadge,
+                isLightMode
+                  ? { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }
+                  : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+              ]}>
+                <Text style={[styles.connectLiveBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>LMS DEADLINES</Text>
               </View>
             </View>
-            <Text style={[styles.connectSectionSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text style={[styles.connectSectionSub, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
               lms.psgim.ac.in • Active faculty coursework submissions
             </Text>
           </View>
         </View>
 
         {assignments.length === 0 ? (
-          <Text style={[styles.connectEmptyText, isEnhancedSuit && { color: '#9CA3AF' }]}>No pending assignments on Moodle.</Text>
+          <Text style={[styles.connectEmptyText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>No pending assignments on Moodle.</Text>
         ) : (
           assignments.slice(0, 3).map((asg) => {
             const isSubmitted = asg.status === 'SUBMITTED';
@@ -1672,33 +1794,45 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 style={[
                   styles.assignmentCard,
                   isSubmitted && { borderColor: '#10B981', backgroundColor: '#064E3B15' },
-                  isEnhancedSuit && {
-                    backgroundColor: '#050505',
-                    borderColor: isSubmitted ? '#10B981' : '#262626',
-                  }
+                  isLightMode
+                    ? {
+                        backgroundColor: '#F8FAFC',
+                        borderColor: isSubmitted ? '#10B981' : '#E2E8F0',
+                      }
+                    : isEnhancedSuit && {
+                        backgroundColor: '#050505',
+                        borderColor: isSubmitted ? '#10B981' : '#262626',
+                      }
                 ]}
               >
                 <View style={styles.assignmentHeaderRow}>
-                  <View style={[styles.asgCodeBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                    <Text style={[styles.asgCodeText, isEnhancedSuit && { color: '#10B981' }]}>{asg.courseCode}</Text>
+                  <View style={[
+                    styles.asgCodeBadge,
+                    isLightMode
+                      ? { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' }
+                      : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
+                  ]}>
+                    <Text style={[styles.asgCodeText, isLightMode ? { color: '#2563EB', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{asg.courseCode}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.asgTitle, isEnhancedSuit && { color: '#10B981' }]} numberOfLines={2}>
+                    <Text style={[styles.asgTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]} numberOfLines={2}>
                       {asg.title}
                     </Text>
-                    <Text style={[styles.asgCourseName, isEnhancedSuit && { color: '#9CA3AF' }]}>{asg.courseName}</Text>
+                    <Text style={[styles.asgCourseName, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#9CA3AF' }]}>{asg.courseName}</Text>
                   </View>
                   <View
                     style={[
                       styles.asgStatusBadge,
                       { backgroundColor: isSubmitted ? '#05966920' : '#EF444420' },
+                      isLightMode && isSubmitted && { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0', borderWidth: 1 },
+                      isLightMode && !isSubmitted && { backgroundColor: '#FEF2F2', borderColor: '#FECACA', borderWidth: 1 },
                       isEnhancedSuit && isSubmitted && { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' }
                     ]}
                   >
                     <Text
                       style={[
                         styles.asgStatusText,
-                        { color: isSubmitted ? '#10B981' : '#F87171' },
+                        { color: isSubmitted ? (isLightMode ? '#065F46' : '#10B981') : (isLightMode ? '#991B1B' : '#F87171') },
                       ]}
                     >
                       {isSubmitted ? 'SUBMITTED' : 'DUE SOON'}
@@ -1706,9 +1840,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   </View>
                 </View>
 
-                <View style={[styles.asgFooterRow, isEnhancedSuit && { borderTopColor: '#262626' }]}>
-                  <Text style={[styles.asgDueText, isEnhancedSuit && { color: '#10B981' }]}>Due: {dueDateFormatted}</Text>
-                  <Text style={[styles.asgFilesText, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                <View style={[styles.asgFooterRow, isLightMode ? { borderTopColor: '#E2E8F0' } : isEnhancedSuit && { borderTopColor: '#262626' }]}>
+                  <Text style={[styles.asgDueText, isLightMode ? { color: '#DC2626', fontWeight: '700' } : isEnhancedSuit && { color: '#10B981' }]}>Due: {dueDateFormatted}</Text>
+                  <Text style={[styles.asgFilesText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
                     Max {asg.maxFiles} files ({asg.acceptedFileTypes.join(', ')})
                   </Text>
                 </View>
@@ -1721,24 +1855,45 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* PSGIM Connect • Official Campus Announcements & Circulars */}
       <View style={[
         styles.connectSection,
-        isEnhancedSuit && {
-          backgroundColor: '#121212',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOpacity: 0.08,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 8,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#121212',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+            }
       ]}>
         <View style={styles.connectHeaderRow}>
-          <View style={[styles.connectIconCircle, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+          <View style={[
+            styles.connectIconCircle,
+            isLightMode
+              ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }
+              : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
+          ]}>
             <Text style={styles.connectIcon}>📢</Text>
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.connectSectionTitle, isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect Announcements</Text>
-              <View style={[styles.connectLiveBadge, isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                <Text style={[styles.connectLiveBadgeText, isEnhancedSuit && { color: '#10B981' }]}>ANNOUNCEMENTS • LIVE</Text>
+              <Text style={[styles.connectSectionTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect Announcements</Text>
+              <View style={[
+                styles.connectLiveBadge,
+                isLightMode
+                  ? { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }
+                  : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+              ]}>
+                <Text style={[styles.connectLiveBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>ANNOUNCEMENTS • LIVE</Text>
               </View>
             </View>
-            <Text style={[styles.connectSectionSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text style={[styles.connectSectionSub, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
               tqm.psginstitutions.in • Official campus notices & circulars
             </Text>
           </View>
@@ -1752,7 +1907,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               style={[
                 styles.connectCategoryChip,
                 announcementFilter === cat && styles.connectCategoryChipActive,
-                isEnhancedSuit && (
+                isLightMode && (
+                  announcementFilter === cat
+                    ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                    : { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }
+                ),
+                isEnhancedSuit && !isLightMode && (
                   announcementFilter === cat
                     ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                     : { backgroundColor: '#050505', borderColor: '#262626' }
@@ -1765,7 +1925,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 style={[
                   styles.connectCategoryChipText,
                   announcementFilter === cat && styles.connectCategoryChipTextActive,
-                  isEnhancedSuit && (
+                  isLightMode && (
+                    announcementFilter === cat
+                      ? { color: '#FFFFFF', fontWeight: '800' }
+                      : { color: '#64748B', fontWeight: '600' }
+                  ),
+                  isEnhancedSuit && !isLightMode && (
                     announcementFilter === cat
                       ? { color: '#050505', fontWeight: '800' }
                       : { color: '#10B981' }
@@ -1779,7 +1944,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
 
         {announcements.filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter).length === 0 ? (
-          <Text style={[styles.connectEmptyText, isEnhancedSuit && { color: '#9CA3AF' }]}>No announcements found in this category.</Text>
+          <Text style={[styles.connectEmptyText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>No announcements found in this category.</Text>
         ) : (
           announcements
             .filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter)
@@ -1788,6 +1953,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 key={item.id}
                 announcement={item}
                 isEnhancedSuit={isEnhancedSuit}
+                isLightMode={isLightMode}
                 onPress={() => {
                   setSelectedNotice(item);
                   PsgimConnectService.markAnnouncementAsRead(item.id);
@@ -1892,7 +2058,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             style={[
               styles.filterChip,
               filter === tab && styles.filterChipActive,
-              isEnhancedSuit && (
+              isLightMode && (
+                filter === tab
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }
+              ),
+              isEnhancedSuit && !isLightMode && (
                 filter === tab
                   ? { backgroundColor: '#10B981', borderColor: '#10B981' }
                   : { backgroundColor: '#121212', borderColor: '#262626' }
@@ -1902,7 +2073,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <Text style={[
               styles.filterChipText,
               filter === tab && styles.filterChipTextActive,
-              isEnhancedSuit && (
+              isLightMode && (
+                filter === tab
+                  ? { color: '#FFFFFF', fontWeight: '800' }
+                  : { color: '#64748B', fontWeight: '600' }
+              ),
+              isEnhancedSuit && !isLightMode && (
                 filter === tab
                   ? { color: '#050505', fontWeight: '800' }
                   : { color: '#10B981' }
@@ -1923,6 +2099,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           subject={subject}
           studentRollNo={toNewRollNo(studentRollNo)}
           isEnhancedSuit={isEnhancedSuit}
+          isLightMode={isLightMode}
           onOpenCoursePlan={(code, name) =>
             setCoursePlanModalInfo({
               visible: true,
@@ -2698,6 +2875,37 @@ const styles = StyleSheet.create({
     color: '#F8FAFC',
     fontWeight: '600',
     fontSize: 12,
+  },
+  unlockDayRow: {
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  unlockDayBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unlockDayBtnActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10B981',
+  },
+  unlockDayBtnInactive: {
+    backgroundColor: 'rgba(30, 41, 59, 0.7)',
+    borderColor: '#334155',
+  },
+  unlockDayBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  unlockDayBtnTextActive: {
+    color: '#10B981',
+  },
+  unlockDayBtnTextInactive: {
+    color: '#94A3B8',
   },
   filterRow: {
     flexDirection: 'row',
