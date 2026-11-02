@@ -6,17 +6,23 @@ interface AttendanceGaugeProps {
   metrics: AttendanceMetrics;
   compact?: boolean;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
-export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compact = false, isEnhancedSuit = false }) => {
+export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({
+  metrics,
+  compact = false,
+  isEnhancedSuit = false,
+  isLightMode = false,
+}) => {
   const { percentage, effectiveTarget, isMedicalClaimActive, status } = metrics;
   
   // Clamped percentage for visual bar (0 - 100)
   const clampedPct = Math.min(100, Math.max(0, percentage));
 
-  // Determine bar color
+  // Determine bar color (Mint Green / Emerald #10B981 for Safe, matching the screenshot)
   const getBarColor = () => {
-    if (status === 'SAFE_STANDARD') return isEnhancedSuit ? '#10B981' : '#10B981';
+    if (status === 'SAFE_STANDARD') return isLightMode ? '#34D399' : '#10B981';
     if (status === 'SAFE_MEDICAL') return '#06B6D4';  // Cyan / Medical safe
     return '#EF4444'; // Red
   };
@@ -28,18 +34,36 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
       {/* Percentage Row */}
       <View style={styles.headerRow}>
         <View style={styles.percentGroup}>
-          <Text style={[styles.percentText, { color: barColor }, compact && styles.compactPercent]}>
+          <Text
+            style={[
+              styles.percentText,
+              { color: isLightMode ? '#0F172A' : barColor },
+              compact && styles.compactPercent,
+            ]}
+          >
             {percentage.toFixed(1)}%
           </Text>
         </View>
 
-        <Text style={[styles.targetIndicatorText, isEnhancedSuit && { color: '#10B981' }]}>
+        <Text
+          style={[
+            styles.targetIndicatorText,
+            isLightMode && { color: '#64748B', fontWeight: '600' },
+            isEnhancedSuit && !isLightMode && { color: '#10B981' },
+          ]}
+        >
           Target: 75%
         </Text>
       </View>
 
       {/* The Gauge Track */}
-      <View style={[styles.trackContainer, isEnhancedSuit && { backgroundColor: '#050505' }]}>
+      <View
+        style={[
+          styles.trackContainer,
+          isLightMode && { backgroundColor: '#E2E8F0' },
+          isEnhancedSuit && !isLightMode && { backgroundColor: '#050505' },
+        ]}
+      >
         {/* Fill Bar */}
         <View 
           style={[
@@ -50,9 +74,21 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
 
         {/* 75% Standard Line Marker */}
         <View style={[styles.marker, { left: '75%' }]}>
-          <View style={[styles.markerLine, { backgroundColor: isEnhancedSuit ? '#10B981' : '#FBBF24' }]} />
+          <View
+            style={[
+              styles.markerLine,
+              { backgroundColor: isLightMode ? '#10B981' : isEnhancedSuit ? '#10B981' : '#FBBF24' },
+            ]}
+          />
           {!compact && (
-            <Text style={[styles.markerLabel, { color: isEnhancedSuit ? '#10B981' : '#FBBF24' }]}>75%</Text>
+            <Text
+              style={[
+                styles.markerLabel,
+                { color: isLightMode ? '#10B981' : isEnhancedSuit ? '#10B981' : '#FBBF24' },
+              ]}
+            >
+              75%
+            </Text>
           )}
         </View>
       </View>
@@ -61,8 +97,21 @@ export const AttendanceGauge: React.FC<AttendanceGaugeProps> = ({ metrics, compa
       {!compact && (
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: isEnhancedSuit ? '#10B981' : '#FBBF24' }]} />
-            <Text style={[styles.legendText, isEnhancedSuit && { color: '#9CA3AF' }]}>75% Standard Minimum Safe Line</Text>
+            <View
+              style={[
+                styles.legendDot,
+                { backgroundColor: isLightMode ? '#10B981' : isEnhancedSuit ? '#10B981' : '#FBBF24' },
+              ]}
+            />
+            <Text
+              style={[
+                styles.legendText,
+                isLightMode && { color: '#64748B', fontWeight: '600' },
+                isEnhancedSuit && !isLightMode && { color: '#9CA3AF' },
+              ]}
+            >
+              75% Standard Minimum Safe Line
+            </Text>
           </View>
         </View>
       )}

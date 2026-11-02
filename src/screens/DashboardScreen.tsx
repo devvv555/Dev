@@ -39,6 +39,7 @@ import { KarenGuide } from '../components/KarenGuide';
 import { WhatIfForecasterModal } from '../components/WhatIfForecasterModal';
 import { StarkArsenalModal } from '../components/StarkArsenalModal';
 import { ProtocolGate } from '../engines/starkProtocol/protocolGate';
+import { ThemeManager, AppThemeMode } from '../constants/theme';
 
 
 interface DashboardScreenProps {
@@ -120,6 +121,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [selectedRescheduleSubjectId, setSelectedRescheduleSubjectId] = useState<string>('');
   const [rescheduleDate, setRescheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [rescheduleTime, setRescheduleTime] = useState<string>('16:45 - 17:45');
+
+  const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
+  const isLightMode = themeMode === 'LIGHT';
+
+  useEffect(() => {
+    ThemeManager.init().then(setThemeMode);
+    const unsubTheme = ThemeManager.subscribe(setThemeMode);
+    return () => unsubTheme();
+  }, []);
 
   useEffect(() => {
     if (isEnhancedSuitProp !== undefined) {
@@ -760,71 +770,130 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   return (
     <ScrollView
-      style={[styles.container, isEnhancedSuit && { backgroundColor: '#0B0202' }]}
+      style={[
+        styles.container,
+        isLightMode ? { backgroundColor: '#F1F5F9' } : isEnhancedSuit && { backgroundColor: '#0B0202' },
+      ]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={isEnhancedSuit ? '#10B981' : '#38BDF8'}
-          colors={isEnhancedSuit ? ['#10B981', '#DC2626'] : ['#38BDF8', '#2563EB']}
-          progressBackgroundColor={isEnhancedSuit ? '#121212' : '#1E293B'}
+          tintColor={isLightMode ? '#2B3990' : isEnhancedSuit ? '#10B981' : '#38BDF8'}
+          colors={isLightMode ? ['#2B3990', '#10B981'] : isEnhancedSuit ? ['#10B981', '#DC2626'] : ['#38BDF8', '#2563EB']}
+          progressBackgroundColor={isLightMode ? '#FFFFFF' : isEnhancedSuit ? '#121212' : '#1E293B'}
         />
       }
     >
       {/* Student Welcome Card */}
       <View style={[
         styles.welcomeCard,
-        isEnhancedSuit && {
-          backgroundColor: '#121212',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-          shadowColor: '#000',
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#121212',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+              shadowColor: '#000',
+            }
       ]}>
         <View style={styles.welcomeTopRow}>
           <TouchableOpacity
             style={[
               styles.welcomeAvatar,
-              isEnhancedSuit && {
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                borderColor: '#10B981',
-              }
+              isLightMode
+                ? {
+                    backgroundColor: '#3B49DF',
+                    borderColor: '#2B3990',
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                  }
+                : isEnhancedSuit && {
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderColor: '#10B981',
+                  }
             ]}
             onPress={() => setShowDigitalIdModal(true)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.welcomeAvatarText, isEnhancedSuit && { color: '#10B981' }]}>
+            <Text
+              style={[
+                styles.welcomeAvatarText,
+                isLightMode ? { color: '#FFFFFF', fontSize: 22, fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' },
+              ]}
+            >
               {studentName ? studentName.charAt(0) : 'S'}
             </Text>
           </TouchableOpacity>
           <View style={styles.welcomeInfo}>
-            <Text style={[styles.welcomeGreeting, isEnhancedSuit && { color: '#9CA3AF' }]}>
-              {isEnhancedSuit ? 'Tactical HUD Active,' : 'Welcome,'}
-            </Text>
-            <Text style={[styles.welcomeName, isEnhancedSuit && { color: '#FFFFFF' }]} numberOfLines={1}>
+            <Text
+              style={[
+                styles.welcomeName,
+                isLightMode ? { color: '#0F172A', fontSize: 17, fontWeight: '900' } : isEnhancedSuit && { color: '#FFFFFF' },
+              ]}
+              numberOfLines={1}
+            >
               {studentName || 'Student'}
             </Text>
-            <Text style={[styles.welcomeSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
-              <Text style={[styles.welcomeRoll, isEnhancedSuit && { color: '#10B981' }]}>
+            <Text
+              style={[
+                styles.welcomeSub,
+                isLightMode ? { color: '#334155', fontSize: 12, marginTop: 2 } : isEnhancedSuit && { color: '#9CA3AF' },
+              ]}
+            >
+              <Text style={[styles.welcomeRoll, isLightMode ? { color: '#334155', fontWeight: '600' } : isEnhancedSuit && { color: '#10B981' }]}>
                 Roll No: {toNewRollNo(studentRollNo)}
               </Text>
-              {profile.section ? ` • ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark Mark III' : 'MBA (2026–28)'}
+              {profile.section ? ` • Batch ${profile.section}` : ''} • {isEnhancedSuit ? 'Enhanced Stark' : 'I MBA'}
+            </Text>
+            {profile.email ? (
+              <Text
+                style={[
+                  isLightMode ? { color: '#334155', fontSize: 11, marginTop: 1 } : { color: '#9CA3AF', fontSize: 11 },
+                ]}
+                numberOfLines={1}
+              >
+                Email · {profile.email}
+              </Text>
+            ) : null}
+            <Text
+              style={[
+                isLightMode ? { color: '#0F172A', fontSize: 11, fontWeight: '600', marginTop: 1 } : { color: '#9CA3AF', fontSize: 11 },
+              ]}
+            >
+              Status: <Text style={{ color: '#10B981', fontWeight: '800' }}>Mint Green</Text>
             </Text>
           </View>
           {onOpenAdmin && (
             <TouchableOpacity
               style={[
                 styles.welcomeAdminBadge,
-                isEnhancedSuit && {
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  borderColor: '#10B981',
-                }
+                isLightMode
+                  ? { backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3B82F6' }
+                  : isEnhancedSuit && {
+                      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                      borderColor: '#10B981',
+                    }
               ]}
               onPress={onOpenAdmin}
               activeOpacity={0.7}
             >
-              <Text style={[styles.welcomeAdminBadgeText, isEnhancedSuit && { color: '#10B981' }]}>
+              <Text
+                style={[
+                  styles.welcomeAdminBadgeText,
+                  isLightMode ? { color: '#2563EB', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' },
+                ]}
+              >
                 Admin
               </Text>
             </TouchableOpacity>
@@ -1021,17 +1090,40 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Top Banner: Overall Attendance Metric */}
       <View style={[
         styles.summaryCard,
-        isEnhancedSuit && {
-          backgroundColor: '#121212',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-          shadowColor: '#000',
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#121212',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+              shadowColor: '#000',
+            }
       ]}>
         <View style={styles.summaryTopRow}>
           <View>
-            <Text style={[styles.summaryTitle, isEnhancedSuit && { color: '#FFFFFF' }]}>Overall Attendance</Text>
-            <Text style={[styles.summarySubtitle, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text
+              style={[
+                styles.summaryTitle,
+                isLightMode ? { color: '#0F172A', fontSize: 20, fontWeight: '900' } : isEnhancedSuit && { color: '#FFFFFF' },
+              ]}
+            >
+              Overall Attendance
+            </Text>
+            <Text
+              style={[
+                styles.summarySubtitle,
+                isLightMode ? { color: '#475569', fontSize: 13, marginTop: 2 } : isEnhancedSuit && { color: '#9CA3AF' },
+              ]}
+            >
               {overall.totalAttended} of {overall.totalHeld} total hours attended
             </Text>
           </View>
@@ -1039,11 +1131,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             {overall.percentage >= 75 ? (
               <View style={[
                 styles.activeMedBadge,
-                isEnhancedSuit
+                isLightMode
+                  ? { backgroundColor: '#34D399', borderColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }
+                  : isEnhancedSuit
                   ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                   : { backgroundColor: '#064E3B', borderColor: '#059669' }
               ]}>
-                <Text style={[styles.activeMedBadgeText, isEnhancedSuit ? { color: '#10B981' } : { color: '#34D399' }]}>
+                <Text
+                  style={[
+                    styles.activeMedBadgeText,
+                    isLightMode ? { color: '#064E3B', fontWeight: '800' } : isEnhancedSuit ? { color: '#10B981' } : { color: '#34D399' },
+                  ]}
+                >
                   {isEnhancedSuit ? 'Stark Safe (≥75%)' : 'Target Safe (≥75%)'}
                 </Text>
               </View>
@@ -1055,30 +1154,63 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
         </View>
 
-        <AttendanceGauge metrics={overall} isEnhancedSuit={isEnhancedSuit} />
+        <AttendanceGauge metrics={overall} isEnhancedSuit={isEnhancedSuit} isLightMode={isLightMode} />
 
-        <View style={[styles.summaryFooter, isEnhancedSuit && { borderTopColor: '#262626' }]}>
-          <Text style={[styles.summaryFooterText, isEnhancedSuit && { color: '#FFFFFF' }]}>{overall.summaryMessage}</Text>
+        <View
+          style={[
+            styles.summaryFooter,
+            isLightMode ? { borderTopColor: '#E2E8F0', marginTop: 10, paddingTop: 10 } : isEnhancedSuit && { borderTopColor: '#262626' },
+          ]}
+        >
+          <Text
+            style={[
+              styles.summaryFooterText,
+              isLightMode ? { color: '#1E293B', fontSize: 13, fontWeight: '600' } : isEnhancedSuit && { color: '#FFFFFF' },
+            ]}
+          >
+            {overall.summaryMessage}
+          </Text>
         </View>
       </View>
 
       {/* Live Auto-Class Tracker Card (Strictly Today's Real-Time Schedule) */}
       <View style={[
         styles.promptSimulatorCard,
-        isEnhancedSuit && {
-          backgroundColor: '#121212',
-          borderColor: '#262626',
-          borderWidth: 1.5,
-        }
+        isLightMode
+          ? {
+              backgroundColor: '#FFFFFF',
+              borderColor: '#E2E8F0',
+              borderWidth: 1,
+              shadowColor: '#64748B',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              elevation: 2,
+            }
+          : isEnhancedSuit && {
+              backgroundColor: '#121212',
+              borderColor: '#262626',
+              borderWidth: 1.5,
+            }
       ]}>
         {/* Header: Strictly Today's Schedule */}
         <View style={{ marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#10B981' }]}>
+              <Text
+                style={[
+                  { fontSize: 13, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 },
+                  isLightMode ? { color: '#0F172A', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' },
+                ]}
+              >
                 {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
               </Text>
-              <Text style={[{ fontSize: 12, fontWeight: '600', color: '#64748B' }, isEnhancedSuit && { color: '#9CA3AF' }]}>
+              <Text
+                style={[
+                  { fontSize: 12, fontWeight: '600', color: '#64748B' },
+                  isLightMode ? { color: '#475569', fontWeight: '700' } : isEnhancedSuit && { color: '#9CA3AF' },
+                ]}
+              >
                 • {displayDateFormatted}
               </Text>
             </View>
@@ -1095,7 +1227,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       borderWidth: 1,
                       borderColor: viewingNextDay ? '#6366F1' : '#334155',
                     },
-                    isEnhancedSuit && {
+                    isLightMode && {
+                      backgroundColor: viewingNextDay ? '#EEF2FF' : '#F1F5F9',
+                      borderColor: '#CBD5E1',
+                    },
+                    isEnhancedSuit && !isLightMode && {
                       backgroundColor: viewingNextDay ? '#10B981' : '#050505',
                       borderColor: '#262626',
                     }
@@ -1104,7 +1240,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 >
                   <Text style={[
                     { fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#A5B4FC' : '#94A3B8' },
-                    isEnhancedSuit && { color: viewingNextDay ? '#050505' : '#10B981' }
+                    isLightMode && { color: '#3B49DF' },
+                    isEnhancedSuit && !isLightMode && { color: viewingNextDay ? '#050505' : '#10B981' }
                   ]}>
                     {viewingNextDay ? '← View Today' : 'Preview Next Day →'}
                   </Text>
@@ -1112,11 +1249,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               )}
               <View style={[
                 { backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#334155' },
-                isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
+                isLightMode && { backgroundColor: '#EEF2FF', borderColor: '#E0E7FF' },
+                isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
               ]}>
                 <Text style={[
-                  { fontSize: 10, fontWeight: '700', color: viewingNextDay ? '#818CF8' : '#38BDF8' },
-                  isEnhancedSuit && { color: '#10B981' }
+                  { fontSize: 10, fontWeight: '800', color: viewingNextDay ? '#818CF8' : '#38BDF8' },
+                  isLightMode && { color: '#2B3990' },
+                  isEnhancedSuit && !isLightMode && { color: '#10B981' }
                 ]}>
                   {viewingNextDay ? 'UPCOMING DAY' : 'LIVE REAL-TIME'}
                 </Text>
@@ -1142,20 +1281,41 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {!isWeekendOrNoClass && (
           <>
             <View style={styles.simulatorHeader}>
-              <View style={[styles.statusTagBadge, { borderColor: slotStatus.color }]}>
-                <Text style={[styles.simulatorTag, { color: slotStatus.color }]}>
+              <View
+                style={[
+                  styles.statusTagBadge,
+                  { borderColor: slotStatus.color },
+                  isLightMode && { backgroundColor: 'rgba(245, 158, 11, 0.12)', borderColor: '#F59E0B' },
+                ]}
+              >
+                <Text style={[styles.simulatorTag, { color: isLightMode ? '#D97706' : slotStatus.color }]}>
                   {slotStatus.tag}
                 </Text>
               </View>
-              <Text style={[styles.simulatorTime, isEnhancedSuit && { color: '#10B981' }]}>
+              <Text
+                style={[
+                  styles.simulatorTime,
+                  isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' },
+                ]}
+              >
                 {currentSlot ? `${currentSlot.startTime} - ${currentSlot.endTime}` : ''}
               </Text>
             </View>
 
-            <Text style={[styles.simulatorTitle, isEnhancedSuit && { color: '#10B981' }]}>
+            <Text
+              style={[
+                styles.simulatorTitle,
+                isLightMode ? { color: '#2B3990', fontSize: 18, fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' },
+              ]}
+            >
               {currentSubject ? `${currentSubject.name}` : 'No Class in Session'}
             </Text>
-            <Text style={[styles.simulatorSubDetail, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text
+              style={[
+                styles.simulatorSubDetail,
+                isLightMode ? { color: '#475569', fontSize: 13, fontWeight: '600' } : isEnhancedSuit && { color: '#9CA3AF' },
+              ]}
+            >
               {currentSlot ? `${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'Lecture Hall'}` : ''}
             </Text>
             {currentSlot && (currentSlot.faculty || currentSubject?.faculty) ? (
@@ -1164,12 +1324,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 activeOpacity={0.7}
                 onPress={() => currentSubject && setFacultyModalSubject(currentSubject)}
               >
-                <Text style={[styles.hourlyFacultyText, isEnhancedSuit && { color: '#9CA3AF' }]}>
-                  Teaching Faculty: <Text style={[styles.hourlyFacultyHighlight, isEnhancedSuit && { color: '#10B981' }]}>{currentSlot.faculty || currentSubject?.faculty}</Text>
+                <Text
+                  style={[
+                    styles.hourlyFacultyText,
+                    isLightMode ? { color: '#475569', fontSize: 13 } : isEnhancedSuit && { color: '#9CA3AF' },
+                  ]}
+                >
+                  Teaching Faculty: <Text style={[styles.hourlyFacultyHighlight, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>{currentSlot.faculty || currentSubject?.faculty}</Text>
                 </Text>
               </TouchableOpacity>
             ) : null}
-            <Text style={[styles.simulatorSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
+            <Text
+              style={[
+                styles.simulatorSub,
+                isLightMode ? { color: '#64748B', fontSize: 12 } : isEnhancedSuit && { color: '#9CA3AF' },
+              ]}
+            >
               {slotStatus.message}
             </Text>
           </>
