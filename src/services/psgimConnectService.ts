@@ -14,8 +14,29 @@ const BASE_URL = 'https://tqm.psginstitutions.in/psgimconnect/backend';
 const ANNOUNCEMENTS_API = `${BASE_URL}/api/announcements/all-list.php`;
 const ATTACHMENT_BASE = `${BASE_URL}/uploads/announcements`;
 
+// Special Announcement for Google Web Launch
+export const LAUNCH_ANNOUNCEMENT: PsgimAnnouncement = {
+  id: 100,
+  title: '🚀 App is Live on Google Web! Access Anywhere & Share with Friends',
+  category: 'General',
+  priority: 'urgent',
+  status: 'published',
+  is_pinned: 1,
+  publish_at: '2026-11-04 12:00:00',
+  created_at: '2026-11-04 12:00:00',
+  created_by: 'MBA Tech Team',
+  venue: 'Google Web & Mobile (attendance-tracker-9e4f7.web.app)',
+  eventDate: 'Now Live Worldwide',
+  eventTime: '24/7 Real-Time Cloud Access',
+  summary: 'Our PSGIM Attendance Monitor & MBA Super-App is officially published and live on Google Web! Anyone can open it on Chrome, Safari or Android, install it as a PWA, and track attendance seamlessly.',
+  content: 'Exciting news! The PSGIM Attendance Tracker & MBA Super-App is now deployed and running live on Google Web at https://attendance-tracker-9e4f7.web.app/.\n\n✨ Key Highlights for you and your classmates:\n• Direct Web & Phone Access: No APK installation required. Works on any browser (Chrome, Edge, Safari, Brave).\n• Add to Home Screen (PWA): Tap "Install App" or "Add to Home Screen" in your browser menu to use it just like a native app.\n• Live Studzone Portal Sync: 1-Tap attendance verification, hour calculators, and bunk margins.\n• Moodle LMS Integration: Live upcoming assignments and direct portal access.\n• Share with Friends: Send the link to your batchmates and friends so everyone can monitor their attendance and avoid shortages!\n\nLink: https://attendance-tracker-9e4f7.web.app',
+  actionUrl: 'https://attendance-tracker-9e4f7.web.app',
+  actionLabel: '🌐 Open Web App & Share Link',
+};
+
 // Enriched static metadata for known PSGIM announcements & circular attachments
 const ENRICHED_METADATA: Record<number, Partial<PsgimAnnouncement>> = {
+  100: LAUNCH_ANNOUNCEMENT,
   31: {
     venue: 'Amphitheatre & Seminar Hall, PSGIM',
     eventDate: 'October 31, 2026',
@@ -85,6 +106,7 @@ const ENRICHED_METADATA: Record<number, Partial<PsgimAnnouncement>> = {
 
 // Fallback seed announcements if device is completely offline on first launch
 const SEED_ANNOUNCEMENTS: PsgimAnnouncement[] = [
+  LAUNCH_ANNOUNCEMENT,
   {
     id: 31,
     title: 'Dance Workshop on Performing Arts',
@@ -248,7 +270,10 @@ export const PsgimConnectService = {
             };
           });
 
-          const sorted = this.sortAnnouncements(merged);
+          const withLaunch = merged.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)
+            ? merged
+            : [LAUNCH_ANNOUNCEMENT, ...merged];
+          const sorted = this.sortAnnouncements(withLaunch);
 
           // Check if there are brand-new announcements to notify
           const cached = await this.getCachedAnnouncements();
@@ -290,7 +315,10 @@ export const PsgimConnectService = {
             ...(ENRICHED_METADATA[item.id] || {}),
             isRead: readIds.includes(item.id),
           }));
-          const sorted = this.sortAnnouncements(merged);
+          const withLaunch = merged.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)
+            ? merged
+            : [LAUNCH_ANNOUNCEMENT, ...merged];
+          const sorted = this.sortAnnouncements(withLaunch);
           await AsyncStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(sorted));
           return sorted;
         }
@@ -302,7 +330,10 @@ export const PsgimConnectService = {
     // 3. Fallback to local cache or complete seed list
     const cached = await this.getCachedAnnouncements();
     if (cached && cached.length > 0) {
-      return this.sortAnnouncements(cached);
+      const withLaunch = cached.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)
+        ? cached
+        : [LAUNCH_ANNOUNCEMENT, ...cached];
+      return this.sortAnnouncements(withLaunch);
     }
     return this.sortAnnouncements(SEED_ANNOUNCEMENTS);
   },

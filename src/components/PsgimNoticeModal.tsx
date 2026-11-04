@@ -9,6 +9,7 @@ import {
   Image,
   SafeAreaView,
   Share,
+  Linking,
 } from 'react-native';
 import { PsgimAnnouncement } from '../types';
 
@@ -148,6 +149,35 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
             <Text style={styles.bodyText}>
               {announcement.content || announcement.summary || 'No further description provided.'}
             </Text>
+
+            {/* Optional Call to Action URL */}
+            {announcement.actionUrl && (
+              <View style={styles.actionCard}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    if (announcement.actionUrl) {
+                      Linking.openURL(announcement.actionUrl).catch(() => {});
+                    }
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.actionButtonText}>
+                    {announcement.actionLabel || '🌐 Open Link'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.shareFriendButton}
+                  onPress={handleShare}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.shareFriendButtonText}>
+                    📲 Share with Friends / WhatsApp
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -370,5 +400,47 @@ const styles = StyleSheet.create({
     color: '#CBD5E1',
     fontSize: 14,
     lineHeight: 22,
+  },
+  actionCard: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+    gap: 12,
+  },
+  actionButton: {
+    backgroundColor: '#0284C7',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0284C7',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  shareFriendButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#34D399',
+  },
+  shareFriendButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });

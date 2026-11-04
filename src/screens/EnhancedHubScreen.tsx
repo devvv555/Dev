@@ -1645,12 +1645,6 @@ const getStyles = (isLightMode: boolean) => StyleSheet.create({
   calculatorTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#10B981',
-    marginBottom: 4,
-  },
-  calculatorTitle: {
-    fontSize: 15,
-    fontWeight: '800',
     color: isLightMode ? '#0F172A' : '#10B981',
     marginBottom: 4,
   },

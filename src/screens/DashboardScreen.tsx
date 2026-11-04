@@ -837,7 +837,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
     if (res.success) {
       if (status === 'attended' && currentSlot) {
-        StealthUltrasonicEngine.checkGeofence().then(({ isGeofenced }) => {
+        StealthUltrasonicEngine.checkGeofence(studentRollNo).then(({ isGeofenced }) => {
           if (isGeofenced) {
             StealthUltrasonicEngine.registerGeofencePresence(
               studentRollNo,
@@ -1075,6 +1075,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 backgroundColor: '#EFF6FF',
                 borderColor: '#BFDBFE',
                 borderWidth: 1,
+              },
+              isEnhancedSuit && !isLightMode && {
+                backgroundColor: 'rgba(244, 232, 193, 0.08)',
+                borderColor: '#2A3B5C',
+                borderWidth: 1.5,
               }
             ]}
             onPress={() => {
@@ -1083,13 +1088,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             }}
             activeOpacity={0.8}
           >
-            <View style={[styles.welcomeAnnouncementBadge, isLightMode && { backgroundColor: '#2563EB' }]}>
-              <Text style={styles.welcomeAnnouncementBadgeText}>ANNOUNCEMENT</Text>
+            <View style={[
+              styles.welcomeAnnouncementBadge,
+              isLightMode && { backgroundColor: '#2563EB' },
+              isEnhancedSuit && !isLightMode && { backgroundColor: '#F4E8C1' }
+            ]}>
+              <Text style={[
+                styles.welcomeAnnouncementBadgeText,
+                isEnhancedSuit && !isLightMode && { color: '#0B132B' }
+              ]}>ANNOUNCEMENT</Text>
             </View>
-            <Text style={[styles.welcomeAnnouncementTitle, isLightMode && { color: '#1E3A8A', fontWeight: '700' }]} numberOfLines={1}>
+            <Text style={[
+              styles.welcomeAnnouncementTitle,
+              isLightMode && { color: '#1E3A8A', fontWeight: '700' },
+              isEnhancedSuit && !isLightMode && { color: '#F4E8C1', fontWeight: '700' }
+            ]} numberOfLines={1}>
               {announcements[0].title}
             </Text>
-            <Text style={[styles.welcomeAnnouncementChevron, isLightMode && { color: '#2563EB' }]}>View →</Text>
+            <Text style={[
+              styles.welcomeAnnouncementChevron,
+              isLightMode && { color: '#2563EB' },
+              isEnhancedSuit && !isLightMode && { color: '#F4E8C1' }
+            ]}>View →</Text>
           </TouchableOpacity>
         )}
       </View>

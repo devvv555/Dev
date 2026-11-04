@@ -9,6 +9,8 @@
  * which share the exact same 2D latitude/longitude coordinates.
  */
 
+import { CloudSyncService } from '../../services/cloudSyncService';
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -313,5 +315,53 @@ export const GeofenceEngine = {
       }
     }
     return { room: closestRoom, distanceMeters: minDistance };
+  },
+
+  /**
+   * Prompts browser for location access and automatically records
+   * whether the student Accepted (GRANTED) or Declined (DENIED).
+   */
+  async requestAndTrackLocation(rollNo?: string): Promise<{
+    coords: Coordinates | null;
+    status: 'GRANTED' | 'DENIED' | 'UNSUPPORTED';
+    errorMessage?: string;
+  }> {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      if (rollNo) {
+        CloudSyncService.logLocationPermission(rollNo, 'UNSUPPORTED', { errorMessage: 'Geolocation unsupported' });
+      }
+      return { coords: null, status: 'UNSUPPORTED', errorMessage: 'Geolocation is not supported.' };
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords: Coordinates = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracyMeters: pos.coords.accuracy,
+            altitudeMeters: pos.coords.altitude,
+            altitudeAccuracyMeters: pos.coords.altitudeAccuracy,
+          };
+          if (rollNo) {
+            CloudSyncService.logLocationPermission(rollNo, 'GRANTED', {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              accuracy: coords.accuracyMeters,
+            });
+          }
+          resolve({ coords, status: 'GRANTED' });
+        },
+        (err) => {
+          const isDenied = err.code === 1; // 1 = PERMISSION_DENIED
+          const status = isDenied ? 'DENIED' : 'UNSUPPORTED';
+          if (rollNo) {
+            CloudSyncService.logLocationPermission(rollNo, status, { errorMessage: err.message });
+          }
+          resolve({ coords: null, status, errorMessage: err.message });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+      );
+    });
   },
 };

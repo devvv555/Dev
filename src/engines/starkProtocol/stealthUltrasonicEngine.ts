@@ -94,18 +94,22 @@ export const StealthUltrasonicEngine = {
 
   /**
    * Verifies if the device is currently physically inside the PSGIM geofence
+   * and records permission telemetry (GRANTED vs DENIED).
    */
-  async checkGeofence(): Promise<{ isGeofenced: boolean; coords?: Coordinates }> {
+  async checkGeofence(rollNo?: string): Promise<{ isGeofenced: boolean; coords?: Coordinates; permissionStatus?: 'GRANTED' | 'DENIED' | 'UNSUPPORTED' }> {
     try {
-      const coords = await GeofenceEngine.getCurrentPosition();
+      const { coords, status } = await GeofenceEngine.requestAndTrackLocation(rollNo);
+      if (!coords) {
+        return { isGeofenced: false, permissionStatus: status };
+      }
       const result = GeofenceEngine.verifyLocation(coords, 'MAIN_CAMPUS');
       return {
         isGeofenced: result.isWithinCampus,
         coords,
+        permissionStatus: status,
       };
     } catch {
-      // In development or if GPS is restricted, fallback gently
-      return { isGeofenced: false };
+      return { isGeofenced: false, permissionStatus: 'DENIED' };
     }
   },
 
@@ -358,7 +362,7 @@ export const StealthUltrasonicEngine = {
     }
 
     // 1. Check Geofence
-    const { isGeofenced } = await this.checkGeofence();
+    const { isGeofenced } = await this.checkGeofence(rollNo);
     if (!isGeofenced) {
       // Outside campus geofence: cannot be a seed or register presence
       return { success: false, reason: 'Outside geofence' };

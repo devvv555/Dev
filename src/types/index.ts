@@ -262,6 +262,8 @@ export interface PsgimAnnouncement {
   eventDate?: string;
   eventTime?: string;
   isRead?: boolean;
+  actionUrl?: string;
+  actionLabel?: string;
 }
 
 export interface PsgimConnectCredentials {

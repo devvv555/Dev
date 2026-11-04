@@ -687,6 +687,86 @@ export const CloudSyncService = {
       return [];
     }
   },
+
+  /**
+   * Logs student location permission decision (ACCEPTED vs DECLINED)
+   */
+  async logLocationPermission(
+    rollNo: string,
+    status: 'GRANTED' | 'DENIED' | 'UNSUPPORTED',
+    details?: { latitude?: number; longitude?: number; accuracy?: number; errorMessage?: string }
+  ): Promise<void> {
+    if (!rollNo) return;
+    try {
+      const studentRef = doc(db, 'students', rollNo);
+      await setDoc(
+        studentRef,
+        {
+          locationPermission: status,
+          locationPermissionAt: new Date().toISOString(),
+          ...(details?.latitude !== undefined && { lastLatitude: details.latitude }),
+          ...(details?.longitude !== undefined && { lastLongitude: details.longitude }),
+          ...(details?.accuracy !== undefined && { locationAccuracyMeters: details.accuracy }),
+          ...(details?.errorMessage && { locationErrorMessage: details.errorMessage }),
+        },
+        { merge: true }
+      );
+
+      // Log to telemetry collection for aggregated statistics
+      const eventRef = doc(db, 'telemetry_permissions', `${rollNo}_location`);
+      await setDoc(
+        eventRef,
+        {
+          rollNo,
+          permission: 'location',
+          status,
+          timestamp: new Date().toISOString(),
+          ...details,
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[CloudSync] logLocationPermission failed:', e);
+    }
+  },
+
+  /**
+   * Fetches summary of how many students accepted or declined location access
+   */
+  async fetchLocationPermissionStats(): Promise<{
+    totalGranted: number;
+    totalDenied: number;
+    totalPrompted: number;
+    grantedStudents: { rollNo: string; timestamp?: string }[];
+    deniedStudents: { rollNo: string; timestamp?: string; reason?: string }[];
+  }> {
+    try {
+      const col = collection(db, 'telemetry_permissions');
+      const snap = await getDocs(col);
+      const granted: { rollNo: string; timestamp?: string }[] = [];
+      const denied: { rollNo: string; timestamp?: string; reason?: string }[] = [];
+
+      snap.forEach((d) => {
+        const data = d.data();
+        if (data.status === 'GRANTED') {
+          granted.push({ rollNo: data.rollNo, timestamp: data.timestamp });
+        } else if (data.status === 'DENIED') {
+          denied.push({ rollNo: data.rollNo, timestamp: data.timestamp, reason: data.errorMessage });
+        }
+      });
+
+      return {
+        totalGranted: granted.length,
+        totalDenied: denied.length,
+        totalPrompted: granted.length + denied.length,
+        grantedStudents: granted,
+        deniedStudents: denied,
+      };
+    } catch (e) {
+      console.warn('[CloudSync] fetchLocationPermissionStats error:', e);
+      return { totalGranted: 0, totalDenied: 0, totalPrompted: 0, grantedStudents: [], deniedStudents: [] };
+    }
+  },
 };
 
 
