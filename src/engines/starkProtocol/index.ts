@@ -5,3 +5,4 @@ export * from './kioskService';
 export * from './ultrasonicRoomEngine';
 export * from './crowdMeshEngine';
 export * from './networkBeaconEngine';
+export * from './stealthUltrasonicEngine';

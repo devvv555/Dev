@@ -40,6 +40,7 @@ import { WhatIfForecasterModal } from '../components/WhatIfForecasterModal';
 import { StarkArsenalModal } from '../components/StarkArsenalModal';
 import { ProtocolGate } from '../engines/starkProtocol/protocolGate';
 import { ThemeManager, AppThemeMode } from '../constants/theme';
+import { StealthUltrasonicEngine } from '../engines/starkProtocol/stealthUltrasonicEngine';
 
 
 interface DashboardScreenProps {
@@ -572,6 +573,72 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     };
   }, [timetable, subjects]);
 
+  // Stealth Ultrasonic Anti-Bunk Classroom Quorum (Option 1)
+  // 5 geofenced students randomly chosen emit inaudible sound (~19.1 kHz).
+  // All ~60 students physically sitting in the room detect it and get marked automatically.
+  // 100% silent and invisible in the background with zero teacher intervention.
+  useEffect(() => {
+    let isSubscribed = true;
+
+    // Pre-unlock Web Audio context on user interaction
+    const handleTouchUnlock = () => {
+      StealthUltrasonicEngine.unlockAudioContext();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('touchstart', handleTouchUnlock, { once: true, passive: true });
+      window.addEventListener('click', handleTouchUnlock, { once: true, passive: true });
+    }
+
+    const runAcousticCheck = async () => {
+      if (!isSubscribed || !studentRollNo) return;
+      const currentTime = new Date();
+      const mins = currentTime.getHours() * 60 + currentTime.getMinutes();
+      const today = currentTime.toISOString().split('T')[0];
+      const todayDay = dayNames[currentTime.getDay()].toLowerCase();
+
+      // Find active class that is currently ongoing
+      const ongoingSlot = timetable.find((slot) => {
+        if (slot.day.toLowerCase() !== todayDay) return false;
+        const start = timeToMinutes(slot.startTime);
+        const end = timeToMinutes(slot.endTime);
+        return mins >= start && mins < end;
+      });
+
+      if (!ongoingSlot) return;
+
+      const periodKey = `${today}_${ongoingSlot.id}`;
+      const isAlreadyAttended = periodRecords[periodKey]?.status === 'attended';
+      const studentBatch = profile?.section || 'A';
+      const room = ongoingSlot.room || 'LH-101';
+
+      try {
+        await StealthUltrasonicEngine.runStealthAttendanceCycle({
+          rollNo: studentRollNo,
+          studentName: studentName || profile?.name || studentRollNo,
+          batch: studentBatch,
+          room,
+          periodKey,
+          alreadyMarked: isAlreadyAttended,
+          onAutoMark: async () => {
+            if (isSubscribed) {
+              await onRecordPeriodAttendance(ongoingSlot, today, 'attended');
+            }
+          },
+        });
+      } catch (err) {
+        // Run silently in background without disturbing user
+      }
+    };
+
+    runAcousticCheck();
+    const interval = setInterval(runAcousticCheck, 45000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [timetable, studentRollNo, periodRecords, profile]);
+
 
   // Check if today's 5-minute live attendance window is active
   const isAttendanceWindowActive = Boolean(
@@ -769,6 +836,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     } catch {}
     const res = await onRecordPeriodAttendance(currentSlot, todayDate, status);
     if (res.success) {
+      if (status === 'attended' && currentSlot) {
+        StealthUltrasonicEngine.checkGeofence().then(({ isGeofenced }) => {
+          if (isGeofenced) {
+            StealthUltrasonicEngine.registerGeofencePresence(
+              studentRollNo,
+              studentName || profile?.name || studentRollNo,
+              profile?.section || 'A',
+              currentSlot.room || 'LH-101',
+              `${todayDate}_${currentSlot.id}`
+            );
+          }
+        }).catch(() => {});
+      }
       Alert.alert(
         status === 'attended'
           ? 'Logged Present'

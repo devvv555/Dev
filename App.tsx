@@ -1162,6 +1162,7 @@ export default function App() {
             studentName={studentName}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
+            isLightMode={isLightMode}
           />
         )}
       </View>

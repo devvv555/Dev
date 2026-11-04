@@ -35,6 +35,7 @@ export interface EnhancedHubScreenProps {
   studentName: string;
   onRefresh?: () => void;
   isEnhancedSuit?: boolean;
+  isLightMode?: boolean;
 }
 
 type HubSection = 'NEWS' | 'CANTEEN_XEROX' | 'FACULTY' | 'SYLLABUS' | 'LIBRARY';
@@ -43,6 +44,7 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   studentRollNo,
   studentName,
   isEnhancedSuit = true,
+  isLightMode = false,
 }) => {
   const [activeSection, setActiveSection] = useState<HubSection>('NEWS');
 
@@ -174,77 +176,231 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   };
 
   const selectedCanteen = CANTEEN_LOCATIONS[selectedCanteenId];
+  const styles = getStyles(isLightMode);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isLightMode && { backgroundColor: '#F1F5F9' }]}>
       {/* Top Section Header */}
-      <View style={styles.topHeader}>
+      <View
+        style={[
+          styles.topHeader,
+          isLightMode && {
+            backgroundColor: '#FFFFFF',
+            borderBottomColor: '#E2E8F0',
+          },
+        ]}
+      >
         <View>
-          <Text style={styles.headerTitle}>ENHANCED SUIT HUB</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text
+            style={[
+              styles.headerTitle,
+              isLightMode && { color: '#0F172A', fontWeight: '900' },
+            ]}
+          >
+            ENHANCED SUIT HUB
+          </Text>
+          <Text
+            style={[
+              styles.headerSubtitle,
+              isLightMode && { color: '#64748B' },
+            ]}
+          >
             Autonomous Campus Intelligence & Student Amenities
           </Text>
         </View>
-        <View style={styles.badgeLive}>
-          <Text style={styles.badgeLiveText}>ONLINE</Text>
+        <View
+          style={[
+            styles.badgeLive,
+            isLightMode && {
+              backgroundColor: '#ECFDF5',
+              borderColor: '#10B981',
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeLiveText,
+              isLightMode && { color: '#047857', fontWeight: '800' },
+            ]}
+          >
+            ONLINE
+          </Text>
         </View>
       </View>
 
       {/* Action Notification Banner */}
       {actionNotice && (
-        <View style={styles.noticeBanner}>
-          <Text style={styles.noticeText}>{actionNotice}</Text>
+        <View
+          style={[
+            styles.noticeBanner,
+            isLightMode && {
+              backgroundColor: '#EFF6FF',
+              borderBottomColor: '#BFDBFE',
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.noticeText,
+              isLightMode && { color: '#1E40AF', fontWeight: '700' },
+            ]}
+          >
+            {actionNotice}
+          </Text>
         </View>
       )}
 
       {/* Section Filter Pills */}
-      <View style={styles.navBarWrapper}>
+      <View
+        style={[
+          styles.navBarWrapper,
+          isLightMode && {
+            backgroundColor: '#FFFFFF',
+            borderBottomColor: '#E2E8F0',
+          },
+        ]}
+      >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.navBarContent}
         >
           <TouchableOpacity
-            style={[styles.navPill, activeSection === 'NEWS' && styles.navPillActive]}
+            style={[
+              styles.navPill,
+              isLightMode && {
+                backgroundColor: '#F8FAFC',
+                borderColor: '#E2E8F0',
+              },
+              activeSection === 'NEWS' &&
+                (isLightMode
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : styles.navPillActive),
+            ]}
             onPress={() => setActiveSection('NEWS')}
           >
-            <Text style={[styles.navPillText, activeSection === 'NEWS' && styles.navPillTextActive]}>
+            <Text
+              style={[
+                styles.navPillText,
+                isLightMode && { color: '#64748B' },
+                activeSection === 'NEWS' &&
+                  (isLightMode
+                    ? { color: '#FFFFFF', fontWeight: '800' }
+                    : styles.navPillTextActive),
+              ]}
+            >
               Live News Feed
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navPill, activeSection === 'CANTEEN_XEROX' && styles.navPillActive]}
+            style={[
+              styles.navPill,
+              isLightMode && {
+                backgroundColor: '#F8FAFC',
+                borderColor: '#E2E8F0',
+              },
+              activeSection === 'CANTEEN_XEROX' &&
+                (isLightMode
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : styles.navPillActive),
+            ]}
             onPress={() => setActiveSection('CANTEEN_XEROX')}
           >
-            <Text style={[styles.navPillText, activeSection === 'CANTEEN_XEROX' && styles.navPillTextActive]}>
+            <Text
+              style={[
+                styles.navPillText,
+                isLightMode && { color: '#64748B' },
+                activeSection === 'CANTEEN_XEROX' &&
+                  (isLightMode
+                    ? { color: '#FFFFFF', fontWeight: '800' }
+                    : styles.navPillTextActive),
+              ]}
+            >
               Canteen & Xerox Radar
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navPill, activeSection === 'FACULTY' && styles.navPillActive]}
+            style={[
+              styles.navPill,
+              isLightMode && {
+                backgroundColor: '#F8FAFC',
+                borderColor: '#E2E8F0',
+              },
+              activeSection === 'FACULTY' &&
+                (isLightMode
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : styles.navPillActive),
+            ]}
             onPress={() => setActiveSection('FACULTY')}
           >
-            <Text style={[styles.navPillText, activeSection === 'FACULTY' && styles.navPillTextActive]}>
+            <Text
+              style={[
+                styles.navPillText,
+                isLightMode && { color: '#64748B' },
+                activeSection === 'FACULTY' &&
+                  (isLightMode
+                    ? { color: '#FFFFFF', fontWeight: '800' }
+                    : styles.navPillTextActive),
+              ]}
+            >
               Faculty Office Booking
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navPill, activeSection === 'SYLLABUS' && styles.navPillActive]}
+            style={[
+              styles.navPill,
+              isLightMode && {
+                backgroundColor: '#F8FAFC',
+                borderColor: '#E2E8F0',
+              },
+              activeSection === 'SYLLABUS' &&
+                (isLightMode
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : styles.navPillActive),
+            ]}
             onPress={() => setActiveSection('SYLLABUS')}
           >
-            <Text style={[styles.navPillText, activeSection === 'SYLLABUS' && styles.navPillTextActive]}>
+            <Text
+              style={[
+                styles.navPillText,
+                isLightMode && { color: '#64748B' },
+                activeSection === 'SYLLABUS' &&
+                  (isLightMode
+                    ? { color: '#FFFFFF', fontWeight: '800' }
+                    : styles.navPillTextActive),
+              ]}
+            >
               Syllabus Velocity
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navPill, activeSection === 'LIBRARY' && styles.navPillActive]}
+            style={[
+              styles.navPill,
+              isLightMode && {
+                backgroundColor: '#F8FAFC',
+                borderColor: '#E2E8F0',
+              },
+              activeSection === 'LIBRARY' &&
+                (isLightMode
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : styles.navPillActive),
+            ]}
             onPress={() => setActiveSection('LIBRARY')}
           >
-            <Text style={[styles.navPillText, activeSection === 'LIBRARY' && styles.navPillTextActive]}>
+            <Text
+              style={[
+                styles.navPillText,
+                isLightMode && { color: '#64748B' },
+                activeSection === 'LIBRARY' &&
+                  (isLightMode
+                    ? { color: '#FFFFFF', fontWeight: '800' }
+                    : styles.navPillTextActive),
+              ]}
+            >
               Library Shield
             </Text>
           </TouchableOpacity>
@@ -1084,18 +1240,18 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (isLightMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F1F5F9' : '#050505',
   },
   topHeader: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#262626',
+    borderBottomColor: isLightMode ? '#E2E8F0' : '#262626',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1103,44 +1259,44 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     letterSpacing: 1.1,
   },
   headerSubtitle: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 2,
   },
   badgeLive: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.2)',
     borderWidth: 1,
-    borderColor: '#10B981',
+    borderColor: isLightMode ? '#10B981' : '#10B981',
   },
   badgeLiveText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#34D399',
+    color: isLightMode ? '#047857' : '#34D399',
     letterSpacing: 0.8,
   },
   noticeBanner: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(16, 185, 129, 0.15)',
     borderBottomWidth: 1,
-    borderBottomColor: '#10B981',
+    borderBottomColor: isLightMode ? '#BFDBFE' : '#10B981',
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   noticeText: {
-    color: '#10B981',
+    color: isLightMode ? '#1E40AF' : '#10B981',
     fontSize: 12,
     fontWeight: '700',
   },
   navBarWrapper: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
     borderBottomWidth: 1,
-    borderBottomColor: '#262626',
+    borderBottomColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   navBarContent: {
     paddingHorizontal: 12,
@@ -1152,18 +1308,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   navPillActive: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: isLightMode ? '#2B3990' : '#10B981',
+    borderColor: isLightMode ? '#2B3990' : '#10B981',
   },
   navPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   navPillTextActive: {
     color: '#FFFFFF',
@@ -1182,22 +1338,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   sectionCaption: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 4,
     lineHeight: 17,
   },
   newsSyncBar: {
     marginTop: 10,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#050505',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1218,11 +1374,11 @@ const styles = StyleSheet.create({
   newsSyncText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#065F46' : '#10B981',
     letterSpacing: 0.5,
   },
   newsRefreshBtn: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)',
     borderWidth: 1,
     borderColor: '#10B981',
     borderRadius: 6,
@@ -1230,21 +1386,26 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   newsRefreshBtnActive: {
-    backgroundColor: '#262626',
+    backgroundColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   newsRefreshBtnText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#10B981',
+    color: isLightMode ? '#047857' : '#10B981',
     letterSpacing: 0.8,
   },
   card: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginBottom: 14,
+    shadowColor: isLightMode ? '#64748B' : undefined,
+    shadowOpacity: isLightMode ? 0.08 : undefined,
+    shadowOffset: isLightMode ? { width: 0, height: 2 } : undefined,
+    shadowRadius: isLightMode ? 6 : undefined,
+    elevation: isLightMode ? 2 : undefined,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -1255,43 +1416,45 @@ const styles = StyleSheet.create({
   newsSource: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#10B981',
+    color: isLightMode ? '#2563EB' : '#10B981',
     letterSpacing: 0.8,
   },
   newsDate: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   newsTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     marginBottom: 6,
     lineHeight: 20,
   },
   newsSummary: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: isLightMode ? '#475569' : '#9CA3AF',
     lineHeight: 18,
     marginBottom: 10,
   },
   takeawayBox: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#10B981',
+    borderLeftColor: isLightMode ? '#2563EB' : '#10B981',
+    borderWidth: isLightMode ? 1 : 0,
+    borderColor: isLightMode ? '#E2E8F0' : undefined,
     marginBottom: 10,
   },
   takeawayLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#1E40AF' : '#10B981',
     marginBottom: 2,
   },
   takeawayText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: isLightMode ? '#334155' : '#9CA3AF',
     lineHeight: 17,
   },
   newsReadMoreBtn: {
@@ -1301,7 +1464,7 @@ const styles = StyleSheet.create({
   newsReadMoreText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#10B981',
+    color: isLightMode ? '#2563EB' : '#10B981',
     textDecorationLine: 'underline',
   },
   subTabRow: {
@@ -1313,19 +1476,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 9,
     borderRadius: 8,
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#CBD5E1' : '#262626',
     alignItems: 'center',
   },
   subTabBtnActive: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: isLightMode ? '#2B3990' : '#10B981',
+    borderColor: isLightMode ? '#2B3990' : '#10B981',
   },
   subTabBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   subTabBtnTextActive: {
     color: '#FFFFFF',
@@ -1340,32 +1503,32 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 7,
     borderRadius: 6,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     alignItems: 'center',
   },
   canteenChipActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderColor: '#10B981',
+    backgroundColor: isLightMode ? '#EEF2FF' : 'rgba(16, 185, 129, 0.15)',
+    borderColor: isLightMode ? '#6366F1' : '#10B981',
   },
   canteenChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   canteenChipTextActive: {
-    color: '#10B981',
+    color: isLightMode ? '#4338CA' : '#10B981',
     fontWeight: '800',
   },
   canteenName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   canteenTagline: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 2,
   },
   queueBadge: {
@@ -1381,7 +1544,7 @@ const styles = StyleSheet.create({
   },
   canteenMsg: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: isLightMode ? '#475569' : '#9CA3AF',
     marginTop: 8,
     marginBottom: 12,
     lineHeight: 18,
@@ -1393,40 +1556,42 @@ const styles = StyleSheet.create({
   },
   infoCol: {
     flex: 1,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderRadius: 6,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   infoLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginBottom: 2,
   },
   infoVal: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   foodNoticeBox: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    backgroundColor: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.08)',
     borderRadius: 8,
     padding: 10,
     borderLeftWidth: 3,
     borderLeftColor: '#10B981',
     marginTop: 6,
     marginBottom: 10,
+    borderWidth: isLightMode ? 1 : 0,
+    borderColor: isLightMode ? '#A7F3D0' : undefined,
   },
   foodNoticeTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#065F46' : '#10B981',
     marginBottom: 2,
   },
   foodNoticeBody: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#047857' : '#9CA3AF',
     lineHeight: 16,
   },
   specialtiesBox: {
@@ -1435,7 +1600,7 @@ const styles = StyleSheet.create({
   specialtiesTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     marginBottom: 6,
   },
   specialtiesRow: {
@@ -1444,29 +1609,30 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   specialtyChip: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   specialtyChipText: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: isLightMode ? '#475569' : '#9CA3AF',
+    fontWeight: isLightMode ? '600' : 'normal',
   },
   rateCardBox: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginTop: 10,
   },
   rateCardTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     marginBottom: 6,
   },
   rateGrid: {
@@ -1474,7 +1640,7 @@ const styles = StyleSheet.create({
   },
   rateItem: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#475569' : '#9CA3AF',
   },
   calculatorTitle: {
     fontSize: 15,
@@ -1482,9 +1648,15 @@ const styles = StyleSheet.create({
     color: '#10B981',
     marginBottom: 4,
   },
+  calculatorTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: isLightMode ? '#0F172A' : '#10B981',
+    marginBottom: 4,
+  },
   calculatorSubtitle: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     lineHeight: 16,
     marginBottom: 14,
   },
@@ -1499,15 +1671,15 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#10B981',
+    color: isLightMode ? '#475569' : '#10B981',
     marginBottom: 4,
   },
   textInput: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#CBD5E1' : '#262626',
     borderRadius: 8,
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
@@ -1522,30 +1694,30 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 6,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     alignItems: 'center',
   },
   toggleBtnActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderColor: '#10B981',
+    backgroundColor: isLightMode ? '#EEF2FF' : 'rgba(16, 185, 129, 0.15)',
+    borderColor: isLightMode ? '#2B3990' : '#10B981',
   },
   toggleBtnText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   toggleBtnTextActive: {
-    color: '#10B981',
+    color: isLightMode ? '#2B3990' : '#10B981',
     fontWeight: '800',
   },
   totalBox: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderRadius: 8,
     padding: 12,
     borderWidth: 1.5,
-    borderColor: '#10B981',
+    borderColor: isLightMode ? '#2B3990' : '#10B981',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1555,17 +1727,17 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   totalNote: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 2,
   },
   totalAmount: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#10B981',
+    color: isLightMode ? '#2B3990' : '#10B981',
   },
   xeroxActionRow: {
     flexDirection: 'row',
@@ -1575,22 +1747,22 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F1F5F9' : '#121212',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#CBD5E1' : '#262626',
     alignItems: 'center',
     justifyContent: 'center',
   },
   qrBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#475569' : '#10B981',
   },
   sendWhatsAppBtn: {
     flex: 1.2,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#10B981',
+    backgroundColor: isLightMode ? '#10B981' : '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1600,32 +1772,32 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   qrDisplayCard: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderRadius: 8,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginTop: 14,
     alignItems: 'center',
   },
   qrCardTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   qrCardSubtitle: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 2,
     marginBottom: 12,
   },
   mockQrPlaceholder: {
     width: 180,
     height: 180,
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#10B981',
+    borderColor: isLightMode ? '#2B3990' : '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
@@ -1633,18 +1805,18 @@ const styles = StyleSheet.create({
   mockQrText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     letterSpacing: 1,
   },
   mockQrSub: {
     fontSize: 11,
-    color: '#34D399',
+    color: isLightMode ? '#2563EB' : '#34D399',
     marginTop: 8,
     fontWeight: '700',
   },
   qrInstructions: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 15,
@@ -1652,11 +1824,11 @@ const styles = StyleSheet.create({
   facName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   facSubject: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 2,
   },
   availBadge: {
@@ -1677,43 +1849,44 @@ const styles = StyleSheet.create({
   },
   facDetailItem: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#475569' : '#9CA3AF',
   },
   facCabin: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 4,
     marginBottom: 10,
   },
   bookSlotBtn: {
-    backgroundColor: '#10B981',
+    backgroundColor: isLightMode ? '#2B3990' : '#10B981',
     paddingVertical: 9,
     borderRadius: 6,
     alignItems: 'center',
   },
   bookSlotBtnDisabled: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F1F5F9' : '#121212',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   bookSlotBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#050505',
+    color: isLightMode ? '#FFFFFF' : '#050505',
   },
   sylCode: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#10B981',
+    color: isLightMode ? '#2563EB' : '#10B981',
   },
   sylTitle: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: isLightMode ? '#0F172A' : '#9CA3AF',
+    fontWeight: isLightMode ? '700' : 'normal',
     marginTop: 2,
   },
   progressBarTrack: {
     height: 8,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#E2E8F0' : '#050505',
     borderRadius: 4,
     marginTop: 10,
     marginBottom: 10,
@@ -1721,7 +1894,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#10B981',
+    backgroundColor: isLightMode ? '#2B3990' : '#10B981',
     borderRadius: 4,
   },
   sylMetricsGrid: {
@@ -1733,51 +1906,56 @@ const styles = StyleSheet.create({
   },
   sylMetricLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   sylMetricVal: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
     marginTop: 2,
   },
   bookTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#0F172A' : '#10B981',
   },
   bookAuthor: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 2,
   },
   bookAccession: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginTop: 1,
   },
   bookRenewBtn: {
     marginTop: 10,
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#EEF2FF' : '#121212',
     paddingVertical: 8,
     borderRadius: 6,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#10B981',
+    borderColor: isLightMode ? '#6366F1' : '#10B981',
   },
   bookRenewBtnText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#10B981',
+    color: isLightMode ? '#4338CA' : '#10B981',
   },
   // Market Ticker & Live Quotes Styles
   marketTickerCard: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginBottom: 14,
+    shadowColor: isLightMode ? '#64748B' : undefined,
+    shadowOpacity: isLightMode ? 0.08 : undefined,
+    shadowOffset: isLightMode ? { width: 0, height: 2 } : undefined,
+    shadowRadius: isLightMode ? 6 : undefined,
+    elevation: isLightMode ? 2 : undefined,
   },
   marketTickerHeader: {
     flexDirection: 'row',
@@ -1793,13 +1971,13 @@ const styles = StyleSheet.create({
   marketTickerTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     letterSpacing: 0.3,
   },
   marketSourceTag: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#38BDF8',
+    color: isLightMode ? '#2563EB' : '#38BDF8',
   },
   quotePillRow: {
     flexDirection: 'row',
@@ -1810,32 +1988,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   quotePillActive: {
-    backgroundColor: '#1E293B',
-    borderColor: '#38BDF8',
+    backgroundColor: isLightMode ? '#EEF2FF' : '#1E293B',
+    borderColor: isLightMode ? '#6366F1' : '#38BDF8',
   },
   quotePillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
   },
   quotePillTextActive: {
-    color: '#38BDF8',
+    color: isLightMode ? '#4338CA' : '#38BDF8',
   },
   quotesScrollContainer: {
     gap: 10,
     paddingBottom: 4,
   },
   quoteCard: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#050505',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     width: 145,
   },
   quoteCardTop: {
@@ -1847,7 +2025,7 @@ const styles = StyleSheet.create({
   quoteSymbol: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
   },
   quoteBadge: {
     fontSize: 10,
@@ -1857,16 +2035,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   quoteBadgeUp: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-    color: '#34D399',
+    backgroundColor: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.2)',
+    color: isLightMode ? '#059669' : '#34D399',
   },
   quoteBadgeDown: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-    color: '#F87171',
+    backgroundColor: isLightMode ? '#FEF2F2' : 'rgba(239, 68, 68, 0.2)',
+    color: isLightMode ? '#DC2626' : '#F87171',
   },
   quoteName: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#9CA3AF',
     marginBottom: 6,
   },
   quotePriceRow: {
@@ -1878,31 +2056,38 @@ const styles = StyleSheet.create({
   quotePrice: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
   },
   quoteChange: {
     fontSize: 10,
     fontWeight: '700',
   },
   quoteTextUp: {
-    color: '#34D399',
+    color: isLightMode ? '#059669' : '#34D399',
   },
   quoteTextDown: {
-    color: '#F87171',
+    color: isLightMode ? '#DC2626' : '#F87171',
   },
   quoteSourceText: {
     fontSize: 8.5,
-    color: '#64748B',
+    color: isLightMode ? '#94A3B8' : '#64748B',
     marginTop: 2,
   },
   // Daystarter Briefing Styles
   daystarterCard: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#050505',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    borderColor: isLightMode ? '#38BDF8' : '#38BDF8',
     marginBottom: 16,
+    ...(isLightMode ? {
+      shadowColor: '#64748B',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 3 },
+      shadowRadius: 8,
+      elevation: 2,
+    } : {}),
   },
   daystarterHeader: {
     flexDirection: 'row',
@@ -1917,9 +2102,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   daystarterLiveBadge: {
-    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+    backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(56, 189, 248, 0.2)',
     borderWidth: 1,
-    borderColor: '#38BDF8',
+    borderColor: isLightMode ? '#93C5FD' : '#38BDF8',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1927,22 +2112,22 @@ const styles = StyleSheet.create({
   daystarterLiveBadgeText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#38BDF8',
+    color: isLightMode ? '#1D4ED8' : '#38BDF8',
     letterSpacing: 0.5,
   },
   daystarterEditionDate: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#94A3B8',
     fontWeight: '600',
   },
   daystarterHeadline: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     lineHeight: 22,
   },
   daystarterSourceBox: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#121212',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -1953,7 +2138,7 @@ const styles = StyleSheet.create({
   daystarterSourceLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#94A3B8',
   },
   daystarterSourceLinkRow: {
     marginTop: 2,
@@ -1961,11 +2146,11 @@ const styles = StyleSheet.create({
   daystarterSourceLink: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#38BDF8',
+    color: isLightMode ? '#0284C7' : '#38BDF8',
   },
   daystarterSummaryText: {
     fontSize: 12,
-    color: '#CBD5E1',
+    color: isLightMode ? '#334155' : '#CBD5E1',
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -1976,22 +2161,22 @@ const styles = StyleSheet.create({
   },
   anchorStatBox: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#121212',
     borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
   },
   anchorStatLabel: {
     fontSize: 9.5,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#94A3B8',
     textTransform: 'uppercase',
   },
   anchorStatValue: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     marginTop: 2,
   },
   anchorStatChange: {
@@ -2001,22 +2186,22 @@ const styles = StyleSheet.create({
   },
   anchorStatSubtext: {
     fontSize: 9,
-    color: '#64748B',
+    color: isLightMode ? '#64748B' : '#64748B',
     marginTop: 3,
     lineHeight: 12,
   },
   flowsCard: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#121212',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginBottom: 12,
   },
   flowsTitle: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     marginBottom: 8,
   },
   flowsRow: {
@@ -2029,7 +2214,7 @@ const styles = StyleSheet.create({
   },
   flowLabel: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#94A3B8',
   },
   flowVal: {
     fontSize: 13,
@@ -2038,21 +2223,21 @@ const styles = StyleSheet.create({
   },
   flowsSourceText: {
     fontSize: 9,
-    color: '#64748B',
+    color: isLightMode ? '#64748B' : '#64748B',
     marginTop: 4,
   },
   macroPointersBox: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#121212',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginBottom: 12,
   },
   macroPointersTitle: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     marginBottom: 8,
   },
   macroPointerItem: {
@@ -2062,37 +2247,38 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   macroBullet: {
-    color: '#38BDF8',
+    color: isLightMode ? '#0284C7' : '#38BDF8',
     fontWeight: '900',
     fontSize: 12,
   },
   macroPointerText: {
     flex: 1,
     fontSize: 11,
-    color: '#CBD5E1',
+    color: isLightMode ? '#334155' : '#CBD5E1',
     lineHeight: 16,
   },
   corporateBox: {
-    backgroundColor: '#121212',
+    backgroundColor: isLightMode ? '#F8FAFC' : '#121212',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
     marginBottom: 12,
   },
   corporateTitle: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     marginBottom: 8,
   },
   corporateItem: {
-    backgroundColor: '#050505',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#050505',
     borderRadius: 8,
     padding: 10,
     marginBottom: 8,
     borderLeftWidth: 3,
     borderLeftColor: '#38BDF8',
+    ...(isLightMode ? { borderWidth: 1, borderColor: '#E2E8F0', borderLeftColor: '#0284C7' } : {}),
   },
   corpHeaderRow: {
     flexDirection: 'row',
@@ -2103,35 +2289,36 @@ const styles = StyleSheet.create({
   corpCompanyName: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
   },
   corpTag: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+    ...(isLightMode ? { borderWidth: 1, borderColor: '#BFDBFE' } : {}),
   },
   corpTagText: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#38BDF8',
+    color: isLightMode ? '#1D4ED8' : '#38BDF8',
   },
   corpResultText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#34D399',
+    color: isLightMode ? '#059669' : '#34D399',
     marginTop: 2,
   },
   corpDetailText: {
     fontSize: 10.5,
-    color: '#94A3B8',
+    color: isLightMode ? '#64748B' : '#94A3B8',
     marginTop: 2,
     lineHeight: 15,
   },
   daystarterReadBtn: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
     borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    borderColor: isLightMode ? '#3B82F6' : '#38BDF8',
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: 'center',
@@ -2140,12 +2327,12 @@ const styles = StyleSheet.create({
   daystarterReadBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#38BDF8',
+    color: isLightMode ? '#1D4ED8' : '#38BDF8',
   },
   sectionSubtitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
     letterSpacing: 0.3,
   },
 });

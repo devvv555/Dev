@@ -1215,16 +1215,54 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
       </View>
 
       {/* Information Tip */}
-      <View style={[styles.infoBanner, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626' }]}>
+      <View
+        style={[
+          styles.infoBanner,
+          isLightMode && {
+            backgroundColor: '#EFF6FF',
+            borderColor: '#BFDBFE',
+          },
+          isEnhancedSuit && !isLightMode && { backgroundColor: '#121212', borderColor: '#262626' },
+        ]}
+      >
         <Text style={styles.infoBannerIcon}>💡</Text>
-        <Text style={[styles.infoBannerText, isEnhancedSuit && { color: '#9CA3AF' }]}>
-          The <Text style={[styles.boldText, isEnhancedSuit && { color: '#10B981' }]}>Hourly App</Text> logs each period real-time. The <Text style={[styles.boldText, isEnhancedSuit && { color: '#10B981' }]}>College ERP</Text> represents your official baseline. Tap "Edit" on any subject below to make manual adjustments.
+        <Text
+          style={[
+            styles.infoBannerText,
+            isLightMode && { color: '#1E40AF' },
+            isEnhancedSuit && !isLightMode && { color: '#9CA3AF' },
+          ]}
+        >
+          The <Text style={[styles.boldText, isLightMode && { color: '#1E3A8A' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>Hourly App</Text> logs each period real-time. The <Text style={[styles.boldText, isLightMode && { color: '#1E3A8A' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>College ERP</Text> represents your official baseline. Tap "Edit" on any subject below to make manual adjustments.
         </Text>
       </View>
 
       {/* Main Subjects Table */}
-      <View style={[styles.tableCard, isEnhancedSuit && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }]}>
-        <Text style={[styles.tableTitle, isEnhancedSuit && { color: '#10B981' }]}>Subject Attendance & Reconciliation</Text>
+      <View
+        style={[
+          styles.tableCard,
+          isLightMode && {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E2E8F0',
+            borderWidth: 1,
+            shadowColor: '#64748B',
+            shadowOpacity: 0.08,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 6,
+            elevation: 2,
+          },
+          isEnhancedSuit && !isLightMode && { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 },
+        ]}
+      >
+        <Text
+          style={[
+            styles.tableTitle,
+            isLightMode && { color: '#0F172A', fontWeight: '800' },
+            isEnhancedSuit && !isLightMode && { color: '#10B981' },
+          ]}
+        >
+          Subject Attendance & Reconciliation
+        </Text>
 
         {subjects.map((sub) => {
           // Calculate today's additional logged hours for this subject
@@ -1253,85 +1291,180 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
           const isSports = sub.noAttendance || sub.code === 'SPORTS' || sub.id === 'sub_sports';
 
           return (
-            <View key={sub.id} style={[styles.rowItem, isEnhancedSuit && { borderBottomColor: '#262626' }]}>
+            <View
+              key={sub.id}
+              style={[
+                styles.rowItem,
+                isLightMode && { borderBottomColor: '#F1F5F9' },
+                isEnhancedSuit && !isLightMode && { borderBottomColor: '#262626' },
+              ]}
+            >
               <View style={styles.rowTop}>
                 <View style={styles.subjectTitleContainer}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={[styles.subjectCode, isEnhancedSuit && { color: '#10B981' }]}>{sub.code}</Text>
+                    <Text
+                      style={[
+                        styles.subjectCode,
+                        isLightMode && { color: '#2B3990', fontWeight: '800' },
+                        isEnhancedSuit && !isLightMode && { color: '#10B981' },
+                      ]}
+                    >
+                      {sub.code}
+                    </Text>
                     {isSports && (
                       <View style={[
-                        { backgroundColor: 'rgba(168, 85, 247, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#A855F7' },
-                        isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                        { backgroundColor: isLightMode ? '#F3E8FF' : 'rgba(168, 85, 247, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: isLightMode ? '#C084FC' : '#A855F7' },
+                        isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
                       ]}>
-                        <Text style={[{ color: '#D8B4FE', fontSize: 10, fontWeight: '700' }, isEnhancedSuit && { color: '#10B981' }]}>NO ATTENDANCE</Text>
+                        <Text style={[{ color: isLightMode ? '#7E22CE' : '#D8B4FE', fontSize: 10, fontWeight: '700' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>NO ATTENDANCE</Text>
                       </View>
                     )}
                   </View>
-                  <Text style={[styles.subjectName, isEnhancedSuit && { color: '#10B981' }]}>{sub.name}</Text>
+                  <Text
+                    style={[
+                      styles.subjectName,
+                      isLightMode && { color: '#0F172A', fontWeight: '800' },
+                      isEnhancedSuit && !isLightMode && { color: '#10B981' },
+                    ]}
+                  >
+                    {sub.name}
+                  </Text>
                 </View>
 
                 {!isSports && (
                   <TouchableOpacity
-                    style={[styles.syncBtn, isEnhancedSuit && { backgroundColor: '#10B981' }]}
+                    style={[
+                      styles.syncBtn,
+                      isLightMode && { backgroundColor: '#EEF2FF', borderWidth: 1, borderColor: '#C7D2FE' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#10B981' },
+                    ]}
                     onPress={() => handleOpenEdit(sub)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.syncBtnText, isEnhancedSuit && { color: '#050505', fontWeight: '800' }]}>Edit</Text>
+                    <Text
+                      style={[
+                        styles.syncBtnText,
+                        isLightMode && { color: '#2B3990', fontWeight: '700' },
+                        isEnhancedSuit && !isLightMode && { color: '#050505', fontWeight: '800' },
+                      ]}
+                    >
+                      Edit
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
 
               {isSports ? (
                 <View style={[
-                  { backgroundColor: 'rgba(168, 85, 247, 0.08)', borderRadius: 8, padding: 10, marginTop: 8, borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)' },
-                  isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
+                  { backgroundColor: isLightMode ? '#FAF5FF' : 'rgba(168, 85, 247, 0.08)', borderRadius: 8, padding: 10, marginTop: 8, borderWidth: 1, borderColor: isLightMode ? '#E9D5FF' : 'rgba(168, 85, 247, 0.3)' },
+                  isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
                 ]}>
-                  <Text style={[{ color: '#E9D5FF', fontSize: 12, fontWeight: '600' }, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                  <Text style={[{ color: isLightMode ? '#6B21A8' : '#E9D5FF', fontSize: 12, fontWeight: '600' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
                     Physical Education & Sports - Not tracked in the ERP.
                   </Text>
                 </View>
               ) : (
-                <View style={styles.comparisonGrid}>
+                <View
+                  style={[
+                    styles.comparisonGrid,
+                    isLightMode && {
+                      backgroundColor: '#F8FAFC',
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                    },
+                  ]}
+                >
                   <TouchableOpacity
                     style={[
                       styles.colBox,
-                      { backgroundColor: isEnhancedSuit ? '#050505' : 'rgba(56, 189, 248, 0.05)', borderRadius: 8, padding: 4 },
-                      isEnhancedSuit && { borderWidth: 1, borderColor: '#262626' }
+                      {
+                        backgroundColor: isLightMode
+                          ? '#FFFFFF'
+                          : isEnhancedSuit
+                          ? '#050505'
+                          : 'rgba(56, 189, 248, 0.05)',
+                        borderRadius: 8,
+                        padding: 4,
+                        borderWidth: isLightMode ? 1 : isEnhancedSuit ? 1 : 0,
+                        borderColor: isLightMode ? '#E2E8F0' : isEnhancedSuit ? '#262626' : undefined,
+                      },
                     ]}
                     onPress={() => setViewingRecordedSubject(sub)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Hourly App</Text>
-                    <Text style={[styles.colValue, { textDecorationLine: 'underline' }, isEnhancedSuit && { color: '#10B981' }]}>
+                    <Text style={[styles.colLabel, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
+                      Hourly App
+                    </Text>
+                    <Text
+                      style={[
+                        styles.colValue,
+                        { textDecorationLine: 'underline' },
+                        isLightMode && { color: '#0F172A', fontWeight: '800' },
+                        isEnhancedSuit && !isLightMode && { color: '#10B981' },
+                      ]}
+                    >
                       {effectiveAppAttended} / {effectiveAppTotal}
                     </Text>
-                    <Text style={[styles.colPct, isEnhancedSuit && { color: '#10B981' }]}>{appPct.toFixed(1)}%</Text>
+                    <Text style={[styles.colPct, isLightMode && { color: '#2563EB', fontWeight: '800' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>
+                      {appPct.toFixed(1)}%
+                    </Text>
                   </TouchableOpacity>
 
-                  <View style={[styles.colDivider, isEnhancedSuit && { backgroundColor: '#262626' }]} />
+                  <View
+                    style={[
+                      styles.colDivider,
+                      isLightMode && { backgroundColor: '#E2E8F0' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#262626' },
+                    ]}
+                  />
 
-                  <View style={[styles.colBox, isEnhancedSuit && { backgroundColor: '#050505', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#262626' }]}>
-                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>College ERP</Text>
-                    <Text style={[styles.colValue, isEnhancedSuit && { color: '#10B981' }]}>
+                  <View
+                    style={[
+                      styles.colBox,
+                      isLightMode && { backgroundColor: '#FFFFFF', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#E2E8F0' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#262626' },
+                    ]}
+                  >
+                    <Text style={[styles.colLabel, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
+                      College ERP
+                    </Text>
+                    <Text style={[styles.colValue, isLightMode && { color: '#0F172A', fontWeight: '800' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>
                       {sub.officialAttended} / {sub.officialTotal}
                     </Text>
-                    <Text style={[styles.colPct, isEnhancedSuit && { color: '#10B981' }]}>{erpPct.toFixed(1)}%</Text>
+                    <Text style={[styles.colPct, isLightMode && { color: '#059669', fontWeight: '800' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>
+                      {erpPct.toFixed(1)}%
+                    </Text>
                   </View>
 
-                  <View style={[styles.colDivider, isEnhancedSuit && { backgroundColor: '#262626' }]} />
+                  <View
+                    style={[
+                      styles.colDivider,
+                      isLightMode && { backgroundColor: '#E2E8F0' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#262626' },
+                    ]}
+                  />
 
-                  <View style={[styles.colBox, isEnhancedSuit && { backgroundColor: '#050505', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#262626' }]}>
-                    <Text style={[styles.colLabel, isEnhancedSuit && { color: '#9CA3AF' }]}>Delta / Status</Text>
+                  <View
+                    style={[
+                      styles.colBox,
+                      isLightMode && { backgroundColor: '#FFFFFF', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#E2E8F0' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderRadius: 8, padding: 4, borderWidth: 1, borderColor: '#262626' },
+                    ]}
+                  >
+                    <Text style={[styles.colLabel, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
+                      Delta / Status
+                    </Text>
                     <Text
                       style={[
                         styles.colValue,
                         classDiff > 0 ? styles.deltaPositive : styles.deltaEven,
-                        isEnhancedSuit && { color: '#10B981' }
+                        isLightMode && { color: classDiff > 0 ? '#D97706' : '#059669', fontWeight: '800' },
+                        isEnhancedSuit && !isLightMode && { color: '#10B981' },
                       ]}
                     >
                       {classDiff > 0 ? `+${classDiff} hrs held` : 'In sync'}
                     </Text>
-                    <Text style={[styles.deltaSub, isEnhancedSuit && { color: '#9CA3AF' }]}>
+                    <Text style={[styles.deltaSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
                       {attendedDiff > 0 ? `+${attendedDiff} hrs present` : 'Matches'}
                     </Text>
                   </View>
@@ -1374,21 +1507,23 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                   <TouchableOpacity
                     style={[
                       { marginTop: 8, padding: 9, borderRadius: 8, backgroundColor: 'rgba(56, 189, 248, 0.08)', borderWidth: 1, borderColor: '#0284C7', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-                      isEnhancedSuit && { backgroundColor: '#050505', borderColor: '#262626' }
+                      isLightMode && { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
                     ]}
                     onPress={() => setViewingRecordedSubject(sub)}
                     activeOpacity={0.8}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={[{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }, isEnhancedSuit && { color: '#10B981' }]}>
+                      <Text style={[{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }, isLightMode && { color: '#1E40AF' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>
                         Post-Portal (From {displayFromDate} Onwards): {attendedSincePortal} / {totalSincePortal} hrs attended
                       </Text>
                     </View>
                     <View style={[
                       { backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 },
-                      isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
+                      isLightMode && { backgroundColor: '#DBEAFE' },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
                     ]}>
-                      <Text style={[{ color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }, isEnhancedSuit && { color: '#10B981' }]}>
+                      <Text style={[{ color: '#38BDF8', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }, isLightMode && { color: '#1E40AF' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>
                         {isCloudLocked ? 'CLOUD STORED & LOCKED' : 'CLOUD SYNCED'}
                       </Text>
                     </View>
@@ -1403,17 +1538,31 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       {/* App Recorded Hours Breakdown Modal */}
       <Modal visible={!!viewingRecordedSubject} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxHeight: '80%' }]}>
+        <View style={[styles.modalOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
+          <View
+            style={[
+              styles.modalCard,
+              { maxHeight: '80%' },
+              isLightMode && {
+                backgroundColor: '#FFFFFF',
+                borderColor: '#CBD5E1',
+                shadowColor: '#64748B',
+                shadowOpacity: 0.15,
+                shadowOffset: { width: 0, height: 6 },
+                shadowRadius: 16,
+                elevation: 8,
+              },
+            ]}
+          >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <View>
-                <Text style={styles.modalTitle}>App Recorded Hours</Text>
-                <Text style={styles.modalSubtitle}>
+                <Text style={[styles.modalTitle, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>App Recorded Hours</Text>
+                <Text style={[styles.modalSubtitle, isLightMode && { color: '#2563EB', fontWeight: '700' }]}>
                   {viewingRecordedSubject?.name} ({viewingRecordedSubject?.code})
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setViewingRecordedSubject(null)} style={{ padding: 6 }}>
-                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: 'bold' }}>X</Text>
+                <Text style={{ fontSize: 18, color: isLightMode ? '#64748B' : '#94A3B8', fontWeight: 'bold' }}>✕</Text>
               </TouchableOpacity>
             </View>
 
@@ -1428,18 +1577,27 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
                 return (
                   <View>
-                    <View style={{ backgroundColor: '#1E293B', padding: 12, borderRadius: 8, marginBottom: 14 }}>
-                      <Text style={{ color: '#94A3B8', fontSize: 12, marginBottom: 4 }}>
-                        Official College ERP Baseline: <Text style={{ color: '#F1F5F9', fontWeight: '700' }}>{viewingRecordedSubject.officialAttended} / {viewingRecordedSubject.officialTotal} hrs</Text> (as of {portalCutoff})
+                    <View
+                      style={[
+                        { backgroundColor: '#1E293B', padding: 12, borderRadius: 8, marginBottom: 14 },
+                        isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' },
+                      ]}
+                    >
+                      <Text style={[{ color: '#94A3B8', fontSize: 12, marginBottom: 4 }, isLightMode && { color: '#64748B' }]}>
+                        Official College ERP Baseline:{' '}
+                        <Text style={[{ color: '#F1F5F9', fontWeight: '700' }, isLightMode && { color: '#0F172A' }]}>
+                          {viewingRecordedSubject.officialAttended} / {viewingRecordedSubject.officialTotal} hrs
+                        </Text>{' '}
+                        (as of {portalCutoff})
                       </Text>
-                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }}>
+                      <Text style={[{ color: '#38BDF8', fontSize: 12, fontWeight: '700' }, isLightMode && { color: '#2563EB' }]}>
                         Total Classes Logged in App: {matchingRecords.length} sessions
                       </Text>
                     </View>
 
                     {matchingRecords.length === 0 ? (
                       <View style={{ padding: 20, alignItems: 'center' }}>
-                        <Text style={{ color: '#94A3B8', fontSize: 14 }}>No individual period records logged in app yet.</Text>
+                        <Text style={[{ color: '#94A3B8', fontSize: 14 }, isLightMode && { color: '#64748B' }]}>No individual period records logged in app yet.</Text>
                       </View>
                     ) : (
                       matchingRecords.map((rec) => {
@@ -1450,33 +1608,42 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                         return (
                           <View
                             key={rec.periodKey}
-                            style={{
-                              backgroundColor: '#0F172A',
-                              padding: 12,
-                              borderRadius: 8,
-                              marginBottom: 8,
-                              borderWidth: 1,
-                              borderColor: isPostPortal ? '#0284C7' : '#334155',
-                              flexDirection: 'row',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
+                            style={[
+                              {
+                                backgroundColor: '#0F172A',
+                                padding: 12,
+                                borderRadius: 8,
+                                marginBottom: 8,
+                                borderWidth: 1,
+                                borderColor: isPostPortal ? '#0284C7' : '#334155',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                              },
+                              isLightMode && {
+                                backgroundColor: '#F8FAFC',
+                                borderColor: isPostPortal ? '#3B82F6' : '#E2E8F0',
+                              },
+                            ]}
                           >
                             <View>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                                <Text style={{ color: '#F1F5F9', fontSize: 13, fontWeight: '700' }}>
+                                <Text style={[{ color: '#F1F5F9', fontSize: 13, fontWeight: '700' }, isLightMode && { color: '#0F172A' }]}>
                                   {rec.date}
                                 </Text>
                                 {isPostPortal && (
-                                  <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                                    <Text style={{ color: '#38BDF8', fontSize: 9, fontWeight: '700' }}>POST-PORTAL</Text>
+                                  <View style={[
+                                    { backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
+                                    isLightMode && { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE' },
+                                  ]}>
+                                    <Text style={[{ color: '#38BDF8', fontSize: 9, fontWeight: '700' }, isLightMode && { color: '#1D4ED8' }]}>POST-PORTAL</Text>
                                   </View>
                                 )}
                               </View>
-                              <Text style={{ color: '#94A3B8', fontSize: 11 }}>
+                              <Text style={[{ color: '#94A3B8', fontSize: 11 }, isLightMode && { color: '#64748B' }]}>
                                 Duration: {rec.hours || 1} hr{(rec.hours || 1) > 1 ? 's' : ''} • {rec.slotId || 'Class Slot'}
                               </Text>
-                              <Text style={{ color: rec.lockedUntilPortalUpdate ? '#38BDF8' : '#34D399', fontSize: 10, marginTop: 2 }}>
+                              <Text style={[{ color: rec.lockedUntilPortalUpdate ? '#38BDF8' : '#34D399', fontSize: 10, marginTop: 2 }, isLightMode && { color: rec.lockedUntilPortalUpdate ? '#2563EB' : '#059669', fontWeight: '600' }]}>
                                 {rec.lockedUntilPortalUpdate ? 'Cloud Locked' : 'Window Synced'}
                               </Text>
                             </View>
@@ -1486,16 +1653,28 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
                                 paddingHorizontal: 10,
                                 paddingVertical: 4,
                                 borderRadius: 6,
-                                backgroundColor: isAttended ? 'rgba(16, 185, 129, 0.15)' : isBunked ? 'rgba(239, 68, 68, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                backgroundColor: isAttended
+                                  ? isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)'
+                                  : isBunked
+                                  ? isLightMode ? '#FEF2F2' : 'rgba(239, 68, 68, 0.15)'
+                                  : isLightMode ? '#F1F5F9' : 'rgba(148, 163, 184, 0.15)',
                                 borderWidth: 1,
-                                borderColor: isAttended ? '#10B981' : isBunked ? '#EF4444' : '#64748B',
+                                borderColor: isAttended
+                                  ? isLightMode ? '#A7F3D0' : '#10B981'
+                                  : isBunked
+                                  ? isLightMode ? '#FECACA' : '#EF4444'
+                                  : isLightMode ? '#CBD5E1' : '#64748B',
                               }}
                             >
                               <Text
                                 style={{
                                   fontSize: 12,
                                   fontWeight: '700',
-                                  color: isAttended ? '#34D399' : isBunked ? '#F87171' : '#94A3B8',
+                                  color: isAttended
+                                    ? isLightMode ? '#059669' : '#34D399'
+                                    : isBunked
+                                    ? isLightMode ? '#DC2626' : '#F87171'
+                                    : isLightMode ? '#64748B' : '#94A3B8',
                                   textTransform: 'uppercase',
                                 }}
                               >
@@ -1512,7 +1691,11 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             </ScrollView>
 
             <TouchableOpacity
-              style={[styles.modalSubmitBtn, { marginTop: 14 }]}
+              style={[
+                styles.modalSubmitBtn,
+                { marginTop: 14 },
+                isLightMode && { backgroundColor: '#2563EB' },
+              ]}
               onPress={() => setViewingRecordedSubject(null)}
             >
               <Text style={styles.modalSubmitText}>Close</Text>
@@ -1523,84 +1706,152 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
       {/* Manual Edit Modal */}
       <Modal visible={!!editingSubject} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
           <ScrollView contentContainerStyle={styles.modalScrollContent}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Edit Subject Attendance</Text>
-              <Text style={styles.modalSubtitle}>
+            <View
+              style={[
+                styles.modalCard,
+                isLightMode && {
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#CBD5E1',
+                  shadowColor: '#64748B',
+                  shadowOpacity: 0.15,
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowRadius: 16,
+                  elevation: 8,
+                },
+              ]}
+            >
+              <Text style={[styles.modalTitle, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>Edit Subject Attendance</Text>
+              <Text style={[styles.modalSubtitle, isLightMode && { color: '#2563EB', fontWeight: '700' }]}>
                 {editingSubject?.name} ({editingSubject?.code})
               </Text>
 
               {(editingSubject?.noAttendance || editingSubject?.code === 'SPORTS' || editingSubject?.id === 'sub_sports') ? (
-                <View style={{ backgroundColor: 'rgba(168, 85, 247, 0.12)', padding: 14, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: '#A855F7' }}>
-                  <Text style={{ color: '#E9D5FF', fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 18 }}>
+                <View
+                  style={[
+                    { backgroundColor: 'rgba(168, 85, 247, 0.12)', padding: 14, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: '#A855F7' },
+                    isLightMode && { backgroundColor: '#FAF5FF', borderColor: '#E9D5FF' },
+                  ]}
+                >
+                  <Text style={[{ color: '#E9D5FF', fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 18 }, isLightMode && { color: '#6B21A8' }]}>
                     Not tracked in the ERP.
                   </Text>
                 </View>
               ) : (
                 <>
                   {/* Section 1: App Attendance */}
-                  <View style={styles.modalSection}>
-                    <Text style={styles.sectionHeader}>Hourly App Attendance</Text>
+                  <View
+                    style={[
+                      styles.modalSection,
+                      isLightMode && {
+                        backgroundColor: '#F8FAFC',
+                        borderColor: '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.sectionHeader, isLightMode && { color: '#1E40AF', fontWeight: '800' }]}>Hourly App Attendance</Text>
                     <View style={styles.inputRow}>
                       <View style={styles.inputCol}>
-                        <Text style={styles.inputLabel}>Hours Attended</Text>
+                        <Text style={[styles.inputLabel, isLightMode && { color: '#475569' }]}>Hours Attended</Text>
                         <TextInput
-                          style={styles.textInput}
+                          style={[
+                            styles.textInput,
+                            isLightMode && {
+                              backgroundColor: '#FFFFFF',
+                              borderColor: '#CBD5E1',
+                              color: '#0F172A',
+                            },
+                          ]}
                           keyboardType="numeric"
                           value={appAttended}
                           onChangeText={setAppAttended}
                           placeholder="0"
-                          placeholderTextColor="#64748B"
+                          placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                         />
                       </View>
                       <View style={styles.inputCol}>
-                        <Text style={styles.inputLabel}>Total Hours Held</Text>
+                        <Text style={[styles.inputLabel, isLightMode && { color: '#475569' }]}>Total Hours Held</Text>
                         <TextInput
-                          style={styles.textInput}
+                          style={[
+                            styles.textInput,
+                            isLightMode && {
+                              backgroundColor: '#FFFFFF',
+                              borderColor: '#CBD5E1',
+                              color: '#0F172A',
+                            },
+                          ]}
                           keyboardType="numeric"
                           value={appTotal}
                           onChangeText={setAppTotal}
                           placeholder="0"
-                          placeholderTextColor="#64748B"
+                          placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                         />
                       </View>
                     </View>
                   </View>
 
                   {/* Section 2: College ERP Baseline */}
-                  <View style={styles.modalSection}>
+                  <View
+                    style={[
+                      styles.modalSection,
+                      isLightMode && {
+                        backgroundColor: '#F8FAFC',
+                        borderColor: '#E2E8F0',
+                      },
+                    ]}
+                  >
                     <View style={styles.sectionHeaderRow}>
-                      <Text style={styles.sectionHeader}>College Portal (ERP Baseline)</Text>
+                      <Text style={[styles.sectionHeader, isLightMode && { color: '#1E40AF', fontWeight: '800' }]}>College Portal (ERP Baseline)</Text>
                       <TouchableOpacity
                         onPress={handleCopyErpToApp}
-                        style={styles.copyErpBtn}
+                        style={[
+                          styles.copyErpBtn,
+                          isLightMode && {
+                            backgroundColor: '#EFF6FF',
+                            borderColor: '#BFDBFE',
+                          },
+                        ]}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.copyErpBtnText}>Copy to App</Text>
+                        <Text style={[styles.copyErpBtnText, isLightMode && { color: '#1D4ED8' }]}>Copy to App</Text>
                       </TouchableOpacity>
                     </View>
                     <View style={styles.inputRow}>
                       <View style={styles.inputCol}>
-                        <Text style={styles.inputLabel}>Official Hours Attended</Text>
+                        <Text style={[styles.inputLabel, isLightMode && { color: '#475569' }]}>Official Hours Attended</Text>
                         <TextInput
-                          style={styles.textInput}
+                          style={[
+                            styles.textInput,
+                            isLightMode && {
+                              backgroundColor: '#FFFFFF',
+                              borderColor: '#CBD5E1',
+                              color: '#0F172A',
+                            },
+                          ]}
                           keyboardType="numeric"
                           value={officialAttended}
                           onChangeText={setOfficialAttended}
                           placeholder="0"
-                          placeholderTextColor="#64748B"
+                          placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                         />
                       </View>
                       <View style={styles.inputCol}>
-                        <Text style={styles.inputLabel}>Official Hours Held</Text>
+                        <Text style={[styles.inputLabel, isLightMode && { color: '#475569' }]}>Official Hours Held</Text>
                         <TextInput
-                          style={styles.textInput}
+                          style={[
+                            styles.textInput,
+                            isLightMode && {
+                              backgroundColor: '#FFFFFF',
+                              borderColor: '#CBD5E1',
+                              color: '#0F172A',
+                            },
+                          ]}
                           keyboardType="numeric"
                           value={officialTotal}
                           onChangeText={setOfficialTotal}
                           placeholder="0"
-                          placeholderTextColor="#64748B"
+                          placeholderTextColor={isLightMode ? '#94A3B8' : '#64748B'}
                         />
                       </View>
                     </View>
@@ -1610,13 +1861,25 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
 
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={styles.modalCancelBtn}
+                  style={[
+                    styles.modalCancelBtn,
+                    isLightMode && {
+                      backgroundColor: '#F1F5F9',
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                    },
+                  ]}
                   onPress={() => setEditingSubject(null)}
                 >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
+                  <Text style={[styles.modalCancelText, isLightMode && { color: '#475569', fontWeight: '700' }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.modalSubmitBtn}
+                  style={[
+                    styles.modalSubmitBtn,
+                    isLightMode && {
+                      backgroundColor: '#2563EB',
+                    },
+                  ]}
                   onPress={handleSaveManual}
                 >
                   <Text style={styles.modalSubmitText}>Save Attendance</Text>
