@@ -217,7 +217,8 @@ export const ReconcileScreen: React.FC<ReconcileScreenProps> = ({
             studzoneResult.value.records.length > 0 &&
             onBatchUpdateSubjects
           ) {
-            const { updatedSubjects } = StudzoneService.applyToSubjects(studzoneResult.value.records, subjects, true);
+            // syncAppCounts=false prevents overwriting user's manually marked or live app attendance
+            const { updatedSubjects } = StudzoneService.applyToSubjects(studzoneResult.value.records, subjects, false);
             onBatchUpdateSubjects(updatedSubjects);
           }
         } catch {
