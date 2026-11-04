@@ -71,9 +71,16 @@ export function calculateAttendanceMetrics(
     summaryMessage = safeBunksAt75 > 0 
       ? `On track! You can safely miss ${safeBunksAt75} more ${safeBunksAt75 === 1 ? 'hour' : 'hours'}.`
       : `You are right at the ${standardTarget}% boundary. Do not miss any hours.`;
+  } else if (hasMedicalClaim && percentage >= medicalTarget) {
+    status = 'SAFE_MEDICAL';
+    summaryMessage = safeBunksAt65 > 0
+      ? `Protected under Medical Concession (65% Cutoff). Can safely miss ${safeBunksAt65} more ${safeBunksAt65 === 1 ? 'hour' : 'hours'}.`
+      : `Protected under Medical Concession at the 65% boundary. Attend all remaining classes to avoid detention.`;
   } else {
     status = 'SHORTAGE';
-    summaryMessage = `⚠️ Attendance shortage (${percentage}%). Need ${recoveryNeededAt75} consecutive ${recoveryNeededAt75 === 1 ? 'hour' : 'hours'} to hit 75%.`;
+    const targetToRecover = hasMedicalClaim ? medicalTarget : standardTarget;
+    const hoursToRecover = hasMedicalClaim ? recoveryNeededAt65 : recoveryNeededAt75;
+    summaryMessage = `⚠️ Attendance shortage (${percentage}%). Need ${hoursToRecover} consecutive ${hoursToRecover === 1 ? 'hour' : 'hours'} to hit ${targetToRecover}%.`;
   }
 
 

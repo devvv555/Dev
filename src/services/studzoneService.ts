@@ -13,6 +13,7 @@ export interface StudzoneAttendanceRecord {
   attendedClasses: number;
   exemptionClasses: number;
   percentage: number;
+  medicalExemptionPercentage?: number; // Official "(%) Exemp - MED" (Column 7)
   attendanceFrom?: string; // Column "Attendance from" (e.g. "17-08-2026")
   attendanceTo?: string;   // Column "Attendance to" (e.g. "10-10-2026")
 }
@@ -173,7 +174,8 @@ export const StudzoneService = {
         const totalClasses = parseInt(cells[1], 10);
         const exemptionClasses = parseInt(cells[2], 10) || 0;
         const presentClasses = parseInt(cells[4], 10);
-        const percentage = parseFloat(cells[5]) || parseFloat(cells[7]) || 0;
+        const percentage = parseFloat(cells[5]) || 0;
+        const medicalExemptionPercentage = parseFloat(cells[7]) || percentage;
         const attendanceFrom = cells[8] ? cells[8].trim() : undefined;
         const attendanceTo = cells[9] ? cells[9].trim() : undefined;
 
@@ -185,6 +187,7 @@ export const StudzoneService = {
             attendedClasses: presentClasses,
             exemptionClasses,
             percentage,
+            medicalExemptionPercentage,
             attendanceFrom,
             attendanceTo,
           });
@@ -773,12 +776,20 @@ export const StudzoneService = {
 
         const newOfficialAttended = matchedRecord.attendedClasses;
         const newOfficialTotal = matchedRecord.totalClasses;
+        const hasMedConcession =
+          (matchedRecord.medicalExemptionPercentage !== undefined &&
+            matchedRecord.medicalExemptionPercentage > matchedRecord.percentage) ||
+          (matchedRecord.exemptionClasses !== undefined && matchedRecord.exemptionClasses > 0);
 
         return {
           ...sub,
           name: sub.name || matchedRecord.courseName || sub.name,
           officialAttended: newOfficialAttended,
           officialTotal: newOfficialTotal,
+          medicalExemptionPercentage: matchedRecord.medicalExemptionPercentage,
+          medicalExemptionHours: matchedRecord.exemptionClasses,
+          hasMedicalClaim: hasMedConcession || sub.hasMedicalClaim,
+          medicalTarget: 65,
           lastOfficialUpdate: matchedRecord.attendanceTo || today,
           attendanceFrom: matchedRecord.attendanceFrom || '17-08-2026',
           attendanceTo: matchedRecord.attendanceTo || '10-10-2026',

@@ -8,6 +8,7 @@ import {
   TextInput,
   Linking,
   Alert,
+  Modal,
 } from 'react-native';
 import {
   BusinessNewsService,
@@ -90,6 +91,8 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   const [isDoubleSided, setIsDoubleSided] = useState<boolean>(false);
   const [bindingType, setBindingType] = useState<'NONE' | 'SPIRAL' | 'FOLDER'>('NONE');
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
+  const [showWalkthrough, setShowWalkthrough] = useState<boolean>(false);
+  const [walkthroughStep, setWalkthroughStep] = useState<number>(0);
 
   // Status message / booking confirmation
   const [actionNotice, setActionNotice] = useState<string | null>(null);
@@ -263,23 +266,57 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
             Autonomous Campus Intelligence & Student Amenities
           </Text>
         </View>
-        <View
-          style={[
-            styles.badgeLive,
-            isLightMode && {
-              backgroundColor: '#ECFDF5',
-              borderColor: '#10B981',
-            },
-          ]}
-        >
-          <Text
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
             style={[
-              styles.badgeLiveText,
-              isLightMode && { color: '#047857', fontWeight: '800' },
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 8,
+                backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
+                borderWidth: 1,
+                borderColor: isLightMode ? '#93C5FD' : '#38BDF8',
+              },
+            ]}
+            onPress={() => {
+              setWalkthroughStep(0);
+              setShowWalkthrough(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={{ fontSize: 13 }}>🧭</Text>
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: '800',
+                color: isLightMode ? '#1D4ED8' : '#38BDF8',
+              }}
+            >
+              Walkthrough
+            </Text>
+          </TouchableOpacity>
+
+          <View
+            style={[
+              styles.badgeLive,
+              isLightMode && {
+                backgroundColor: '#ECFDF5',
+                borderColor: '#10B981',
+              },
             ]}
           >
-            ONLINE
-          </Text>
+            <Text
+              style={[
+                styles.badgeLiveText,
+                isLightMode && { color: '#047857', fontWeight: '800' },
+              ]}
+            >
+              ONLINE
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -1426,6 +1463,266 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
           </View>
         )}
       </ScrollView>
+
+      {/* Enhanced Hub Walkthrough Modal */}
+      <Modal visible={showWalkthrough} animationType="fade" transparent>
+        <View style={[styles.modalOverlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.55)' }]}>
+          <View
+            style={[
+              styles.modalCard,
+              { maxWidth: 500, width: '100%', alignSelf: 'center', maxHeight: '85%' },
+              isLightMode && {
+                backgroundColor: '#FFFFFF',
+                borderColor: '#CBD5E1',
+                shadowColor: '#64748B',
+                shadowOpacity: 0.18,
+                shadowOffset: { width: 0, height: 8 },
+                shadowRadius: 20,
+                elevation: 10,
+              },
+            ]}
+          >
+            {(() => {
+              const walkthroughSteps = [
+                {
+                  tab: 'NEWS' as HubSection,
+                  icon: '🌅',
+                  badge: 'STEP 1 • 08:00 AM BRIEFING',
+                  title: 'Preparoo DayStarter & Market Radar',
+                  description:
+                    'Every morning at 08:00 AM, review the executive DayStarter compilation (Nifty/Sensex anchor levels, institutional FII/DII cash flows, Options PCR, and corporate earnings like IndiGo and Asian Paints). During trading hours (9:15 AM - 3:30 PM), indices update live with market ticks.',
+                  actionTip: 'Tap the source link anytime to read the full issue or cite data in your classes.',
+                },
+                {
+                  tab: 'NEWS' as HubSection,
+                  icon: '📰',
+                  badge: 'STEP 2 • PRESS FEED',
+                  title: '15-Minute Curated Business Press',
+                  description:
+                    'Direct headlines from The Hindu, BusinessLine, Business Standard, and Mint. Every story includes a customized MBA Takeaway tailored to your Economics (EDM), Operations (MCOB), and Securities (ADM) coursework.',
+                  actionTip: 'Auto-refreshes every 15 minutes, or tap the Refresh button to force-sync.',
+                },
+                {
+                  tab: 'CANTEEN_XEROX' as HubSection,
+                  icon: '🍽️',
+                  badge: 'STEP 3 • CANTEEN RADAR',
+                  title: 'Real-Time Canteen Crowd Mesh',
+                  description:
+                    'Check queue intensity across all 3 dining spots: Main IM Canteen, Campus Annex, and Coffee Kiosk (8:30 AM - 6:00 PM; Lunch 12:30-2:00 PM). GPS auto-detects if you are on-site to submit peer crowd updates.',
+                  actionTip: 'View the live peak meter before walking over between lectures.',
+                },
+                {
+                  tab: 'CANTEEN_XEROX' as HubSection,
+                  icon: '🖨️',
+                  badge: 'STEP 4 • ZERO-QUEUE XEROX',
+                  title: 'Print Cost Calculator & UPI Pay',
+                  description:
+                    'Enter your page count, select B&W vs Color, double-sided, or spiral binding to get the exact cost. Scan the shop UPI QR code to pay, then tap "Send via WhatsApp" to send your document for zero-wait pickup.',
+                  actionTip: 'Avoid peak queues before project deadlines and internal assignment submissions.',
+                },
+                {
+                  tab: 'FACULTY' as HubSection,
+                  icon: '👨‍🏫',
+                  badge: 'STEP 5 • FACULTY CONSULT',
+                  title: 'Office Hours & Doubt Clearance',
+                  description:
+                    'Directly view faculty consultation cabins and available office hour windows. Reserve 1-on-1 slots in one tap to review trimester projects, internships, or academic doubts.',
+                  actionTip: 'Reservations prevent conflicting bookings during busy assessment weeks.',
+                },
+                {
+                  tab: 'SYLLABUS' as HubSection,
+                  icon: '📈',
+                  badge: 'STEP 6 • SYLLABUS TRACKER',
+                  title: 'Curriculum Velocity Telemetry',
+                  description:
+                    'Monitor syllabus pacing across all 8 trimester courses. Compare actual classes conducted against university targets to anticipate upcoming internals and exam dates.',
+                  actionTip: 'Use velocity indicators to plan your revision schedule early.',
+                },
+                {
+                  tab: 'LIBRARY' as HubSection,
+                  icon: '📚',
+                  badge: 'STEP 7 • LIBRARY SHIELD',
+                  title: 'Due Dates & 1-Click Online Renewal',
+                  description:
+                    'Track borrowed library books, accession barcodes, and due countdowns. If a return deadline is near, tap "Renew Online (+14 Days)" to renew immediately without visiting the counter.',
+                  actionTip: 'Guarantees zero library overdue fines throughout your trimester.',
+                },
+              ];
+
+              const currentStep = walkthroughSteps[walkthroughStep] || walkthroughSteps[0];
+              const totalSteps = walkthroughSteps.length;
+
+              return (
+                <View>
+                  {/* Modal Header */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontSize: 24 }}>{currentStep.icon}</Text>
+                      <View>
+                        <View
+                          style={{
+                            backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
+                            paddingHorizontal: 7,
+                            paddingVertical: 2,
+                            borderRadius: 4,
+                            alignSelf: 'flex-start',
+                            marginBottom: 2,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontWeight: '900',
+                              color: isLightMode ? '#1D4ED8' : '#38BDF8',
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            {currentStep.badge}
+                          </Text>
+                        </View>
+                        <Text
+                          style={[
+                            styles.modalTitle,
+                            isLightMode && { color: '#0F172A', fontWeight: '800' },
+                          ]}
+                        >
+                          {currentStep.title}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setShowWalkthrough(false)}
+                      style={{ padding: 6 }}
+                    >
+                      <Text style={{ fontSize: 18, color: isLightMode ? '#64748B' : '#94A3B8', fontWeight: 'bold' }}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Step Description */}
+                  <View
+                    style={[
+                      {
+                        backgroundColor: isLightMode ? '#F8FAFC' : '#0F172A',
+                        padding: 14,
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: isLightMode ? '#E2E8F0' : '#334155',
+                        marginVertical: 10,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        lineHeight: 20,
+                        color: isLightMode ? '#334155' : '#CBD5E1',
+                      }}
+                    >
+                      {currentStep.description}
+                    </Text>
+
+                    <View
+                      style={{
+                        marginTop: 10,
+                        paddingTop: 8,
+                        borderTopWidth: 1,
+                        borderTopColor: isLightMode ? '#E2E8F0' : '#1E293B',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12 }}>💡</Text>
+                      <Text
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: '700',
+                          color: isLightMode ? '#1E40AF' : '#38BDF8',
+                          flex: 1,
+                        }}
+                      >
+                        {currentStep.actionTip}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Step Progress Dots */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginVertical: 12 }}>
+                    {walkthroughSteps.map((_, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => {
+                          setWalkthroughStep(i);
+                          setActiveSection(walkthroughSteps[i].tab);
+                        }}
+                        style={{
+                          width: i === walkthroughStep ? 20 : 7,
+                          height: 7,
+                          borderRadius: 4,
+                          backgroundColor:
+                            i === walkthroughStep
+                              ? isLightMode
+                                ? '#2563EB'
+                                : '#38BDF8'
+                              : isLightMode
+                              ? '#CBD5E1'
+                              : '#334155',
+                        }}
+                      />
+                    ))}
+                  </View>
+
+                  {/* Step Action Buttons */}
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                    {walkthroughStep > 0 && (
+                      <TouchableOpacity
+                        style={[
+                          styles.modalCancelBtn,
+                          isLightMode && {
+                            backgroundColor: '#F1F5F9',
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                          },
+                        ]}
+                        onPress={() => {
+                          const prev = walkthroughStep - 1;
+                          setWalkthroughStep(prev);
+                          setActiveSection(walkthroughSteps[prev].tab);
+                        }}
+                      >
+                        <Text style={[styles.modalCancelText, isLightMode && { color: '#475569', fontWeight: '700' }]}>
+                          Previous
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                      style={[
+                        styles.modalSubmitBtn,
+                        isLightMode && { backgroundColor: '#2563EB' },
+                      ]}
+                      onPress={() => {
+                        if (walkthroughStep < totalSteps - 1) {
+                          const next = walkthroughStep + 1;
+                          setWalkthroughStep(next);
+                          setActiveSection(walkthroughSteps[next].tab);
+                        } else {
+                          setShowWalkthrough(false);
+                          setWalkthroughStep(0);
+                        }
+                      }}
+                    >
+                      <Text style={styles.modalSubmitText}>
+                        {walkthroughStep < totalSteps - 1 ? `Next (${walkthroughStep + 1}/${totalSteps}) →` : 'Got It! Start Exploring'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -2519,4 +2816,148 @@ const getStyles = (isLightMode: boolean) => StyleSheet.create({
     color: isLightMode ? '#0F172A' : '#F8FAFC',
     letterSpacing: 0.3,
   },
+  gpsRadarContainer: {
+    backgroundColor: isLightMode ? '#F8FAFC' : '#0B0F19',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: isLightMode ? '#E2E8F0' : '#1E293B',
+    marginTop: 10,
+    marginBottom: 12,
+  },
+  gpsRadarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  gpsRadarTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
+    letterSpacing: 0.5,
+  },
+  gpsScanBtn: {
+    backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: isLightMode ? '#3B82F6' : '#38BDF8',
+  },
+  gpsScanBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: isLightMode ? '#1D4ED8' : '#38BDF8',
+  },
+  gpsStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#050505',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: isLightMode ? '#E2E8F0' : '#262626',
+    marginBottom: 8,
+  },
+  gpsStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  gpsStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
+  },
+  gpsSubtext: {
+    fontSize: 9.5,
+    color: isLightMode ? '#64748B' : '#94A3B8',
+    marginTop: 2,
+  },
+  gpsPermissionNotice: {
+    backgroundColor: isLightMode ? '#FFFBEB' : 'rgba(245, 158, 11, 0.1)',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: isLightMode ? '#FDE68A' : '#F59E0B',
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  gpsPermissionText: {
+    fontSize: 10,
+    color: isLightMode ? '#B45309' : '#FBBF24',
+    flex: 1,
+    marginRight: 8,
+  },
+  gpsGrantBtn: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  gpsGrantBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#000000',
+  },
+  telemetryBarRow: {
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  telemetryLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: isLightMode ? '#64748B' : '#94A3B8',
+  },
+  telemetryVal: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: isLightMode ? '#0F172A' : '#F8FAFC',
+  },
+  radarMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  radarMetaText: {
+    fontSize: 9.5,
+    color: isLightMode ? '#64748B' : '#94A3B8',
+  },
+  crowdReportingBox: {
+    backgroundColor: isLightMode ? '#F1F5F9' : '#141414',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: isLightMode ? '#CBD5E1' : '#262626',
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  crowdReportingTitle: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: isLightMode ? '#334155' : '#CBD5E1',
+    marginBottom: 6,
+  },
+  crowdReportBtnRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  crowdReportBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    backgroundColor: isLightMode ? '#FFFFFF' : '#050505',
+  },
+  crowdReportBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
 });
+

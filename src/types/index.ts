@@ -14,6 +14,8 @@ export interface Subject {
   standardTarget: number; // default 75%
   medicalTarget: number;   // default 65%
   hasMedicalClaim: boolean;
+  medicalExemptionPercentage?: number; // Official "(%) Exemp - MED" from Studzone portal
+  medicalExemptionHours?: number;      // Approved exemption hours
   attended: number;
   total: number;
   officialAttended: number;

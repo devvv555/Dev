@@ -786,6 +786,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       return;
     }
 
+    if (status === 'attended') {
+      try {
+        const geo = await StealthUltrasonicEngine.checkGeofence(studentRollNo);
+        if (geo.coords && !geo.isGeofenced) {
+          Alert.alert(
+            'Location Verification',
+            'You appear to be outside the PSGIM campus boundary. Attendance can only be recorded when physically on campus.'
+          );
+          return;
+        }
+      } catch {}
+    }
+
     if (currentRecord) {
       if (currentRecord.status === status) {
         Alert.alert(

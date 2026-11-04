@@ -29,9 +29,9 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   const metrics = calculateAttendanceMetrics(
     subject.attended,
     subject.total,
-    false,
-    75,
-    75
+    subject.hasMedicalClaim,
+    subject.standardTarget || 75,
+    subject.medicalTarget || 65
   );
 
   const mcobData = studentRollNo && (subject.id === 'sub_mcob' || subject.code === '24GM11')
@@ -120,9 +120,18 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           <Text style={[styles.classCountsText, isLightMode ? { color: '#475569' } : isEnhancedSuit && { color: '#F8FAFC' }]}>
             <Text style={[styles.attendedCount, isLightMode ? { color: '#0F172A', fontWeight: '900' } : isEnhancedSuit && { color: '#10B981' }]}>{subject.attended}</Text> / {subject.total} hrs attended
           </Text>
-          <Text style={[styles.officialSyncText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
-            College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
-          </Text>
+          <View style={{ alignItems: 'flex-end', gap: 2 }}>
+            <Text style={[styles.officialSyncText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
+              College ERP: {subject.officialAttended}/{subject.officialTotal} hrs
+            </Text>
+            {subject.medicalExemptionPercentage !== undefined && subject.medicalExemptionPercentage > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={{ fontSize: 10.5, fontWeight: '700', color: '#10B981' }}>
+                  🏥 Med Concession: {subject.medicalExemptionPercentage}%
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       )}
 
