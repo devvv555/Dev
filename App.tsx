@@ -119,8 +119,11 @@ export default function App() {
           }
           await StorageService.setAuthUser(officialRoll);
           setActiveRollNo(officialRoll);
-          const initialSubjects = PsgimService.generateSubjectsForStudent(officialRoll);
           const initialTimetable = PsgimService.generateTimetableForStudent(officialRoll);
+          const defaultGenerated = PsgimService.generateSubjectsForStudent(officialRoll);
+          const savedSubjects = await StorageService.getSubjects(officialRoll);
+          // Prefer saved/customized subjects over static generation
+          const initialSubjects = savedSubjects && savedSubjects.length > 0 ? savedSubjects : defaultGenerated;
 
           // Apply saved faculty overrides if any
           for (const sub of initialSubjects) {
@@ -727,10 +730,13 @@ export default function App() {
   const handleRefresh = async () => {
     try {
       if (activeRollNo) {
-        const studentSubjects = PsgimService.generateSubjectsForStudent(activeRollNo);
         const studentTimetable = PsgimService.generateTimetableForStudent(activeRollNo);
         const storedRecords = await StorageService.getPeriodRecords(activeRollNo);
         const storedMed = await StorageService.getMedicalClaims();
+        const savedSubjects = await StorageService.getSubjects(activeRollNo);
+        const studentSubjects = savedSubjects && savedSubjects.length > 0
+          ? savedSubjects
+          : PsgimService.generateSubjectsForStudent(activeRollNo);
 
         // Apply saved faculty overrides if any
         for (const sub of studentSubjects) {
