@@ -29,6 +29,12 @@ import {
   XeroxRushStatus,
   DEFAULT_XEROX_RATES,
 } from '../services/campusLifeFeaturesEngine';
+import {
+  CanteenLocationMeshService,
+  LiveLocationStatus,
+  LiveCrowdMeshMetrics,
+  CANTEEN_GEOLOCATIONS,
+} from '../services/canteenLocationMeshService';
 
 export interface EnhancedHubScreenProps {
   studentRollNo: string;
@@ -68,6 +74,10 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   const [quoteCategoryFilter, setQuoteCategoryFilter] = useState<'ALL' | 'INDEX' | 'STOCK' | 'COMMODITY'>('ALL');
 
   const [canteenStatus, setCanteenStatus] = useState<CanteenRushStatus | null>(null);
+  const [liveLocation, setLiveLocation] = useState<LiveLocationStatus | null>(null);
+  const [liveCrowdMetrics, setLiveCrowdMetrics] = useState<LiveCrowdMeshMetrics | null>(null);
+  const [isScanningGps, setIsScanningGps] = useState<boolean>(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState<boolean>(false);
   const [xeroxStatus, setXeroxStatus] = useState<XeroxRushStatus | null>(null);
   const [facultySlots, setFacultySlots] = useState<FacultyOfficeHourSlot[]>([]);
   const [syllabusList, setSyllabusList] = useState<SyllabusVelocity[]>([]);
@@ -87,6 +97,51 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
   useEffect(() => {
     loadAllData();
   }, [selectedCanteenId]);
+
+  // Subscribe to Live Crowd Mesh via Firestore for selected canteen spot
+  useEffect(() => {
+    const baseline = CampusLifeFeaturesEngine.getCanteenRushStatus(selectedCanteenId);
+    const unsubscribe = CanteenLocationMeshService.subscribeToLiveCrowdMesh(
+      selectedCanteenId,
+      baseline.crowdPercentage,
+      baseline.currentCrowdLevel,
+      (metrics) => {
+        setLiveCrowdMetrics(metrics);
+      }
+    );
+    return () => unsubscribe();
+  }, [selectedCanteenId]);
+
+  // Auto-scan location when opening Canteen section in Enhanced Suit mode
+  useEffect(() => {
+    if (activeSection === 'CANTEEN_XEROX' && canteenSubTab === 'CANTEEN') {
+      handleScanLocation();
+    }
+  }, [activeSection, canteenSubTab, selectedCanteenId]);
+
+  const handleScanLocation = async () => {
+    setIsScanningGps(true);
+    try {
+      const loc = await CanteenLocationMeshService.checkCanteenLocation(selectedCanteenId);
+      setLiveLocation(loc);
+    } catch (e) {
+      console.warn('GPS Scan error:', e);
+    } finally {
+      setIsScanningGps(false);
+    }
+  };
+
+  const handleReportCrowd = async (level: 'LOW' | 'MODERATE' | 'PEAK') => {
+    setIsSubmittingReport(true);
+    const success = await CanteenLocationMeshService.submitStudentRushReport(selectedCanteenId, level);
+    setIsSubmittingReport(false);
+    if (success) {
+      setActionNotice(`✅ Verified crowd report submitted (${level} Rush). Thank you!`);
+      setTimeout(() => setActionNotice(null), 3500);
+    } else {
+      Alert.alert('Report Error', 'Could not record report. Check connection.');
+    }
+  };
 
   // 15-Minute News Auto-Refresh ticker & countdown
   useEffect(() => {
@@ -701,11 +756,16 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
                   ))}
                 </View>
 
-                {/* Selected Canteen Detail Card */}
-                <View style={styles.card}>
+                {/* Selected Canteen Detail Card with Stark Tactical GPS Mesh */}
+                <View style={[styles.card, { borderColor: '#EAB308', borderWidth: 1.5 }]}>
                   <View style={styles.cardHeaderRow}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.canteenName}>{selectedCanteen.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <Text style={styles.canteenName}>{selectedCanteen.name}</Text>
+                        <View style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', borderColor: '#EAB308', borderWidth: 1, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+                          <Text style={{ fontSize: 9, fontWeight: '800', color: '#EAB308' }}>TACTICAL MESH</Text>
+                        </View>
+                      </View>
                       <Text style={styles.canteenTagline}>{selectedCanteen.tagline}</Text>
                     </View>
                     <View
@@ -713,15 +773,15 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
                         styles.queueBadge,
                         {
                           backgroundColor:
-                            canteenStatus?.currentCrowdLevel === 'PEAK'
+                            (liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel) === 'PEAK'
                               ? 'rgba(239, 68, 68, 0.2)'
-                              : canteenStatus?.currentCrowdLevel === 'LOW'
+                              : (liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel) === 'LOW'
                               ? 'rgba(16, 185, 129, 0.2)'
                               : 'rgba(245, 158, 11, 0.2)',
                           borderColor:
-                            canteenStatus?.currentCrowdLevel === 'PEAK'
+                            (liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel) === 'PEAK'
                               ? '#EF4444'
-                              : canteenStatus?.currentCrowdLevel === 'LOW'
+                              : (liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel) === 'LOW'
                               ? '#10B981'
                               : '#F59E0B',
                         },
@@ -732,20 +792,150 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
                           styles.queueBadgeText,
                           {
                             color:
-                              canteenStatus?.currentCrowdLevel === 'PEAK'
+                              (liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel) === 'PEAK'
                                 ? '#F87171'
-                                : canteenStatus?.currentCrowdLevel === 'LOW'
+                                : (liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel) === 'LOW'
                                 ? '#34D399'
                                 : '#FBBF24',
                           },
                         ]}
                       >
-                        {canteenStatus?.currentCrowdLevel} QUEUE ({canteenStatus?.crowdPercentage}%)
+                        {liveCrowdMetrics?.crowdLevel || canteenStatus?.currentCrowdLevel} QUEUE ({liveCrowdMetrics?.crowdPercentage ?? canteenStatus?.crowdPercentage}%)
                       </Text>
                     </View>
                   </View>
 
-                  <Text style={styles.canteenMsg}>{canteenStatus?.statusMessage}</Text>
+                  {/* STARK GPS RADAR & GEOFENCE STATUS PANEL */}
+                  <View style={styles.gpsRadarContainer}>
+                    <View style={styles.gpsRadarHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ fontSize: 13 }}>🛰️</Text>
+                        <Text style={styles.gpsRadarTitle}>
+                          STARK RADAR: CAMPUS GEOFENCE
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.gpsScanBtn}
+                        onPress={handleScanLocation}
+                        disabled={isScanningGps}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.gpsScanBtnText}>
+                          {isScanningGps ? 'Pinging GPS...' : '📡 Refresh GPS'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {liveLocation?.hasPermission ? (
+                      <View style={styles.gpsStatusRow}>
+                        <View style={[
+                          styles.gpsStatusDot,
+                          { backgroundColor: liveLocation.isInsideGeofence ? '#10B981' : '#F59E0B' }
+                        ]} />
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <Text style={styles.gpsStatusText}>
+                            {liveLocation.isInsideGeofence
+                              ? `📍 INSIDE ${selectedCanteen.name.toUpperCase()} (within geofence ~${liveLocation.distanceMeters ?? 0}m)`
+                              : `📍 OUTSIDE ZONE: ~${liveLocation.distanceMeters ?? '—'}m away from food counter`}
+                          </Text>
+                          <Text style={styles.gpsSubtext}>
+                            {liveLocation.isInsideGeofence
+                              ? 'Your presence is contributing to anonymous live crowd density.'
+                              : 'Walk toward canteen to auto-register wait times and sync telemetry.'}
+                          </Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.gpsPermissionNotice}>
+                        <Text style={styles.gpsPermissionText}>
+                          {liveLocation?.error || 'Location access is required to sense live counter proximity.'}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.gpsGrantBtn}
+                          onPress={handleScanLocation}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.gpsGrantBtnText}>Grant Location Access</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    {/* Live Crowd Telemetry Bar */}
+                    <View style={styles.telemetryBarRow}>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <Text style={styles.telemetryLabel}>Live Density</Text>
+                          <Text style={styles.telemetryVal}>
+                            {liveCrowdMetrics?.crowdPercentage ?? canteenStatus?.crowdPercentage ?? 20}% • Est. Wait: ~{liveCrowdMetrics?.estimatedWaitMinutes ?? 3} mins
+                          </Text>
+                        </View>
+                        <View style={styles.progressBarTrack}>
+                          <View
+                            style={[
+                              styles.progressBarFill,
+                              {
+                                width: `${Math.min(liveCrowdMetrics?.crowdPercentage ?? canteenStatus?.crowdPercentage ?? 20, 100)}%`,
+                                backgroundColor:
+                                  (liveCrowdMetrics?.crowdPercentage ?? canteenStatus?.crowdPercentage ?? 20) > 75
+                                    ? '#EF4444'
+                                    : (liveCrowdMetrics?.crowdPercentage ?? canteenStatus?.crowdPercentage ?? 20) > 40
+                                    ? '#F59E0B'
+                                    : '#10B981',
+                              },
+                            ]}
+                          />
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Source tag & active phones */}
+                    <View style={styles.radarMetaRow}>
+                      <Text style={styles.radarMetaText}>
+                        Mesh Mode: {liveCrowdMetrics?.source === 'GPS_LIVE_MESH' ? '🟢 Live Anonymous GPS Mesh' : '⏱️ Timetable Bell Schedule'}
+                      </Text>
+                      {liveCrowdMetrics?.activePingsCount !== undefined && liveCrowdMetrics.activePingsCount > 0 ? (
+                        <Text style={[styles.radarMetaText, { color: '#10B981', fontWeight: '700' }]}>
+                          {liveCrowdMetrics.activePingsCount} active device(s) in zone
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+
+                  <Text style={styles.canteenMsg}>
+                    {liveCrowdMetrics?.statusTagline || canteenStatus?.statusMessage}
+                  </Text>
+
+                  {/* 1-Tap Student Vibe / Rush Check-in */}
+                  <View style={styles.crowdReportingBox}>
+                    <Text style={styles.crowdReportingTitle}>
+                      Are you currently at the canteen? Quick Vibe Check:
+                    </Text>
+                    <View style={styles.crowdReportBtnRow}>
+                      <TouchableOpacity
+                        style={[styles.crowdReportBtn, { borderColor: '#10B981' }]}
+                        onPress={() => handleReportCrowd('LOW')}
+                        disabled={isSubmittingReport}
+                      >
+                        <Text style={[styles.crowdReportBtnText, { color: '#10B981' }]}>🟢 Empty / Fast</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.crowdReportBtn, { borderColor: '#F59E0B' }]}
+                        onPress={() => handleReportCrowd('MODERATE')}
+                        disabled={isSubmittingReport}
+                      >
+                        <Text style={[styles.crowdReportBtnText, { color: '#F59E0B' }]}>🟡 Normal Rush</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.crowdReportBtn, { borderColor: '#EF4444' }]}
+                        onPress={() => handleReportCrowd('PEAK')}
+                        disabled={isSubmittingReport}
+                      >
+                        <Text style={[styles.crowdReportBtnText, { color: '#EF4444' }]}>🔴 Packed Queue</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
 
                   {/* Highlights Grid */}
                   <View style={styles.infoGridRow}>
