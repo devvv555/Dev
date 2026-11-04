@@ -1108,6 +1108,7 @@ export default function App() {
             onUpdateFaculty={handleUpdateFaculty}
             onOpenCalendar={() => handleTabChange('CALENDAR')}
             onOpenEnhancedHub={() => handleTabChange('ENHANCED')}
+            onOpenErpSync={() => handleTabChange('ERP_SYNC')}
             onRefresh={handleRefresh}
             isEnhancedSuit={isEnhancedSuit}
             isLightMode={isLightMode}
