@@ -711,7 +711,7 @@ export default function App() {
       return s;
     });
     setSubjects(next);
-    StorageService.saveSubjects(next);
+    StorageService.saveSubjects(next, activeRollNo);
     if (activeRollNo) {
       CloudSyncService.syncSubjects(activeRollNo, next);
     }
@@ -720,7 +720,7 @@ export default function App() {
   // Batch update subjects (e.g. from Studzone automated extraction)
   const handleBatchUpdateSubjects = (updatedSubjects: Subject[]) => {
     setSubjects(updatedSubjects);
-    StorageService.saveSubjects(updatedSubjects);
+    StorageService.saveSubjects(updatedSubjects, activeRollNo);
     if (activeRollNo) {
       CloudSyncService.syncSubjects(activeRollNo, updatedSubjects);
     }
