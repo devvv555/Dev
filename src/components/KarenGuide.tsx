@@ -142,6 +142,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
   studentName,
   isEnhancedSuit = false,
   isLightMode = false,
+  onExtractPortal,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
 
@@ -283,6 +284,49 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
             <Text style={[styles.stepDescription, isLightMode && { color: '#475569' }]}>
               {step.description}
             </Text>
+
+            {step.actionButton && (
+              <TouchableOpacity
+                style={[
+                  {
+                    marginTop: 12,
+                    marginBottom: 6,
+                    paddingVertical: 13,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
+                    backgroundColor: '#0284C7',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    shadowColor: '#0284C7',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  },
+                  isEnhancedSuit && !isLightMode && { backgroundColor: '#10B981', shadowColor: '#10B981' },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  onClose();
+                  if (onExtractPortal) {
+                    onExtractPortal();
+                  }
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 14,
+                    fontWeight: '800',
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  {step.actionButton.label}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <View
               style={[
