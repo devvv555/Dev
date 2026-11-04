@@ -21,19 +21,29 @@ export const INITIAL_TIMETABLE: TimetableSlot[] = [];
 export const INITIAL_MEDICAL_CLAIMS: MedicalClaimRecord[] = [];
 
 export const StorageService = {
-  async getSubjects(): Promise<Subject[]> {
+  async getSubjects(rollNo?: string): Promise<Subject[]> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.SUBJECTS);
+      const key = rollNo ? `${STORAGE_KEYS.SUBJECTS}_${rollNo.toUpperCase().trim()}` : STORAGE_KEYS.SUBJECTS;
+      const data = await AsyncStorage.getItem(key);
       if (data) return JSON.parse(data);
-      await this.saveSubjects(INITIAL_SUBJECTS);
+      // Fallback to legacy global key if student-scoped key is empty
+      if (rollNo) {
+        const legacy = await AsyncStorage.getItem(STORAGE_KEYS.SUBJECTS);
+        if (legacy) return JSON.parse(legacy);
+      }
       return INITIAL_SUBJECTS;
     } catch {
       return INITIAL_SUBJECTS;
     }
   },
 
-  async saveSubjects(subjects: Subject[]): Promise<void> {
+  async saveSubjects(subjects: Subject[], rollNo?: string): Promise<void> {
     try {
+      if (rollNo) {
+        const key = `${STORAGE_KEYS.SUBJECTS}_${rollNo.toUpperCase().trim()}`;
+        await AsyncStorage.setItem(key, JSON.stringify(subjects));
+      }
+      // Also maintain legacy key for backwards compatibility
       await AsyncStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
     } catch (e) {
       console.warn('Storage error:', e);
