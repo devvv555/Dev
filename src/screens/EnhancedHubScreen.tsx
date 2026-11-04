@@ -2959,5 +2959,50 @@ const getStyles = (isLightMode: boolean) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: isLightMode ? '#FFFFFF' : '#121212',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: isLightMode ? '#CBD5E1' : '#262626',
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: isLightMode ? '#0F172A' : '#10B981',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    backgroundColor: isLightMode ? '#F1F5F9' : '#1E293B',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelText: {
+    color: isLightMode ? '#475569' : '#94A3B8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalSubmitBtn: {
+    flex: 1,
+    backgroundColor: isLightMode ? '#2563EB' : '#10B981',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSubmitText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
 });
 

@@ -32,16 +32,19 @@ export function calculateAttendanceMetrics(
   total: number,    // total hours held
   hasMedicalClaim: boolean = false,
   standardTarget: number = 75,
-  medicalTarget: number = 65
+  medicalTarget: number = 65,
+  exemptionHours: number = 0
 ): AttendanceMetrics {
-  const percentage = total === 0 ? 100 : Number(((attended / total) * 100).toFixed(2));
+  // If medical exemption hours are credited by the college, recover those hours back into the effective attended count
+  const effectiveAttended = hasMedicalClaim ? attended + Math.max(0, exemptionHours) : attended;
+  const percentage = total === 0 ? 100 : Number(((effectiveAttended / total) * 100).toFixed(2));
   const effectiveTarget = hasMedicalClaim ? medicalTarget : standardTarget;
 
   // Safe bunk hours calculation:
   // Math.floor((100 * A - Target * N) / Target)
   const calcSafeBunks = (targetPct: number): number => {
     if (total === 0) return 0;
-    const numerator = 100 * attended - targetPct * total;
+    const numerator = 100 * effectiveAttended - targetPct * total;
     if (numerator < 0) return 0;
     return Math.floor(numerator / targetPct);
   };
@@ -50,7 +53,7 @@ export function calculateAttendanceMetrics(
   // Math.ceil((Target * N - 100 * A) / (100 - Target))
   const calcRecoveryNeeded = (targetPct: number): number => {
     if (total === 0 || targetPct >= 100) return 0;
-    const numerator = targetPct * total - 100 * attended;
+    const numerator = targetPct * total - 100 * effectiveAttended;
     if (numerator <= 0) return 0;
     return Math.ceil(numerator / (100 - targetPct));
   };
@@ -113,9 +116,10 @@ export function calculateOverallMetrics(subjects: Subject[]): AttendanceMetrics 
   );
   const totalAttended = activeSubjects.reduce((sum, s) => sum + s.attended, 0);
   const totalHeld = activeSubjects.reduce((sum, s) => sum + s.total, 0);
+  const totalExemptionHours = activeSubjects.reduce((sum, s) => sum + (s.medicalExemptionHours || 0), 0);
   const hasAnyMedical = activeSubjects.some((s) => s.hasMedicalClaim);
 
-  const metrics = calculateAttendanceMetrics(totalAttended, totalHeld, hasAnyMedical);
+  const metrics = calculateAttendanceMetrics(totalAttended, totalHeld, hasAnyMedical, 75, 65, totalExemptionHours);
   return {
     ...metrics,
     totalAttended,

@@ -14,6 +14,7 @@ export interface KarenGuideProps {
   studentName?: string;
   isEnhancedSuit?: boolean;
   isLightMode?: boolean;
+  onExtractPortal?: () => void;
 }
 
 interface GuideStep {
@@ -21,36 +22,51 @@ interface GuideStep {
   badge: string;
   description: string;
   tip: string;
+  actionButton?: {
+    label: string;
+    action: 'EXTRACT_PORTAL';
+  };
 }
 
 const STANDARD_STEPS: GuideStep[] = [
   {
-    title: 'Welcome to PSGIM Attendance',
-    badge: 'STUDENT ONBOARDING',
+    title: 'Welcome to PSGIM Attendance Tracker',
+    badge: 'FIRST-TIME SETUP',
     description:
-      'Hello! I am Karen, your campus companion. I am here to guide you around the app so you never miss a class, fall below the 75% boundary, or lose track of deadlines.',
-    tip: 'Your credentials remain strictly private and safe on this device.',
+      'Hello! I am Karen, your AI campus companion. Welcome to the official PSGIM Attendance & MBA Super-App. To get started, I will walk you through each feature step-by-step so you never miss a lecture, stay above 75%, and keep your attendance synchronized.',
+    tip: 'Your student data is saved securely on this device with cloud backup.',
   },
   {
-    title: 'Automatic Attendance Marker',
-    badge: 'AUTONOMOUS ENGINE',
+    title: 'Extract Official Portal Attendance',
+    badge: 'CRITICAL FIRST STEP',
     description:
-      'The real-time class tracker automatically detects your current lecture period, classroom, and faculty based on your section schedule. Mark attendance in 1 tap or let the app calculate your running attendance.',
-    tip: 'Your exact "Safe Bunks" and "Classes to Recover" update in real-time.',
+      'Before tracking live periods, sync your baseline official attendance from the PSG Tech Studzone / College Portal. Tap "Extract Attendance Now" to launch the extractor. Enter your DOB or portal password, and all your courses, held hours, and attended hours will load automatically!',
+    tip: 'Tap the button below to jump straight to the Studzone Extractor in the Portals tab.',
+    actionButton: {
+      label: '⚡ Extract Attendance from Portal Now',
+      action: 'EXTRACT_PORTAL',
+    },
   },
   {
-    title: 'Medical Concession Vault (65%)',
-    badge: 'SPECIAL CONCESSION',
+    title: 'Automatic Real-Time Period Marker',
+    badge: 'DASHBOARD RADAR',
     description:
-      'If you have medical leaves with a valid doctor\'s certificate, register your claim in the Medical Vault. Your required safety threshold adjusts down to 65%.',
-    tip: 'Always keep your medical certificates handy for administrative verification.',
+      'The real-time class tracker automatically detects your current lecture period, classroom (e.g. LH-101/LH-401), and faculty based on your section schedule. Mark "Present" or "Absent" in 1 tap, or let the app compute your real-time attendance.',
+    tip: 'Your exact "Safe Bunks" and "Classes to Recover" update instantly.',
   },
   {
-    title: 'ERP Reconcile & Digital ID',
-    badge: 'SYSTEM INTEGRATION',
+    title: 'What-If Simulator & Medical Vault (65%)',
+    badge: 'EXAM SAFEGUARD',
     description:
-      'Reconcile your recorded hours with official portal updates anytime. Plus, access your Emergency Digital Student ID with a quick barcode scan if you forget your physical badge.',
-    tip: 'I am always available whenever you need quick help!',
+      'Simulate future bunk scenarios up to exam cut-off dates to guarantee your university hall ticket eligibility. Plus, if you have medical certificates, register your claim in the Medical Concession Vault to lower your required threshold to 65%.',
+    tip: 'Always keep each course above 75% to stay completely condonation-free.',
+  },
+  {
+    title: 'Portals, Moodle & Campus Amenities',
+    badge: 'FULL SUPER-APP ACCESS',
+    description:
+      'Access official circulars, Moodle assignment deadlines, live canteen rush radar, zero-queue print cost calculator, and 1-click library book renewals all inside the app tabs.',
+    tip: 'Tap the Karen icon anytime on your Dashboard whenever you need a quick walkthrough!',
   },
 ];
 

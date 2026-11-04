@@ -31,7 +31,8 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     subject.total,
     subject.hasMedicalClaim,
     subject.standardTarget || 75,
-    subject.medicalTarget || 65
+    subject.medicalTarget || 65,
+    subject.medicalExemptionHours || 0
   );
 
   const mcobData = studentRollNo && (subject.id === 'sub_mcob' || subject.code === '24GM11')

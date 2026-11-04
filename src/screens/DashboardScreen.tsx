@@ -11,6 +11,8 @@ import {
   Vibration,
   RefreshControl,
   Platform,
+  Share,
+  Linking,
 } from 'react-native';
 import { Subject, TimetableSlot, PeriodAttendanceRecord, AttendanceStatus, PeriodReminder, SurplusAttendanceAlert, LmsAssignment, LmsQuiz, PsgimAnnouncement } from '../types';
 import { calculateOverallMetrics, getSlotHours, isPeriodLocked } from '../services/attendanceEngine';
@@ -125,9 +127,30 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [rescheduleDate, setRescheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [rescheduleTime, setRescheduleTime] = useState<string>('16:45 - 17:45');
   const [unlockedDays, setUnlockedDays] = useState<string[]>([]);
+  const [showLaunchPopup, setShowLaunchPopup] = useState(false);
 
   const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
   const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
+
+  // Check if Launch Announcement pop-up has been seen
+  useEffect(() => {
+    const checkLaunchPopup = async () => {
+      try {
+        const seen = await AsyncStorage.getItem('@psgim_launch_popup_seen_v1');
+        if (!seen) {
+          // Trigger pop-up after a gentle delay for smooth screen entrance
+          const timer = setTimeout(() => {
+            setShowLaunchPopup(true);
+            try {
+              Vibration.vibrate([0, 100, 80, 150]);
+            } catch {}
+          }, 800);
+          return () => clearTimeout(timer);
+        }
+      } catch {}
+    };
+    checkLaunchPopup();
+  }, []);
 
   useEffect(() => {
     ThemeManager.init().then(setThemeMode);
@@ -2501,6 +2524,146 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
 
 
+      {/* 🚀 GOOGLE WEB LAUNCH POP-UP MODAL */}
+      <Modal
+        visible={showLaunchPopup}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setShowLaunchPopup(false);
+          AsyncStorage.setItem('@psgim_launch_popup_seen_v1', 'true').catch(() => {});
+        }}
+      >
+        <View style={styles.launchPopupOverlay}>
+          <View
+            style={[
+              styles.launchPopupCard,
+              isLightMode
+                ? { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }
+                : isEnhancedSuit
+                ? { backgroundColor: '#0B132B', borderColor: '#2A3B5C', borderWidth: 2 }
+                : { backgroundColor: '#0F172A', borderColor: '#38BDF8', borderWidth: 1.5 }
+            ]}
+          >
+            {/* Top Badge & Header */}
+            <View style={styles.launchPopupHeader}>
+              <View style={[
+                styles.launchPopupPill,
+                isLightMode
+                  ? { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }
+                  : { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38BDF8' }
+              ]}>
+                <Text style={[
+                  styles.launchPopupPillText,
+                  isLightMode ? { color: '#1D4ED8' } : { color: '#38BDF8' }
+                ]}>
+                  🚀 OFFICIAL LAUNCH
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowLaunchPopup(false);
+                  AsyncStorage.setItem('@psgim_launch_popup_seen_v1', 'true').catch(() => {});
+                }}
+                style={styles.launchPopupCloseBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.launchPopupCloseText, isLightMode && { color: '#64748B' }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Title & Subtitle */}
+            <Text style={[styles.launchPopupTitle, isLightMode && { color: '#0F172A' }, isEnhancedSuit && !isLightMode && { color: '#F4E8C1' }]}>
+              App is Live on Google Web!
+            </Text>
+            <Text style={[styles.launchPopupTagline, isLightMode ? { color: '#2563EB' } : { color: '#38BDF8' }]}>
+              Now anyone can access from any phone or laptop.
+            </Text>
+
+            {/* Feature Highlights */}
+            <View style={[styles.launchFeaturesBox, isLightMode ? { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' } : { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+              <View style={styles.launchFeatureRow}>
+                <Text style={styles.launchFeatureIcon}>🌐</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.launchFeatureTitle, isLightMode && { color: '#1E293B' }, isEnhancedSuit && !isLightMode && { color: '#F4E8C1' }]}>
+                    No Download Needed
+                  </Text>
+                  <Text style={[styles.launchFeatureSub, isLightMode && { color: '#64748B' }]}>
+                    Works on Chrome, Safari, Edge, or Android via Google Web.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.launchFeatureRow}>
+                <Text style={styles.launchFeatureIcon}>⚡</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.launchFeatureTitle, isLightMode && { color: '#1E293B' }, isEnhancedSuit && !isLightMode && { color: '#F4E8C1' }]}>
+                    Live Studzone & Moodle
+                  </Text>
+                  <Text style={[styles.launchFeatureSub, isLightMode && { color: '#64748B' }]}>
+                    1-Tap attendance extraction, hour calculators, and deadlines.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.launchFeatureRow}>
+                <Text style={styles.launchFeatureIcon}>📲</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.launchFeatureTitle, isLightMode && { color: '#1E293B' }, isEnhancedSuit && !isLightMode && { color: '#F4E8C1' }]}>
+                    Installable as PWA
+                  </Text>
+                  <Text style={[styles.launchFeatureSub, isLightMode && { color: '#64748B' }]}>
+                    Tap "Add to Home Screen" to use full screen like a native app.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.launchPopupActions}>
+              <TouchableOpacity
+                style={styles.launchShareBtn}
+                onPress={async () => {
+                  try {
+                    await Share.share({
+                      message:
+                        '🔥 Hey! The PSGIM Attendance Tracker & MBA Super-App is officially live on Google Web!\n\nCheck live attendance, bunks left, Moodle assignments & timetable in 1-tap without installing any APK:\n👉 https://attendance-tracker-9e4f7.web.app\n\nShare with our batchmates! 🚀',
+                    });
+                  } catch {}
+                  AsyncStorage.setItem('@psgim_launch_popup_seen_v1', 'true').catch(() => {});
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.launchShareBtnText}>📲 Share with Friends (WhatsApp)</Text>
+              </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  style={[styles.launchOpenBtn, isLightMode ? { backgroundColor: '#0284C7' } : { backgroundColor: '#0284C7' }]}
+                  onPress={() => {
+                    Linking.openURL('https://attendance-tracker-9e4f7.web.app').catch(() => {});
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.launchOpenBtnText}>🌐 Open Web Link</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.launchDismissBtn, isLightMode ? { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' } : { backgroundColor: '#1E293B', borderColor: '#334155' }]}
+                  onPress={() => {
+                    setShowLaunchPopup(false);
+                    AsyncStorage.setItem('@psgim_launch_popup_seen_v1', 'true').catch(() => {});
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.launchDismissBtnText, isLightMode && { color: '#475569' }]}>Got it!</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* PSGIM Connect Official Circular & Poster Modal */}
       <PsgimNoticeModal
         visible={!!selectedNotice}
@@ -4306,6 +4469,135 @@ const styles = StyleSheet.create({
   mcuAiBtnSecondaryText: {
     color: '#38BDF8',
     fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // ── Launch Announcement Pop-up Modal Styles ──
+  launchPopupOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  launchPopupCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 20,
+    padding: 22,
+    shadowColor: '#000000',
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  launchPopupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  launchPopupPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  launchPopupPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  launchPopupCloseBtn: {
+    padding: 6,
+  },
+  launchPopupCloseText: {
+    color: '#94A3B8',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  launchPopupTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#F8FAFC',
+    letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  launchPopupTagline: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  launchFeaturesBox: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    gap: 12,
+    marginBottom: 18,
+  },
+  launchFeatureRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  launchFeatureIcon: {
+    fontSize: 18,
+    marginTop: 1,
+  },
+  launchFeatureTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    marginBottom: 1,
+  },
+  launchFeatureSub: {
+    fontSize: 11,
+    color: '#94A3B8',
+    lineHeight: 16,
+  },
+  launchPopupActions: {
+    gap: 10,
+  },
+  launchShareBtn: {
+    backgroundColor: '#10B981',
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B981',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  launchShareBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  launchOpenBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  launchOpenBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  launchDismissBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  launchDismissBtnText: {
+    color: '#94A3B8',
+    fontSize: 13,
     fontWeight: '700',
   },
 });
