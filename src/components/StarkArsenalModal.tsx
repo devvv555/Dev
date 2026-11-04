@@ -99,9 +99,9 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
           <View style={styles.header}>
             <View style={{ flex: 1, marginRight: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.title}>Stark Tactical Arsenal</Text>
+                <Text style={styles.title}>Level One Arsenal</Text>
                 <View style={styles.activeTag}>
-                  <Text style={styles.activeTagText}>576 MATRIX</Text>
+                  <Text style={styles.activeTagText}>LEVEL ONE</Text>
                 </View>
               </View>
               <Text style={styles.subtitle}>
@@ -122,11 +122,11 @@ export const StarkArsenalModal: React.FC<StarkArsenalModalProps> = ({
           >
             {[
               { id: 'NEWS', label: 'Business News' },
-              { id: 'CANTEEN', label: 'Canteen Radar (#004)' },
-              { id: 'FACULTY', label: 'Faculty Booking (#005)' },
-              { id: 'SYLLABUS', label: 'Syllabus Velocity (#006)' },
-              { id: 'LIBRARY', label: 'Library Shield (#011)' },
-              { id: 'VOICE', label: 'Karen Briefing (#025)' },
+              { id: 'CANTEEN', label: 'Canteen & Xerox (Coming Soon)' },
+              { id: 'FACULTY', label: 'Faculty Booking (Coming Soon)' },
+              { id: 'SYLLABUS', label: 'Syllabus Velocity (Coming Soon)' },
+              { id: 'LIBRARY', label: 'Library Shield (Coming Soon)' },
+              { id: 'VOICE', label: 'Karen Briefing' },
             ].map((tab) => (
               <TouchableOpacity
                 key={tab.id}

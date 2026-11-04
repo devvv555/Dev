@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { ThemeManager, AppThemeMode } from '../constants/theme';
 
 export interface KarenGuideProps {
   visible: boolean;
@@ -100,32 +101,32 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
     tip: 'Available directly in the 5th section under the Enhanced Hub tab.',
   },
   {
-    title: 'Canteen & Xerox Radar (#004)',
-    badge: 'CAMPUS AMENITIES',
+    title: 'Canteen & Xerox Radar',
+    badge: 'COMING SOON',
     description:
-      'Monitor live crowd levels across all 3 campus dining spots (Main IM Canteen, Campus Annex, and Coffee Kiosk) with 8:30 AM to 6:00 PM hours (Lunch 12:30-2:00 PM). Plus, calculate print costs and send files to the Xerox shop without standing in line.',
-    tip: 'Check the Xerox calculator to scan UPI QR and forward files via WhatsApp ahead of time.',
+      '[COMING SOON] Live queue rush radar across campus dining spots (Main IM Canteen, Campus Annex, Coffee Kiosk) with real-time peer GPS mesh and zero-queue Xerox print cost calculator.',
+    tip: 'Coming soon! Automated sensor mesh & cafeteria queue integration in testing.',
   },
   {
-    title: 'Faculty Office Hours Booking (#005)',
-    badge: 'ACADEMIC RADAR',
+    title: 'Faculty Office Hours Booking',
+    badge: 'COMING SOON',
     description:
-      'View faculty office timings, cabin locations, and free consultation slots. Reserve appointments with professors in 1 click for academic mentorship, project reviews, or doubts.',
-    tip: 'Book consultation appointments ahead of time during designated faculty hours.',
+      '[COMING SOON] View faculty consultation cabins and reserve 1-on-1 office hour appointments directly in 1 click for academic mentorship, project reviews, or doubts.',
+    tip: 'Coming soon! Synchronized with faculty trimester office schedules.',
   },
   {
-    title: 'Syllabus Velocity Tracker (#006)',
-    badge: 'CURRICULUM TELEMETRY',
+    title: 'Syllabus Velocity Tracker',
+    badge: 'COMING SOON',
     description:
-      'Track real-time syllabus completion velocity across all 8 trimester courses. Compare classes conducted against the planned curriculum timeline to pace your exam preparation.',
-    tip: 'Identifies which subjects are racing ahead or need self-study reinforcement.',
+      '[COMING SOON] Real-time syllabus completion velocity telemetry across all 8 trimester courses to compare classes conducted against planned curriculum targets.',
+    tip: 'Coming soon! Trimester lecture milestone tracking will activate shortly.',
   },
   {
-    title: 'Library Shield & 1-Click Renewal (#011)',
-    badge: 'LIBRARY SAFEGUARD',
+    title: 'Library Shield & 1-Click Renewal',
+    badge: 'COMING SOON',
     description:
-      'Track all borrowed books from the campus library, accession numbers, and due date countdowns. Avoid overdue fines with instant 1-click renewal that extends your borrowing window by 14 days.',
-    tip: 'Renews books directly without needing to stand in the library circulation queue.',
+      '[COMING SOON] Track borrowed library volumes, accession barcodes, and return due countdowns with 1-click 14-day online extension to guarantee zero overdue fines.',
+    tip: 'Coming soon! Campus library RFID circulation integration currently in progress.',
   },
   {
     title: '5th Navigation Section: Enhanced Hub',
@@ -141,11 +142,19 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
   onClose,
   studentName,
   isEnhancedSuit = false,
-  isLightMode = false,
+  isLightMode: isLightModeProp,
   onExtractPortal,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
 
+  useEffect(() => {
+    ThemeManager.init().then(setThemeMode);
+    const unsub = ThemeManager.subscribe(setThemeMode);
+    return () => unsub();
+  }, []);
+
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
   const steps = isEnhancedSuit ? ENHANCED_SUIT_STEPS : STANDARD_STEPS;
   const step = steps[currentStepIndex] || steps[0];
 
