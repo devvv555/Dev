@@ -63,6 +63,7 @@ interface DashboardScreenProps {
   onOpenCalendar?: () => void;
   onOpenAdmin?: () => void;
   onOpenEnhancedHub?: () => void;
+  onOpenErpSync?: () => void;
   onRefresh?: () => Promise<void> | void;
   isEnhancedSuit?: boolean;
   isLightMode?: boolean;
@@ -79,6 +80,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onOpenCalendar,
   onOpenAdmin,
   onOpenEnhancedHub,
+  onOpenErpSync,
   onRefresh,
   isEnhancedSuit: isEnhancedSuitProp,
   isLightMode: isLightModeProp,
@@ -132,13 +134,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
   const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
 
-  // Check if Launch Announcement pop-up has been seen
+  // Check if First-Time Onboarding / Karen Guide has been seen
   useEffect(() => {
-    const checkLaunchPopup = async () => {
+    const checkFirstTimeOnboarding = async () => {
       try {
-        const seen = await AsyncStorage.getItem('@psgim_launch_popup_seen_v1');
-        if (!seen) {
-          // Trigger pop-up after a gentle delay for smooth screen entrance
+        const guideSeen = await AsyncStorage.getItem('@psgim_karen_first_launch_guide_seen');
+        if (!guideSeen) {
+          const timer = setTimeout(() => {
+            setShowKarenGuide(true);
+            try {
+              Vibration.vibrate([0, 80, 60, 100]);
+            } catch {}
+          }, 600);
+          return () => clearTimeout(timer);
+        }
+
+        const launchSeen = await AsyncStorage.getItem('@psgim_launch_popup_seen_v1');
+        if (!launchSeen) {
           const timer = setTimeout(() => {
             setShowLaunchPopup(true);
             try {
@@ -149,7 +161,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         }
       } catch {}
     };
-    checkLaunchPopup();
+    checkFirstTimeOnboarding();
   }, []);
 
   useEffect(() => {
@@ -2880,10 +2892,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Karen Guide Modal */}
       <KarenGuide
         visible={showKarenGuide}
-        onClose={() => setShowKarenGuide(false)}
+        onClose={() => {
+          setShowKarenGuide(false);
+          AsyncStorage.setItem('@psgim_karen_first_launch_guide_seen', 'true').catch(() => {});
+        }}
         studentName={studentName}
         isEnhancedSuit={isEnhancedSuit}
         isLightMode={isLightMode}
+        onExtractPortal={() => {
+          setShowKarenGuide(false);
+          AsyncStorage.setItem('@psgim_karen_first_launch_guide_seen', 'true').catch(() => {});
+          if (onOpenErpSync) {
+            onOpenErpSync();
+          }
+        }}
       />
 
       {/* What-If Bunk & Exam Forecaster Modal */}
