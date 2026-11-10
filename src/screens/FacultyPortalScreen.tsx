@@ -122,6 +122,7 @@ export const FacultyPortalScreen: React.FC<FacultyPortalScreenProps> = ({
       day: activeSlot.day,
       startTime: activeSlot.startTime,
       endTime: activeSlot.endTime,
+      hours: activeSlot.hours || 1,
       courseKey: activeSlot.courseKey,
       courseTitle: activeSlot.courseTitle,
       batchCode: activeSlot.batchCode,
@@ -256,8 +257,15 @@ export const FacultyPortalScreen: React.FC<FacultyPortalScreenProps> = ({
                         🕒 {slot.startTime} – {slot.endTime}
                       </Text>
                     </View>
-                    <View style={[styles.roomBadge, isLight && { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
-                      <Text style={[styles.roomBadgeText, isLight && { color: '#2B3990' }]}>📍 {slot.room}</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      <View style={[styles.hoursBadge, { backgroundColor: slot.hours > 1 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.15)', borderColor: slot.hours > 1 ? '#F59E0B' : '#38BDF8' }]}>
+                        <Text style={[styles.hoursBadgeText, { color: slot.hours > 1 ? '#F59E0B' : '#38BDF8' }]}>
+                          ⏱️ {slot.hours} {slot.hours === 1 ? 'Hour' : 'Hours'} Block
+                        </Text>
+                      </View>
+                      <View style={[styles.roomBadge, isLight && { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
+                        <Text style={[styles.roomBadgeText, isLight && { color: '#2B3990' }]}>📍 {slot.room}</Text>
+                      </View>
                     </View>
                   </View>
 
@@ -265,6 +273,10 @@ export const FacultyPortalScreen: React.FC<FacultyPortalScreenProps> = ({
                   <View style={styles.slotMetaRow}>
                     <Text style={[styles.slotMetaText, isLight && { color: '#475569' }]}>
                       Batch: <Text style={{ fontWeight: '800', color: isLight ? '#0F172A' : '#38BDF8' }}>{slot.batchCode}</Text>
+                    </Text>
+                    <Text style={{ color: '#64748B' }}>•</Text>
+                    <Text style={[styles.slotMetaText, isLight && { color: '#475569' }]}>
+                      Duration: <Text style={{ fontWeight: '800', color: isLight ? '#0F172A' : '#F59E0B' }}>{slot.hours} {slot.hours === 1 ? 'Academic Hour' : 'Academic Hours'}</Text>
                     </Text>
                     <Text style={{ color: '#64748B' }}>•</Text>
                     <Text style={[styles.slotMetaText, isLight && { color: '#475569' }]}>
@@ -304,7 +316,7 @@ export const FacultyPortalScreen: React.FC<FacultyPortalScreenProps> = ({
                     {activeSlot.courseKey} • {activeSlot.batchCode}
                   </Text>
                   <Text style={[styles.modalSubtitle, isLight && { color: '#64748B' }]}>
-                    {activeSlot.startTime} – {activeSlot.endTime} • {activeSlot.room} ({enrolledStudents.length} Students)
+                    {activeSlot.startTime} – {activeSlot.endTime} ({activeSlot.hours} {activeSlot.hours === 1 ? 'hr' : 'hrs'}) • {activeSlot.room} • {enrolledStudents.length} Students
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -629,6 +641,16 @@ const styles = StyleSheet.create({
     color: '#38BDF8',
     fontSize: 12,
     fontWeight: '700',
+  },
+  hoursBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+  },
+  hoursBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
   },
   roomBadge: {
     backgroundColor: '#0F172A',

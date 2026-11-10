@@ -319,6 +319,7 @@ export const FacultyDataService = {
     day: string;
     startTime: string;
     endTime: string;
+    hours: number;
     courseKey: string;
     courseTitle: string;
     batchCode: string;
@@ -333,6 +334,7 @@ export const FacultyDataService = {
       day: string;
       startTime: string;
       endTime: string;
+      hours: number;
       courseKey: string;
       courseTitle: string;
       batchCode: string;
@@ -348,11 +350,18 @@ export const FacultyDataService = {
         faculty.courses.forEach((c) => {
           if (slot.course === c.courseKey && slot.applicableBatches.includes(c.batchCode)) {
             const courseMeta = PSGIM_COURSES[c.courseKey];
+            // Calculate academic hours for this timetable slot (e.g. 08:30-10:20 -> 2 hours, 15:40-16:35 -> 1 hour)
+            const [sh, sm] = slot.startTime.split(':').map(Number);
+            const [eh, em] = slot.endTime.split(':').map(Number);
+            const diffMinutes = ((eh || 0) * 60 + (em || 0)) - ((sh || 0) * 60 + (sm || 0));
+            const calculatedHours = diffMinutes > 0 ? Math.max(1, Math.round(diffMinutes / 60)) : 1;
+
             scheduleList.push({
               slotId: `slot_${dayName.toLowerCase()}_${slot.startTime.replace(':', '')}_${c.batchCode}`,
               day: slot.day,
               startTime: slot.startTime,
               endTime: slot.endTime,
+              hours: calculatedHours,
               courseKey: c.courseKey,
               courseTitle: courseMeta?.title || c.courseKey,
               batchCode: c.batchCode,

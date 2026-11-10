@@ -12,6 +12,7 @@ export interface HourlyRollCallRecord {
   day: string;
   startTime: string;
   endTime: string;
+  hours: number; // Academic hours duration: 1, 2, or 3
   courseKey: string;
   courseTitle: string;
   batchCode: string;
@@ -86,6 +87,7 @@ export const FacultyAttendanceService = {
         await CloudSyncService.broadcastFacultyPeriodAttendance({
           periodId: record.periodId,
           date: record.date,
+          hours: record.hours || 1,
           courseKey: record.courseKey,
           courseTitle: record.courseTitle,
           batchCode: record.batchCode,

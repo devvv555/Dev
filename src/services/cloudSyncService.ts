@@ -775,6 +775,7 @@ export const CloudSyncService = {
   async broadcastFacultyPeriodAttendance(payload: {
     periodId: string;
     date: string;
+    hours?: number;
     courseKey: string;
     courseTitle: string;
     batchCode: string;
@@ -793,12 +794,15 @@ export const CloudSyncService = {
       // In Firestore, also push to individual student period records so students see the teacher's mark
       const batch = writeBatch(db);
       let count = 0;
+      const periodHours = payload.hours || 1;
       for (const [studentRoll, status] of Object.entries(payload.attendanceMap)) {
         if (!studentRoll) continue;
         const studentPeriodRef = doc(db, 'students', studentRoll, 'periods', `${payload.date}_${payload.periodId}`);
         batch.set(studentPeriodRef, {
           slotId: payload.periodId,
+          periodKey: `${payload.date}_${payload.periodId}`,
           date: payload.date,
+          hours: periodHours,
           status: status === 'present' ? 'attended' : status === 'absent' ? 'bunked' : 'od',
           recordedByFaculty: payload.facultyName,
           course: payload.courseKey,
