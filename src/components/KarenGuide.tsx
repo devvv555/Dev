@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,22 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { ThemeManager, AppThemeMode } from '../constants/theme';
+import { Subject, TimetableSlot } from '../types';
+import { KarenAiService, ChatMessage } from '../services/karenAiService';
 
 export interface KarenGuideProps {
   visible: boolean;
   onClose: () => void;
   studentName?: string;
+  studentRollNo?: string;
+  subjects?: Subject[];
+  timetable?: TimetableSlot[];
   isEnhancedSuit?: boolean;
   isLightMode?: boolean;
   onExtractPortal?: () => void;
@@ -118,8 +127,8 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
     title: 'Syllabus Velocity Tracker',
     badge: 'COMING SOON',
     description:
-      '[COMING SOON] Real-time syllabus completion velocity telemetry across all 8 trimester courses to compare classes conducted against planned curriculum targets.',
-    tip: 'Coming soon! Trimester lecture milestone tracking will activate shortly.',
+      '[COMING SOON] Track lecture progression across 30 planned trimesters sessions against midterm and model exam milestones to identify syllabus velocity gaps before CA tests.',
+    tip: 'Coming soon! Connected with Moodle course delivery milestones.',
   },
   {
     title: 'Library Shield & 1-Click Renewal',
@@ -141,18 +150,90 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
   visible,
   onClose,
   studentName,
+  studentRollNo = '',
+  subjects = [],
+  timetable = [],
   isEnhancedSuit = false,
   isLightMode: isLightModeProp,
   onExtractPortal,
 }) => {
+  const [activeTab, setActiveTab] = useState<'CHAT' | 'WALKTHROUGH'>('CHAT');
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [themeMode, setThemeMode] = useState<AppThemeMode>(ThemeManager.getMode());
+
+  // Karen Live AI Chat State (Google Gemini Flash)
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     ThemeManager.init().then(setThemeMode);
     const unsub = ThemeManager.subscribe(setThemeMode);
     return () => unsub();
   }, []);
+
+  // Initialize Karen welcoming message
+  useEffect(() => {
+    if (visible && messages.length === 0) {
+      const welcome: ChatMessage = {
+        id: 'msg_welcome',
+        sender: 'karen',
+        text: `Hello ${studentName || 'there'}! I am Karen, your AI campus companion powered by Google Gemini. All your live attendance, professors, and timetable periods are loaded.\n\nAsk me anything! For example: "Can I bunk EDM tomorrow?", "Who is teaching MCOB?", or "How many classes do I need to recover?"`,
+        timestamp: Date.now(),
+        chips: [
+          'Can I bunk EDM?',
+          'Who is my MCOB faculty?',
+          'What is my safest subject?',
+          'Explain the 65% medical rule',
+        ],
+      };
+      setMessages([welcome]);
+    }
+  }, [visible, studentName]);
+
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = (textToSend || inputMessage).trim();
+    if (!text || isTyping) return;
+
+    setInputMessage('');
+    const userMsg: ChatMessage = {
+      id: `msg_u_${Date.now()}`,
+      sender: 'user',
+      text,
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setIsTyping(true);
+
+    setTimeout(() => {
+      chatScrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    const reply = await KarenAiService.sendMessage({
+      message: text,
+      studentName: studentName || 'Student',
+      rollNo: studentRollNo,
+      subjects,
+      timetable,
+      history: messages.map((m) => ({ sender: m.sender, text: m.text })),
+    });
+
+    const karenMsg: ChatMessage = {
+      id: `msg_k_${Date.now()}`,
+      sender: 'karen',
+      text: reply,
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, karenMsg]);
+    setIsTyping(false);
+
+    setTimeout(() => {
+      chatScrollRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  };
 
   const isLightMode = isLightModeProp !== undefined ? isLightModeProp : themeMode === 'LIGHT';
   const steps = isEnhancedSuit ? ENHANCED_SUIT_STEPS : STANDARD_STEPS;
@@ -177,7 +258,10 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={[styles.overlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
+      <KeyboardAvoidingView
+        style={[styles.overlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View
           style={[
             styles.card,
@@ -214,9 +298,14 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
               <Text style={styles.karenAvatarText}>K</Text>
             </View>
             <View style={styles.headerTitles}>
-              <Text style={[styles.karenTitle, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>
-                Karen Guide
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.karenTitle, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>
+                  Karen AI
+                </Text>
+                <View style={styles.geminiBadge}>
+                  <Text style={styles.geminiBadgeText}>✨ GEMINI FLASH</Text>
+                </View>
+              </View>
               <Text
                 style={[
                   styles.karenSub,
@@ -224,7 +313,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
                   isRed && !isLightMode && { color: '#10B981' },
                 ]}
               >
-                {isRed ? 'Stark Suit AI Companion // Level 2' : 'Your Suit AI Assistant'}
+                {isRed ? 'Stark Suit AI Companion // Level 2' : 'Your Campus AI Advisor'}
               </Text>
             </View>
             <TouchableOpacity
@@ -239,200 +328,290 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Privacy Guarantee Banner */}
-          <View
-            style={[
-              styles.privacyBanner,
-              isLightMode && {
-                backgroundColor: '#EFF6FF',
-                borderBottomColor: '#DBEAFE',
-              },
-              isRed && !isLightMode && styles.privacyBannerRed,
-            ]}
-          >
-            <Text
-              style={[
-                styles.privacyText,
-                isLightMode && { color: '#1E40AF', fontWeight: '700' },
-                isRed && !isLightMode && { color: '#10B981' },
-              ]}
+          {/* Mode Switcher: AI Chat vs Walkthrough Guide */}
+          <View style={[styles.tabBar, isLightMode && { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'CHAT' && (isLightMode ? styles.tabBtnActiveLight : styles.tabBtnActive)]}
+              onPress={() => setActiveTab('CHAT')}
             >
-              {isRed
-                ? 'STARK PROTOCOL LEVEL 2: All enhanced capabilities online.'
-                : 'Privacy Guarantee: Zero sensitive data or credentials are displayed or shared.'}
-            </Text>
+              <Text
+                style={[
+                  styles.tabBtnText,
+                  activeTab === 'CHAT' && (isLightMode ? styles.tabBtnTextActiveLight : styles.tabBtnTextActive),
+                ]}
+              >
+                💬 Karen AI Chat
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'WALKTHROUGH' && (isLightMode ? styles.tabBtnActiveLight : styles.tabBtnActive)]}
+              onPress={() => setActiveTab('WALKTHROUGH')}
+            >
+              <Text
+                style={[
+                  styles.tabBtnText,
+                  activeTab === 'WALKTHROUGH' && (isLightMode ? styles.tabBtnTextActiveLight : styles.tabBtnTextActive),
+                ]}
+              >
+                📖 App Walkthrough
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Step Body */}
-          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            <View
-              style={[
-                styles.stepBadge,
-                isLightMode && {
-                  backgroundColor: '#EFF6FF',
-                  borderColor: '#93C5FD',
-                },
-                isRed && !isLightMode && styles.stepBadgeRed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.stepBadgeText,
-                  isLightMode && { color: '#1D4ED8', fontWeight: '800' },
-                  isRed && !isLightMode && { color: '#10B981' },
-                ]}
+          {/* TAB 1: KAREN AI LIVE CHAT */}
+          {activeTab === 'CHAT' ? (
+            <View style={{ flex: 1 }}>
+              <ScrollView
+                ref={chatScrollRef}
+                style={styles.chatScroll}
+                contentContainerStyle={styles.chatScrollContent}
+                keyboardShouldPersistTaps="handled"
               >
-                {step.badge}
-              </Text>
-            </View>
+                {messages.map((msg) => {
+                  const isUser = msg.sender === 'user';
+                  return (
+                    <View key={msg.id} style={{ marginBottom: 12 }}>
+                      <View
+                        style={[
+                          styles.chatBubble,
+                          isUser ? styles.chatBubbleUser : styles.chatBubbleKaren,
+                          isLightMode && (isUser ? styles.chatBubbleUserLight : styles.chatBubbleKarenLight),
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.chatMessageText,
+                            isLightMode && (isUser ? { color: '#FFFFFF' } : { color: '#0F172A' }),
+                          ]}
+                        >
+                          {msg.text}
+                        </Text>
+                      </View>
 
-            <Text style={[styles.stepTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
-              {currentStepIndex === 0 && studentName ? `${studentName}: ${step.title}` : step.title}
-            </Text>
+                      {/* Quick Prompt Chips */}
+                      {msg.chips && msg.chips.length > 0 && (
+                        <View style={styles.chipsRow}>
+                          {msg.chips.map((chip, idx) => (
+                            <TouchableOpacity
+                              key={idx}
+                              style={[
+                                styles.chipBtn,
+                                isLightMode && { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
+                              ]}
+                              onPress={() => handleSendMessage(chip)}
+                            >
+                              <Text style={[styles.chipText, isLightMode && { color: '#1D4ED8' }]}>{chip}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
 
-            <Text style={[styles.stepDescription, isLightMode && { color: '#475569' }]}>
-              {step.description}
-            </Text>
+                {isTyping && (
+                  <View style={[styles.chatBubble, styles.chatBubbleKaren, isLightMode && styles.chatBubbleKarenLight, { flexDirection: 'row', gap: 6, alignItems: 'center' }]}>
+                    <ActivityIndicator size="small" color="#38BDF8" />
+                    <Text style={{ fontSize: 12, color: '#94A3B8' }}>Karen is calculating with Gemini...</Text>
+                  </View>
+                )}
+              </ScrollView>
 
-            {step.actionButton && (
-              <TouchableOpacity
-                style={[
-                  {
-                    marginTop: 12,
-                    marginBottom: 6,
-                    paddingVertical: 13,
-                    paddingHorizontal: 16,
-                    borderRadius: 10,
-                    backgroundColor: '#0284C7',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    shadowColor: '#0284C7',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 8,
-                    elevation: 4,
-                  },
-                  isEnhancedSuit && !isLightMode && { backgroundColor: '#10B981', shadowColor: '#10B981' },
-                ]}
-                activeOpacity={0.85}
-                onPress={() => {
-                  onClose();
-                  if (onExtractPortal) {
-                    onExtractPortal();
-                  }
-                }}
-              >
-                <Text
-                  style={{
-                    color: '#FFFFFF',
-                    fontSize: 14,
-                    fontWeight: '800',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  {step.actionButton.label}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            <View
-              style={[
-                styles.tipBox,
-                isLightMode && {
-                  backgroundColor: '#F8FAFC',
-                  borderLeftColor: '#2563EB',
-                  borderWidth: 1,
-                  borderColor: '#E2E8F0',
-                },
-                isRed && !isLightMode && styles.tipBoxRed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.tipLabel,
-                  isLightMode && { color: '#2563EB', fontWeight: '800' },
-                  isRed && !isLightMode && { color: '#10B981' },
-                ]}
-              >
-                PRO TIP
-              </Text>
-              <Text
-                style={[
-                  styles.tipText,
-                  isLightMode && { color: '#334155', fontWeight: '600' },
-                  isRed && !isLightMode && { color: '#10B981' },
-                ]}
-              >
-                {step.tip}
-              </Text>
-            </View>
-          </ScrollView>
-
-          {/* Stepper Dots & Navigation Footer */}
-          <View
-            style={[
-              styles.footer,
-              isLightMode && {
-                backgroundColor: '#FFFFFF',
-                borderTopColor: '#E2E8F0',
-              },
-            ]}
-          >
-            <View style={styles.dotsRow}>
-              {steps.map((_, idx) => (
-                <View
-                  key={idx}
-                  style={[
-                    styles.dot,
-                    isLightMode && { backgroundColor: '#E2E8F0' },
-                    idx === currentStepIndex &&
-                      (isLightMode
-                        ? { backgroundColor: '#2B3990', width: 20 }
-                        : isRed
-                        ? styles.dotActiveRed
-                        : styles.dotActive),
-                  ]}
+              {/* Chat Input Bar */}
+              <View style={[styles.inputBar, isLightMode && styles.inputBarLight]}>
+                <TextInput
+                  style={[styles.chatTextInput, isLightMode && styles.chatTextInputLight]}
+                  placeholder="Ask Karen (e.g. Can I bunk EDM tomorrow?)"
+                  placeholderTextColor="#64748B"
+                  value={inputMessage}
+                  onChangeText={setInputMessage}
+                  onSubmitEditing={() => handleSendMessage()}
+                  returnKeyType="send"
                 />
-              ))}
-            </View>
-
-            <View style={styles.btnRow}>
-              {currentStepIndex > 0 && (
                 <TouchableOpacity
-                  onPress={handlePrev}
+                  style={[styles.sendBtn, !inputMessage.trim() && { opacity: 0.5 }]}
+                  onPress={() => handleSendMessage()}
+                  disabled={!inputMessage.trim() || isTyping}
+                >
+                  <Text style={styles.sendBtnText}>➤</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            /* TAB 2: STEPPER WALKTHROUGH */
+            <View style={{ flex: 1 }}>
+              <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+                <View
                   style={[
-                    styles.backBtn,
-                    isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+                    styles.stepBadge,
+                    isLightMode && {
+                      backgroundColor: '#EFF6FF',
+                      borderColor: '#93C5FD',
+                    },
+                    isRed && !isLightMode && styles.stepBadgeRed,
                   ]}
                 >
-                  <Text style={[styles.backBtnText, isLightMode && { color: '#475569', fontWeight: '700' }]}>
-                    Back
+                  <Text
+                    style={[
+                      styles.stepBadgeText,
+                      isLightMode && { color: '#1D4ED8', fontWeight: '800' },
+                      isRed && !isLightMode && { color: '#10B981' },
+                    ]}
+                  >
+                    {step.badge}
                   </Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                onPress={handleNext}
+                </View>
+
+                <Text style={[styles.stepTitle, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>
+                  {currentStepIndex === 0 && studentName ? `${studentName}: ${step.title}` : step.title}
+                </Text>
+
+                <Text style={[styles.stepDescription, isLightMode && { color: '#475569' }]}>
+                  {step.description}
+                </Text>
+
+                {step.actionButton && (
+                  <TouchableOpacity
+                    style={[
+                      {
+                        marginTop: 12,
+                        marginBottom: 6,
+                        paddingVertical: 13,
+                        paddingHorizontal: 16,
+                        borderRadius: 10,
+                        backgroundColor: '#0284C7',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        shadowColor: '#0284C7',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 8,
+                        elevation: 4,
+                      },
+                      isEnhancedSuit && !isLightMode && { backgroundColor: '#10B981', shadowColor: '#10B981' },
+                    ]}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      onClose();
+                      if (onExtractPortal) {
+                        onExtractPortal();
+                      }
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: 14,
+                        fontWeight: '800',
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {step.actionButton.label}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                <View
+                  style={[
+                    styles.tipBox,
+                    isLightMode && {
+                      backgroundColor: '#F8FAFC',
+                      borderLeftColor: '#2563EB',
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                    },
+                    isRed && !isLightMode && styles.tipBoxRed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tipLabel,
+                      isLightMode && { color: '#2563EB', fontWeight: '800' },
+                      isRed && !isLightMode && { color: '#10B981' },
+                    ]}
+                  >
+                    PRO TIP
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tipText,
+                      isLightMode && { color: '#334155', fontWeight: '600' },
+                      isRed && !isLightMode && { color: '#10B981' },
+                    ]}
+                  >
+                    {step.tip}
+                  </Text>
+                </View>
+              </ScrollView>
+
+              {/* Stepper Dots & Navigation Footer */}
+              <View
                 style={[
-                  styles.nextBtn,
-                  isLightMode && { backgroundColor: '#2B3990' },
-                  isRed && !isLightMode && styles.nextBtnRed,
+                  styles.footer,
+                  isLightMode && {
+                    backgroundColor: '#FFFFFF',
+                    borderTopColor: '#E2E8F0',
+                  },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.nextBtnText,
-                    isRed && !isLightMode && { color: '#050505', fontWeight: '800' },
-                  ]}
-                >
-                  {currentStepIndex === steps.length - 1 ? 'Got it!' : 'Next'}
-                </Text>
-              </TouchableOpacity>
+                <View style={styles.dotsRow}>
+                  {steps.map((_, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.dot,
+                        isLightMode && { backgroundColor: '#E2E8F0' },
+                        idx === currentStepIndex &&
+                          (isLightMode
+                            ? { backgroundColor: '#2B3990', width: 20 }
+                            : isRed
+                            ? styles.dotActiveRed
+                            : styles.dotActive),
+                      ]}
+                    />
+                  ))}
+                </View>
+
+                <View style={styles.btnRow}>
+                  {currentStepIndex > 0 && (
+                    <TouchableOpacity
+                      onPress={handlePrev}
+                      style={[
+                        styles.backBtn,
+                        isLightMode && { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
+                      ]}
+                    >
+                      <Text style={[styles.backBtnText, isLightMode && { color: '#475569', fontWeight: '700' }]}>
+                        Back
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    onPress={handleNext}
+                    style={[
+                      styles.nextBtn,
+                      isLightMode && { backgroundColor: '#2B3990' },
+                      isRed && !isLightMode && styles.nextBtnRed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.nextBtnText,
+                        isRed && !isLightMode && { color: '#050505', fontWeight: '800' },
+                      ]}
+                    >
+                      {currentStepIndex === steps.length - 1 ? 'Got it!' : 'Next'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
+          )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -440,113 +619,251 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 6, 23, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
   card: {
     width: '100%',
-    maxWidth: 520,
-    maxHeight: '90%',
-    backgroundColor: '#0F172A',
+    maxWidth: 480,
+    height: 580,
+    backgroundColor: '#1E293B',
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#0284C7',
+    borderColor: '#334155',
     overflow: 'hidden',
   },
   cardRed: {
-    backgroundColor: '#121212',
     borderColor: '#262626',
-    borderWidth: 1.5,
+    backgroundColor: '#121212',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     backgroundColor: '#0F172A',
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
   },
   headerRed: {
     backgroundColor: '#050505',
     borderBottomColor: '#262626',
   },
   karenAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#0284C7',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   karenAvatarRed: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderWidth: 1,
     borderColor: '#10B981',
-    borderWidth: 1.5,
   },
   karenAvatarText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   headerTitles: {
     flex: 1,
-    marginLeft: 12,
   },
   karenTitle: {
     color: '#F8FAFC',
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
+  },
+  geminiBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38BDF8',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  geminiBadgeText: {
+    color: '#38BDF8',
+    fontSize: 9,
+    fontWeight: '900',
   },
   karenSub: {
     color: '#38BDF8',
     fontSize: 11,
     fontWeight: '600',
+    marginTop: 1,
   },
   closeBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#1E293B',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   closeBtnRed: {
-    backgroundColor: '#121212',
-    borderColor: '#262626',
-    borderWidth: 1,
+    backgroundColor: '#1F2937',
   },
   closeBtnText: {
-    color: '#CBD5E1',
-    fontSize: 16,
+    color: '#94A3B8',
+    fontSize: 14,
     fontWeight: '700',
   },
-  privacyBanner: {
-    backgroundColor: 'rgba(56, 189, 248, 0.08)',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+
+  // Tab switcher
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#0F172A',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(56, 189, 248, 0.15)',
+    borderBottomColor: '#334155',
+    padding: 6,
+    gap: 6,
   },
-  privacyBannerRed: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderBottomColor: 'rgba(16, 185, 129, 0.2)',
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
   },
-  privacyText: {
-    color: '#BAE6FD',
+  tabBtnActive: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+  },
+  tabBtnActiveLight: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#2B3990',
+  },
+  tabBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  tabBtnTextActive: {
+    color: '#38BDF8',
+    fontWeight: '800',
+  },
+  tabBtnTextActiveLight: {
+    color: '#2B3990',
+    fontWeight: '800',
+  },
+
+  // Chat styles
+  chatScroll: {
+    flex: 1,
+  },
+  chatScrollContent: {
+    padding: 14,
+  },
+  chatBubble: {
+    maxWidth: '85%',
+    padding: 12,
+    borderRadius: 14,
+  },
+  chatBubbleKaren: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderTopLeftRadius: 4,
+  },
+  chatBubbleKarenLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  chatBubbleUser: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#0284C7',
+    borderTopRightRadius: 4,
+  },
+  chatBubbleUserLight: {
+    backgroundColor: '#2B3990',
+  },
+  chatMessageText: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: '#F8FAFC',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  chipBtn: {
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  chipText: {
+    color: '#38BDF8',
     fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: '700',
   },
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#0F172A',
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+    gap: 8,
+  },
+  inputBarLight: {
+    backgroundColor: '#FFFFFF',
+    borderTopColor: '#E2E8F0',
+  },
+  chatTextInput: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: '#F8FAFC',
+    fontSize: 13,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  chatTextInputLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#CBD5E1',
+    color: '#0F172A',
+  },
+  sendBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#0284C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+
+  // Stepper body
   body: {
-    padding: 20,
+    padding: 18,
   },
   stepBadge: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-    borderColor: '#0284C7',
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
     alignSelf: 'flex-start',
+    backgroundColor: '#0C4A6E',
+    borderWidth: 1,
+    borderColor: '#0284C7',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
     marginBottom: 8,
   },
   stepBadgeRed: {
@@ -557,69 +874,76 @@ const styles = StyleSheet.create({
     color: '#38BDF8',
     fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
   stepTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    color: '#F8FAFC',
+    fontSize: 17,
     fontWeight: '800',
     marginBottom: 8,
   },
   stepDescription: {
-    color: '#CBD5E1',
+    color: '#94A3B8',
     fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 19,
     marginBottom: 14,
   },
   tipBox: {
-    backgroundColor: '#1E293B',
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: '#0F172A',
     borderLeftWidth: 3,
     borderLeftColor: '#38BDF8',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
   },
   tipBoxRed: {
-    backgroundColor: '#050505',
     borderLeftColor: '#10B981',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
   },
   tipLabel: {
     color: '#38BDF8',
     fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.5,
     marginBottom: 2,
   },
   tipText: {
-    color: '#E2E8F0',
-    fontSize: 12,
+    color: '#CBD5E1',
+    fontSize: 11.5,
     lineHeight: 16,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#0F172A',
     borderTopWidth: 1,
-    borderTopColor: '#1E293B',
+    borderTopColor: '#334155',
   },
   dotsRow: {
     flexDirection: 'row',
-    gap: 6,
+    alignItems: 'center',
+    gap: 5,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#334155',
   },
   dotActive: {
     backgroundColor: '#38BDF8',
-    width: 20,
+    width: 16,
   },
   dotActiveRed: {
     backgroundColor: '#10B981',
-    width: 20,
+    width: 16,
   },
   btnRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   backBtn: {
@@ -629,12 +953,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
   },
   backBtnText: {
-    color: '#CBD5E1',
+    color: '#94A3B8',
     fontSize: 12,
     fontWeight: '700',
   },
   nextBtn: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 8,
     backgroundColor: '#0284C7',

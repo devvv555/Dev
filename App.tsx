@@ -1395,12 +1395,20 @@ export default function App() {
         medicalClaims={medicalClaims}
       />
 
-      {/* Karen Welcoming & Suit Guide Modal */}
+      {/* Karen Welcoming, Suit Guide & Gemini AI Chat Modal */}
       <KarenGuide
         visible={showKarenGuide}
         onClose={() => setShowKarenGuide(false)}
         studentName={studentName}
+        studentRollNo={activeRollNo}
+        subjects={subjects}
+        timetable={timetable}
         isEnhancedSuit={isEnhancedSuit}
+        isLightMode={isLightMode}
+        onExtractPortal={() => {
+          setShowKarenGuide(false);
+          handleTabChange('ERP_SYNC');
+        }}
       />
 
       {/* Stark Protocol 5-Tap Video Easter Egg Modal */}

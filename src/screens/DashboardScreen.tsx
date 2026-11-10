@@ -44,6 +44,7 @@ import { ProtocolGate } from '../engines/starkProtocol/protocolGate';
 import { ThemeManager, AppThemeMode } from '../constants/theme';
 import { StealthUltrasonicEngine } from '../engines/starkProtocol/stealthUltrasonicEngine';
 import { Mark85CopilotModal } from '../components/Mark85CopilotModal';
+import { StarkScriptTerminalModal } from '../components/StarkScriptTerminalModal';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -117,6 +118,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [showWhatIfForecaster, setShowWhatIfForecaster] = useState(false);
   const [showStarkArsenal, setShowStarkArsenal] = useState(false);
   const [showMark85Copilot, setShowMark85Copilot] = useState(false);
+  const [showStarkScriptTerminal, setShowStarkScriptTerminal] = useState(false);
   const [isEnhancedSuit, setIsEnhancedSuit] = useState(isEnhancedSuitProp ?? false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
@@ -2315,6 +2317,26 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <TouchableOpacity
               style={[
                 styles.mcuAiBtnSecondary,
+                {
+                  borderColor: '#10B981',
+                  backgroundColor: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)',
+                  borderWidth: 1.5,
+                }
+              ]}
+              onPress={() => {
+                try {
+                  Vibration.vibrate(30);
+                } catch {}
+                setShowStarkScriptTerminal(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#10B981', fontWeight: '900', fontSize: 11.5 }}>📟 StarkScript IDE</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.mcuAiBtnSecondary,
                 isLightMode
                   ? { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
                   : { borderColor: '#262626', backgroundColor: '#050505' }
@@ -3017,7 +3039,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </View>
       </Modal>
 
-      {/* Karen Guide Modal */}
+      {/* Karen Guide & Gemini AI Chat Modal */}
       <KarenGuide
         visible={showKarenGuide}
         onClose={() => {
@@ -3025,6 +3047,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           AsyncStorage.setItem('@psgim_karen_first_launch_guide_seen', 'true').catch(() => {});
         }}
         studentName={studentName}
+        studentRollNo={studentRollNo}
+        subjects={subjects}
+        timetable={timetable}
         isEnhancedSuit={isEnhancedSuit}
         isLightMode={isLightMode}
         onExtractPortal={() => {
@@ -3065,6 +3090,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         onClose={() => setShowMark85Copilot(false)}
         subjects={subjects}
         studentName={studentName}
+        studentRollNo={studentRollNo}
+        isLightMode={isLightMode}
+      />
+
+      {/* StarkScript Interactive DSL IDE & Terminal */}
+      <StarkScriptTerminalModal
+        visible={showStarkScriptTerminal}
+        onClose={() => setShowStarkScriptTerminal(false)}
         studentRollNo={studentRollNo}
         isLightMode={isLightMode}
       />
