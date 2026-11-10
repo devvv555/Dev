@@ -2254,28 +2254,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               styles.mcuAiAvatar,
               isLightMode
                 ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1', borderWidth: 1 }
-                : { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981', borderWidth: 1 }
+                : { backgroundColor: 'rgba(234, 179, 8, 0.2)', borderColor: '#EAB308', borderWidth: 1 }
             ]}>
-              <Text style={[styles.mcuAiAvatarText, isLightMode ? { color: '#2B3990', fontWeight: '900' } : { color: '#10B981' }]}>L1</Text>
+              <Text style={[styles.mcuAiAvatarText, isLightMode ? { color: '#2B3990', fontWeight: '900' } : { color: '#EAB308' }]}>AI</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={[styles.mcuAiTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : { color: '#F8FAFC' }]}>
-                  Level One Companion
+                  PSGIM AI Copilot
                 </Text>
                 <View style={[
                   styles.mcuAiActiveBadge,
                   isLightMode
-                    ? { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
-                    : { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                    ? { backgroundColor: '#FEFCE8', borderColor: '#EAB308' }
+                    : { backgroundColor: 'rgba(234, 179, 8, 0.15)', borderColor: '#EAB308' }
                 ]}>
-                  <Text style={[styles.mcuAiActiveBadgeText, isLightMode ? { color: '#047857', fontWeight: '800' } : { color: '#10B981' }]}>
-                    LEVEL ONE ACTIVE
+                  <Text style={[styles.mcuAiActiveBadgeText, isLightMode ? { color: '#B45309', fontWeight: '800' } : { color: '#EAB308' }]}>
+                    ACTIVE COPILOT
                   </Text>
                 </View>
               </View>
               <Text style={[styles.mcuAiSubtitle, isLightMode ? { color: '#64748B' } : { color: '#9CA3AF' }]}>
-                Level One • Academic intelligence, smart forecaster & campus companion systems
+                Predictive Debarment Risk Radar • Deloitte/Federal Bank Placement Matcher
               </Text>
             </View>
           </View>
@@ -2284,23 +2284,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <TouchableOpacity
               style={[
                 styles.mcuAiBtnPrimary,
-                isLightMode
-                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
-                  : { backgroundColor: '#10B981', borderColor: '#10B981' }
-              ]}
-              onPress={() => setShowKarenGuide(true)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.mcuAiBtnPrimaryText, { color: '#FFFFFF', fontWeight: '800' }]}>App Walkthrough Guide</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.mcuAiBtnSecondary,
                 {
+                  backgroundColor: '#EAB308',
                   borderColor: '#EAB308',
-                  backgroundColor: isLightMode ? '#FEFCE8' : 'rgba(234, 179, 8, 0.15)',
-                  borderWidth: 1.5,
+                  paddingVertical: 10,
                 }
               ]}
               onPress={() => {
@@ -2311,27 +2298,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Text style={{ color: '#EAB308', fontWeight: '900', fontSize: 11.5 }}>⚡ Mark 85 AI Copilot</Text>
+              <Text style={{ color: '#000000', fontWeight: '900', fontSize: 13 }}>
+                🚀 Open AI Academic & Placement Copilot
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.mcuAiBtnSecondary,
-                {
-                  borderColor: '#10B981',
-                  backgroundColor: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)',
-                  borderWidth: 1.5,
-                }
+                isLightMode
+                  ? { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
+                  : { borderColor: '#262626', backgroundColor: '#050505' }
               ]}
-              onPress={() => {
-                try {
-                  Vibration.vibrate(30);
-                } catch {}
-                setShowStarkScriptTerminal(true);
-              }}
+              onPress={() => setShowWhatIfForecaster(true)}
               activeOpacity={0.8}
             >
-              <Text style={{ color: '#10B981', fontWeight: '900', fontSize: 11.5 }}>📟 StarkScript IDE</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, isLightMode ? { color: '#0F172A', fontWeight: '800' } : { color: '#38BDF8', fontWeight: '800' }]}>What-If Forecaster</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
