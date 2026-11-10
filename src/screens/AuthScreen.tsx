@@ -18,16 +18,23 @@ import { PsgimService } from '../services/psgimService';
 import { getMasterStudent, toNewRollNo, toOldRollNo } from '../data/psgimMasterStudents';
 import { CORRECT_ADMIN_PIN } from './AdminDashboardScreen';
 
+import { FacultyMember, FacultyDataService } from '../data/psgimFacultyData';
+
 interface AuthScreenProps {
   onLoginSuccess: (rollNo: string) => void;
   onAdminLogin?: () => void;
+  onFacultyLogin?: (faculty: FacultyMember) => void;
 }
 
 type LoginStep = 'credentials' | 'verifying' | 'done';
+type AuthMode = 'student' | 'faculty';
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminLogin }) => {
+export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminLogin, onFacultyLogin }) => {
+  const [authMode, setAuthMode] = useState<AuthMode>('student');
   const [rollNoInput, setRollNoInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [facultyEmailInput, setFacultyEmailInput] = useState('');
+  const [facultyPasswordInput, setFacultyPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('credentials');
@@ -148,10 +155,43 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     onLoginSuccess(officialRoll);
   };
 
+  const handleFacultyLogin = async () => {
+    setErrorMessage(null);
+    const cleanEmail = facultyEmailInput.trim().toLowerCase();
+    const cleanPassword = facultyPasswordInput.trim();
+
+    if (!cleanEmail) {
+      setErrorMessage('Please enter your official PSGIM email address (e.g. kirupa@psgim.ac.in).');
+      return;
+    }
+
+    if (!cleanPassword) {
+      setErrorMessage('Please enter your faculty access password (welcome@123).');
+      return;
+    }
+
+    setLoginStep('verifying');
+    setVerifyingStatus('Authenticating faculty credentials with PSGIM faculty directory...');
+
+    setTimeout(() => {
+      const res = FacultyDataService.verifyFacultyLogin(cleanEmail, cleanPassword);
+      if (!res.success || !res.faculty) {
+        setLoginStep('credentials');
+        setErrorMessage(res.error || 'Authentication failed. Please verify your email and password.');
+        return;
+      }
+
+      setLoginStep('done');
+      if (onFacultyLogin) {
+        onFacultyLogin(res.faculty);
+      }
+    }, 600);
+  };
+
   const handleGuestLogin = async () => {
     setErrorMessage(null);
     setLoginStep('verifying');
-    setVerifyingStatus('Preparing Faculty & Administration Guest Environment...');
+    setVerifyingStatus('Entering Instant Guest Inspection Environment...');
     setTimeout(async () => {
       await StudzoneService.saveCredentials({
         rollNo: 'GUEST',
@@ -160,7 +200,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
       });
       setLoginStep('done');
       onLoginSuccess('GUEST');
-    }, 400);
+    }, 300);
   };
 
   const isLoading = loginStep === 'verifying';
@@ -190,18 +230,64 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
           </View>
         </View>
 
+        {/* ── Role Selector: Student vs Faculty ── */}
+        <View style={styles.roleTabContainer}>
+          <TouchableOpacity
+            style={[styles.roleTab, authMode === 'student' && styles.roleTabActive]}
+            onPress={() => {
+              setAuthMode('student');
+              setErrorMessage(null);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.roleTabText, authMode === 'student' && styles.roleTabTextActive]}>
+              🎓 Student Login
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.roleTab, authMode === 'faculty' && styles.roleTabActive]}
+            onPress={() => {
+              setAuthMode('faculty');
+              setErrorMessage(null);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.roleTabText, authMode === 'faculty' && styles.roleTabTextActive]}>
+              👨‍🏫 Faculty Portal
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* ── Login Card ── */}
         <View style={styles.card}>
-          {/* Portal badge */}
-          <View style={styles.portalBadge}>
-            <Text style={styles.portalBadgeIcon}>•</Text>
-            <Text style={styles.portalBadgeText}>Powered by PSG Studzone Portal</Text>
-          </View>
+          {authMode === 'student' ? (
+            <>
+              {/* Portal badge */}
+              <View style={styles.portalBadge}>
+                <Text style={styles.portalBadgeIcon}>•</Text>
+                <Text style={styles.portalBadgeText}>Powered by PSG Studzone Portal</Text>
+              </View>
 
-          <Text style={styles.cardTitle}>Student Sign In</Text>
-          <Text style={styles.cardSubtitle}>
-            Use your official <Text style={styles.highlight}>Studzone credentials</Text> to log in.
-          </Text>
+              <Text style={styles.cardTitle}>Student Sign In</Text>
+              <Text style={styles.cardSubtitle}>
+                Use your official <Text style={styles.highlight}>Studzone credentials</Text> to log in.
+              </Text>
+            </>
+          ) : (
+            <>
+              {/* Faculty portal badge */}
+              <View style={[styles.portalBadge, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                <Text style={[styles.portalBadgeIcon, { color: '#10B981' }]}>•</Text>
+                <Text style={[styles.portalBadgeText, { color: '#10B981' }]}>PSGIM Faculty Attendance Portal</Text>
+              </View>
+
+              <Text style={styles.cardTitle}>Faculty Sign In</Text>
+              <Text style={styles.cardSubtitle}>
+                Log in with your official <Text style={styles.highlight}>@psgim.ac.in email</Text> to manage hourly period attendance.
+              </Text>
+            </>
+          )}
 
           {/* Error message */}
           {errorMessage && !isLoading && (
@@ -218,14 +304,140 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
               >
                 ◌
               </Animated.Text>
-              <Text style={styles.verifyingTitle}>Verifying with Studzone…</Text>
+              <Text style={styles.verifyingTitle}>
+                {authMode === 'faculty' ? 'Authenticating Faculty…' : 'Verifying with Studzone…'}
+              </Text>
               <Text style={styles.verifyingStatus}>{verifyingStatus}</Text>
               <View style={styles.verifyingHint}>
                 <Text style={styles.verifyingHintText}>
-                  Your credentials are sent directly to the official college portal and never stored on our servers.
+                  {authMode === 'faculty'
+                    ? 'Connecting to official PSGIM faculty database.'
+                    : 'Your credentials are sent directly to the official college portal and never stored on our servers.'}
                 </Text>
               </View>
             </View>
+          ) : authMode === 'faculty' ? (
+            <>
+              {/* Faculty College Email */}
+              <Text style={styles.inputLabel}>OFFICIAL PSGIM EMAIL</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. kirupa@psgim.ac.in"
+                placeholderTextColor="#475569"
+                value={facultyEmailInput}
+                onChangeText={(t) => {
+                  setFacultyEmailInput(t);
+                  setErrorMessage(null);
+                }}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+                returnKeyType="next"
+                editable={!isLoading}
+              />
+
+              {/* Faculty Access Password */}
+              <Text style={styles.inputLabel}>FACULTY PASSWORD</Text>
+              <View style={styles.passwordWrapper}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="welcome@123"
+                  placeholderTextColor="#475569"
+                  value={facultyPasswordInput}
+                  onChangeText={(t) => {
+                    setFacultyPasswordInput(t);
+                    setErrorMessage(null);
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleFacultyLogin}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.showHideBtn}
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.showHideText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Faculty Password Hint */}
+              <View style={[styles.hintBox, { borderLeftColor: '#10B981', borderColor: 'rgba(16, 185, 129, 0.3)', backgroundColor: 'rgba(16, 185, 129, 0.08)' }]}>
+                <Text style={[styles.hintTitle, { color: '#10B981' }]}>Faculty Access Credential</Text>
+                <Text style={styles.hintBody}>
+                  The standard faculty portal access password is{' '}
+                  <Text style={[styles.highlight, { color: '#10B981' }]}>welcome@123</Text>.
+                </Text>
+              </View>
+
+              {/* Faculty Sign In Button */}
+              <TouchableOpacity
+                style={[
+                  styles.submitBtn,
+                  { backgroundColor: '#10B981' },
+                  isLoading && styles.submitBtnDisabled,
+                ]}
+                onPress={handleFacultyLogin}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                <Text style={styles.submitBtnText}>Sign In to Faculty Portal</Text>
+              </TouchableOpacity>
+
+              {/* Quick Preset Buttons for Professors */}
+              <Text style={[styles.inputLabel, { marginTop: 14, textAlign: 'center' }]}>QUICK PROFESSOR AUTO-FILL</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                {[
+                  { name: 'Dr. Kirupa (MCOB)', email: 'kirupa@psgim.ac.in' },
+                  { name: 'Dr. Nancy (ADM)', email: 'nancy@psgim.ac.in' },
+                  { name: 'Dr. Aiswarya (EDM)', email: 'aiswaryad@psgim.ac.in' },
+                  { name: 'Mr. Sathish (BS)', email: 'sathish@psgim.ac.in' },
+                ].map((p) => (
+                  <TouchableOpacity
+                    key={p.email}
+                    style={{
+                      backgroundColor: '#1E293B',
+                      borderWidth: 1,
+                      borderColor: '#334155',
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 5,
+                    }}
+                    onPress={() => {
+                      setFacultyEmailInput(p.email);
+                      setFacultyPasswordInput('welcome@123');
+                      setErrorMessage(null);
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, color: '#38BDF8', fontWeight: '700' }}>{p.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Divider */}
+              <View style={styles.orDividerRow}>
+                <View style={styles.orDividerLine} />
+                <Text style={styles.orDividerText}>OR</Text>
+                <View style={styles.orDividerLine} />
+              </View>
+
+              {/* Zero-Password Guest Button */}
+              <TouchableOpacity
+                style={styles.guestAccessBtn}
+                onPress={handleGuestLogin}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                <View style={styles.guestBadgePill}>
+                  <Text style={styles.guestBadgeText}>NO PASSWORD NEEDED • 1-TAP</Text>
+                </View>
+                <Text style={styles.guestAccessBtnTitle}>⚡ Instant Guest Preview</Text>
+                <Text style={styles.guestAccessBtnSub}>Explore app freely without entering any roll number or password</Text>
+              </TouchableOpacity>
+            </>
           ) : (
             <>
               {/* Roll Number */}
@@ -322,7 +534,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                 <View style={styles.orDividerLine} />
               </View>
 
-              {/* Faculty & Administration Guest Access Button */}
+              {/* Zero-Password Guest Button */}
               <TouchableOpacity
                 style={styles.guestAccessBtn}
                 onPress={handleGuestLogin}
@@ -330,10 +542,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
                 disabled={isLoading}
               >
                 <View style={styles.guestBadgePill}>
-                  <Text style={styles.guestBadgeText}>FACULTY & ADMIN</Text>
+                  <Text style={styles.guestBadgeText}>NO PASSWORD NEEDED • 1-TAP</Text>
                 </View>
-                <Text style={styles.guestAccessBtnTitle}>Continue as Guest / Teacher</Text>
-                <Text style={styles.guestAccessBtnSub}>Explore timetable, attendance forecaster & campus modules</Text>
+                <Text style={styles.guestAccessBtnTitle}>⚡ Instant Guest Preview</Text>
+                <Text style={styles.guestAccessBtnSub}>Explore entire app freely without entering any roll number or password</Text>
               </TouchableOpacity>
             </>
           )}
@@ -424,6 +636,37 @@ const styles = StyleSheet.create({
     color: '#38BDF8',
     fontSize: 11,
     fontWeight: '700',
+  },
+  // ── Role Tabs ──
+  roleTabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#1E293B',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  roleTab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  roleTabActive: {
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+  },
+  roleTabText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  roleTabTextActive: {
+    color: '#F8FAFC',
+    fontWeight: '800',
   },
   // ── Card ──
   card: {

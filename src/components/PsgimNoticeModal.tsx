@@ -12,19 +12,24 @@ import {
   Linking,
 } from 'react-native';
 import { PsgimAnnouncement } from '../types';
+import { ThemeManager } from '../constants/theme';
 
 interface PsgimNoticeModalProps {
   visible: boolean;
   announcement: PsgimAnnouncement | null;
   onClose: () => void;
+  isLightMode?: boolean;
 }
 
 export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
   visible,
   announcement,
   onClose,
+  isLightMode: isLightModeProp,
 }) => {
   if (!announcement) return null;
+
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : ThemeManager.getMode() === 'LIGHT';
 
   const handleShare = async () => {
     try {
@@ -40,17 +45,17 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, isLightMode && { backgroundColor: '#F8FAFC' }]}>
         {/* Navigation Bar */}
-        <View style={styles.navBar}>
+        <View style={[styles.navBar, isLightMode && { backgroundColor: '#FFFFFF', borderBottomColor: '#E2E8F0' }]}>
           <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backBtnText}>← Close</Text>
+            <Text style={[styles.backBtnText, isLightMode && { color: '#2B3990', fontWeight: '800' }]}>← Close</Text>
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerCategory}>{announcement.category.toUpperCase()}</Text>
+            <Text style={[styles.headerCategory, isLightMode && { color: '#64748B' }]}>{announcement.category.toUpperCase()}</Text>
           </View>
           <TouchableOpacity onPress={handleShare} style={styles.shareBtn} activeOpacity={0.7}>
-            <Text style={styles.shareBtnText}>Share ↗</Text>
+            <Text style={[styles.shareBtnText, isLightMode && { color: '#2B3990', fontWeight: '700' }]}>Share ↗</Text>
           </TouchableOpacity>
         </View>
 
@@ -58,8 +63,11 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
           {/* Badges Row */}
           <View style={styles.badgeRow}>
             {announcement.is_pinned === 1 && (
-              <View style={styles.pinnedBadge}>
-                <Text style={styles.pinnedText}>📌 PINNED NOTICE</Text>
+              <View style={[
+                styles.pinnedBadge,
+                isLightMode && { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }
+              ]}>
+                <Text style={[styles.pinnedText, isLightMode && { color: '#475569' }]}>📌 PINNED NOTICE</Text>
               </View>
             )}
             <View
@@ -67,6 +75,8 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
                 styles.priorityBadge,
                 announcement.priority === 'urgent' && styles.priorityUrgent,
                 announcement.priority === 'important' && styles.priorityImportant,
+                isLightMode && announcement.priority === 'urgent' && { backgroundColor: '#FEE2E2', borderColor: '#EF4444' },
+                isLightMode && announcement.priority === 'important' && { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' },
               ]}
             >
               <Text
@@ -74,12 +84,14 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
                   styles.priorityText,
                   announcement.priority === 'urgent' && styles.priorityUrgentText,
                   announcement.priority === 'important' && styles.priorityImportantText,
+                  isLightMode && announcement.priority === 'urgent' && { color: '#DC2626' },
+                  isLightMode && announcement.priority === 'important' && { color: '#B45309' },
                 ]}
               >
                 {announcement.priority.toUpperCase()}
               </Text>
             </View>
-            <Text style={styles.publishDateText}>
+            <Text style={[styles.publishDateText, isLightMode && { color: '#64748B' }]}>
               {new Date(announcement.publish_at).toLocaleDateString('en-IN', {
                 day: 'numeric',
                 month: 'short',
@@ -89,41 +101,41 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>{announcement.title}</Text>
+          <Text style={[styles.title, isLightMode && { color: '#0F172A', fontWeight: '900' }]}>{announcement.title}</Text>
 
           {/* Publisher Pill */}
-          <View style={styles.publisherRow}>
-            <View style={styles.publisherAvatar}>
-              <Text style={styles.publisherAvatarText}>
+          <View style={[styles.publisherRow, isLightMode && { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }]}>
+            <View style={[styles.publisherAvatar, isLightMode && { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1' }]}>
+              <Text style={[styles.publisherAvatarText, isLightMode && { color: '#2B3990' }]}>
                 {announcement.created_by.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View>
-              <Text style={styles.publisherName}>{announcement.created_by}</Text>
-              <Text style={styles.publisherRole}>Official PSGIM Circular</Text>
+              <Text style={[styles.publisherName, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>{announcement.created_by}</Text>
+              <Text style={[styles.publisherRole, isLightMode && { color: '#64748B' }]}>Official PSGIM Circular</Text>
             </View>
           </View>
 
           {/* Event Metadata Card if available */}
           {(announcement.eventDate || announcement.venue || announcement.eventTime) && (
-            <View style={styles.eventCard}>
-              <Text style={styles.eventCardHeader}>🗓️ EVENT SCHEDULE & VENUE</Text>
+            <View style={[styles.eventCard, isLightMode && { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }]}>
+              <Text style={[styles.eventCardHeader, isLightMode && { color: '#2B3990', fontWeight: '800' }]}>🗓️ EVENT SCHEDULE & VENUE</Text>
               {announcement.eventDate && (
                 <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Date:</Text>
-                  <Text style={styles.metaValue}>{announcement.eventDate}</Text>
+                  <Text style={[styles.metaLabel, isLightMode && { color: '#64748B' }]}>Date:</Text>
+                  <Text style={[styles.metaValue, isLightMode && { color: '#0F172A', fontWeight: '700' }]}>{announcement.eventDate}</Text>
                 </View>
               )}
               {announcement.eventTime && (
                 <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Time:</Text>
-                  <Text style={styles.metaValue}>{announcement.eventTime}</Text>
+                  <Text style={[styles.metaLabel, isLightMode && { color: '#64748B' }]}>Time:</Text>
+                  <Text style={[styles.metaValue, isLightMode && { color: '#0F172A', fontWeight: '700' }]}>{announcement.eventTime}</Text>
                 </View>
               )}
               {announcement.venue && (
                 <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Venue:</Text>
-                  <Text style={styles.metaValue}>{announcement.venue}</Text>
+                  <Text style={[styles.metaLabel, isLightMode && { color: '#64748B' }]}>Venue:</Text>
+                  <Text style={[styles.metaValue, isLightMode && { color: '#0F172A', fontWeight: '700' }]}>{announcement.venue}</Text>
                 </View>
               )}
             </View>
@@ -132,11 +144,11 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
           {/* Attached Poster / Circular Image */}
           {announcement.attachmentUrl && (
             <View style={styles.attachmentSection}>
-              <Text style={styles.attachmentHeader}>🖼️ OFFICIAL CIRCULAR POSTER</Text>
-              <View style={styles.imageContainer}>
+              <Text style={[styles.attachmentHeader, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>🖼️ OFFICIAL CIRCULAR POSTER</Text>
+              <View style={[styles.imageContainer, isLightMode && { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }]}>
                 <Image
                   source={{ uri: announcement.attachmentUrl }}
-                  style={styles.attachmentImage}
+                  style={[styles.attachmentImage, isLightMode && { backgroundColor: '#F8FAFC' }]}
                   resizeMode="contain"
                 />
               </View>
@@ -144,17 +156,17 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
           )}
 
           {/* Summary / Content */}
-          <View style={styles.contentSection}>
-            <Text style={styles.sectionHeading}>Details</Text>
-            <Text style={styles.bodyText}>
+          <View style={[styles.contentSection, isLightMode && { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }]}>
+            <Text style={[styles.sectionHeading, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>Details</Text>
+            <Text style={[styles.bodyText, isLightMode && { color: '#334155' }]}>
               {announcement.content || announcement.summary || 'No further description provided.'}
             </Text>
 
             {/* Optional Call to Action URL */}
             {announcement.actionUrl && (
-              <View style={styles.actionCard}>
+              <View style={[styles.actionCard, isLightMode && { borderTopColor: '#E2E8F0' }]}>
                 <TouchableOpacity
-                  style={styles.actionButton}
+                  style={[styles.actionButton, isLightMode && { backgroundColor: '#2B3990' }]}
                   onPress={() => {
                     if (announcement.actionUrl) {
                       Linking.openURL(announcement.actionUrl).catch(() => {});
@@ -168,7 +180,7 @@ export const PsgimNoticeModal: React.FC<PsgimNoticeModalProps> = ({
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.shareFriendButton}
+                  style={[styles.shareFriendButton, isLightMode && { backgroundColor: '#059669', borderColor: '#10B981' }]}
                   onPress={handleShare}
                   activeOpacity={0.85}
                 >
@@ -282,21 +294,21 @@ const styles = StyleSheet.create({
   },
   publishDateText: {
     color: '#64748B',
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 12,
     marginLeft: 'auto',
+    fontWeight: '600',
   },
   title: {
     color: '#F8FAFC',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     lineHeight: 28,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   publisherRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     backgroundColor: '#1E293B',
     borderRadius: 12,
     padding: 12,

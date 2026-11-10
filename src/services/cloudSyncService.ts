@@ -767,6 +767,54 @@ export const CloudSyncService = {
       return { totalGranted: 0, totalDenied: 0, totalPrompted: 0, grantedStudents: [], deniedStudents: [] };
     }
   },
+
+  /**
+   * Broadcast faculty-submitted hourly roll call sheet to Firestore
+   * Saves class-level record and updates student's period attendance in batch
+   */
+  async broadcastFacultyPeriodAttendance(payload: {
+    periodId: string;
+    date: string;
+    courseKey: string;
+    courseTitle: string;
+    batchCode: string;
+    facultyName: string;
+    submittedAt: number;
+    attendanceMap: Record<string, 'present' | 'absent' | 'od'>;
+  }): Promise<void> {
+    try {
+      const classDocId = `${payload.date}_${payload.periodId}_${payload.batchCode}`;
+      const classRef = doc(db, 'faculty_attendance', classDocId);
+      await setDoc(classRef, {
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      // In Firestore, also push to individual student period records so students see the teacher's mark
+      const batch = writeBatch(db);
+      let count = 0;
+      for (const [studentRoll, status] of Object.entries(payload.attendanceMap)) {
+        if (!studentRoll) continue;
+        const studentPeriodRef = doc(db, 'students', studentRoll, 'periods', `${payload.date}_${payload.periodId}`);
+        batch.set(studentPeriodRef, {
+          slotId: payload.periodId,
+          date: payload.date,
+          status: status === 'present' ? 'attended' : status === 'absent' ? 'bunked' : 'od',
+          recordedByFaculty: payload.facultyName,
+          course: payload.courseKey,
+          batch: payload.batchCode,
+          timestamp: payload.submittedAt,
+        }, { merge: true });
+        count++;
+        // Firestore batch max is 500
+        if (count >= 400) break;
+      }
+      await batch.commit();
+    } catch (e) {
+      console.warn('[CloudSync] broadcastFacultyPeriodAttendance error:', e);
+    }
+  },
 };
+
 
 

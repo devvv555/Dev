@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { PsgimAnnouncement } from '../types';
+import { ThemeManager } from '../constants/theme';
 
 interface PsgimAnnouncementCardProps {
   announcement: PsgimAnnouncement;
@@ -13,8 +14,9 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
   announcement,
   onPress,
   isEnhancedSuit = false,
-  isLightMode = false,
+  isLightMode: isLightModeProp,
 }) => {
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : ThemeManager.getMode() === 'LIGHT';
   const isUrgent = announcement.priority === 'urgent';
   const isImportant = announcement.priority === 'important';
 
@@ -25,13 +27,14 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
         isLightMode
           ? {
               backgroundColor: '#FFFFFF',
-              borderColor: '#E2E8F0',
+              borderColor: '#CBD5E1',
               borderWidth: 1,
-              shadowColor: '#64748B',
-              shadowOpacity: 0.08,
-              shadowOffset: { width: 0, height: 2 },
-              shadowRadius: 6,
-              elevation: 2,
+              ...Platform.select({
+                web: {
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                },
+                default: {},
+              }),
             }
           : isEnhancedSuit && {
               backgroundColor: '#050505',
@@ -130,7 +133,10 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
         {/* Thumbnail if attachment poster exists */}
         {announcement.attachmentUrl && (
           <TouchableOpacity
-            style={styles.thumbnailContainer}
+            style={[
+              styles.thumbnailContainer,
+              isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
+            ]}
             onPress={onPress}
             activeOpacity={0.7}
           >
@@ -139,14 +145,17 @@ export const PsgimAnnouncementCard: React.FC<PsgimAnnouncementCardProps> = ({
               style={styles.thumbnail}
               resizeMode="cover"
             />
-            <View style={styles.posterOverlay}>
-              <Text style={styles.posterOverlayText}>POSTER ↗</Text>
+            <View style={[
+              styles.posterOverlay,
+              isLightMode && { backgroundColor: 'rgba(43, 57, 144, 0.88)' }
+            ]}>
+              <Text style={[styles.posterOverlayText, isLightMode && { color: '#FFFFFF' }]}>POSTER ↗</Text>
             </View>
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={[styles.footerRow, isLightMode && { borderTopColor: '#F1F5F9' }]}>
+      <View style={[styles.footerRow, isLightMode && { borderTopColor: '#E2E8F0' }]}>
         <Text style={[styles.readMoreText, isLightMode && { color: '#2B3990', fontWeight: '700' }]}>View Circular & Poster →</Text>
       </View>
     </TouchableOpacity>

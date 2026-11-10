@@ -248,20 +248,21 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
           },
         ]}
       >
-        <View>
+        <View style={{ flex: 1, marginRight: 10 }}>
           <Text
             style={[
               styles.headerTitle,
               isLightMode && { color: '#0F172A', fontWeight: '900' },
             ]}
           >
-            ENHANCED SUIT HUB
+            LEVEL ONE HUB
           </Text>
           <Text
             style={[
               styles.headerSubtitle,
               isLightMode && { color: '#64748B' },
             ]}
+            numberOfLines={1}
           >
             Autonomous Campus Intelligence & Student Amenities
           </Text>
@@ -298,25 +299,6 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
               Walkthrough
             </Text>
           </TouchableOpacity>
-
-          <View
-            style={[
-              styles.badgeLive,
-              isLightMode && {
-                backgroundColor: '#ECFDF5',
-                borderColor: '#10B981',
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.badgeLiveText,
-                isLightMode && { color: '#047857', fontWeight: '800' },
-              ]}
-            >
-              ONLINE
-            </Text>
-          </View>
         </View>
       </View>
 
@@ -796,11 +778,11 @@ export const EnhancedHubScreen: React.FC<EnhancedHubScreenProps> = ({
                 {/* Selected Canteen Detail Card with Stark Tactical GPS Mesh */}
                 <View style={[styles.card, { borderColor: '#EAB308', borderWidth: 1.5 }]}>
                   <View style={styles.cardHeaderRow}>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                        <Text style={styles.canteenName}>{selectedCanteen.name}</Text>
-                        <View style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', borderColor: '#EAB308', borderWidth: 1, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
-                          <Text style={{ fontSize: 9, fontWeight: '800', color: '#EAB308' }}>TACTICAL MESH</Text>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={styles.canteenName}>{selectedCanteen.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 3 }}>
+                        <View style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', borderColor: '#EAB308', borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start' }}>
+                          <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLightMode ? '#B45309' : '#EAB308' }}>TACTICAL MESH</Text>
                         </View>
                       </View>
                       <Text style={styles.canteenTagline}>{selectedCanteen.tagline}</Text>

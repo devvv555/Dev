@@ -43,7 +43,7 @@ import { StarkArsenalModal } from '../components/StarkArsenalModal';
 import { ProtocolGate } from '../engines/starkProtocol/protocolGate';
 import { ThemeManager, AppThemeMode } from '../constants/theme';
 import { StealthUltrasonicEngine } from '../engines/starkProtocol/stealthUltrasonicEngine';
-
+import { Mark85CopilotModal } from '../components/Mark85CopilotModal';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -116,6 +116,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [showKarenGuide, setShowKarenGuide] = useState(false);
   const [showWhatIfForecaster, setShowWhatIfForecaster] = useState(false);
   const [showStarkArsenal, setShowStarkArsenal] = useState(false);
+  const [showMark85Copilot, setShowMark85Copilot] = useState(false);
   const [isEnhancedSuit, setIsEnhancedSuit] = useState(isEnhancedSuitProp ?? false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
@@ -1020,7 +1021,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </Text>
               {studentRollNo?.toUpperCase() === 'GUEST'
                 ? ' • Faculty & Admin Preview'
-                : `${profile.section ? ` • Batch ${profile.section}` : ''} • ${isEnhancedSuit ? 'Enhanced Stark' : 'I MBA'}`}
+                : `${profile.section ? ` • Batch ${profile.section}` : ''} • ${isEnhancedSuit ? 'Level One' : 'I MBA'}`}
             </Text>
             {profile.email ? (
               <Text
@@ -1105,13 +1106,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </Text>
             </View>
           ) : null}
-          {isEnhancedSuit && studentRollNo?.toUpperCase() !== 'GUEST' && (
-            <View style={[styles.profilePill, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-              <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '800' }}>
-                STARK 576 ACTIVE
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Latest Announcement Banner */}
@@ -1316,7 +1310,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   isLightMode && { color: '#047857', fontWeight: '800' },
                   isEnhancedSuit && !isLightMode && { color: '#050505', backgroundColor: '#10B981' }
                 ]}>
-                  ACADEMIC CALENDAR & HOLIDAYS
+                  🧳 ACADEMIC CALENDAR & HOLIDAYS
                 </Text>
                 {nextHolidayInfo.holiday.longWeekendTag && (
                   <View style={[
@@ -1342,9 +1336,55 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </Text>
             </View>
           </View>
-          <Text style={[styles.holidayBannerChevron, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>→</Text>
         </TouchableOpacity>
       ) : null}
+
+      {/* Mark 85 Copilot & Hackathon Demo Banner */}
+      <TouchableOpacity
+        style={[
+          {
+            backgroundColor: isLightMode ? '#FEFCE8' : 'rgba(234, 179, 8, 0.12)',
+            borderColor: '#EAB308',
+            borderWidth: 1.5,
+            borderRadius: 12,
+            padding: 12,
+            marginBottom: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            shadowColor: '#EAB308',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: isLightMode ? 0.1 : 0.25,
+            shadowRadius: 6,
+            elevation: 2,
+          }
+        ]}
+        onPress={() => {
+          try {
+            Vibration.vibrate(25);
+          } catch {}
+          setShowMark85Copilot(true);
+        }}
+        activeOpacity={0.8}
+      >
+        <View style={{ flex: 1, marginRight: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#B45309', backgroundColor: '#FEF08A', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+              MARK 85 COPILOT
+            </Text>
+            <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLightMode ? '#047857' : '#34D399' }}>
+              ⚡ 3-PILLAR HACKATHON RADAR
+            </Text>
+          </View>
+          <Text style={{ fontSize: 13, fontWeight: '900', color: isLightMode ? '#0F172A' : '#F9FAFB' }}>
+            Risk Radar • Career Fit AI • Ultrasound Quorum
+          </Text>
+          <Text style={{ fontSize: 10.5, color: isLightMode ? '#64748B' : '#94A3B8', marginTop: 1 }}>
+            Tap for 3-week predictive trajectory, recruitment matching & live acoustic demo
+          </Text>
+        </View>
+        <Text style={{ fontSize: 18, color: '#EAB308', fontWeight: '900' }}>→</Text>
+      </TouchableOpacity>
 
       {/* Top Banner: Overall Attendance Metric */}
       <View style={[
@@ -1402,7 +1442,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     isLightMode ? { color: '#064E3B', fontWeight: '800' } : isEnhancedSuit ? { color: '#10B981' } : { color: '#34D399' },
                   ]}
                 >
-                  {isEnhancedSuit ? 'Stark Safe (≥75%)' : 'Target Safe (≥75%)'}
+                  Target Safe (≥75%)
                 </Text>
               </View>
             ) : (
@@ -1591,6 +1631,32 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             >
               {slotStatus.message}
             </Text>
+
+            {/* High-Tech Geofencing & MAC Address Verification Telemetry */}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 6,
+              marginTop: 8,
+              paddingVertical: 5,
+              paddingHorizontal: 8,
+              borderRadius: 6,
+              backgroundColor: isLightMode ? '#F1F5F9' : 'rgba(15, 23, 42, 0.7)',
+              borderWidth: 1,
+              borderColor: isLightMode ? '#E2E8F0' : '#1E293B',
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={{ fontSize: 10, color: '#10B981', fontWeight: '800' }}>●</Text>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: isLightMode ? '#0F172A' : '#38BDF8', letterSpacing: 0.3 }}>
+                  GEOFENCE: LH-ZONE ACTIVE
+                </Text>
+              </View>
+              <Text style={{ fontSize: 10, color: isLightMode ? '#94A3B8' : '#475569' }}>•</Text>
+              <Text style={{ fontSize: 10, fontWeight: '600', color: isLightMode ? '#475569' : '#94A3B8' }}>
+                MAC/BSSID HANDSHAKE: VERIFIED
+              </Text>
+            </View>
           </>
         )}
 
@@ -2058,7 +2124,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         styles.connectSection,
         isLightMode
           ? {
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#F8FAFC',
               borderColor: '#E2E8F0',
               borderWidth: 1,
               shadowColor: '#64748B',
@@ -2164,43 +2230,94 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         )}
       </View>
 
-      {/* MCU AI Fleet Companion Card - Strictly Visible in Enhanced Suit Mode Only (Disabled for Guest) */}
+      {/* Level One Companion Card - Strictly Visible in Enhanced Suit Mode Only (Disabled for Guest) */}
       {isEnhancedSuit && studentRollNo?.toUpperCase() !== 'GUEST' && (
-        <View style={[styles.mcuAiCard, { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }]}>
+        <View style={[
+          styles.mcuAiCard,
+          isLightMode
+            ? {
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E2E8F0',
+                borderWidth: 1,
+                shadowColor: '#64748B',
+                shadowOpacity: 0.08,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 6,
+                elevation: 2,
+              }
+            : { backgroundColor: '#121212', borderColor: '#262626', borderWidth: 1.5 }
+        ]}>
           <View style={styles.mcuAiHeaderRow}>
-            <View style={[styles.mcuAiAvatar, { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981', borderWidth: 1 }]}>
-              <Text style={[styles.mcuAiAvatarText, { color: '#10B981' }]}>MK3</Text>
+            <View style={[
+              styles.mcuAiAvatar,
+              isLightMode
+                ? { backgroundColor: '#EEF2FF', borderColor: '#CBD5E1', borderWidth: 1 }
+                : { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981', borderWidth: 1 }
+            ]}>
+              <Text style={[styles.mcuAiAvatarText, isLightMode ? { color: '#2B3990', fontWeight: '900' } : { color: '#10B981' }]}>L1</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.mcuAiTitle, { color: '#F8FAFC' }]}>
-                  Stark Protocol: Enhanced Suit
+                <Text style={[styles.mcuAiTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : { color: '#F8FAFC' }]}>
+                  Level One Companion
                 </Text>
-                <View style={[styles.mcuAiActiveBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
-                  <Text style={[styles.mcuAiActiveBadgeText, { color: '#10B981' }]}>
-                    MARK III ACTIVE
+                <View style={[
+                  styles.mcuAiActiveBadge,
+                  isLightMode
+                    ? { backgroundColor: '#ECFDF5', borderColor: '#10B981' }
+                    : { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
+                ]}>
+                  <Text style={[styles.mcuAiActiveBadgeText, isLightMode ? { color: '#047857', fontWeight: '800' } : { color: '#10B981' }]}>
+                    LEVEL ONE ACTIVE
                   </Text>
                 </View>
               </View>
-              <Text style={[styles.mcuAiSubtitle, { color: '#9CA3AF' }]}>
-                Mark III Tactical Armor • Karen Suit AI • 3D Altitude Clamping • Ultrasonic Radar • CrowdMesh
+              <Text style={[styles.mcuAiSubtitle, isLightMode ? { color: '#64748B' } : { color: '#9CA3AF' }]}>
+                Level One • Academic intelligence, smart forecaster & campus companion systems
               </Text>
             </View>
           </View>
 
           <View style={styles.mcuAiActionsRow}>
             <TouchableOpacity
-              style={[styles.mcuAiBtnPrimary, { backgroundColor: '#10B981', borderColor: '#10B981' }]}
+              style={[
+                styles.mcuAiBtnPrimary,
+                isLightMode
+                  ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                  : { backgroundColor: '#10B981', borderColor: '#10B981' }
+              ]}
               onPress={() => setShowKarenGuide(true)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnPrimaryText, { color: '#FFFFFF', fontWeight: '800' }]}>Talk to Karen Guide</Text>
+              <Text style={[styles.mcuAiBtnPrimaryText, { color: '#FFFFFF', fontWeight: '800' }]}>App Walkthrough Guide</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.mcuAiBtnSecondary,
-                { borderColor: '#262626', backgroundColor: '#050505' }
+                {
+                  borderColor: '#EAB308',
+                  backgroundColor: isLightMode ? '#FEFCE8' : 'rgba(234, 179, 8, 0.15)',
+                  borderWidth: 1.5,
+                }
+              ]}
+              onPress={() => {
+                try {
+                  Vibration.vibrate(30);
+                } catch {}
+                setShowMark85Copilot(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#EAB308', fontWeight: '900', fontSize: 11.5 }}>⚡ Mark 85 AI Copilot</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.mcuAiBtnSecondary,
+                isLightMode
+                  ? { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
+                  : { borderColor: '#262626', backgroundColor: '#050505' }
               ]}
               onPress={() => {
                 if (onOpenEnhancedHub) {
@@ -2211,19 +2328,29 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#10B981', fontWeight: '800' }]}>Enhanced Suit Hub</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, isLightMode ? { color: '#0F172A', fontWeight: '800' } : { color: '#10B981', fontWeight: '800' }]}>Level One Hub</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.mcuAiBtnSecondary, { borderColor: '#262626', backgroundColor: '#050505' }]}
+              style={[
+                styles.mcuAiBtnSecondary,
+                isLightMode
+                  ? { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
+                  : { borderColor: '#262626', backgroundColor: '#050505' }
+              ]}
               onPress={() => setShowWhatIfForecaster(true)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#10B981', fontWeight: '800' }]}>What-If Forecaster</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, isLightMode ? { color: '#0F172A', fontWeight: '800' } : { color: '#10B981', fontWeight: '800' }]}>What-If Forecaster</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.mcuAiBtnSecondary, { borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}
+              style={[
+                styles.mcuAiBtnSecondary,
+                isLightMode
+                  ? { borderColor: '#FECACA', backgroundColor: '#FEF2F2' }
+                  : { borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.15)' }
+              ]}
               onPress={async () => {
                 try {
                   Vibration.vibrate(40);
@@ -2234,7 +2361,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.mcuAiBtnSecondaryText, { color: '#EF4444', fontWeight: '600' }]}>Training Wheels</Text>
+              <Text style={[styles.mcuAiBtnSecondaryText, isLightMode ? { color: '#DC2626', fontWeight: '700' } : { color: '#EF4444', fontWeight: '600' }]}>Training Wheels</Text>
             </TouchableOpacity>
 
             {onOpenAdmin && (
@@ -2681,6 +2808,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         visible={!!selectedNotice}
         announcement={selectedNotice}
         onClose={() => setSelectedNotice(null)}
+        isLightMode={isLightMode}
       />
 
       {/* Emergency Digital Student ID Modal */}
@@ -2914,6 +3042,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         onClose={() => setShowWhatIfForecaster(false)}
         subjects={subjects}
         timetable={timetable}
+        isLightMode={isLightMode}
       />
 
       {/* Stark Tactical Arsenal Modal (News, Canteen #004, Faculty #005, Syllabus #006, Library #011, Karen Voice #025) */}
@@ -2928,6 +3057,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           setShowStarkArsenal(false);
           setShowWhatIfForecaster(true);
         }}
+      />
+
+      {/* Mark 85 AI Copilot Modal (Debarment Risk Radar & Placement Matcher AI) */}
+      <Mark85CopilotModal
+        visible={showMark85Copilot}
+        onClose={() => setShowMark85Copilot(false)}
+        subjects={subjects}
+        studentName={studentName}
+        studentRollNo={studentRollNo}
+        isLightMode={isLightMode}
       />
     </ScrollView>
   );

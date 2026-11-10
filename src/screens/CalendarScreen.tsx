@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Vibration,
   Modal,
+  Image,
 } from 'react-native';
 import {
   ACADEMIC_CALENDAR,
@@ -131,7 +132,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   const getTypeBadge = (type: CalendarEventType) => {
     switch (type) {
       case 'HOLIDAY':
-        return { label: 'Holiday', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' };
+        return { label: '🧳 Holiday', color: '#10B981', bg: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)' };
       case 'EXAM':
         return { label: 'Exam', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
       case 'EVENT':
@@ -213,10 +214,10 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
           <View style={styles.spotlightHeaderRow}>
             <View style={[
               styles.spotlightIconCircle,
-              isLightMode && { backgroundColor: '#ECFDF5', borderColor: '#10B981', borderWidth: 1 },
+              isLightMode && { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0', borderWidth: 1 },
               isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981', borderWidth: 1 }
             ]}>
-              <Text style={[styles.spotlightIconText, isLightMode ? { color: '#065F46', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>CAL</Text>
+              <Text style={{ fontSize: 22 }}>🧳</Text>
             </View>
             <View style={styles.spotlightInfo}>
               <Text style={[styles.spotlightTag, isLightMode ? { color: '#047857', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>
@@ -295,7 +296,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                 : { color: '#10B981' }
             )
           ]}>
-            Holidays ({upcomingHolidaysCount})
+            🧳 Holidays ({upcomingHolidaysCount})
           </Text>
         </TouchableOpacity>
 

@@ -50,9 +50,9 @@ const STANDARD_STEPS: GuideStep[] = [
   },
   {
     title: 'Automatic Real-Time Period Marker',
-    badge: 'DASHBOARD RADAR',
+    badge: 'GEO-FENCING & MAC VERIFIED',
     description:
-      'The real-time class tracker automatically detects your current lecture period, classroom (e.g. LH-101/LH-401), and faculty based on your section schedule. Mark "Present" or "Absent" in 1 tap, or let the app compute your real-time attendance.',
+      'The autonomous marker uses campus geo-fencing (LH beacon perimeter) and Wi-Fi MAC address handshake telemetry to triangulate your active lecture hall (e.g. LH-101/LH-401). It verifies scheduled periods and marks your attendance in 1 tap without manual guesswork.',
     tip: 'Your exact "Safe Bunks" and "Classes to Recover" update instantly.',
   },
   {
@@ -81,9 +81,9 @@ const ENHANCED_SUIT_STEPS: GuideStep[] = [
   },
   {
     title: 'Automatic Attendance Marker',
-    badge: 'AUTONOMOUS TRACKER',
+    badge: 'GEO-FENCE & MAC VERIFIED',
     description:
-      'The intelligent auto-class tracker monitors your real-time schedule slot-by-slot. It automatically identifies your current period, classroom, and faculty, marking and computing attendance without manual math.',
+      'Autonomous telemetry engine synchronizing campus micro-geofencing, AP MAC address / BSSID verification, and schedule slot-by-slot tracking. Automatically identifies active lecture halls, validates period presence, and computes live attendance margins.',
     tip: 'Check the Live Auto-Class Tracker card on your Dashboard anytime during lecture hours.',
   },
   {

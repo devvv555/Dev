@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { Subject, TimetableSlot } from '../types';
 import { simulateAttendanceProjections } from '../services/forecasterService';
+import { ThemeManager } from '../constants/theme';
 
 interface WhatIfForecasterModalProps {
   visible: boolean;
   onClose: () => void;
   subjects: Subject[];
   timetable: TimetableSlot[];
+  isLightMode?: boolean;
 }
 
 export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
@@ -23,7 +25,10 @@ export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
   onClose,
   subjects,
   timetable,
+  isLightMode: isLightModeProp,
 }) => {
+  const isLightMode = isLightModeProp !== undefined ? isLightModeProp : ThemeManager.getMode() === 'LIGHT';
+
   // Map of subjectId -> number of extra bunks to simulate
   const [bunkAdjustments, setBunkAdjustments] = useState<Record<string, number>>({});
 
@@ -48,23 +53,23 @@ export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
       case 'SAFE':
         return {
           label: 'Eligible for Exams (Safe)',
-          bg: 'rgba(16, 185, 129, 0.15)',
+          bg: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)',
           border: '#10B981',
-          text: '#34D399',
+          text: isLightMode ? '#047857' : '#34D399',
         };
       case 'CONDONATION':
         return {
           label: 'Condonation Fee Needed (65%-74%)',
-          bg: 'rgba(245, 158, 11, 0.15)',
+          bg: isLightMode ? '#FEF3C7' : 'rgba(245, 158, 11, 0.15)',
           border: '#F59E0B',
-          text: '#FBBF24',
+          text: isLightMode ? '#B45309' : '#FBBF24',
         };
       case 'DETENTION':
         return {
           label: 'Detained / Ineligible (<65%)',
-          bg: 'rgba(239, 68, 68, 0.15)',
+          bg: isLightMode ? '#FEE2E2' : 'rgba(239, 68, 68, 0.15)',
           border: '#EF4444',
-          text: '#F87171',
+          text: isLightMode ? '#DC2626' : '#F87171',
         };
     }
   };
@@ -78,28 +83,53 @@ export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+      <View style={[styles.overlay, isLightMode && { backgroundColor: 'rgba(15, 23, 42, 0.55)' }]}>
+        <View style={[
+          styles.container,
+          isLightMode && {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E2E8F0',
+            ...Platform.select({
+              web: {
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              },
+              default: {},
+            }),
+          }
+        ]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, isLightMode && { borderBottomColor: '#E2E8F0' }]}>
             <View style={{ flex: 1, marginRight: 12 }}>
-              <Text style={styles.title}>What-If Bunk & Exam Forecaster</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, isLightMode ? { color: '#0F172A', fontWeight: '900' } : { color: '#10B981' }]}>
+                What-If Bunk & Exam Forecaster
+              </Text>
+              <Text style={[styles.subtitle, isLightMode && { color: '#64748B' }]}>
                 Simulate end-of-semester attendance & exam hall ticket eligibility
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.exitHeaderBtn} activeOpacity={0.8}>
-              <Text style={styles.exitHeaderBtnText}>✕ Exit</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.exitHeaderBtn,
+                isLightMode && { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }
+              ]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.exitHeaderBtnText, isLightMode ? { color: '#0F172A', fontWeight: '700' } : { color: '#10B981' }]}>
+                ✕ Exit
+              </Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
             {/* Projected Summary Card */}
-            <View style={styles.summaryCard}>
+            <View style={[styles.summaryCard, isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
               <View style={styles.summaryTop}>
                 <View>
-                  <Text style={styles.summaryLabel}>Projected Overall Attendance</Text>
-                  <Text style={styles.summaryBigNumber}>
+                  <Text style={[styles.summaryLabel, isLightMode && { color: '#64748B' }]}>
+                    Projected Overall Attendance
+                  </Text>
+                  <Text style={[styles.summaryBigNumber, isLightMode && { color: '#047857' }]}>
                     {projection.projectedOverallPercentage}%
                   </Text>
                 </View>
@@ -110,46 +140,52 @@ export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
                 </View>
               </View>
 
-              <View style={styles.statBreakdownRow}>
+              <View style={[styles.statBreakdownRow, isLightMode && { borderTopColor: '#E2E8F0' }]}>
                 <View style={styles.miniStat}>
-                  <Text style={styles.miniStatLabel}>Current Attendance</Text>
-                  <Text style={styles.miniStatVal}>{projection.currentOverallPercentage}%</Text>
+                  <Text style={[styles.miniStatLabel, isLightMode && { color: '#64748B' }]}>Current Attendance</Text>
+                  <Text style={[styles.miniStatVal, isLightMode && { color: '#0F172A' }]}>{projection.currentOverallPercentage}%</Text>
                 </View>
                 <View style={styles.miniStat}>
-                  <Text style={styles.miniStatLabel}>Semester Cut-off Date</Text>
-                  <Text style={styles.miniStatVal}>27 Nov 2026</Text>
+                  <Text style={[styles.miniStatLabel, isLightMode && { color: '#64748B' }]}>Semester Cut-off Date</Text>
+                  <Text style={[styles.miniStatVal, isLightMode && { color: '#0F172A' }]}>27 Nov 2026</Text>
                 </View>
                 <View style={styles.miniStat}>
-                  <Text style={styles.miniStatLabel}>End Semester Exams</Text>
-                  <Text style={styles.miniStatVal}>30 Nov 2026</Text>
+                  <Text style={[styles.miniStatLabel, isLightMode && { color: '#64748B' }]}>End Semester Exams</Text>
+                  <Text style={[styles.miniStatVal, isLightMode && { color: '#0F172A' }]}>30 Nov 2026</Text>
                 </View>
               </View>
 
               <TouchableOpacity style={styles.resetBtn} onPress={handleReset}>
-                <Text style={styles.resetBtnText}>↺ Reset All Simulations</Text>
+                <Text style={[styles.resetBtnText, isLightMode && { color: '#2B3990' }]}>↺ Reset All Simulations</Text>
               </TouchableOpacity>
             </View>
 
             {/* Instruction Banner */}
-            <View style={styles.infoBanner}>
-              <Text style={styles.infoBannerText}>
+            <View style={[styles.infoBanner, isLightMode && { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+              <Text style={[styles.infoBannerText, isLightMode && { color: '#1E40AF' }]}>
                 Adjust the bunks below using <Text style={{ fontWeight: 'bold' }}>-</Text> and <Text style={{ fontWeight: 'bold' }}>+</Text> to preview your exact final percentage on the Last Working Day before End Sem Exams.
               </Text>
             </View>
 
             {/* Subject Simulations List */}
-            <Text style={styles.sectionHeading}>Subject-Wise Simulation</Text>
+            <Text style={[styles.sectionHeading, isLightMode ? { color: '#0F172A', fontWeight: '800' } : { color: '#10B981' }]}>
+              Subject-Wise Simulation
+            </Text>
 
             {projection.subjects.map((sub) => {
               const badge = getStatusBadge(sub.eligibilityStatus);
               const maxSimBunk = sub.remainingScheduledHours;
 
               return (
-                <View key={sub.subjectId} style={styles.subjectCard}>
+                <View key={sub.subjectId} style={[styles.subjectCard, isLightMode && { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }]}>
                   <View style={styles.subjectTopRow}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.subjectCode}>{sub.subjectCode}</Text>
-                      <Text style={styles.subjectName} numberOfLines={1}>{sub.subjectName}</Text>
+                      <Text style={[styles.subjectCode, isLightMode ? { color: '#2B3990', fontWeight: '800' } : { color: '#10B981' }]}>
+                        {sub.subjectCode}
+                      </Text>
+                      <Text style={[styles.subjectName, isLightMode ? { color: '#0F172A', fontWeight: '700' } : { color: '#10B981' }]} numberOfLines={1}>
+                        {sub.subjectName}
+                      </Text>
                     </View>
                     <View style={[styles.badgePill, { backgroundColor: badge.bg, borderColor: badge.border }]}>
                       <Text style={[styles.badgePillText, { color: badge.text }]}>
@@ -160,50 +196,58 @@ export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
 
                   {/* Metrics preview */}
                   <View style={styles.metricsRow}>
-                    <Text style={styles.metricItem}>
-                      Current: <Text style={styles.metricVal}>{sub.currentAttended}/{sub.currentTotal} ({sub.currentPercentage}%)</Text>
+                    <Text style={[styles.metricItem, isLightMode && { color: '#64748B' }]}>
+                      Current: <Text style={[styles.metricVal, isLightMode && { color: '#047857' }]}>{sub.currentAttended}/{sub.currentTotal} ({sub.currentPercentage}%)</Text>
                     </Text>
-                    <Text style={styles.metricItem}>
-                      Remaining Classes: <Text style={styles.metricVal}>{sub.remainingScheduledHours} hrs</Text>
+                    <Text style={[styles.metricItem, isLightMode && { color: '#64748B' }]}>
+                      Remaining Classes: <Text style={[styles.metricVal, isLightMode && { color: '#047857' }]}>{sub.remainingScheduledHours} hrs</Text>
                     </Text>
                   </View>
 
                   <View style={styles.metricsRow}>
-                    <Text style={styles.metricItem}>
-                      Max Safe Bunk Margin: <Text style={{ color: '#34D399', fontWeight: '700' }}>{sub.safeBunkAllowanceRemaining} hrs</Text>
+                    <Text style={[styles.metricItem, isLightMode && { color: '#64748B' }]}>
+                      Max Safe Bunk Margin: <Text style={{ color: isLightMode ? '#047857' : '#34D399', fontWeight: '700' }}>{sub.safeBunkAllowanceRemaining} hrs</Text>
                     </Text>
-                    <Text style={styles.metricItem}>
-                      Ceiling: <Text style={styles.metricVal}>{sub.maxPossiblePercentage}%</Text>
+                    <Text style={[styles.metricItem, isLightMode && { color: '#64748B' }]}>
+                      Ceiling: <Text style={[styles.metricVal, isLightMode && { color: '#047857' }]}>{sub.maxPossiblePercentage}%</Text>
                     </Text>
                   </View>
 
                   {/* Simulator Control */}
-                  <View style={styles.controlBox}>
-                    <Text style={styles.controlLabel}>Simulate Bunking:</Text>
+                  <View style={[styles.controlBox, isLightMode && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
+                    <Text style={[styles.controlLabel, isLightMode && { color: '#0F172A' }]}>Simulate Bunking:</Text>
                     <View style={styles.stepperContainer}>
                       <TouchableOpacity
-                        style={[styles.stepBtn, sub.simulatedBunks <= 0 && styles.stepBtnDisabled]}
+                        style={[
+                          styles.stepBtn,
+                          isLightMode && { backgroundColor: '#2B3990' },
+                          sub.simulatedBunks <= 0 && (isLightMode ? { backgroundColor: '#E2E8F0', opacity: 0.6 } : styles.stepBtnDisabled)
+                        ]}
                         onPress={() => handleAdjustBunk(sub.subjectId, -1, maxSimBunk)}
                         disabled={sub.simulatedBunks <= 0}
                       >
-                        <Text style={styles.stepBtnText}>−</Text>
+                        <Text style={[styles.stepBtnText, isLightMode && { color: '#FFFFFF' }]}>−</Text>
                       </TouchableOpacity>
                       <View style={styles.bunkCountBox}>
-                        <Text style={styles.bunkCountText}>{sub.simulatedBunks} hrs</Text>
+                        <Text style={[styles.bunkCountText, isLightMode && { color: '#0F172A' }]}>{sub.simulatedBunks} hrs</Text>
                       </View>
                       <TouchableOpacity
-                        style={[styles.stepBtn, sub.simulatedBunks >= maxSimBunk && styles.stepBtnDisabled]}
+                        style={[
+                          styles.stepBtn,
+                          isLightMode && { backgroundColor: '#2B3990' },
+                          sub.simulatedBunks >= maxSimBunk && (isLightMode ? { backgroundColor: '#E2E8F0', opacity: 0.6 } : styles.stepBtnDisabled)
+                        ]}
                         onPress={() => handleAdjustBunk(sub.subjectId, 1, maxSimBunk)}
                         disabled={sub.simulatedBunks >= maxSimBunk}
                       >
-                        <Text style={styles.stepBtnText}>+</Text>
+                        <Text style={[styles.stepBtnText, isLightMode && { color: '#FFFFFF' }]}>+</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
 
                   {/* Result Projection Note */}
-                  <View style={styles.forecastNoteRow}>
-                    <Text style={styles.forecastNoteText}>
+                  <View style={[styles.forecastNoteRow, isLightMode && { borderTopColor: '#E2E8F0' }]}>
+                    <Text style={[styles.forecastNoteText, isLightMode && { color: '#64748B' }]}>
                       Projected Result: <Text style={{ fontWeight: 'bold', color: badge.text }}>{sub.projectedAttended}/{sub.projectedTotal} hrs ({sub.projectedPercentage}%)</Text> • {sub.eligibilityStatus === 'SAFE' ? 'Permitted for University Exam' : sub.eligibilityStatus === 'CONDONATION' ? 'Requires Medical / Condonation Application' : 'Strict Exam Detention'}
                     </Text>
                   </View>
@@ -213,9 +257,18 @@ export const WhatIfForecasterModal: React.FC<WhatIfForecasterModalProps> = ({
           </ScrollView>
 
           {/* Bottom Footer Exit Action */}
-          <View style={styles.footerActionRow}>
-            <TouchableOpacity onPress={onClose} style={styles.bottomExitBtn} activeOpacity={0.8}>
-              <Text style={styles.bottomExitBtnText}>✕ Exit Forecaster</Text>
+          <View style={[styles.footerActionRow, isLightMode && { borderTopColor: '#E2E8F0' }]}>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.bottomExitBtn,
+                isLightMode && { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }
+              ]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.bottomExitBtnText, isLightMode ? { color: '#0F172A', fontWeight: '700' } : { color: '#10B981' }]}>
+                ✕ Exit Forecaster
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

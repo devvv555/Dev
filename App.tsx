@@ -38,6 +38,9 @@ import { KarenGuide } from './src/components/KarenGuide';
 import { MissMinutesScheduler } from './src/services/missMinutesScheduler';
 import { EnhancedHubScreen } from './src/screens/EnhancedHubScreen';
 import { ThemeManager, AppThemeMode } from './src/constants/theme';
+import { FacultyMember } from './src/data/psgimFacultyData';
+import { FacultyPortalScreen } from './src/screens/FacultyPortalScreen';
+import { FacultyAttendanceService } from './src/services/facultyAttendanceService';
 
 type Tab = 'DASHBOARD' | 'TIMETABLE' | 'CALENDAR' | 'ERP_SYNC' | 'ENHANCED';
 
@@ -45,6 +48,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [activeRollNo, setActiveRollNo] = useState<string>('');
+  const [loggedInFaculty, setLoggedInFaculty] = useState<FacultyMember | null>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>('DASHBOARD');
   const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
@@ -195,6 +199,11 @@ export default function App() {
               console.warn('Background cloud sync warning:', err);
             }
           })();
+        }
+
+        const savedFaculty = await FacultyAttendanceService.getFacultySession();
+        if (savedFaculty) {
+          setLoggedInFaculty(savedFaculty);
         }
 
         const storedMed = await StorageService.getMedicalClaims();
@@ -407,10 +416,17 @@ export default function App() {
   // Logout handler
   const handleLogout = async () => {
     await StorageService.clearAuthUser();
+    await FacultyAttendanceService.clearFacultySession();
     setIsAuthenticated(false);
     setActiveRollNo('');
+    setLoggedInFaculty(null);
     setPeriodRecords({});
     setActiveTab('DASHBOARD');
+  };
+
+  const handleFacultyLoginSuccess = async (faculty: FacultyMember) => {
+    await FacultyAttendanceService.saveFacultySession(faculty);
+    setLoggedInFaculty(faculty);
   };
 
   // Dedicated single-marking handler for hourly periods (prevents double-marking)
@@ -802,6 +818,22 @@ export default function App() {
     );
   }
 
+  // If logged in as Faculty, render Faculty Portal directly
+  if (loggedInFaculty) {
+    return (
+      <SafeAreaProvider>
+        <FacultyPortalScreen
+          visible={true}
+          faculty={loggedInFaculty}
+          onLogout={async () => {
+            await FacultyAttendanceService.clearFacultySession();
+            setLoggedInFaculty(null);
+          }}
+        />
+      </SafeAreaProvider>
+    );
+  }
+
   // If not logged in, display Sign In screen
   if (!isAuthenticated) {
     return (
@@ -809,6 +841,7 @@ export default function App() {
         <AuthScreen
           onLoginSuccess={handleLoginSuccess}
           onAdminLogin={() => setShowAdminModal(true)}
+          onFacultyLogin={handleFacultyLoginSuccess}
         />
         {showAdminModal && (
           <AdminDashboardScreen
@@ -875,7 +908,7 @@ export default function App() {
               ]}
               numberOfLines={1}
             >
-              {isEnhancedSuit ? 'STARK ONE' : 'PSGIM One'}
+              PSGIM ONE
             </Text>
           </TouchableOpacity>
 
@@ -919,7 +952,7 @@ export default function App() {
             {activeRollNo?.toUpperCase() === 'GUEST'
               ? 'Institutional Inspection • Faculty & Admin Preview'
               : isEnhancedSuit
-              ? 'Mark III Tactical Armor • Karen AI'
+              ? 'Level One'
               : 'PSGIM Campus Super-App • I MBA'}
           </Text>
           <View
@@ -1072,10 +1105,29 @@ export default function App() {
               activeOpacity={0.7}
             >
               <Text style={[styles.profileDropdownTitle, { color: '#F59E0B' }]}>
-                {activeRollNo?.toUpperCase() === 'GUEST' ? '🎓 Exit Guest • Student Login' : '🏛️ Switch to Guest / Teacher Mode'}
+                {activeRollNo?.toUpperCase() === 'GUEST' ? '🎓 Exit Guest • Student Login' : '🏛️ Switch to Guest Mode'}
               </Text>
               <Text style={[styles.profileDropdownSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
-                {activeRollNo?.toUpperCase() === 'GUEST' ? 'Log into a specific student roll number' : 'Preview as Faculty, Admin or Inspector'}
+                {activeRollNo?.toUpperCase() === 'GUEST' ? 'Log into a specific student roll number' : 'Instant 1-tap view without password'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={[styles.profileDropdownDivider, isLightMode ? { backgroundColor: '#E2E8F0' } : isEnhancedSuit && { backgroundColor: '#262626' }]} />
+
+            {/* Direct Faculty Attendance Portal shortcut */}
+            <TouchableOpacity
+              style={styles.profileDropdownItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                handleLogout();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.profileDropdownTitle, { color: '#10B981' }]}>
+                👨‍🏫 Teacher / Faculty Portal Login
+              </Text>
+              <Text style={[styles.profileDropdownSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
+                Sign in with @psgim.ac.in and welcome@123 to mark class attendance
               </Text>
             </TouchableOpacity>
 

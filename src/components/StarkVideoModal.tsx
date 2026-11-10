@@ -5,6 +5,7 @@ import {
   Modal,
   Platform,
   Vibration,
+  StatusBar,
 } from 'react-native';
 import { ProtocolGate, ProtocolMode } from '../engines/starkProtocol/protocolGate';
 
@@ -28,12 +29,27 @@ export const StarkVideoModal: React.FC<StarkVideoModalProps> = ({
   const videoRef = useRef<any>(null);
 
   useEffect(() => {
+    let originalThemeColor: string | null = null;
+
     if (visible) {
       try {
         Vibration.vibrate([0, 80, 100, 80]);
       } catch {}
 
       if (Platform.OS === 'web') {
+        try {
+          const metaTag = document.querySelector('meta[name="theme-color"]');
+          if (metaTag) {
+            originalThemeColor = metaTag.getAttribute('content');
+            metaTag.setAttribute('content', '#000000');
+          } else {
+            const newMeta = document.createElement('meta');
+            newMeta.name = 'theme-color';
+            newMeta.content = '#000000';
+            document.head.appendChild(newMeta);
+          }
+        } catch {}
+
         // Try locking screen to landscape if supported
         try {
           if (screen?.orientation && (screen.orientation as any).lock) {
@@ -53,15 +69,25 @@ export const StarkVideoModal: React.FC<StarkVideoModalProps> = ({
           }
         }, 100);
       }
-    } else {
+    }
+
+    return () => {
       if (Platform.OS === 'web') {
         try {
           if (screen?.orientation && (screen.orientation as any).unlock) {
             (screen.orientation as any).unlock();
           }
         } catch {}
+        try {
+          const tag = document.querySelector('meta[name="theme-color"]');
+          if (tag && originalThemeColor) {
+            tag.setAttribute('content', originalThemeColor);
+          } else if (tag) {
+            tag.setAttribute('content', '#F8FAFC');
+          }
+        } catch {}
       }
-    }
+    };
   }, [visible]);
 
   /**
@@ -92,6 +118,7 @@ export const StarkVideoModal: React.FC<StarkVideoModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onClose}>
+      <StatusBar backgroundColor="#000000" barStyle="light-content" animated />
       <View style={styles.fullscreenBlackout}>
         {Platform.OS === 'web' ? (
           <div
