@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { ThemeManager, AppThemeMode } from '../constants/theme';
 import { Subject, TimetableSlot } from '../types';
@@ -179,13 +180,14 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
       const welcome: ChatMessage = {
         id: 'msg_welcome',
         sender: 'karen',
-        text: `Hello ${studentName || 'there'}! I am Karen, your AI campus companion powered by Google Gemini. All your live attendance, professors, and timetable periods are loaded.\n\nAsk me anything! For example: "Can I bunk EDM tomorrow?", "Who is teaching MCOB?", or "How many classes do I need to recover?"`,
+        text: `Hello ${studentName || 'there'}! I am Karen, your AI campus companion. All your live attendance, course plans, syllabus chapters, and timetable periods are loaded.\n\nAsk me anything! For example: "What chapters are in ADM?", "Can I bunk EDM tomorrow?", "Who is teaching MCOB?", or "What units are in Business Statistics?"`,
         timestamp: Date.now(),
         chips: [
+          'What chapters are in ADM?',
+          'Units in Business Statistics',
           'Can I bunk EDM?',
           'Who is my MCOB faculty?',
           'What is my safest subject?',
-          'Explain the 65% medical rule',
         ],
       };
       setMessages([welcome]);
@@ -291,20 +293,22 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
             <View
               style={[
                 styles.karenAvatar,
-                isLightMode && { backgroundColor: '#2B3990' },
+                { overflow: 'hidden', borderWidth: 1.5, borderColor: '#38BDF8' },
+                isLightMode && { backgroundColor: '#EEF2FF' },
                 isRed && !isLightMode && styles.karenAvatarRed,
               ]}
             >
-              <Text style={styles.karenAvatarText}>K</Text>
+              <Image
+                source={require('../../assets/karen_ai_avatar.png')}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
             </View>
             <View style={styles.headerTitles}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={[styles.karenTitle, isLightMode && { color: '#0F172A', fontWeight: '800' }]}>
                   Karen AI
                 </Text>
-                <View style={styles.geminiBadge}>
-                  <Text style={styles.geminiBadgeText}>✨ GEMINI FLASH</Text>
-                </View>
               </View>
               <Text
                 style={[
@@ -413,7 +417,7 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
                 {isTyping && (
                   <View style={[styles.chatBubble, styles.chatBubbleKaren, isLightMode && styles.chatBubbleKarenLight, { flexDirection: 'row', gap: 6, alignItems: 'center' }]}>
                     <ActivityIndicator size="small" color="#38BDF8" />
-                    <Text style={{ fontSize: 12, color: '#94A3B8' }}>Karen is calculating with Gemini...</Text>
+                    <Text style={{ fontSize: 12, color: '#94A3B8' }}>Karen is thinking...</Text>
                   </View>
                 )}
               </ScrollView>

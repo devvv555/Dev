@@ -32,6 +32,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DigitalIdModal } from './src/components/DigitalIdModal';
 import { CoursePlanModal } from './src/components/CoursePlanModal';
 import { AttendanceDisputeModal } from './src/components/AttendanceDisputeModal';
+import { NotebookLmModal } from './src/components/NotebookLmModal';
 import { ProtocolGate } from './src/engines/starkProtocol/protocolGate';
 import { StarkVideoModal } from './src/components/StarkVideoModal';
 import { KarenGuide } from './src/components/KarenGuide';
@@ -57,6 +58,7 @@ export default function App() {
   const [showDigitalIdModal, setShowDigitalIdModal] = useState<boolean>(false);
   const [showCoursePlanModal, setShowCoursePlanModal] = useState<boolean>(false);
   const [showDisputeModal, setShowDisputeModal] = useState<boolean>(false);
+  const [showNotebookLmModal, setShowNotebookLmModal] = useState<boolean>(false);
   const [showStarkVideoModal, setShowStarkVideoModal] = useState<boolean>(false);
   const [showKarenGuide, setShowKarenGuide] = useState<boolean>(false);
   const [isEnhancedSuit, setIsEnhancedSuit] = useState<boolean>(false);
@@ -913,6 +915,26 @@ export default function App() {
           </TouchableOpacity>
 
           <View style={styles.headerActionsRow}>
+            {/* Karen AI Avatar Button (Quick Access from Homepage) */}
+            <TouchableOpacity
+              style={[
+                styles.karenHeaderBtn,
+                isLightMode
+                  ? { backgroundColor: '#EEF2FF', borderColor: '#38BDF8' }
+                  : { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38BDF8' },
+              ]}
+              onPress={() => setShowKarenGuide(true)}
+              activeOpacity={0.7}
+              accessibilityLabel="Open Karen AI Assistant"
+            >
+              <Image
+                source={require('./assets/karen_ai_avatar.png')}
+                style={styles.karenHeaderImg}
+                resizeMode="cover"
+              />
+              <View style={styles.karenLiveDot} />
+            </TouchableOpacity>
+
             {/* Profile Avatar Icon (Tap to access Karen, Feedback, Theme Switcher, ID, and Logout) */}
             <TouchableOpacity
               style={[
@@ -1075,6 +1097,25 @@ export default function App() {
             >
               <Text style={[styles.profileDropdownTitle, isLightMode && { color: '#0F172A' }, isEnhancedSuit && !isLightMode && { color: '#10B981' }]}>📚 Course Plans</Text>
               <Text style={[styles.profileDropdownSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>All 8 Subjects & CA Marks</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.profileDropdownDivider, isLightMode ? { backgroundColor: '#E2E8F0' } : isEnhancedSuit && { backgroundColor: '#262626' }]} />
+
+            {/* Google NotebookLM Collective Study Hub */}
+            <TouchableOpacity
+              style={styles.profileDropdownItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                setShowNotebookLmModal(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.profileDropdownTitle, { color: isLightMode ? '#2563EB' : '#60A5FA' }]}>
+                🎙️ NotebookLM Study Hub
+              </Text>
+              <Text style={[styles.profileDropdownSub, isLightMode && { color: '#64748B' }, isEnhancedSuit && !isLightMode && { color: '#9CA3AF' }]}>
+                Collective AI Notes & Audio Deep Dives
+              </Text>
             </TouchableOpacity>
 
             <View style={[styles.profileDropdownDivider, isLightMode ? { backgroundColor: '#E2E8F0' } : isEnhancedSuit && { backgroundColor: '#262626' }]} />
@@ -1395,6 +1436,15 @@ export default function App() {
         medicalClaims={medicalClaims}
       />
 
+      {/* Google NotebookLM Collective Study Hub Modal */}
+      <NotebookLmModal
+        visible={showNotebookLmModal}
+        onClose={() => setShowNotebookLmModal(false)}
+        studentRollNo={activeRollNo}
+        studentName={studentName}
+        isLightMode={isLightMode}
+      />
+
       {/* Karen Welcoming, Suit Guide & Gemini AI Chat Modal */}
       <KarenGuide
         visible={showKarenGuide}
@@ -1476,6 +1526,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  karenHeaderBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  karenHeaderImg: {
+    width: '100%',
+    height: '100%',
+  },
+  karenLiveDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    borderWidth: 1,
+    borderColor: '#0F172A',
   },
   headerSubRow: {
     flexDirection: 'row',
