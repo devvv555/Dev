@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
     <title>PSGIM One — Attendance & Academic Tracker for PSGIM MBA</title>
 
     <!-- Search Engine Optimization (SEO) Metadata -->
@@ -60,7 +60,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
 
-    <!-- Style resets for React Native Web & Fullscreen PWA -->
+    <!-- Style resets for React Native Web & Fullscreen PWA (Strict Zero Zoom) -->
     <style id="expo-reset">
       html,
       body {
@@ -68,6 +68,10 @@
         margin: 0;
         padding: 0;
         background-color: #0F172A;
+        /* Strictly prevent browser zoom and pinch across the app */
+        touch-action: pan-x pan-y;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
         /* Allow browser pull-to-refresh & normal gestures */
         overscroll-behavior-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -84,8 +88,70 @@
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-x pan-y;
+      }
+      /* Prevent iOS auto-zoom on inputs */
+      input, textarea, select {
+        font-size: 16px;
       }
     </style>
+
+    <!-- Anti-Zoom System: Block pinch-to-zoom, iOS Safari gestures, double-tap zoom & trackpad/wheel zoom -->
+    <script>
+      (function() {
+        if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+        // 1. Prevent Safari iOS gesture zoom (gesturestart, gesturechange, gestureend)
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
+        document.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false });
+        document.addEventListener('gestureend', function(e) { e.preventDefault(); }, { passive: false });
+
+        // 2. Prevent multi-touch pinch to zoom (2 or more touches on screen)
+        document.addEventListener('touchstart', function(e) {
+          if (e.touches && e.touches.length > 1) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+          if (e.touches && e.touches.length > 1) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        // 3. Prevent double-tap to zoom on mobile devices
+        var lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+          var now = Date.now();
+          if (now - lastTouchEnd <= 300) {
+            var target = e.target;
+            var isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT');
+            if (!isInput) {
+              e.preventDefault();
+            }
+          }
+          lastTouchEnd = now;
+        }, { passive: false });
+
+        // 4. Prevent Ctrl / Cmd + Mousewheel / Trackpad pinch zoom
+        window.addEventListener('wheel', function(e) {
+          if (e.ctrlKey) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        // 5. Prevent Ctrl / Cmd + keyboard zoom shortcuts (+, -, =, 0)
+        window.addEventListener('keydown', function(e) {
+          if ((e.ctrlKey || e.metaKey) && (
+            e.key === '+' || e.key === '-' || e.key === '=' || e.key === '_' || e.key === '0' ||
+            e.keyCode === 187 || e.keyCode === 189 || e.keyCode === 48 || e.keyCode === 96 ||
+            e.keyCode === 107 || e.keyCode === 109
+          )) {
+            e.preventDefault();
+          }
+        });
+      })();
+    </script>
   </head>
 
   <body>
