@@ -502,7 +502,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   const [selectedCourseDetails, setSelectedCourseDetails] = useState<{
     code: string;
     name: string;
-    type: 'SYLLABUS' | 'PLAN';
+    type: 'SYLLABUS' | 'PLAN' | 'ASSIGNMENTS';
   } | null>(null);
 
   // Smart Holiday & Continuous Recovery Leave Planner State
@@ -1834,6 +1834,34 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       </View>
                     </View>
 
+                    {/* Assignments & Submissions Row */}
+                    <View style={styles.academicActionRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                        <CalendarCheck size={18} color="#F59E0B" strokeWidth={2} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.actionRowTitle}>Assignments & Submissions</Text>
+                          <Text style={styles.actionRowSub}>
+                            {getCoursePlanForSubject(sub.code, sub.name).assessments.length} Deliverables • CA & Portfolios
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <TouchableOpacity
+                          style={[styles.actionViewBtn, { borderColor: '#F59E0B' }]}
+                          onPress={() => {
+                            setSelectedCourseDetails({
+                              code: sub.code,
+                              name: sub.name,
+                              type: 'ASSIGNMENTS',
+                            });
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.actionViewText, { color: '#F59E0B' }]}>View</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
                     {/* Google NotebookLM Individual Subject Link Row (Only shown for Core Courses with NotebookLM) */}
                     {hasNotebookForSubject(sub.code, sub.name) && (
                       <View style={styles.academicActionRow}>
@@ -2836,7 +2864,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           <Text style={styles.codeBadgeText}>{coursePlan.subjectCode}</Text>
                         </View>
                         <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '800' }}>
-                          {isPlan ? '15-WEEK COURSE PLAN' : 'OFFICIAL SYLLABUS'}
+                          {selectedCourseDetails.type === 'ASSIGNMENTS'
+                            ? 'COURSE ASSIGNMENTS & SUBMISSIONS'
+                            : isPlan
+                            ? '15-WEEK COURSE PLAN'
+                            : 'OFFICIAL SYLLABUS'}
                         </Text>
                       </View>
                       <Text style={[styles.drawerTitle, { fontSize: 15 }]} numberOfLines={1}>
@@ -2851,14 +2883,12 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     </TouchableOpacity>
                   </View>
 
-
-
-                  {/* Switch between Syllabus & Course Plan */}
+                  {/* Switch between Syllabus, Course Plan & Assignments */}
                   <View style={styles.courseDetailSwitcherRow}>
                     <TouchableOpacity
                       style={[
                         styles.courseDetailSwitcherBtn,
-                        !isPlan && styles.courseDetailSwitcherBtnActive,
+                        selectedCourseDetails.type === 'SYLLABUS' && styles.courseDetailSwitcherBtnActive,
                       ]}
                       onPress={() =>
                         setSelectedCourseDetails({
@@ -2868,21 +2898,21 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       }
                       activeOpacity={0.8}
                     >
-                      <FileText size={14} color={!isPlan ? '#38BDF8' : '#64748B'} />
+                      <FileText size={13} color={selectedCourseDetails.type === 'SYLLABUS' ? '#38BDF8' : '#64748B'} />
                       <Text
                         style={[
                           styles.courseDetailSwitcherText,
-                          !isPlan && styles.courseDetailSwitcherTextActive,
+                          selectedCourseDetails.type === 'SYLLABUS' && styles.courseDetailSwitcherTextActive,
                         ]}
                       >
-                        Syllabus & Units
+                        Syllabus
                       </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       style={[
                         styles.courseDetailSwitcherBtn,
-                        isPlan && styles.courseDetailSwitcherBtnActive,
+                        selectedCourseDetails.type === 'PLAN' && styles.courseDetailSwitcherBtnActive,
                       ]}
                       onPress={() =>
                         setSelectedCourseDetails({
@@ -2892,14 +2922,38 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       }
                       activeOpacity={0.8}
                     >
-                      <CalendarDays size={14} color={isPlan ? '#38BDF8' : '#64748B'} />
+                      <CalendarDays size={13} color={selectedCourseDetails.type === 'PLAN' ? '#38BDF8' : '#64748B'} />
                       <Text
                         style={[
                           styles.courseDetailSwitcherText,
-                          isPlan && styles.courseDetailSwitcherTextActive,
+                          selectedCourseDetails.type === 'PLAN' && styles.courseDetailSwitcherTextActive,
                         ]}
                       >
-                        15-Week Sessions
+                        15-Week Plan
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.courseDetailSwitcherBtn,
+                        selectedCourseDetails.type === 'ASSIGNMENTS' && styles.courseDetailSwitcherBtnActive,
+                      ]}
+                      onPress={() =>
+                        setSelectedCourseDetails({
+                          ...selectedCourseDetails,
+                          type: 'ASSIGNMENTS',
+                        })
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <CalendarCheck size={13} color={selectedCourseDetails.type === 'ASSIGNMENTS' ? '#F59E0B' : '#64748B'} />
+                      <Text
+                        style={[
+                          styles.courseDetailSwitcherText,
+                          selectedCourseDetails.type === 'ASSIGNMENTS' && { color: '#F59E0B', fontWeight: '800' },
+                        ]}
+                      >
+                        Assignments
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -2916,7 +2970,106 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       )}
                     </View>
 
-                    {!isPlan ? (
+                    {selectedCourseDetails.type === 'ASSIGNMENTS' ? (
+                      /* ASSIGNMENTS & SUBMISSIONS VIEW */
+                      <View style={{ gap: 12, marginTop: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Text style={styles.drawerSectionLabel}>
+                            CONTINUOUS ASSESSMENTS ({coursePlan.assessments.length} TOTAL)
+                          </Text>
+                          <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: '#F59E0B', borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+                            <Text style={{ color: '#F59E0B', fontSize: 10, fontWeight: '800' }}>
+                              50 CA WEIGHTAGE
+                            </Text>
+                          </View>
+                        </View>
+
+                        {coursePlan.assessments.map((ass, aIdx) => (
+                          <View
+                            key={ass.id || aIdx}
+                            style={{
+                              backgroundColor: isLight ? '#F8FAFC' : '#0B1322',
+                              borderRadius: 14,
+                              padding: 14,
+                              borderWidth: 1.2,
+                              borderColor: isLight ? '#E2E8F0' : '#1E293B',
+                            }}
+                          >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <Text style={{ fontSize: 14, fontWeight: '800', color: isLight ? '#0F172A' : '#FFFFFF', flex: 1, marginRight: 8 }}>
+                                {ass.title}
+                              </Text>
+                              <View
+                                style={{
+                                  backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.15)',
+                                  borderColor: isLight ? '#FDE68A' : '#F59E0B',
+                                  borderWidth: 1,
+                                  borderRadius: 8,
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 3,
+                                }}
+                              >
+                                <Text style={{ color: isLight ? '#B45309' : '#F59E0B', fontSize: 11, fontWeight: '900' }}>
+                                  {ass.marksAllotted} Marks
+                                </Text>
+                              </View>
+                            </View>
+
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                              <View style={{ backgroundColor: isLight ? '#E0F2FE' : 'rgba(56, 189, 248, 0.12)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 }}>
+                                <Text style={{ color: isLight ? '#0369A1' : '#38BDF8', fontSize: 10, fontWeight: '800' }}>
+                                  {ass.type || 'ASSIGNMENT'}
+                                </Text>
+                              </View>
+                              <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#1E293B', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 }}>
+                                <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700' }}>
+                                  Timeline: {ass.scheduledDate}
+                                </Text>
+                              </View>
+                              {ass.sessionsCovered ? (
+                                <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#1E293B', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 }}>
+                                  <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700' }}>
+                                    {ass.sessionsCovered}
+                                  </Text>
+                                </View>
+                              ) : null}
+                            </View>
+
+                            {ass.description ? (
+                              <Text style={{ fontSize: 12, color: isLight ? '#475569' : '#CBD5E1', lineHeight: 18, marginBottom: 10 }}>
+                                {ass.description}
+                              </Text>
+                            ) : null}
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: isLight ? '#E2E8F0' : '#1E293B' }}>
+                              <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '700' }}>
+                                Official Moodle Portal Submission
+                              </Text>
+                              <TouchableOpacity
+                                style={{
+                                  backgroundColor: isLight ? '#0284C7' : '#0369A1',
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 5,
+                                  borderRadius: 6,
+                                }}
+                                onPress={() => {
+                                  if (Platform.OS === 'web') {
+                                    window.open('https://lms.psgim.ac.in', '_blank');
+                                  } else {
+                                    Linking.openURL('https://lms.psgim.ac.in').catch(() => {});
+                                  }
+                                }}
+                                activeOpacity={0.8}
+                              >
+                                <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>
+                                  Open Moodle →
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    ) : selectedCourseDetails.type === 'SYLLABUS' ? (
                       /* SYLLABUS VIEW */
                       <View style={{ gap: 10, marginTop: 10 }}>
                         <Text style={styles.drawerSectionLabel}>COURSE ASSESSMENTS (50 CA + 50 FE)</Text>
