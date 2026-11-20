@@ -843,183 +843,162 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                   styles.cardBox,
                   {
                     padding: 16,
+                    borderRadius: 18,
                     borderWidth: 1.5,
-                    borderColor: isLight
-                      ? (slotStatus.tag === 'IN SESSION' ? '#F87171' : '#38BDF8')
-                      : (slotStatus.tag === 'IN SESSION' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(56, 189, 248, 0.4)'),
-                    backgroundColor: isLight
-                      ? '#FFFFFF'
-                      : (slotStatus.tag === 'IN SESSION' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(15, 23, 42, 0.95)'),
-                    shadowColor: slotStatus.color,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 10,
-                    elevation: 4,
+                    borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.4)',
+                    backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.35,
+                    shadowRadius: 14,
+                    elevation: 5,
                   },
                 ]}
               >
-                {/* Header: Live Status & Day Details */}
-                <View style={{ marginBottom: 10 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      {/* Pulsing indicator dot */}
-                      <View
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: slotStatus.color,
-                        }}
-                      />
-                      <Text
-                        style={[
-                          { fontSize: 11.5, fontWeight: '900', letterSpacing: 0.8 },
-                          { color: isLight ? '#0F172A' : '#38BDF8' },
-                        ]}
-                      >
-                        {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
+                {/* Header: Dot + TODAY'S SCHEDULE • DD/MM/YYYY + Reset button */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                    {/* Glowing lavender/cyan dot */}
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: isLight ? '#2563EB' : '#818CF8',
+                        shadowColor: '#818CF8',
+                        shadowRadius: 4,
+                        shadowOpacity: 0.8,
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '900',
+                        color: isLight ? '#0284C7' : '#38BDF8',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      {isWeekendOrNoClass ? 'WEEKEND RELAX' : viewingNextDay ? 'NEXT DAY PREVIEW' : "TODAY'S SCHEDULE"}
+                      <Text style={{ color: isLight ? '#64748B' : '#94A3B8', fontWeight: '700' }}>
+                        {' '}• {displayDateFormatted}
                       </Text>
-                      <Text style={{ fontSize: 11.5, fontWeight: '600', color: '#64748B' }}>
-                        • {displayDateFormatted}
-                      </Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <TouchableOpacity
-                        onPress={async () => {
-                          try {
-                            Vibration.vibrate(30);
-                          } catch {}
-                          Alert.alert(
-                            'Reset Today Attendance?',
-                            'This will clear any accidental attendance marks for today and restore them to unmarked so you can freely mark them again.',
-                            [
-                              { text: 'Cancel', style: 'cancel' },
-                              {
-                                text: 'Yes, Reset Today',
-                                style: 'destructive',
-                                onPress: async () => {
-                                  const today = displayDateStr;
-                                  const nextLocal = { ...localPeriodStatuses };
-                                  let changed = false;
-                                  Object.keys(nextLocal).forEach((key) => {
-                                    if (key.startsWith(today)) {
-                                      delete nextLocal[key];
-                                      changed = true;
-                                    }
-                                  });
-                                  setLocalPeriodStatuses(nextLocal);
-                                  Alert.alert('Reset Complete', "Today's accidental attendance markings have been cleared!");
-                                },
-                              },
-                            ]
-                          );
-                        }}
-                        style={[
-                          {
-                            backgroundColor: isLight ? '#FEF2F2' : 'rgba(239, 68, 68, 0.15)',
-                            paddingHorizontal: 7,
-                            paddingVertical: 2.5,
-                            borderRadius: 6,
-                            borderWidth: 1,
-                            borderColor: isLight ? '#FCA5A5' : '#EF4444',
-                          },
-                        ]}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLight ? '#DC2626' : '#F87171' }}>
-                          ↺ Reset
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => setViewingNextDay(!viewingNextDay)}
-                        style={[
-                          {
-                            backgroundColor: viewingNextDay ? '#312E81' : (isLight ? '#F1F5F9' : '#1E293B'),
-                            paddingHorizontal: 7,
-                            paddingVertical: 2.5,
-                            borderRadius: 6,
-                            borderWidth: 1,
-                            borderColor: viewingNextDay ? '#6366F1' : (isLight ? '#CBD5E1' : '#334155'),
-                          },
-                        ]}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={{ fontSize: 9.5, fontWeight: '700', color: viewingNextDay ? '#A5B4FC' : (isLight ? '#3B49DF' : '#94A3B8') }}>
-                          {viewingNextDay ? '← Today' : 'Next Day →'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                    </Text>
                   </View>
 
-                  {isWeekendOrNoClass ? (
-                    <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#1E293B', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
-                        No Classes Scheduled Today ({currentDayName})
-                      </Text>
-                      <Text style={{ fontSize: 11.5, color: '#64748B', textAlign: 'center' }}>
-                        Enjoy your break! Classes resume as per official college timetable.
-                      </Text>
-                    </View>
-                  ) : null}
+                  {/* Reset button pill matching screenshot: red outline with dark crimson fill */}
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        Vibration.vibrate(30);
+                      } catch {}
+                      Alert.alert(
+                        'Reset Today Attendance?',
+                        'This will clear any accidental attendance marks for today and restore them to unmarked so you can freely mark them again.',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Yes, Reset Today',
+                            style: 'destructive',
+                            onPress: async () => {
+                              const today = displayDateStr;
+                              const nextLocal = { ...localPeriodStatuses };
+                              let changed = false;
+                              Object.keys(nextLocal).forEach((key) => {
+                                if (key.startsWith(today)) {
+                                  delete nextLocal[key];
+                                  changed = true;
+                                }
+                              });
+                              setLocalPeriodStatuses(nextLocal);
+                              Alert.alert('Reset Complete', "Today's accidental attendance markings have been cleared!");
+                            },
+                          },
+                        ]
+                      );
+                    }}
+                    style={{
+                      backgroundColor: isLight ? '#FEF2F2' : 'rgba(153, 27, 27, 0.45)',
+                      paddingHorizontal: 10,
+                      paddingVertical: 3.5,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: isLight ? '#FCA5A5' : '#EF4444',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 3,
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#DC2626' : '#FCA5A5' }}>
+                      ↺ Reset
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
-                {!isWeekendOrNoClass && currentSlot && (
+                {isWeekendOrNoClass ? (
+                  <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#0F172A', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
+                      No Classes Scheduled Today ({currentDayName})
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center' }}>
+                      Enjoy your break! Classes resume as per official college timetable.
+                    </Text>
+                  </View>
+                ) : currentSlot ? (
                   <>
-                    {/* Period Status Badge & Real-Time Remaining Timer */}
-                    <View style={[styles.simulatorHeader, { marginBottom: 6 }]}>
-                      <View
-                        style={[
-                          styles.statusTagBadge,
-                          { borderColor: slotStatus.color, backgroundColor: slotStatus.tag === 'IN SESSION' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.12)' },
-                        ]}
-                      >
-                        <Text style={[styles.simulatorTag, { color: slotStatus.color, fontWeight: '900' }]}>
-                          ● {slotStatus.tag}
-                        </Text>
-                      </View>
-                      <Text style={[styles.simulatorTime, isLight && { color: '#0F172A', fontWeight: '800' }]}>
-                        {`${currentSlot.startTime} - ${currentSlot.endTime}`}
-                      </Text>
-                    </View>
-
-                    {/* Subject Name & Room */}
+                    {/* Line 1: Bold Subject Title */}
                     <Text
-                      style={[
-                        styles.simulatorTitle,
-                        { fontSize: 17, fontWeight: '900', marginBottom: 2 },
-                        isLight && { color: '#2B3990' },
-                      ]}
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '900',
+                        color: isLight ? '#0F172A' : '#FFFFFF',
+                        marginBottom: 4,
+                        letterSpacing: 0.2,
+                      }}
+                      numberOfLines={2}
                     >
-                      {currentSubject ? `${currentSubject.name}` : 'Academic Session'}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.simulatorSubDetail,
-                        { fontSize: 12, marginBottom: 4 },
-                        isLight && { color: '#475569', fontWeight: '600' },
-                      ]}
-                    >
-                      {`${currentSlot.day} • ${currentSlot.startTime} – ${currentSlot.endTime} (${getSlotHours(currentSlot)} ${getSlotHours(currentSlot) === 1 ? 'hr' : 'hrs'}) • ${currentSlot.room || 'LH-101'}`}
+                      {currentSubject ? currentSubject.name : 'Economics for Decision Making'}
                     </Text>
 
-                    {/* Faculty in Charge */}
+                    {/* Line 2: Day • Start — End (X hrs) • Room */}
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '600',
+                        color: isLight ? '#475569' : '#94A3B8',
+                        marginBottom: 8,
+                      }}
+                    >
+                      {`${currentSlot.day} • ${currentSlot.startTime} — ${currentSlot.endTime} (${getSlotHours(currentSlot)} hrs) • ${currentSlot.room || 'LH-101'}`}
+                    </Text>
+
+                    {/* Line 3: Faculty Pill with Cyan highlight text */}
                     {(currentSlot.faculty || currentSubject?.faculty) ? (
-                      <View style={[styles.hourlyFacultyTouch, { paddingVertical: 4, marginVertical: 4 }, isLight && { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }]}>
-                        <Text style={[styles.hourlyFacultyText, { fontSize: 12 }, isLight && { color: '#475569' }]}>
-                          Faculty: <Text style={[styles.hourlyFacultyHighlight, isLight && { color: '#2B3990', fontWeight: '800' }]}>{currentSlot.faculty || currentSubject?.faculty}</Text>
+                      <View
+                        style={{
+                          alignSelf: 'flex-start',
+                          backgroundColor: isLight ? '#F0F9FF' : 'rgba(15, 23, 42, 0.8)',
+                          borderWidth: 1,
+                          borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.35)',
+                          borderRadius: 8,
+                          paddingHorizontal: 10,
+                          paddingVertical: 5,
+                          marginBottom: 14,
+                        }}
+                      >
+                        <Text style={{ fontSize: 12.5, fontWeight: '600', color: isLight ? '#475569' : '#94A3B8' }}>
+                          Faculty: <Text style={{ color: isLight ? '#0284C7' : '#38BDF8', fontWeight: '800' }}>{currentSlot.faculty || currentSubject?.faculty}</Text>
                         </Text>
                       </View>
                     ) : null}
 
-                    {/* Horizontal Period Selector: All active periods with live status badges */}
+                    {/* Line 4: Square Period Cards (e.g. 08:30 / 24GM12 / Attended) */}
                     {activeDaySlots.length > 0 && (
                       <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        style={[styles.periodPillScroll, { marginVertical: 8 }]}
-                        contentContainerStyle={styles.periodPillContainer}
+                        style={{ marginBottom: 14 }}
+                        contentContainerStyle={{ flexDirection: 'row', gap: 10 }}
                       >
                         {activeDaySlots.map((slot, index) => {
                           const slotSub = subjects.find((s) => s.id === slot.subjectId);
@@ -1028,76 +1007,88 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           const rec = localPeriodStatuses[pKey] ? { status: localPeriodStatuses[pKey] } : periodRecords[pKey];
                           const isSelected = activeIndex === index;
 
+                          // Compute background color matching screenshot:
+                          // Selected/Active: Solid electric blue (#2563EB)
+                          // Marked Attended (unselected): Dark pine green with green border
+                          // Marked Bunked: Dark wine red with red border
+                          // Unmarked: Slate navy
+                          let pillBg = '#1E293B';
+                          let pillBorder = '#334155';
+                          let timeColor = '#FFFFFF';
+                          let codeColor = '#FFFFFF';
+
+                          if (isSelected) {
+                            pillBg = '#2563EB';
+                            pillBorder = '#60A5FA';
+                            timeColor = '#FFFFFF';
+                            codeColor = '#FFFFFF';
+                          } else if (rec?.status === 'attended') {
+                            pillBg = isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.6)';
+                            pillBorder = isLight ? '#A7F3D0' : '#10B981';
+                            timeColor = isLight ? '#065F46' : '#A7F3D0';
+                            codeColor = isLight ? '#065F46' : '#A7F3D0';
+                          } else if (rec?.status === 'bunked') {
+                            pillBg = isLight ? '#FEF2F2' : 'rgba(127, 29, 29, 0.6)';
+                            pillBorder = isLight ? '#FECACA' : '#EF4444';
+                            timeColor = isLight ? '#991B1B' : '#FCA5A5';
+                            codeColor = isLight ? '#991B1B' : '#FCA5A5';
+                          } else if (rec?.status === 'cancelled') {
+                            pillBg = isLight ? '#F1F5F9' : '#1E293B';
+                            pillBorder = isLight ? '#CBD5E1' : '#475569';
+                            timeColor = '#94A3B8';
+                            codeColor = '#94A3B8';
+                          } else if (isLight) {
+                            pillBg = '#F8FAFC';
+                            pillBorder = '#CBD5E1';
+                            timeColor = '#334155';
+                            codeColor = '#0F172A';
+                          }
+
                           return (
                             <TouchableOpacity
                               key={slot.id}
-                              style={[
-                                styles.periodPill,
-                                isSelected ? styles.periodPillActive : styles.periodPillInactive,
-                                rec?.status === 'attended' && !isSelected && styles.periodPillMarkedAttended,
-                                rec?.status === 'bunked' && !isSelected && styles.periodPillMarkedBunked,
-                                rec?.status === 'cancelled' && !isSelected && styles.periodPillMarkedCancelled,
-                                isLight && (
-                                  isSelected
-                                    ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
-                                    : rec?.status === 'attended'
-                                    ? { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }
-                                    : rec?.status === 'bunked'
-                                    ? { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }
-                                    : rec?.status === 'cancelled'
-                                    ? { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }
-                                    : { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
-                                ),
-                              ]}
+                              style={{
+                                width: 84,
+                                height: 72,
+                                borderRadius: 12,
+                                borderWidth: 1.5,
+                                borderColor: pillBorder,
+                                backgroundColor: pillBg,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 6,
+                              }}
                               onPress={() => setSelectedSlotIndex(index)}
                               activeOpacity={0.7}
                             >
-                              <Text
-                                style={[
-                                  styles.periodPillTime,
-                                  isSelected && styles.periodPillTextActive,
-                                  isLight && (isSelected ? { color: '#FFFFFF' } : { color: '#64748B' }),
-                                ]}
-                              >
+                              <Text style={{ fontSize: 13, fontWeight: '900', color: timeColor }}>
                                 {slot.startTime}
                               </Text>
-                              <Text
-                                style={[
-                                  styles.periodPillCode,
-                                  isSelected && styles.periodPillTextActive,
-                                  isLight && (isSelected ? { color: '#FFFFFF', fontWeight: '800' } : { color: '#0F172A', fontWeight: '700' }),
-                                ]}
-                              >
+                              <Text style={{ fontSize: 11.5, fontWeight: '800', color: codeColor, marginVertical: 2 }}>
                                 {slotSub?.code || 'CLASS'}
                               </Text>
                               {isSportsSlot ? (
-                                <Text style={[styles.periodPillStatus, isLight ? { color: '#2B3990' } : { color: '#818CF8' }]}>
-                                  No Attendance
+                                <Text style={{ fontSize: 9.5, fontWeight: '700', color: isSelected ? '#FFFFFF' : '#818CF8' }}>
+                                  No Att.
                                 </Text>
                               ) : rec ? (
                                 <Text
-                                  style={[
-                                    styles.periodPillStatus,
-                                    isSelected
-                                      ? { color: '#FFFFFF' }
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: '800',
+                                    color: isSelected
+                                      ? '#FFFFFF'
                                       : rec.status === 'attended'
-                                      ? { color: isLight ? '#059669' : '#34D399', fontWeight: '700' }
+                                      ? (isLight ? '#059669' : '#34D399')
                                       : rec.status === 'bunked'
-                                      ? { color: isLight ? '#DC2626' : '#F87171', fontWeight: '700' }
-                                      : { color: isLight ? '#64748B' : '#94A3B8', fontWeight: '700' },
-                                  ]}
+                                      ? (isLight ? '#DC2626' : '#F87171')
+                                      : '#94A3B8',
+                                  }}
                                 >
                                   {rec.status === 'attended' ? '✅ Attended' : rec.status === 'bunked' ? '❌ Missed' : '⚪ Free'}
                                 </Text>
                               ) : (
-                                <Text
-                                  style={[
-                                    styles.periodPillStatus,
-                                    isSelected
-                                      ? { color: isLight ? 'rgba(255,255,255,0.85)' : '#FFFFFF' }
-                                      : { color: isLight ? '#94A3B8' : '#64748B' },
-                                  ]}
-                                >
+                                <Text style={{ fontSize: 9.5, fontWeight: '700', color: isSelected ? 'rgba(255,255,255,0.85)' : '#64748B' }}>
                                   ⏳ Unmarked
                                 </Text>
                               )}
@@ -1107,102 +1098,119 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       </ScrollView>
                     )}
 
-                    {/* Status & 1-Tap Attendance Buttons */}
-                    {currentRecord && (
+                    {/* Line 5: Large Status Banner (e.g. ✅ Marked: Attended (2 hrs)) */}
+                    {currentRecord ? (
                       <View
-                        style={[
-                          styles.periodLockedBanner,
-                          { marginVertical: 6 },
-                          currentRecord.status === 'attended' && styles.lockedBannerAttended,
-                          currentRecord.status === 'bunked' && styles.lockedBannerBunked,
-                          currentRecord.status === 'cancelled' && styles.lockedBannerCancelled,
-                          isLight && (
-                            currentRecord.status === 'attended'
-                              ? { backgroundColor: '#ECFDF5', borderColor: '#6EE7B7' }
-                              : currentRecord.status === 'bunked'
-                              ? { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }
-                              : { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
-                          ),
-                        ]}
+                        style={{
+                          backgroundColor: currentRecord.status === 'attended'
+                            ? (isLight ? '#ECFDF5' : 'rgba(6, 78, 59, 0.45)')
+                            : currentRecord.status === 'bunked'
+                            ? (isLight ? '#FEF2F2' : 'rgba(127, 29, 29, 0.45)')
+                            : (isLight ? '#F1F5F9' : 'rgba(30, 41, 59, 0.5)'),
+                          borderWidth: 1.5,
+                          borderColor: currentRecord.status === 'attended'
+                            ? (isLight ? '#6EE7B7' : '#10B981')
+                            : currentRecord.status === 'bunked'
+                            ? (isLight ? '#FCA5A5' : '#EF4444')
+                            : '#64748B',
+                          borderRadius: 14,
+                          paddingVertical: 12,
+                          paddingHorizontal: 16,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          marginBottom: 14,
+                        }}
                       >
-                        <View style={styles.lockedBannerRow}>
-                          <Text style={styles.lockedBannerIcon}>
-                            {currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
-                          </Text>
-                          <View style={styles.lockedBannerTextContainer}>
-                            <Text
-                              style={[
-                                styles.lockedBannerTitle,
-                                isLight && {
-                                  color: currentRecord.status === 'attended'
-                                    ? '#065F46'
-                                    : currentRecord.status === 'bunked'
-                                    ? '#991B1B'
-                                    : '#334155',
-                                },
-                              ]}
-                            >
-                              {currentRecord.status === 'attended' && `Marked: Attended (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
-                              {currentRecord.status === 'bunked' && `Marked: Missed (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
-                              {currentRecord.status === 'cancelled' && 'Marked: Free / Cancelled'}
-                            </Text>
-                          </View>
-                        </View>
+                        <Text style={{ fontSize: 22 }}>
+                          {currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            fontWeight: '900',
+                            color: isLight
+                              ? (currentRecord.status === 'attended' ? '#065F46' : currentRecord.status === 'bunked' ? '#991B1B' : '#334155')
+                              : '#FFFFFF',
+                          }}
+                        >
+                          {currentRecord.status === 'attended' && `Marked: Attended (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
+                          {currentRecord.status === 'bunked' && `Marked: Missed (${currentRecord.hours || getSlotHours(currentSlot)} hrs)`}
+                          {currentRecord.status === 'cancelled' && 'Marked: Free / Cancelled'}
+                        </Text>
                       </View>
-                    )}
+                    ) : null}
 
-                    <View style={[styles.promptActionsRow, { marginTop: 6 }]}>
+                    {/* Line 6: Exact 3 Action Buttons Matching Screenshot */}
+                    {/* Button 1: Emerald Green with White text and highlight inner border (Attended (2h)) */}
+                    {/* Button 2: Vibrant Red with White text (I Missed (2h)) */}
+                    {/* Button 3: Dark Slate Gray with Muted Light text (Free) */}
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
                       <TouchableOpacity
                         activeOpacity={0.8}
-                        style={[
-                          styles.promptActionBtn,
-                          styles.promptAttendBtn,
-                          currentRecord?.status === 'attended' && styles.promptBtnSelected,
-                          (currentRecord && currentRecord.status !== 'attended') && styles.promptBtnDimmed,
-                        ]}
+                        style={{
+                          flex: 1.1,
+                          backgroundColor: '#059669',
+                          borderRadius: 12,
+                          paddingVertical: 11,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: currentRecord?.status === 'attended' ? 2 : 1,
+                          borderColor: currentRecord?.status === 'attended' ? '#A7F3D0' : '#10B981',
+                          shadowColor: '#10B981',
+                          shadowRadius: currentRecord?.status === 'attended' ? 6 : 0,
+                          shadowOpacity: currentRecord?.status === 'attended' ? 0.4 : 0,
+                        }}
                         onPress={() => handleMarkTodaySlot(currentSlot, 'attended')}
                       >
-                        <Text style={styles.promptAttendText}>
-                          {currentRecord?.status === 'attended'
-                            ? `Attended (${getSlotHours(currentSlot)}h)`
-                            : `I Attended (${getSlotHours(currentSlot)}h)`}
+                        <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13.5 }}>
+                          Attended ({getSlotHours(currentSlot)}h)
                         </Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
                         activeOpacity={0.8}
-                        style={[
-                          styles.promptActionBtn,
-                          styles.promptBunkBtn,
-                          currentRecord?.status === 'bunked' && styles.promptBtnSelected,
-                          (currentRecord && currentRecord.status !== 'bunked') && styles.promptBtnDimmed,
-                        ]}
+                        style={{
+                          flex: 1.1,
+                          backgroundColor: '#DC2626',
+                          borderRadius: 12,
+                          paddingVertical: 11,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: currentRecord?.status === 'bunked' ? 2 : 1,
+                          borderColor: currentRecord?.status === 'bunked' ? '#FECACA' : '#EF4444',
+                          shadowColor: '#EF4444',
+                          shadowRadius: currentRecord?.status === 'bunked' ? 6 : 0,
+                          shadowOpacity: currentRecord?.status === 'bunked' ? 0.4 : 0,
+                        }}
                         onPress={() => handleMarkTodaySlot(currentSlot, 'bunked')}
                       >
-                        <Text style={styles.promptBunkText}>
-                          {currentRecord?.status === 'bunked'
-                            ? `Missed (${getSlotHours(currentSlot)}h)`
-                            : `I Missed (${getSlotHours(currentSlot)}h)`}
+                        <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13.5 }}>
+                          I Missed ({getSlotHours(currentSlot)}h)
                         </Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
                         activeOpacity={0.8}
-                        style={[
-                          styles.promptActionBtn,
-                          styles.promptCancelBtn,
-                          currentRecord?.status === 'cancelled' && styles.promptBtnSelected,
-                          (currentRecord && currentRecord.status !== 'cancelled') && styles.promptBtnDimmed,
-                        ]}
+                        style={{
+                          flex: 0.9,
+                          backgroundColor: isLight ? '#E2E8F0' : '#334155',
+                          borderRadius: 12,
+                          paddingVertical: 11,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: currentRecord?.status === 'cancelled' ? 2 : 1,
+                          borderColor: currentRecord?.status === 'cancelled' ? '#94A3B8' : (isLight ? '#CBD5E1' : '#475569'),
+                        }}
                         onPress={() => handleMarkTodaySlot(currentSlot, 'cancelled')}
                       >
-                        <Text style={styles.promptCancelText}>
-                          {currentRecord?.status === 'cancelled' ? 'Free (Marked)' : 'Free'}
+                        <Text style={{ color: isLight ? '#475569' : '#CBD5E1', fontWeight: '800', fontSize: 13.5 }}>
+                          Free
                         </Text>
                       </TouchableOpacity>
                     </View>
                   </>
-                )}
+                ) : null}
               </View>
 
               {/* BOX 1: LIVE ATTENDANCE STATUS CARD (Replacing "No attendance data available") */}
