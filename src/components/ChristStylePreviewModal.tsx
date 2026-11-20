@@ -791,6 +791,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
         {/* Top Header Bar (Mirroring Screenshot 1, 2, 3) */}
         <View style={styles.topHeader}>
           <View style={styles.headerLeft}>
+            {/* Back button when not on HOME */}
             {activeTab !== 'HOME' ? (
               <TouchableOpacity
                 style={styles.backBtn}
@@ -800,15 +801,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                 <Text style={styles.backBtnText}>‹</Text>
               </TouchableOpacity>
             ) : null}
-
-            {/* Official Crest Badge */}
-            <View style={styles.crestContainer}>
-              <Image
-                source={require('../../assets/icon.png')}
-                style={styles.crestImg}
-                resizeMode="contain"
-              />
-            </View>
           </View>
 
           <View style={styles.headerRight}>
@@ -2647,13 +2639,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                 >
                   <Text style={styles.backBtnText}>‹</Text>
                 </TouchableOpacity>
-                <View style={styles.crestContainer}>
-                  <Image
-                    source={require('../../assets/icon.png')}
-                    style={styles.crestImg}
-                    resizeMode="contain"
-                  />
-                </View>
               </View>
               <View style={styles.headerRight}>
                 <TouchableOpacity
