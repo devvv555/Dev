@@ -839,7 +839,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                 ]}
               >
                 <Text style={styles.greetingTitle}>
-                  👋 Hello, <Text style={{ color: isLight ? '#0F172A' : '#FFFFFF' }}>{studentName.toUpperCase()}</Text> ({displayRollNo})
+                  Hello, <Text style={{ color: isLight ? '#0F172A' : '#FFFFFF' }}>{studentName.toUpperCase()}</Text> ({displayRollNo})
                 </Text>
                 <View style={styles.classPill}>
                   <Text style={styles.classPillText}>Class: I MBA - Section B</Text>
@@ -1096,11 +1096,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                                       : '#94A3B8',
                                   }}
                                 >
-                                  {rec.status === 'attended' ? '✅ Attended' : rec.status === 'bunked' ? '❌ Missed' : '⚪ Free'}
+                                  {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✕ Missed' : '○ Free'}
                                 </Text>
                               ) : (
                                 <Text style={{ fontSize: 9.5, fontWeight: '700', color: isSelected ? 'rgba(255,255,255,0.85)' : '#64748B' }}>
-                                  ⏳ Unmarked
+                                  ○ Unmarked
                                 </Text>
                               )}
                             </TouchableOpacity>
@@ -1109,7 +1109,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       </ScrollView>
                     )}
 
-                    {/* Line 5: Large Status Banner (e.g. ✅ Marked: Attended (2 hrs)) */}
+                    {/* Line 5: Large Status Banner (e.g. Marked: Attended (2 hrs)) */}
                     {currentRecord ? (
                       <View
                         style={{
@@ -1134,7 +1134,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         }}
                       >
                         <Text style={{ fontSize: 22 }}>
-                          {currentRecord.status === 'attended' ? '✅' : currentRecord.status === 'bunked' ? '❌' : '⚪'}
+                          {currentRecord.status === 'attended' ? '✓' : currentRecord.status === 'bunked' ? '✕' : '○'}
                         </Text>
                         <Text
                           style={{
@@ -1526,7 +1526,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                               <View style={[styles.subjectLeaveDetailBox, { borderColor: isSafe ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)', backgroundColor: isSafe ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)' }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                                   <Text style={[styles.subjectLeaveTitle, { color: isSafe ? '#10B981' : '#EF4444' }]}>
-                                    {isSafe ? '✓ SAFE ATTENDANCE MARGIN' : '⚠️ ATTENDANCE SHORTAGE WARNING'}
+                                    {isSafe ? '✓ SAFE ATTENDANCE MARGIN' : '[!] ATTENDANCE SHORTAGE WARNING'}
                                   </Text>
                                   <View style={[styles.subjectLeaveBadge, { backgroundColor: isSafe ? '#10B981' : '#EF4444' }]}>
                                     <Text style={styles.subjectLeaveBadgeText}>
@@ -1704,7 +1704,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
             <ScrollView contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
               <Text style={styles.sectionPageTitle}>Academics</Text>
 
-              {/* Search Bar (Screenshot 5: ✨ Search course name or code...) */}
+              {/* Search Bar (Screenshot 5: Search course name or code...) */}
               <View style={styles.searchBar}>
                 <Sparkles size={16} color="#FBBF24" style={{ marginRight: 8 }} />
                 <TextInput
@@ -2973,7 +2973,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                               </View>
                               <Text style={styles.sessionTopicText}>{sess.topic}</Text>
                               {sess.software ? (
-                                <Text style={styles.sessionSoftwareText}>💻 Tool: {sess.software}</Text>
+                                <Text style={styles.sessionSoftwareText}>Tool: {sess.software}</Text>
                               ) : null}
                             </View>
                           </View>
@@ -3196,8 +3196,8 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         </View>
                         <Text style={styles.simResultRecoverySub}>
                           {continuousClassesNeeded === 0
-                            ? '✅ Still safe! No mandatory continuous recovery required.'
-                            : `⚡ Attend next ${continuousClassesNeeded} classes continuously with 0 bunks.`}
+                            ? '✓ Still safe! No mandatory continuous recovery required.'
+                            : `Attend next ${continuousClassesNeeded} classes continuously with 0 bunks.`}
                         </Text>
                       </View>
                     </View>
@@ -3253,7 +3253,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                                 )}
                               </View>
                               <Text style={styles.holidayRecDate}>
-                                🗓️ {hol.date} {hol.endDate ? `to ${hol.endDate}` : ''} • {hol.day}
+                                {hol.date} {hol.endDate ? `to ${hol.endDate}` : ''} • {hol.day}
                               </Text>
                             </View>
                           </View>
