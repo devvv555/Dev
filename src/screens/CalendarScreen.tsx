@@ -32,17 +32,23 @@ interface CalendarScreenProps {
   isLightMode?: boolean;
 }
 
-const getTodayDateStr = (): string => {
+const getTodayDateInfo = (): { todayStr: string; currentHour: number } => {
   const d = new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return {
+    todayStr: `${year}-${month}-${day}`,
+    currentHour: d.getHours(),
+  };
 };
 
-const isItemPassed = (item: AcademicCalendarItem, todayStr: string): boolean => {
+const isItemPassed = (item: AcademicCalendarItem, todayStr: string, currentHour: number = 0): boolean => {
   const effectiveEnd = item.endDate || item.date;
-  return effectiveEnd < todayStr;
+  if (effectiveEnd < todayStr) return true;
+  // If the event ends today and afternoon/evening has arrived (>= 17:00 / 5:00 PM), it has passed
+  if (effectiveEnd === todayStr && currentHour >= 17) return true;
+  return false;
 };
 
 export const CalendarScreen: React.FC<CalendarScreenProps> = ({
@@ -85,24 +91,24 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
     }
   };
 
-  const nextHolidayInfo = getNextHoliday();
-  const todayStr = getTodayDateStr();
+  const { todayStr, currentHour } = getTodayDateInfo();
+  const nextHolidayInfo = getNextHoliday(todayStr);
 
   const upcomingHolidaysCount = ACADEMIC_CALENDAR.filter(
-    (item) => item.type === 'HOLIDAY' && !isItemPassed(item, todayStr)
+    (item) => item.type === 'HOLIDAY' && !isItemPassed(item, todayStr, currentHour)
   ).length;
 
   const upcomingExamsCount = ACADEMIC_CALENDAR.filter(
-    (item) => item.type === 'EXAM' && !isItemPassed(item, todayStr)
+    (item) => item.type === 'EXAM' && !isItemPassed(item, todayStr, currentHour)
   ).length;
 
   const upcomingEventsCount = ACADEMIC_CALENDAR.filter(
-    (item) => (item.type === 'EVENT' || item.type === 'ACADEMIC') && !isItemPassed(item, todayStr)
+    (item) => (item.type === 'EVENT' || item.type === 'ACADEMIC') && !isItemPassed(item, todayStr, currentHour)
   ).length;
 
   const filteredItems = ACADEMIC_CALENDAR.filter((item) => {
     // Strictly exclude items that have already passed across all categories (Holidays, Exams, Events & Trips)
-    if (isItemPassed(item, todayStr)) {
+    if (isItemPassed(item, todayStr, currentHour)) {
       return false;
     }
     if (filter === 'ALL') return true;
@@ -126,13 +132,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       return `${start.day}/${start.month}/${start.year}`;
     }
     const end = parse(endDateStr);
-    return `${start.day}/${start.month}/${start.year} – ${end.day}/${end.month}/${end.year}`;
+    return `${start.day}/${start.month}/${start.year} - ${end.day}/${end.month}/${end.year}`;
   };
 
   const getTypeBadge = (type: CalendarEventType) => {
     switch (type) {
       case 'HOLIDAY':
-        return { label: '🧳 Holiday', color: '#10B981', bg: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)' };
+        return { label: 'Holiday', color: '#10B981', bg: isLightMode ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)' };
       case 'EXAM':
         return { label: 'Exam', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
       case 'EVENT':
@@ -217,7 +223,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
               isLightMode && { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0', borderWidth: 1 },
               isEnhancedSuit && !isLightMode && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981', borderWidth: 1 }
             ]}>
-              <Text style={{ fontSize: 22 }}>🧳</Text>
+              <Text style={[styles.spotlightIconText, isLightMode ? { color: '#065F46', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>CAL</Text>
             </View>
             <View style={styles.spotlightInfo}>
               <Text style={[styles.spotlightTag, isLightMode ? { color: '#047857', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>
@@ -296,7 +302,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                 : { color: '#10B981' }
             )
           ]}>
-            🧳 Holidays ({upcomingHolidaysCount})
+            Holidays ({upcomingHolidaysCount})
           </Text>
         </TouchableOpacity>
 

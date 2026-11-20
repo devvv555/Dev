@@ -494,17 +494,27 @@ export function getNextHoliday(referenceDateStr?: string): {
   daysRemaining: number;
 } | null {
   const today = referenceDateStr ? new Date(referenceDateStr) : new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  const currentHour = today.getHours();
 
-  const upcomingHolidays = ACADEMIC_CALENDAR.filter(
-    (item) => item.type === 'HOLIDAY' && item.date >= todayStr
-  ).sort((a, b) => a.date.localeCompare(b.date));
+  const upcomingHolidays = ACADEMIC_CALENDAR.filter((item) => {
+    if (item.type !== 'HOLIDAY') return false;
+    const effectiveEnd = item.endDate || item.date;
+    if (effectiveEnd < todayStr) return false;
+    // If today is the holiday and evening has concluded (>= 18:00 / 6:00 PM), it has passed
+    if (effectiveEnd === todayStr && currentHour >= 18) return false;
+    return true;
+  }).sort((a, b) => a.date.localeCompare(b.date));
 
   if (upcomingHolidays.length === 0) return null;
 
   const next = upcomingHolidays[0];
-  const targetDate = new Date(next.date);
-  const diffTime = targetDate.getTime() - today.getTime();
+  const targetDate = new Date(next.date + 'T00:00:00');
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diffTime = targetDate.getTime() - todayMidnight.getTime();
   const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
   return { holiday: next, daysRemaining };

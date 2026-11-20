@@ -551,10 +551,29 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
 
   // Filter upcoming official holidays & long weekends from calendar
   const upcomingHolidays = React.useMemo(() => {
-    const todayStr = '2026-11-19';
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
     return ACADEMIC_CALENDAR.filter(
       (item) => item.type === 'HOLIDAY' || item.isLongWeekend
     ).filter((item) => (item.endDate || item.date) >= todayStr);
+  }, []);
+
+  // Filter out past events as dates pass by
+  const upcomingCalendarEvents = React.useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    const currentHour = now.getHours();
+
+    return ACADEMIC_CALENDAR.filter((item) => {
+      const effectiveEnd = item.endDate || item.date;
+      return !(effectiveEnd < todayStr || (effectiveEnd === todayStr && currentHour >= 17));
+    });
   }, []);
 
   // Group period records into Day-by-Day everyday attendance logs
@@ -2004,7 +2023,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
 
               {/* Calendar Event Cards */}
               <View style={{ gap: 10 }}>
-                {ACADEMIC_CALENDAR.filter((item) => {
+                {upcomingCalendarEvents.filter((item) => {
                   if (calFilter !== 'ALL' && item.type !== calFilter) return false;
                   if (!calSearch.trim()) return true;
                   const q = calSearch.toLowerCase();
