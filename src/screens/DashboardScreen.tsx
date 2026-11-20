@@ -47,6 +47,7 @@ import { Mark85CopilotModal } from '../components/Mark85CopilotModal';
 import { StarkScriptTerminalModal } from '../components/StarkScriptTerminalModal';
 import { NotebookLmModal } from '../components/NotebookLmModal';
 import { ChristStylePreviewModal } from '../components/ChristStylePreviewModal';
+import { PlusCircle, Check, X, Clock, Plus, Minus, Save } from 'lucide-react-native';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -132,7 +133,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     (studentName && studentName.toLowerCase().includes('devdarshan'))
   );
 
-  const [showChristPreview, setShowChristPreview] = useState(isDevdarshanProfile);
+  const [showChristPreview, setShowChristPreview] = useState(false);
+  // Manual Attendance & Extra Class in Hours Modal State
+  const [showExtraClassModal, setShowExtraClassModal] = useState<boolean>(false);
+  const [extraClassSubjectId, setExtraClassSubjectId] = useState<string>('');
+  const [extraClassConductedHours, setExtraClassConductedHours] = useState<number>(2);
+  const [extraClassAttendedHours, setExtraClassAttendedHours] = useState<number>(2);
+  const [extraClassDate, setExtraClassDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [extraClassCategory, setExtraClassCategory] = useState<string>('Extra Lecture');
+  const [extraClassToast, setExtraClassToast] = useState<string | null>(null);
   const [isEnhancedSuit, setIsEnhancedSuit] = useState(isEnhancedSuitProp ?? false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
@@ -217,15 +226,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         setHasConnectRegisterNo(!!creds?.registerNo);
       });
 
-      // Automatically open the new Dark-Navy interface for Devdarshan's profile
-      if (
-        studentRollNo.toUpperCase().includes('26AB12') ||
-        studentRollNo.toUpperCase().includes('24AB12') ||
-        studentRollNo.toUpperCase().includes('2312518') ||
-        (studentName && studentName.toLowerCase().includes('devdarshan'))
-      ) {
-        setShowChristPreview(true);
-      }
 
       // Check if student should receive the notification that attendance is updated upto 14-11-2026
       AsyncStorage.getItem(`@attendance_updated_1411_notified_${studentRollNo}`).then((notified) => {
@@ -988,6 +988,54 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     }
   };
 
+  const handleRecordExtraClassInHours = async () => {
+    const targetSub = subjects.find((s) => s.id === extraClassSubjectId) || subjects[0];
+    if (!targetSub) return;
+
+    const conductedHrs = Math.max(1, extraClassConductedHours);
+    const attendedHrs = Math.min(conductedHrs, Math.max(0, extraClassAttendedHours));
+
+    const updatedSub: Subject = {
+      ...targetSub,
+      attended: Math.max(0, (targetSub.attended || 0) + attendedHrs),
+      total: Math.max(0, (targetSub.total || 0) + conductedHrs),
+    };
+
+    const nextSubjects = subjects.map((s) => (s.id === targetSub.id ? updatedSub : s));
+    setSubjects(nextSubjects);
+    if (onUpdateSubject) {
+      onUpdateSubject(updatedSub);
+    }
+    await StorageService.saveSubjects(nextSubjects);
+
+    // Also record in periodRecords so it appears in attendance history / everyday logs
+    const slotId = `extra_${targetSub.id}_${extraClassDate}_${Date.now()}`;
+    const periodKey = `${extraClassDate}_${slotId}`;
+    const newRecord: PeriodAttendanceRecord = {
+      periodKey,
+      date: extraClassDate,
+      slotId,
+      subjectId: targetSub.id,
+      status: attendedHrs > 0 ? 'attended' : 'bunked',
+      hours: conductedHrs,
+      recordedAt: Date.now(),
+      cloudSyncedAt: new Date().toISOString(),
+    };
+
+    if (studentRollNo) {
+      const stored = await StorageService.getPeriodRecords(studentRollNo);
+      const merged = { ...stored, ...periodRecords, [periodKey]: newRecord };
+      setPeriodRecords(merged);
+      await StorageService.savePeriodRecords(studentRollNo, merged);
+      CloudSyncService.syncSubjects(studentRollNo, nextSubjects);
+      CloudSyncService.syncPeriodRecord(studentRollNo, newRecord);
+    }
+
+    setExtraClassToast(`Extra class recorded: ${targetSub.code || targetSub.name} (+${attendedHrs}/${conductedHrs} hrs)`);
+    setShowExtraClassModal(false);
+    setTimeout(() => setExtraClassToast(null), 4000);
+  };
+
   return (
     <ScrollView
       style={[
@@ -1047,7 +1095,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               PROTOTYPE PREVIEW
             </Text>
             <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#38BDF8' }}>
-              ✨ CHRIST / KP UNIVERSITY UI
+              CHRIST / KP UNIVERSITY UI
             </Text>
           </View>
           <Text style={{ fontSize: 13, fontWeight: '900', color: '#F8FAFC' }}>
@@ -1581,6 +1629,40 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             {overall.summaryMessage}
           </Text>
         </View>
+
+        {/* Extra Class & Manual Hours Quick Action Button */}
+        <TouchableOpacity
+          style={{
+            backgroundColor: isLightMode ? '#E0F2FE' : '#1E293B',
+            borderColor: isLightMode ? '#0284C7' : '#38BDF8',
+            borderWidth: 1.5,
+            borderRadius: 10,
+            paddingVertical: 9,
+            paddingHorizontal: 14,
+            marginTop: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+          onPress={() => {
+            const firstId = extraClassSubjectId || subjects[0]?.id || '';
+            setExtraClassSubjectId(firstId);
+            setShowExtraClassModal(true);
+          }}
+          activeOpacity={0.8}
+        >
+          <PlusCircle size={15} color={isLightMode ? '#0284C7' : '#38BDF8'} strokeWidth={2.5} />
+          <Text
+            style={{
+              fontSize: 12.5,
+              fontWeight: '800',
+              color: isLightMode ? '#0369A1' : '#38BDF8',
+            }}
+          >
+            + Mark Extra Class (in hours)
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Live Auto-Class Tracker Card (Strictly Today's Real-Time Schedule) */}
@@ -3321,6 +3403,336 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         studentRollNo={studentRollNo}
         isLightMode={isLightMode}
       />
+
+      {/* Mark Extra Class in Hours Modal */}
+      <Modal
+        visible={showExtraClassModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowExtraClassModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(3, 7, 18, 0.85)', justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              backgroundColor: isLightMode ? '#FFFFFF' : '#0F172A',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              maxHeight: '90%',
+              borderTopWidth: 1,
+              borderColor: isLightMode ? '#E2E8F0' : '#1E293B',
+            }}
+          >
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={{ fontSize: 17, fontWeight: '900', color: isLightMode ? '#0F172A' : '#F8FAFC' }}>
+                  Mark Extra Class (in Hours)
+                </Text>
+                <Text style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                  Log extra lecture or compensatory hours directly to your attendance
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowExtraClassModal(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: isLightMode ? '#F1F5F9' : '#1E293B',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <X size={18} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Toast message if present */}
+            {extraClassToast ? (
+              <View
+                style={{
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  borderColor: '#10B981',
+                  borderWidth: 1,
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Check size={16} color="#10B981" strokeWidth={2.5} />
+                <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700', flex: 1 }}>
+                  {extraClassToast}
+                </Text>
+              </View>
+            ) : null}
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24, gap: 14 }}>
+              {/* 1. Select Subject */}
+              <View>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: isLightMode ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 8 }}>
+                  SELECT COURSE
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+                  {subjects
+                    .filter((s) => !s.noAttendance && s.code !== 'SPORTS' && !s.name.toLowerCase().includes('sports'))
+                    .map((sub) => {
+                      const isSel = (extraClassSubjectId || subjects[0]?.id) === sub.id;
+                      const codeLabel = sub.code || sub.name.substring(0, 4).toUpperCase();
+                      return (
+                        <TouchableOpacity
+                          key={sub.id}
+                          onPress={() => setExtraClassSubjectId(sub.id)}
+                          style={{
+                            backgroundColor: isSel ? (isLightMode ? '#E0F2FE' : '#1E293B') : (isLightMode ? '#F8FAFC' : '#0B1322'),
+                            borderColor: isSel ? '#0284C7' : (isLightMode ? '#CBD5E1' : '#1E293B'),
+                            borderWidth: 1.5,
+                            borderRadius: 9,
+                            paddingVertical: 7,
+                            paddingHorizontal: 12,
+                            alignItems: 'center',
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: '800', color: isSel ? (isLightMode ? '#0369A1' : '#38BDF8') : (isLightMode ? '#334155' : '#94A3B8') }}>
+                            {codeLabel}
+                          </Text>
+                          <Text style={{ fontSize: 9.5, color: '#64748B', marginTop: 1 }}>
+                            {sub.attended || 0}/{sub.total || 0} hrs
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                </ScrollView>
+              </View>
+
+              {(() => {
+                const targetSub = subjects.find((s) => s.id === (extraClassSubjectId || subjects[0]?.id)) || subjects[0];
+                if (!targetSub) return null;
+                const curAttended = targetSub.attended || 0;
+                const curTotal = targetSub.total || 0;
+                const curPct = curTotal > 0 ? (curAttended / curTotal) * 100 : 100;
+
+                const conductedHrs = Math.max(1, extraClassConductedHours);
+                const attendedHrs = Math.min(conductedHrs, Math.max(0, extraClassAttendedHours));
+                const newAttended = curAttended + attendedHrs;
+                const newTotal = curTotal + conductedHrs;
+                const newPct = newTotal > 0 ? (newAttended / newTotal) * 100 : 100;
+                const isNewSafe = newPct >= 75;
+                const newSafeBunks = newTotal > 0 ? Math.max(0, Math.floor((100 * newAttended - 75 * newTotal) / 75)) : 0;
+
+                return (
+                  <View style={{ gap: 14 }}>
+                    {/* Course Summary Banner */}
+                    <View style={{ backgroundColor: isLightMode ? '#F8FAFC' : '#0B1322', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: isLightMode ? '#E2E8F0' : '#1E293B' }}>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: isLightMode ? '#0F172A' : '#F8FAFC' }}>
+                        {targetSub.name}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                        Current Standing: {curAttended} / {curTotal} hrs ({curPct.toFixed(1)}%) • Code: {targetSub.code || '24GMxx'}
+                      </Text>
+                    </View>
+
+                    {/* Quick Preset Hours Chips */}
+                    <View>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: isLightMode ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                        QUICK HOURS PRESETS
+                      </Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                        {[
+                          { label: 'Attended 1 of 1 hr', cond: 1, att: 1 },
+                          { label: 'Attended 2 of 2 hrs', cond: 2, att: 2 },
+                          { label: 'Attended 3 of 3 hrs', cond: 3, att: 3 },
+                          { label: 'Attended 1 of 2 hrs', cond: 2, att: 1 },
+                          { label: 'Missed 0 of 1 hr', cond: 1, att: 0 },
+                          { label: 'Missed 0 of 2 hrs', cond: 2, att: 0 },
+                        ].map((preset, pIdx) => {
+                          const isMatch = extraClassConductedHours === preset.cond && extraClassAttendedHours === preset.att;
+                          return (
+                            <TouchableOpacity
+                              key={pIdx}
+                              onPress={() => {
+                                setExtraClassConductedHours(preset.cond);
+                                setExtraClassAttendedHours(preset.att);
+                              }}
+                              style={{
+                                backgroundColor: isMatch ? (isLightMode ? '#0284C7' : '#0369A1') : (isLightMode ? '#F1F5F9' : '#1E293B'),
+                                paddingHorizontal: 11,
+                                paddingVertical: 6,
+                                borderRadius: 8,
+                              }}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: isMatch ? '#FFFFFF' : (isLightMode ? '#475569' : '#94A3B8') }}>
+                                {preset.label}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+
+                    {/* 2. Conducted Hours Stepper */}
+                    <View style={{ backgroundColor: isLightMode ? '#F8FAFC' : '#0B1322', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: isLightMode ? '#E2E8F0' : '#1E293B' }}>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: isLightMode ? '#475569' : '#94A3B8', marginBottom: 8 }}>
+                        HOURS CONDUCTED / HELD
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <TouchableOpacity
+                          style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLightMode ? '#E2E8F0' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={() => {
+                            const nextC = Math.max(1, conductedHrs - 1);
+                            setExtraClassConductedHours(nextC);
+                            if (extraClassAttendedHours > nextC) setExtraClassAttendedHours(nextC);
+                          }}
+                        >
+                          <Text style={{ fontSize: 18, fontWeight: '900', color: '#64748B' }}>-</Text>
+                        </TouchableOpacity>
+                        <View style={{ flex: 1, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 17, fontWeight: '900', color: isLightMode ? '#0F172A' : '#FFFFFF' }}>
+                            {conductedHrs} {conductedHrs === 1 ? 'Hour' : 'Hours'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLightMode ? '#E2E8F0' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={() => setExtraClassConductedHours(conductedHrs + 1)}
+                        >
+                          <Text style={{ fontSize: 18, fontWeight: '900', color: '#64748B' }}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* 3. Attended Hours Stepper */}
+                    <View style={{ backgroundColor: isLightMode ? '#F0FDF4' : 'rgba(16, 185, 129, 0.08)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#10B981', marginBottom: 8 }}>
+                        HOURS YOU ATTENDED (PRESENT)
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <TouchableOpacity
+                          style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLightMode ? '#DCFCE7' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={() => setExtraClassAttendedHours(Math.max(0, attendedHrs - 1))}
+                        >
+                          <Text style={{ fontSize: 18, fontWeight: '900', color: '#10B981' }}>-</Text>
+                        </TouchableOpacity>
+                        <View style={{ flex: 1, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 17, fontWeight: '900', color: attendedHrs > 0 ? '#10B981' : '#EF4444' }}>
+                            {attendedHrs} {attendedHrs === 1 ? 'Hour' : 'Hours'} {attendedHrs === 0 ? '(Absent)' : '(Present)'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLightMode ? '#DCFCE7' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={() => setExtraClassAttendedHours(Math.min(conductedHrs, attendedHrs + 1))}
+                        >
+                          <Text style={{ fontSize: 18, fontWeight: '900', color: '#10B981' }}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* 4. Date Selection */}
+                    <View>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: isLightMode ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                        DATE (YYYY-MM-DD)
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
+                        {['Today', 'Yesterday'].map((quickLabel) => {
+                          const qDate = new Date();
+                          if (quickLabel === 'Yesterday') qDate.setDate(qDate.getDate() - 1);
+                          const y = qDate.getFullYear();
+                          const m = String(qDate.getMonth() + 1).padStart(2, '0');
+                          const d = String(qDate.getDate()).padStart(2, '0');
+                          const qDateStr = `${y}-${m}-${d}`;
+                          const isMatch = extraClassDate === qDateStr;
+                          return (
+                            <TouchableOpacity
+                              key={quickLabel}
+                              onPress={() => setExtraClassDate(qDateStr)}
+                              style={{
+                                backgroundColor: isMatch ? (isLightMode ? '#E0F2FE' : '#1E293B') : (isLightMode ? '#F1F5F9' : '#0B1322'),
+                                borderWidth: 1,
+                                borderColor: isMatch ? '#0284C7' : (isLightMode ? '#CBD5E1' : '#334155'),
+                                paddingHorizontal: 10,
+                                paddingVertical: 5,
+                                borderRadius: 7,
+                              }}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: isMatch ? (isLightMode ? '#0369A1' : '#38BDF8') : (isLightMode ? '#475569' : '#94A3B8') }}>
+                                {quickLabel} ({qDateStr})
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                      <TextInput
+                        style={{
+                          backgroundColor: isLightMode ? '#FFFFFF' : '#0B1322',
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: isLightMode ? '#CBD5E1' : '#334155',
+                          paddingHorizontal: 12,
+                          paddingVertical: 7,
+                          fontSize: 13,
+                          color: isLightMode ? '#0F172A' : '#FFFFFF',
+                        }}
+                        value={extraClassDate}
+                        onChangeText={setExtraClassDate}
+                        placeholder="2026-11-20"
+                        placeholderTextColor="#64748B"
+                      />
+                    </View>
+
+                    {/* 5. Live Impact Projection Card */}
+                    <View style={{ backgroundColor: isNewSafe ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: isNewSafe ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)' }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isNewSafe ? '#10B981' : '#EF4444' }}>
+                          PROJECTED POST-EXTRA CLASS STANDING
+                        </Text>
+                        <Text style={{ fontSize: 16, fontWeight: '900', color: isNewSafe ? '#10B981' : '#EF4444' }}>
+                          {newPct.toFixed(1)}%
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 11.5, color: isLightMode ? '#475569' : '#94A3B8', marginTop: 4 }}>
+                        {attendedHrs > 0
+                          ? `Adding ${attendedHrs} attended / ${conductedHrs} conducted hrs brings subject to ${newAttended}/${newTotal} hrs (${newSafeBunks} safe bunks available).`
+                          : `Adding 0 attended / ${conductedHrs} conducted hrs drops subject to ${newAttended}/${newTotal} hrs.`}
+                      </Text>
+                    </View>
+
+                    {/* Action Button */}
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#0284C7',
+                        paddingVertical: 12,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        gap: 8,
+                        shadowColor: '#0284C7',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3,
+                        elevation: 3,
+                      }}
+                      onPress={handleRecordExtraClassInHours}
+                      activeOpacity={0.8}
+                    >
+                      <PlusCircle size={16} color="#FFFFFF" strokeWidth={2.4} />
+                      <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
+                        Confirm & Add Extra Class (+{attendedHrs}/{conductedHrs} hrs)
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };

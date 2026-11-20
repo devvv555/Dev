@@ -114,6 +114,7 @@ import {
   LogOut,
   PlusCircle,
   Plus,
+  Minus,
 } from 'lucide-react-native';
 
 interface ChristStylePreviewProps {
@@ -543,8 +544,10 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   const [manualSubjectId, setManualSubjectId] = useState<string>(attendanceSubjects[0]?.id || subjects[0]?.id || '');
   const [manualDate, setManualDate] = useState<string>(displayDateStr);
   const [manualClassType, setManualClassType] = useState<string>('Extra Lecture');
-  const [manualHours, setManualHours] = useState<number>(1);
-  const [manualTiming, setManualTiming] = useState<string>('16:45 - 17:45');
+  const [manualHours, setManualHours] = useState<number>(2);
+  const [manualConductedHours, setManualConductedHours] = useState<number>(2);
+  const [manualAttendedHours, setManualAttendedHours] = useState<number>(2);
+  const [manualTiming, setManualTiming] = useState<string>('16:45 - 18:45');
   const [manualRoom, setManualRoom] = useState<string>('LH-101');
   const [manualStatus, setManualStatus] = useState<AttendanceStatus>('attended');
   const [directAttendedInput, setDirectAttendedInput] = useState<string>('');
@@ -571,11 +574,14 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
     const targetSub = subjects.find((s) => s.id === manualSubjectId) || subjects[0];
     if (!targetSub) return;
 
+    const conductedHrs = Math.max(1, manualConductedHours);
+    const attendedHrs = Math.min(conductedHrs, Math.max(0, manualAttendedHours));
+
     const startPart = manualTiming.split('-')[0]?.trim() || '16:45';
     const [startHStr, startMStr] = startPart.split(':');
     const startH = parseInt(startHStr, 10) || 16;
     const startM = parseInt(startMStr, 10) || 45;
-    const endH = startH + manualHours;
+    const endH = startH + conductedHrs;
     const startTimeFormatted = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
     const endTimeFormatted = `${String(endH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
 
@@ -598,31 +604,31 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
       rescheduledDate: manualDate,
     };
 
+    const deltaAttended = attendedHrs;
+    const deltaTotal = conductedHrs;
+    const updated: Subject = {
+      ...targetSub,
+      attended: Math.max(0, (targetSub.attended || 0) + deltaAttended),
+      total: Math.max(0, (targetSub.total || 0) + deltaTotal),
+    };
+    if (onUpdateSubject) {
+      onUpdateSubject(updated);
+    }
+    try {
+      const nextSubs = subjects.map((s) => (s.id === targetSub.id ? updated : s));
+      await StorageService.saveSubjects(nextSubs);
+    } catch {}
+
     if (onRecordPeriodAttendance) {
       try {
-        await onRecordPeriodAttendance(extraSlot, manualDate, manualStatus);
+        await onRecordPeriodAttendance(extraSlot, manualDate, attendedHrs > 0 ? 'attended' : 'bunked');
       } catch (err) {
         console.warn('Error recording extra class period:', err);
       }
-    } else {
-      const deltaAttended = manualStatus === 'attended' ? manualHours : 0;
-      const deltaTotal = manualHours;
-      const updated: Subject = {
-        ...targetSub,
-        attended: Math.max(0, (targetSub.attended || 0) + deltaAttended),
-        total: Math.max(0, (targetSub.total || 0) + deltaTotal),
-      };
-      if (onUpdateSubject) {
-        onUpdateSubject(updated);
-      }
-      try {
-        const nextSubs = subjects.map((s) => (s.id === targetSub.id ? updated : s));
-        await StorageService.saveSubjects(nextSubs);
-      } catch {}
     }
 
-    const hoursLabel = `${manualHours} ${manualHours === 1 ? 'hr' : 'hrs'}`;
-    const statusLabel = manualStatus === 'attended' ? 'Attended (Present)' : 'Missed (Absent)';
+    const hoursLabel = `${attendedHrs}/${conductedHrs} hrs`;
+    const statusLabel = attendedHrs > 0 ? 'Attended (Present)' : 'Missed (Absent)';
     setManualToastMsg(`Extra Class recorded: ${targetSub.code || targetSub.name} (+${hoursLabel} - ${statusLabel}).`);
     setShowManualAttendanceModal(false);
     setTimeout(() => setManualToastMsg(null), 4000);
@@ -3823,10 +3829,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     );
                   }
 
-                  // EXTRA_CLASS MODE
-                  const extraHours = manualHours;
-                  const newAttended = curAttended + (manualStatus === 'attended' ? extraHours : 0);
-                  const newTotal = curTotal + extraHours;
+                  // EXTRA_CLASS MODE (in hours)
+                  const conductedHrs = Math.max(1, manualConductedHours);
+                  const attendedHrs = Math.min(conductedHrs, Math.max(0, manualAttendedHours));
+                  const newAttended = curAttended + attendedHrs;
+                  const newTotal = curTotal + conductedHrs;
                   const newPct = newTotal > 0 ? (newAttended / newTotal) * 100 : 100;
                   const isNewSafe = newPct >= 75;
                   const newSafeBunks = newTotal > 0 ? Math.max(0, Math.floor((100 * newAttended - 75 * newTotal) / 75)) : 0;
@@ -3870,6 +3877,110 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                             );
                           })}
                         </ScrollView>
+                      </View>
+
+                      {/* Quick Hours Presets */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          QUICK HOURS PRESETS
+                        </Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                          {[
+                            { label: 'Attended 1 of 1 hr', cond: 1, att: 1 },
+                            { label: 'Attended 2 of 2 hrs', cond: 2, att: 2 },
+                            { label: 'Attended 3 of 3 hrs', cond: 3, att: 3 },
+                            { label: 'Attended 1 of 2 hrs', cond: 2, att: 1 },
+                            { label: 'Missed 0 of 1 hr', cond: 1, att: 0 },
+                            { label: 'Missed 0 of 2 hrs', cond: 2, att: 0 },
+                          ].map((preset, pIdx) => {
+                            const isMatch = manualConductedHours === preset.cond && manualAttendedHours === preset.att;
+                            return (
+                              <TouchableOpacity
+                                key={pIdx}
+                                onPress={() => {
+                                  setManualConductedHours(preset.cond);
+                                  setManualAttendedHours(preset.att);
+                                  setManualStatus(preset.att > 0 ? 'attended' : 'bunked');
+                                }}
+                                style={{
+                                  backgroundColor: isMatch ? (isLight ? '#0284C7' : '#0369A1') : (isLight ? '#F1F5F9' : '#1E293B'),
+                                  paddingHorizontal: 11,
+                                  paddingVertical: 6,
+                                  borderRadius: 8,
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: isMatch ? '#FFFFFF' : (isLight ? '#475569' : '#94A3B8') }}>
+                                  {preset.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+
+                      {/* Conducted Hours Stepper */}
+                      <View style={{ backgroundColor: isLight ? '#F8FAFC' : '#0B1322', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: isLight ? '#E2E8F0' : '#1E293B' }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', marginBottom: 8 }}>
+                          HOURS CONDUCTED / HELD
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <TouchableOpacity
+                            style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#E2E8F0' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                            onPress={() => {
+                              const nextC = Math.max(1, conductedHrs - 1);
+                              setManualConductedHours(nextC);
+                              if (manualAttendedHours > nextC) setManualAttendedHours(nextC);
+                            }}
+                          >
+                            <Minus size={16} color="#64748B" strokeWidth={2.4} />
+                          </TouchableOpacity>
+                          <View style={{ flex: 1, alignItems: 'center' }}>
+                            <Text style={{ fontSize: 17, fontWeight: '900', color: isLight ? '#0F172A' : '#FFFFFF' }}>
+                              {conductedHrs} {conductedHrs === 1 ? 'Hour' : 'Hours'}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#E2E8F0' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                            onPress={() => setManualConductedHours(conductedHrs + 1)}
+                          >
+                            <Plus size={16} color="#64748B" strokeWidth={2.4} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {/* Attended Hours Stepper */}
+                      <View style={{ backgroundColor: isLight ? '#F0FDF4' : 'rgba(16, 185, 129, 0.08)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#10B981', marginBottom: 8 }}>
+                          HOURS YOU ATTENDED (PRESENT)
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <TouchableOpacity
+                            style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#DCFCE7' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                            onPress={() => {
+                              const nextA = Math.max(0, attendedHrs - 1);
+                              setManualAttendedHours(nextA);
+                              setManualStatus(nextA > 0 ? 'attended' : 'bunked');
+                            }}
+                          >
+                            <Minus size={16} color="#10B981" strokeWidth={2.4} />
+                          </TouchableOpacity>
+                          <View style={{ flex: 1, alignItems: 'center' }}>
+                            <Text style={{ fontSize: 17, fontWeight: '900', color: attendedHrs > 0 ? '#10B981' : '#EF4444' }}>
+                              {attendedHrs} {attendedHrs === 1 ? 'Hour' : 'Hours'} {attendedHrs === 0 ? '(Absent)' : '(Present)'}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#DCFCE7' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                            onPress={() => {
+                              const nextA = Math.min(conductedHrs, attendedHrs + 1);
+                              setManualAttendedHours(nextA);
+                              setManualStatus(nextA > 0 ? 'attended' : 'bunked');
+                            }}
+                          >
+                            <Plus size={16} color="#10B981" strokeWidth={2.4} />
+                          </TouchableOpacity>
+                        </View>
                       </View>
 
                       {/* Date Input with Quick Chips */}
@@ -3925,41 +4036,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           placeholder="2026-11-20"
                           placeholderTextColor="#64748B"
                         />
-                      </View>
-
-                      {/* Duration (Hours) */}
-                      <View>
-                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
-                          DURATION
-                        </Text>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                          {[1, 2, 3].map((hrs) => {
-                            const isHrsSel = manualHours === hrs;
-                            return (
-                              <TouchableOpacity
-                                key={hrs}
-                                onPress={() => {
-                                  setManualHours(hrs);
-                                  if (hrs === 1) setManualTiming('16:45 - 17:45');
-                                  if (hrs === 2) setManualTiming('16:45 - 18:45');
-                                  if (hrs === 3) setManualTiming('16:45 - 19:45');
-                                }}
-                                style={{
-                                  flex: 1,
-                                  backgroundColor: isHrsSel ? (isLight ? '#0284C7' : '#0369A1') : (isLight ? '#F1F5F9' : '#1E293B'),
-                                  paddingVertical: 8,
-                                  borderRadius: 8,
-                                  alignItems: 'center',
-                                }}
-                                activeOpacity={0.7}
-                              >
-                                <Text style={{ fontSize: 12, fontWeight: '800', color: isHrsSel ? '#FFFFFF' : (isLight ? '#475569' : '#94A3B8') }}>
-                                  {hrs} {hrs === 1 ? 'Hour' : 'Hours'}
-                                </Text>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </View>
                       </View>
 
                       {/* Slot Timing */}
@@ -4021,58 +4097,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         </View>
                       </View>
 
-                      {/* Attendance Status (Present vs Absent) */}
-                      <View>
-                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
-                          YOUR ATTENDANCE STATUS
-                        </Text>
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              backgroundColor: manualStatus === 'attended' ? 'rgba(16, 185, 129, 0.15)' : (isLight ? '#F8FAFC' : '#0B1322'),
-                              borderColor: manualStatus === 'attended' ? '#10B981' : (isLight ? '#CBD5E1' : '#334155'),
-                              borderWidth: 1.5,
-                              paddingVertical: 10,
-                              borderRadius: 10,
-                              alignItems: 'center',
-                              flexDirection: 'row',
-                              justifyContent: 'center',
-                              gap: 6,
-                            }}
-                            onPress={() => setManualStatus('attended')}
-                            activeOpacity={0.8}
-                          >
-                            <Check size={16} color="#10B981" strokeWidth={2.6} />
-                            <Text style={{ fontSize: 13, fontWeight: '800', color: '#10B981' }}>
-                              Attended (Present)
-                            </Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              backgroundColor: manualStatus === 'bunked' ? 'rgba(239, 68, 68, 0.15)' : (isLight ? '#F8FAFC' : '#0B1322'),
-                              borderColor: manualStatus === 'bunked' ? '#EF4444' : (isLight ? '#CBD5E1' : '#334155'),
-                              borderWidth: 1.5,
-                              paddingVertical: 10,
-                              borderRadius: 10,
-                              alignItems: 'center',
-                              flexDirection: 'row',
-                              justifyContent: 'center',
-                              gap: 6,
-                            }}
-                            onPress={() => setManualStatus('bunked')}
-                            activeOpacity={0.8}
-                          >
-                            <X size={16} color="#EF4444" strokeWidth={2.6} />
-                            <Text style={{ fontSize: 13, fontWeight: '800', color: '#EF4444' }}>
-                              Missed (Absent)
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
                       {/* Live Mathematical Projection Card */}
                       <View style={{ backgroundColor: isNewSafe ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: isNewSafe ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -4084,9 +4108,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           </Text>
                         </View>
                         <Text style={{ fontSize: 11, color: isLight ? '#475569' : '#94A3B8', marginTop: 4 }}>
-                          {manualStatus === 'attended'
-                            ? `Attending this ${extraHours} hr session lifts your subject attendance to ${newAttended}/${newTotal} hrs (${newSafeBunks} safe bunks available).`
-                            : `Missing this ${extraHours} hr session drops your subject attendance to ${newAttended}/${newTotal} hrs.`}
+                          {`+${attendedHrs} hrs attended / +${conductedHrs} hrs held -> New Total: ${newAttended}/${newTotal} hrs (${newPct.toFixed(1)}%). ${newSafeBunks > 0 ? `${newSafeBunks} safe bunks available.` : 'Below minimum threshold.'}`}
                         </Text>
                       </View>
 
@@ -4111,7 +4133,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       >
                         <PlusCircle size={16} color="#FFFFFF" strokeWidth={2.4} />
                         <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
-                          Record Extra Class Attendance
+                          Record Extra Class (+{attendedHrs}/{conductedHrs} hrs)
                         </Text>
                       </TouchableOpacity>
                     </View>
