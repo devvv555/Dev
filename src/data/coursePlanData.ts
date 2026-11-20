@@ -94,10 +94,10 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'Revision', topic: 'End-Semester Final Exam Preparation & Doubt Clearing' },
     ],
     classroomRules: [
-      '🔢 Calculator is required for all classes (Scientific calculator is preferable).',
-      '📓 Separate notebook needs to be maintained for the Statistics class.',
-      '💻 Laptop is mandatory for analysis using SPSS / PSPP, Jamovi, Gretl & AI software in classes.',
-      '🤝 Group preparations for examinations and case studies are encouraged.',
+      'Calculator is required for all classes (Scientific calculator is preferable).',
+      'Separate notebook needs to be maintained for the Statistics class.',
+      'Laptop is mandatory for analysis using SPSS / PSPP, Jamovi, Gretl & AI software in classes.',
+      'Group preparations for examinations and case studies are encouraged.',
     ],
     recommendedBooks: [
       'Business Statistics (10th edition) by David M. Levine, Stephen A. Mazur, Barbara A. Carlson (Prentice Hall, 2023)',
@@ -197,10 +197,10 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'Revision', topic: 'Comprehensive Course Wrap-up & End Semester Guidance', date: 'Session 30' },
     ],
     classroomRules: [
-      '📊 Scientific calculator is required for all numerical and accounting sessions.',
-      '💻 Laptop with MS Excel is mandatory for Unit 3 Financial Modeling & Dashboards.',
-      '📰 Read financial dailies (Economic Times / Mint / Business Standard) for corporate reporting discussions.',
-      '🤝 Punctual attendance and proactive case discussion participation are strictly assessed.',
+      'Scientific calculator is required for all numerical and accounting sessions.',
+      'Laptop with MS Excel is mandatory for Unit 3 Financial Modeling & Dashboards.',
+      'Read financial dailies (Economic Times / Mint / Business Standard) for corporate reporting discussions.',
+      'Punctual attendance and proactive case discussion participation are strictly assessed.',
     ],
     recommendedBooks: [
       'Horngren, C. T., Sundem, G. L., Stratton, W. O., Burgstahler, D., and Schatzberg, J. O. “Introduction to Management Accounting”. Pearson, 17th edition, 2022.',
@@ -301,10 +301,10 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: '5', topic: 'Mini Project Capstone • Final project presentations & lab evaluations' },
     ],
     classroomRules: [
-      '👔 Be prompt in formal attire. Be ready to learn when class begins and no mobile phone in the lab.',
-      '💻 Be prepared: Have your laptop with MS Excel installed and working for every session.',
-      '🚫 No plagiarism in assignments (be creative with original corporate datasets).',
-      '⚠️ Strict deadline adherence: No resubmissions or re-tests.',
+      'Be prompt in formal attire. Be ready to learn when class begins and no mobile phone in the lab.',
+      'Be prepared: Have your laptop with MS Excel installed and working for every session.',
+      'No plagiarism in assignments (be creative with original corporate datasets).',
+      ' Strict deadline adherence: No resubmissions or re-tests.',
     ],
     recommendedBooks: [
       'Alexander, Michael. “Excel Dashboards & Reports for Dummies”. John Wiley & Sons, 2022.',
@@ -403,9 +403,9 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'Revision', topic: 'Comprehensive Course Revision & Final Exam Preparation' },
     ],
     classroomRules: [
-      '📖 Read prescribed Harvard / Ivey business cases prior to classroom discussion.',
-      '🤝 Punctual attendance and active classroom participation are strictly recorded.',
-      '📱 Laptops allowed during assigned case analysis; personal phone usage prohibited.',
+      'Read prescribed Harvard / Ivey business cases prior to classroom discussion.',
+      'Punctual attendance and active classroom participation are strictly recorded.',
+      'Laptops allowed during assigned case analysis; personal phone usage prohibited.',
     ],
     recommendedBooks: [
       'Robbins, Stephen P., “Management”. Pearson Education, 15th Edition, 2022.',
@@ -505,9 +505,9 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'Revision', topic: 'Comprehensive Course Revision & End Semester Preparation' },
     ],
     classroomRules: [
-      '📈 Economic graph plotting and numerical problem solving required in every lecture.',
-      '🗞️ Regular reading of economic news (Mint, Business Line, The Economist) is mandatory.',
-      '💻 Bring laptops for macroeconomic data extraction from RBI DBIE and World Bank.',
+      'Economic graph plotting and numerical problem solving required in every lecture.',
+      ' Regular reading of economic news (Mint, Business Line, The Economist) is mandatory.',
+      'Bring laptops for macroeconomic data extraction from RBI DBIE and World Bank.',
     ],
     recommendedBooks: [
       'Thomas, Christopher R., and S. Charles Maurice. “Managerial Economics”. Tata McGraw Hill, 12th Edition, 2020.',
@@ -607,9 +607,9 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'V', topic: 'Crisis Communication • Public relations, PR releases & crisis response frameworks' },
     ],
     classroomRules: [
-      '👔 Professional formal dress code is mandatory for all presentations and lab activities.',
-      '🚫 Zero tolerance for plagiarism in written assignments and report portfolios.',
-      '🎙️ Active oral participation and peer feedback are graded.',
+      'Professional formal dress code is mandatory for all presentations and lab activities.',
+      'Zero tolerance for plagiarism in written assignments and report portfolios.',
+      ' Active oral participation and peer feedback are graded.',
     ],
     recommendedBooks: [
       'Bovee, Courtland L., John V. Thill, and Roshan Lal Raina. “Business Communication Today”. 15th Edition, Pearson Education, 2021.',
@@ -709,9 +709,9 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'Revision', topic: 'E-Commerce Rules & Comprehensive Legal Course Review' },
     ],
     classroomRules: [
-      '⚖️ Case law citations and landmark court judgment references are expected in all assessments.',
-      '📄 Students must maintain individual portfolios of commercial legal templates.',
-      '🤝 Punctuality and classroom attendance compliance are strictly enforced.',
+      ' Case law citations and landmark court judgment references are expected in all assessments.',
+      'Students must maintain individual portfolios of commercial legal templates.',
+      'Punctuality and classroom attendance compliance are strictly enforced.',
     ],
     recommendedBooks: [
       'Arora, Sushma. “Business Law”. Taxmann’s Publication Private Limited, 11th Edition, 2021.',
@@ -801,9 +801,9 @@ export const OFFICIAL_COURSE_PLANS: Record<string, CoursePlan> = {
       { sessionNumber: 30, unit: 'V', topic: 'Reflection & Synthesis • Individual learnings, ethical leadership & certificate award' },
     ],
     classroomRules: [
-      '🤝 100% attendance and active field participation are strictly compulsory.',
-      '🌱 Zero financial budget policy: projects must leverage ingenuity, partnership, and non-monetary resources.',
-      '📸 High-resolution photographic and video documentation required for all field visits.',
+      '100% attendance and active field participation are strictly compulsory.',
+      'Zero financial budget policy: projects must leverage ingenuity, partnership, and non-monetary resources.',
+      'High-resolution photographic and video documentation required for all field visits.',
     ],
     recommendedBooks: [
       'United Nations Sustainable Development Goals Resource Toolkit (SDG Report 2024).',
@@ -923,9 +923,9 @@ export function getCoursePlanForSubject(subjectCode: string, subjectName?: strin
       isExam: i === 12 || i === 13,
     })),
     classroomRules: [
-      '📖 Regular attendance and punctuality are required for all sessions.',
-      '💻 Bring laptop whenever analytical or case discussion is scheduled.',
-      '🤝 Active class participation in case analysis is mandatory.',
+      'Regular attendance and punctuality are required for all sessions.',
+      'Bring laptop whenever analytical or case discussion is scheduled.',
+      'Active class participation in case analysis is mandatory.',
     ],
     recommendedBooks: [
       `Standard Textbooks for ${subjectName || cleanCode} (PSGIM Library Reference)`,

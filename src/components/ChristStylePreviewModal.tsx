@@ -24,6 +24,7 @@ import { calculateAttendanceMetrics, getSlotHours } from '../services/attendance
 import { ACADEMIC_CALENDAR, AcademicCalendarItem } from '../data/academicCalendarData';
 import { NOTEBOOK_LM_SHARED_URL } from './NotebookLmModal';
 import { getCoursePlanForSubject } from '../data/coursePlanData';
+import { getCourseSyllabus, CourseSyllabus } from '../data/courseSyllabusData';
 
 // Subject-specific Google NotebookLM AI Study Hub URLs (Only for Core Courses that have official NotebookLM)
 const STORAGE_READ_NOTIFS_KEY = '@psgim_read_notifications_';
@@ -1765,66 +1766,58 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     <Text style={styles.academicTitleText}>{sub.name.toUpperCase()}</Text>
 
                     {/* Syllabus Row */}
-                    <View style={styles.academicActionRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <TouchableOpacity
+                      style={styles.academicActionRow}
+                      onPress={() => {
+                        setSelectedCourseDetails({
+                          code: sub.code,
+                          name: sub.name,
+                          type: 'SYLLABUS',
+                        });
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                         <FileText size={18} color="#60A5FA" strokeWidth={2} />
-                        <View>
+                        <View style={{ flex: 1 }}>
                           <Text style={styles.actionRowTitle}>Syllabus</Text>
                           <Text style={styles.actionRowSub}>Units & Course Outcomes</Text>
                         </View>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <TouchableOpacity
-                          style={styles.actionViewBtn}
-                          onPress={() => {
-                            setSelectedCourseDetails({
-                              code: sub.code,
-                              name: sub.name,
-                              type: 'SYLLABUS',
-                            });
-                          }}
-                          activeOpacity={0.7}
-                        >
+                        <View style={styles.actionViewBtn}>
                           <Text style={styles.actionViewText}>View</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.actionIconBtn}
-                          onPress={() => {
-                            if (onOpenCoursePlan) onOpenCoursePlan(sub.code, sub.name);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <ExternalLink size={14} color="#38BDF8" strokeWidth={2.2} />
-                        </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Course Plan Row */}
-                    <View style={styles.academicActionRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <TouchableOpacity
+                      style={styles.academicActionRow}
+                      onPress={() => {
+                        setSelectedCourseDetails({
+                          code: sub.code,
+                          name: sub.name,
+                          type: 'PLAN',
+                        });
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                         <CalendarDays size={18} color="#34D399" strokeWidth={2} />
-                        <View>
+                        <View style={{ flex: 1 }}>
                           <Text style={styles.actionRowTitle}>Course Plan</Text>
                           <Text style={styles.actionRowSub}>15-Week Lecture Schedule</Text>
                         </View>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <TouchableOpacity
-                          style={styles.actionViewBtn}
-                          onPress={() => {
-                            setSelectedCourseDetails({
-                              code: sub.code,
-                              name: sub.name,
-                              type: 'PLAN',
-                            });
-                          }}
-                          activeOpacity={0.7}
-                        >
+                        <View style={styles.actionViewBtn}>
                           <Text style={styles.actionViewText}>View</Text>
-                        </TouchableOpacity>
+                        </View>
                         <TouchableOpacity
                           style={styles.actionIconBtn}
-                          onPress={() => {
+                          onPress={(e) => {
+                            e.stopPropagation?.();
                             if (onOpenCoursePlan) onOpenCoursePlan(sub.code, sub.name);
                           }}
                           activeOpacity={0.7}
@@ -1832,10 +1825,20 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           <ExternalLink size={14} color="#34D399" strokeWidth={2.2} />
                         </TouchableOpacity>
                       </View>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Assignments & Submissions Row */}
-                    <View style={styles.academicActionRow}>
+                    <TouchableOpacity
+                      style={styles.academicActionRow}
+                      onPress={() => {
+                        setSelectedCourseDetails({
+                          code: sub.code,
+                          name: sub.name,
+                          type: 'ASSIGNMENTS',
+                        });
+                      }}
+                      activeOpacity={0.7}
+                    >
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                         <CalendarCheck size={18} color="#F59E0B" strokeWidth={2} />
                         <View style={{ flex: 1 }}>
@@ -1846,21 +1849,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         </View>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <TouchableOpacity
-                          style={[styles.actionViewBtn, { borderColor: '#F59E0B' }]}
-                          onPress={() => {
-                            setSelectedCourseDetails({
-                              code: sub.code,
-                              name: sub.name,
-                              type: 'ASSIGNMENTS',
-                            });
-                          }}
-                          activeOpacity={0.7}
-                        >
+                        <View style={[styles.actionViewBtn, { borderColor: '#F59E0B' }]}>
                           <Text style={[styles.actionViewText, { color: '#F59E0B' }]}>View</Text>
-                        </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Google NotebookLM Individual Subject Link Row (Only shown for Core Courses with NotebookLM) */}
                     {hasNotebookForSubject(sub.code, sub.name) && (
@@ -2839,13 +2832,29 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
           </Modal>
         )}
 
-        {/* Course Syllabus & Course Plan In-Modal Viewer */}
+        {/* Course Syllabus, Course Plan & Assignments Isolated In-Modal Viewer */}
         {selectedCourseDetails && (() => {
+          const isSyllabus = selectedCourseDetails.type === 'SYLLABUS';
+          const isPlan = selectedCourseDetails.type === 'PLAN';
+          const isAssignments = selectedCourseDetails.type === 'ASSIGNMENTS';
+
+          const courseSyllabus = getCourseSyllabus(
+            selectedCourseDetails.code,
+            selectedCourseDetails.name
+          );
           const coursePlan = getCoursePlanForSubject(
             selectedCourseDetails.code,
             selectedCourseDetails.name
           );
-          const isPlan = selectedCourseDetails.type === 'PLAN';
+
+          const subjectCode = isSyllabus ? courseSyllabus.subjectCode : coursePlan.subjectCode;
+          const subjectTitle = isSyllabus ? courseSyllabus.subjectTitle : coursePlan.subjectTitle;
+          const badgeLabel = isSyllabus
+            ? 'OFFICIAL SYLLABUS'
+            : isPlan
+            ? '15-WEEK COURSE PLAN'
+            : 'COURSE ASSIGNMENTS & SUBMISSIONS';
+          const badgeColor = isSyllabus ? '#38BDF8' : isPlan ? '#10B981' : '#F59E0B';
 
           return (
             <Modal
@@ -2861,18 +2870,14 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     <View style={{ flex: 1, marginRight: 10 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                         <View style={styles.codeBadge}>
-                          <Text style={styles.codeBadgeText}>{coursePlan.subjectCode}</Text>
+                          <Text style={styles.codeBadgeText}>{subjectCode}</Text>
                         </View>
-                        <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '800' }}>
-                          {selectedCourseDetails.type === 'ASSIGNMENTS'
-                            ? 'COURSE ASSIGNMENTS & SUBMISSIONS'
-                            : isPlan
-                            ? '15-WEEK COURSE PLAN'
-                            : 'OFFICIAL SYLLABUS'}
+                        <Text style={{ color: badgeColor, fontSize: 11, fontWeight: '800' }}>
+                          {badgeLabel}
                         </Text>
                       </View>
                       <Text style={[styles.drawerTitle, { fontSize: 15 }]} numberOfLines={1}>
-                        {coursePlan.subjectTitle}
+                        {subjectTitle}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -2883,96 +2888,179 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     </TouchableOpacity>
                   </View>
 
-                  {/* Switch between Syllabus, Course Plan & Assignments */}
-                  <View style={styles.courseDetailSwitcherRow}>
-                    <TouchableOpacity
-                      style={[
-                        styles.courseDetailSwitcherBtn,
-                        selectedCourseDetails.type === 'SYLLABUS' && styles.courseDetailSwitcherBtnActive,
-                      ]}
-                      onPress={() =>
-                        setSelectedCourseDetails({
-                          ...selectedCourseDetails,
-                          type: 'SYLLABUS',
-                        })
-                      }
-                      activeOpacity={0.8}
-                    >
-                      <FileText size={13} color={selectedCourseDetails.type === 'SYLLABUS' ? '#38BDF8' : '#64748B'} />
-                      <Text
-                        style={[
-                          styles.courseDetailSwitcherText,
-                          selectedCourseDetails.type === 'SYLLABUS' && styles.courseDetailSwitcherTextActive,
-                        ]}
-                      >
-                        Syllabus
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.courseDetailSwitcherBtn,
-                        selectedCourseDetails.type === 'PLAN' && styles.courseDetailSwitcherBtnActive,
-                      ]}
-                      onPress={() =>
-                        setSelectedCourseDetails({
-                          ...selectedCourseDetails,
-                          type: 'PLAN',
-                        })
-                      }
-                      activeOpacity={0.8}
-                    >
-                      <CalendarDays size={13} color={selectedCourseDetails.type === 'PLAN' ? '#38BDF8' : '#64748B'} />
-                      <Text
-                        style={[
-                          styles.courseDetailSwitcherText,
-                          selectedCourseDetails.type === 'PLAN' && styles.courseDetailSwitcherTextActive,
-                        ]}
-                      >
-                        15-Week Plan
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.courseDetailSwitcherBtn,
-                        selectedCourseDetails.type === 'ASSIGNMENTS' && styles.courseDetailSwitcherBtnActive,
-                      ]}
-                      onPress={() =>
-                        setSelectedCourseDetails({
-                          ...selectedCourseDetails,
-                          type: 'ASSIGNMENTS',
-                        })
-                      }
-                      activeOpacity={0.8}
-                    >
-                      <CalendarCheck size={13} color={selectedCourseDetails.type === 'ASSIGNMENTS' ? '#F59E0B' : '#64748B'} />
-                      <Text
-                        style={[
-                          styles.courseDetailSwitcherText,
-                          selectedCourseDetails.type === 'ASSIGNMENTS' && { color: '#F59E0B', fontWeight: '800' },
-                        ]}
-                      >
-                        Assignments
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
+                  {/* Dedicated Isolated Views: ZERO SWITCHER, ZERO CROSS-OVER */}
                   <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                    {/* Faculty & Objective Box */}
-                    <View style={styles.courseObjBox}>
-                      <Text style={styles.courseObjTitle}>Course Objective</Text>
-                      <Text style={styles.courseObjText}>{coursePlan.courseObjective}</Text>
-                      {coursePlan.faculty && coursePlan.faculty.length > 0 && (
-                        <Text style={styles.courseFacultyText}>
-                          Faculty: {coursePlan.faculty.join(', ')}
-                        </Text>
-                      )}
-                    </View>
+                    {isSyllabus ? (
+                      /* =======================================================
+                         1. PURE SYLLABUS VIEW: ONLY OBJECTIVE, COs, UNITS I-V & BOOKS
+                         ======================================================= */
+                      <View style={{ gap: 12 }}>
+                        {/* Course Overview Box */}
+                        <View style={styles.courseObjBox}>
+                          <Text style={styles.courseObjTitle}>Course Objective</Text>
+                          <Text style={styles.courseObjText}>{courseSyllabus.courseObjective}</Text>
+                          {courseSyllabus.faculty && courseSyllabus.faculty.length > 0 && (
+                            <Text style={styles.courseFacultyText}>
+                              Faculty: {courseSyllabus.faculty.join(', ')}
+                            </Text>
+                          )}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                            <View style={{ backgroundColor: isLight ? '#E0F2FE' : 'rgba(56, 189, 248, 0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                              <Text style={{ color: isLight ? '#0369A1' : '#38BDF8', fontSize: 10.5, fontWeight: '800' }}>
+                                {courseSyllabus.credits}
+                              </Text>
+                            </View>
+                            <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                              <Text style={{ color: '#94A3B8', fontSize: 10.5, fontWeight: '700' }}>
+                                {courseSyllabus.mode}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
 
-                    {selectedCourseDetails.type === 'ASSIGNMENTS' ? (
-                      /* ASSIGNMENTS & SUBMISSIONS VIEW */
-                      <View style={{ gap: 12, marginTop: 10 }}>
+                        {/* Course Outcomes (CO1-CO5) */}
+                        <View style={{ gap: 8 }}>
+                          <Text style={styles.drawerSectionLabel}>COURSE OUTCOMES (CO1–CO5)</Text>
+                          {courseSyllabus.courseOutcomes.map((co) => (
+                            <View
+                              key={co.code}
+                              style={{
+                                backgroundColor: isLight ? '#F8FAFC' : '#0B1322',
+                                borderRadius: 10,
+                                padding: 12,
+                                borderWidth: 1,
+                                borderColor: isLight ? '#E2E8F0' : '#1E293B',
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                <View
+                                  style={{
+                                    backgroundColor: isLight ? '#E0F2FE' : 'rgba(56, 189, 248, 0.15)',
+                                    borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.35)',
+                                    borderWidth: 1,
+                                    borderRadius: 6,
+                                    paddingHorizontal: 7,
+                                    paddingVertical: 2,
+                                  }}
+                                >
+                                  <Text style={{ color: isLight ? '#0284C7' : '#38BDF8', fontSize: 11, fontWeight: '900' }}>
+                                    {co.code}
+                                  </Text>
+                                </View>
+                                <Text style={{ fontSize: 12.5, fontWeight: '800', color: isLight ? '#0F172A' : '#FFFFFF', flex: 1 }}>
+                                  {co.title}
+                                </Text>
+                              </View>
+                              <Text style={{ fontSize: 11.5, color: isLight ? '#475569' : '#CBD5E1', lineHeight: 17 }}>
+                                {co.description}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+
+                        {/* Syllabus Units (Units I-V) */}
+                        <View style={{ gap: 10, marginTop: 4 }}>
+                          <Text style={styles.drawerSectionLabel}>SYLLABUS UNITS (UNITS I–V)</Text>
+                          {courseSyllabus.units.map((unit, uIdx) => (
+                            <View
+                              key={uIdx}
+                              style={{
+                                backgroundColor: isLight ? '#F8FAFC' : '#0B1322',
+                                borderRadius: 12,
+                                padding: 14,
+                                borderWidth: 1.2,
+                                borderColor: isLight ? '#E2E8F0' : '#1E293B',
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                  <View
+                                    style={{
+                                      backgroundColor: isLight ? '#0284C7' : '#0369A1',
+                                      borderRadius: 6,
+                                      paddingHorizontal: 8,
+                                      paddingVertical: 3,
+                                    }}
+                                  >
+                                    <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>
+                                      {unit.unitNumber}
+                                    </Text>
+                                  </View>
+                                  <View
+                                    style={{
+                                      backgroundColor: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.15)',
+                                      borderColor: isLight ? '#FDE68A' : 'rgba(245, 158, 11, 0.3)',
+                                      borderWidth: 1,
+                                      borderRadius: 6,
+                                      paddingHorizontal: 7,
+                                      paddingVertical: 2,
+                                    }}
+                                  >
+                                    <Text style={{ color: isLight ? '#B45309' : '#F59E0B', fontSize: 10, fontWeight: '800' }}>
+                                      Target: {unit.coTarget}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </View>
+
+                              <Text style={{ fontSize: 13.5, fontWeight: '800', color: isLight ? '#0F172A' : '#FFFFFF', marginBottom: 8 }}>
+                                {unit.title}
+                              </Text>
+
+                              <View style={{ gap: 6 }}>
+                                {unit.topics.map((top, tIdx) => (
+                                  <View key={tIdx} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                                    <Text style={{ color: '#38BDF8', fontSize: 13, marginRight: 7, lineHeight: 17 }}>•</Text>
+                                    <Text style={{ fontSize: 11.5, color: isLight ? '#334155' : '#CBD5E1', flex: 1, lineHeight: 17 }}>
+                                      {top}
+                                    </Text>
+                                  </View>
+                                ))}
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+
+                        {/* Recommended Textbooks */}
+                        {courseSyllabus.recommendedBooks && courseSyllabus.recommendedBooks.length > 0 && (
+                          <View style={{ marginTop: 4, marginBottom: 16 }}>
+                            <Text style={styles.drawerSectionLabel}>RECOMMENDED TEXTBOOKS & REFERENCES</Text>
+                            <View
+                              style={{
+                                backgroundColor: isLight ? '#F8FAFC' : '#0B1322',
+                                borderRadius: 12,
+                                padding: 12,
+                                borderWidth: 1,
+                                borderColor: isLight ? '#E2E8F0' : '#1E293B',
+                                gap: 8,
+                              }}
+                            >
+                              {courseSyllabus.recommendedBooks.map((book, bIdx) => (
+                                <View key={bIdx} style={styles.bookItemRow}>
+                                  <Text style={{ color: '#38BDF8', fontSize: 13, marginRight: 6 }}>•</Text>
+                                  <Text style={styles.bookItemText}>{book}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    ) : isAssignments ? (
+                      /* =======================================================
+                         2. PURE ASSIGNMENTS & SUBMISSIONS VIEW
+                         ======================================================= */
+                      <View style={{ gap: 12 }}>
+                        {/* Course Overview Box */}
+                        <View style={styles.courseObjBox}>
+                          <Text style={styles.courseObjTitle}>Course Deliverables & Assessment Plan</Text>
+                          <Text style={styles.courseObjText}>{coursePlan.courseObjective}</Text>
+                          {coursePlan.faculty && coursePlan.faculty.length > 0 && (
+                            <Text style={styles.courseFacultyText}>
+                              Faculty: {coursePlan.faculty.join(', ')}
+                            </Text>
+                          )}
+                        </View>
+
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Text style={styles.drawerSectionLabel}>
                             CONTINUOUS ASSESSMENTS ({coursePlan.assessments.length} TOTAL)
@@ -3069,41 +3157,50 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           </View>
                         ))}
                       </View>
-                    ) : selectedCourseDetails.type === 'SYLLABUS' ? (
-                      /* SYLLABUS VIEW */
-                      <View style={{ gap: 10, marginTop: 10 }}>
-                        <Text style={styles.drawerSectionLabel}>COURSE ASSESSMENTS (50 CA + 50 FE)</Text>
-                        {coursePlan.assessments.map((ass) => (
-                          <View key={ass.id} style={styles.assessmentItemBox}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <Text style={styles.assessmentTitle}>{ass.title}</Text>
-                              <View style={styles.assessmentMarksBadge}>
-                                <Text style={styles.assessmentMarksText}>{ass.marksAllotted} Marks</Text>
-                              </View>
-                            </View>
-                            <Text style={styles.assessmentSubText}>{ass.sessionsCovered} • {ass.scheduledDate}</Text>
-                            {ass.description ? (
-                              <Text style={styles.assessmentDescText}>{ass.description}</Text>
-                            ) : null}
-                          </View>
-                        ))}
+                    ) : (
+                      /* =======================================================
+                         3. PURE 15-WEEK COURSE PLAN VIEW (30 SESSIONS)
+                         ======================================================= */
+                      <View style={{ gap: 10 }}>
+                        {/* Faculty & Objective Box */}
+                        <View style={styles.courseObjBox}>
+                          <Text style={styles.courseObjTitle}>Course Objective</Text>
+                          <Text style={styles.courseObjText}>{coursePlan.courseObjective}</Text>
+                          {coursePlan.faculty && coursePlan.faculty.length > 0 && (
+                            <Text style={styles.courseFacultyText}>
+                              Faculty: {coursePlan.faculty.join(', ')}
+                            </Text>
+                          )}
+                        </View>
 
-                        {coursePlan.recommendedBooks && coursePlan.recommendedBooks.length > 0 && (
-                          <View style={{ marginTop: 12 }}>
-                            <Text style={styles.drawerSectionLabel}>RECOMMENDED TEXTBOOKS</Text>
-                            {coursePlan.recommendedBooks.map((book, bIdx) => (
-                              <View key={bIdx} style={styles.bookItemRow}>
-                                <Text style={{ color: '#38BDF8', fontSize: 13, marginRight: 6 }}>•</Text>
-                                <Text style={styles.bookItemText}>{book}</Text>
+                        {/* Classroom Rules */}
+                        {coursePlan.classroomRules && coursePlan.classroomRules.length > 0 && (
+                          <View
+                            style={{
+                              backgroundColor: isLight ? '#F8FAFC' : '#0B1322',
+                              borderRadius: 10,
+                              padding: 12,
+                              borderWidth: 1,
+                              borderColor: isLight ? '#E2E8F0' : '#1E293B',
+                              gap: 6,
+                            }}
+                          >
+                            <Text style={styles.drawerSectionLabel}>CLASSROOM PROTOCOLS</Text>
+                            {coursePlan.classroomRules.map((rule, rIdx) => (
+                              <View key={rIdx} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                                <Text style={{ color: '#38BDF8', fontSize: 12, marginRight: 6 }}>•</Text>
+                                <Text style={{ color: isLight ? '#475569' : '#CBD5E1', fontSize: 11.5, flex: 1, lineHeight: 16 }}>
+                                  {rule}
+                                </Text>
                               </View>
                             ))}
                           </View>
                         )}
-                      </View>
-                    ) : (
-                      /* COURSE PLAN VIEW: 30 Sessions */
-                      <View style={{ gap: 8, marginTop: 10 }}>
-                        <Text style={styles.drawerSectionLabel}>LECTURE SESSIONS ({coursePlan.sessions.length} TOTAL)</Text>
+
+                        {/* 30 Lecture Sessions */}
+                        <Text style={[styles.drawerSectionLabel, { marginTop: 4 }]}>
+                          LECTURE SESSIONS ({coursePlan.sessions.length} TOTAL)
+                        </Text>
                         {coursePlan.sessions.map((sess) => (
                           <View
                             key={sess.sessionNumber}
@@ -3131,25 +3228,25 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                             </View>
                           </View>
                         ))}
+
+                        {/* External Interactive Course Plan Trigger */}
+                        <TouchableOpacity
+                          style={[styles.openInteractivePlanBtn, { marginTop: 8, marginBottom: 16 }]}
+                          onPress={() => {
+                            const targetCode = selectedCourseDetails.code;
+                            const targetName = selectedCourseDetails.name;
+                            setSelectedCourseDetails(null);
+                            if (onOpenCoursePlan) onOpenCoursePlan(targetCode, targetName);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Share2 size={16} color="#38BDF8" />
+                          <Text style={styles.openInteractivePlanText}>
+                            Open Full Interactive CA Marks Calculator & Plan
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                     )}
-
-                    {/* External Interactive Course Plan Trigger */}
-                    <TouchableOpacity
-                      style={styles.openInteractivePlanBtn}
-                      onPress={() => {
-                        const targetCode = selectedCourseDetails.code;
-                        const targetName = selectedCourseDetails.name;
-                        setSelectedCourseDetails(null);
-                        if (onOpenCoursePlan) onOpenCoursePlan(targetCode, targetName);
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <Share2 size={16} color="#38BDF8" />
-                      <Text style={styles.openInteractivePlanText}>
-                        Open Full Interactive CA Marks Calculator & Plan
-                      </Text>
-                    </TouchableOpacity>
                   </ScrollView>
                 </View>
               </View>
