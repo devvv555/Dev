@@ -128,7 +128,7 @@ export const PsgimService = {
         total,
         officialAttended,
         officialTotal,
-        lastOfficialUpdate: '2026-10-10',
+        lastOfficialUpdate: '2026-11-07',
         batch: isBlankBatch ? '' : `Batch ${batchLetter}`,
         faculty: isBlankBatch ? '' : faculty,
         room: isBlankBatch

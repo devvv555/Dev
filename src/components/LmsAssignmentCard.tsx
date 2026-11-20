@@ -11,6 +11,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { LmsAssignment } from '../types';
 import { LmsService } from '../services/lmsService';
+import { NotificationService } from '../services/notificationService';
 
 interface LmsAssignmentCardProps {
   assignment: LmsAssignment;
@@ -89,6 +90,13 @@ export const LmsAssignmentCard: React.FC<LmsAssignmentCardProps> = ({
               setIsUploading(false);
               if (res.success && res.updatedAssignment) {
                 onUpdated(res.updatedAssignment);
+                // Push exactly 1 system tray notification per upload
+                NotificationService.notifyMoodleSubmission(
+                  assignment.courseName || assignment.courseCode,
+                  assignment.title,
+                  file.name
+                ).catch(() => {});
+
                 Alert.alert(
                   'Submission Verified!',
                   `"${file.name}" has been recorded as officially submitted for grading.`

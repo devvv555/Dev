@@ -180,14 +180,14 @@ export const KarenGuide: React.FC<KarenGuideProps> = ({
       const welcome: ChatMessage = {
         id: 'msg_welcome',
         sender: 'karen',
-        text: `Hello ${studentName || 'there'}! I am Karen, your AI campus companion. All your live attendance, course plans, syllabus chapters, and timetable periods are loaded.\n\nAsk me anything! For example: "What chapters are in ADM?", "Can I bunk EDM tomorrow?", "Who is teaching MCOB?", or "What units are in Business Statistics?"`,
+        text: `Hey ${studentName || 'Peter'}! I am Karen, your AI big sister and campus companion. I’ve loaded all your live attendance figures, syllabus course plans, and weekly lecture slots.\n\nAsk me anything! Like "Can I bunk the whole week?", "Can I bunk EDM tomorrow?", "What chapters are in ADM?", or "Rate my academic health!"`,
         timestamp: Date.now(),
         chips: [
+          'Can I bunk the whole week?',
           'What chapters are in ADM?',
+          'Can I bunk EDM tomorrow?',
+          'Rate my attendance standing',
           'Units in Business Statistics',
-          'Can I bunk EDM?',
-          'Who is my MCOB faculty?',
-          'What is my safest subject?',
         ],
       };
       setMessages([welcome]);

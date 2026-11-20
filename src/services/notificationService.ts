@@ -444,32 +444,34 @@ export const NotificationService = {
   },
 
   /**
-   * Notify when a faculty/teacher posts an assignment, deadline change, or update on Moodle
+   * Notify when a student uploads and submits an assignment document to Moodle (one notification per upload)
    */
-  async notifyMoodleCourseUpdate(
+  async notifyMoodleSubmission(
     courseName: string,
-    updateTitle: string,
-    details: string
+    assignmentTitle: string,
+    fileName: string
   ): Promise<string | null> {
     try {
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: `Moodle Update: ${courseName}`,
-          body: `${updateTitle}: ${details}`,
+          title: `Moodle Upload Complete: ${courseName}`,
+          body: `"${fileName}" successfully submitted for "${assignmentTitle}". Submission recorded for grading.`,
           data: {
-            type: 'MOODLE_UPDATE',
+            type: 'MOODLE_SUBMISSION',
             courseName,
-            updateTitle,
+            assignmentTitle,
+            fileName,
+            timestamp: Date.now(),
           },
           sound: 'default',
-          vibrate: [0, 600, 250, 600],
-          priority: Notifications.AndroidNotificationPriority.MAX,
+          vibrate: [0, 400, 200, 400],
+          priority: Notifications.AndroidNotificationPriority.HIGH,
         },
-        trigger: null, // deliver immediately to phone notification bar
+        trigger: null, // deliver immediately to system tray
       });
       return id;
     } catch (e) {
-      console.warn('Error firing Moodle phone notification:', e);
+      console.warn('Error firing Moodle submission notification:', e);
       return null;
     }
   },
@@ -497,6 +499,32 @@ export const NotificationService = {
       return id;
     } catch (e) {
       console.warn('Error firing announcement notification:', e);
+      return null;
+    }
+  },
+
+  /**
+   * Notify when Moodle course content or assignments are refreshed
+   */
+  async notifyMoodleCourseUpdate(title: string, subTitle: string, bodyText: string): Promise<string | null> {
+    try {
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `${title} • ${subTitle}`,
+          body: bodyText,
+          data: {
+            type: 'MOODLE_SYNC',
+            timestamp: Date.now(),
+          },
+          sound: 'default',
+          vibrate: [0, 300, 150, 300],
+          priority: Notifications.AndroidNotificationPriority.DEFAULT,
+        },
+        trigger: null,
+      });
+      return id;
+    } catch (e) {
+      console.warn('Error firing moodle update notification:', e);
       return null;
     }
   },

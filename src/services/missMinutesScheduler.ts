@@ -33,20 +33,20 @@ export const MissMinutesScheduler = {
   SCHEDULE_CRON_EXPRESSION: '0 21 * * 1-6', // 9:00 PM Mon-Sat
 
   /**
-   * Checks whether the current time window matches the 9:00 PM Mon-Sat protocol.
+   * Checks whether the current time window matches the 9:00 PM Mon-Sat protocol
+   * or evening sync window.
    */
   isScheduledWindow(): boolean {
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const hours = now.getHours();
-    const minutes = now.getMinutes();
 
     // Monday through Saturday only (1 to 6)
     const isMonToSat = day >= 1 && day <= 6;
-    // Window: around 21:00 (9:00 PM)
-    const isNinePm = hours === 21 && minutes >= 0 && minutes <= 59;
+    // Window: from 20:00 (8:00 PM) onwards through the evening/night
+    const isEveningOrNight = hours >= 20;
 
-    return isMonToSat && isNinePm;
+    return isMonToSat && isEveningOrNight;
   },
 
   /**
@@ -145,12 +145,10 @@ export const MissMinutesScheduler = {
         count += subjects.length;
       }
 
-      // Sync today's period attendance
+      // Sync all period records across all past days so nothing is left behind
       for (const [key, rec] of Object.entries(periodRecords)) {
-        if (rec.date === todayStr) {
-          await CloudSyncService.syncPeriodRecord(currentRoll, rec);
-          count++;
-        }
+        await CloudSyncService.syncPeriodRecord(currentRoll, rec);
+        count++;
       }
 
       // Broadcast global notification update for cohort

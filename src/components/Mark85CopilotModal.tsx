@@ -16,10 +16,6 @@ import {
   CampusJobDrive,
 } from '../services/placementMatcherService';
 import {
-  AcademicRiskForecasterService,
-  AcademicRiskSummary,
-} from '../services/academicRiskForecasterService';
-import {
   StealthUltrasonicEngine,
   STEALTH_ULTRASONIC_FREQ,
 } from '../engines/starkProtocol/stealthUltrasonicEngine';
@@ -33,7 +29,7 @@ export interface Mark85CopilotModalProps {
   isLightMode?: boolean;
 }
 
-type CopilotTab = 'RISK_RADAR' | 'CAREER_FIT' | 'HACKATHON_DEMO';
+type CopilotTab = 'CAREER_FIT' | 'HACKATHON_DEMO';
 
 export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
   visible,
@@ -43,7 +39,7 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
   studentRollNo = '',
   isLightMode = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<CopilotTab>('RISK_RADAR');
+  const [activeTab, setActiveTab] = useState<CopilotTab>('CAREER_FIT');
 
   // Hackathon Live Pitch State
   const [ultrasoundTransmitting, setUltrasoundTransmitting] = useState<boolean>(false);
@@ -65,9 +61,6 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
       'Finance & Analytics'
     )
   );
-
-  // Risk Radar State
-  const riskSummary: AcademicRiskSummary = AcademicRiskForecasterService.forecastAcademicRisk(subjects);
 
   const handleRunMatch = (companyId: string) => {
     setSelectedCompanyId(companyId);
@@ -91,11 +84,11 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={styles.headerBadge}>MARK 85 UPGRADE</Text>
               <Text style={[styles.headerSub, isLightMode && { color: '#64748B' }]}>
-                B-School Copilot
+                Placement & Career AI
               </Text>
             </View>
             <Text style={[styles.headerTitle, isLightMode && styles.headerTitleLight]}>
-              PSGIM One • AI Copilot
+              PSGIM One • Placement AI Copilot
             </Text>
           </View>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
@@ -105,25 +98,6 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
 
         {/* Tab Switcher */}
         <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[
-              styles.tabBtn,
-              activeTab === 'RISK_RADAR' && styles.tabBtnActive,
-              activeTab === 'RISK_RADAR' && { borderColor: '#EF4444' },
-            ]}
-            onPress={() => setActiveTab('RISK_RADAR')}
-          >
-            <Text
-              style={[
-                styles.tabBtnText,
-                activeTab === 'RISK_RADAR' && styles.tabBtnTextActive,
-                activeTab === 'RISK_RADAR' && { color: '#F87171' },
-              ]}
-            >
-              🛡️ Debarment Risk Radar
-            </Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[
               styles.tabBtn,
@@ -139,7 +113,7 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
                 activeTab === 'CAREER_FIT' && { color: '#FBBF24' },
               ]}
             >
-              💼 Career Fit AI
+              💼 Career Fit & Placement Matcher
             </Text>
           </TouchableOpacity>
 
@@ -164,108 +138,7 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* TAB 1: ACADEMIC RISK & DEBARMENT FORECASTER */}
-          {activeTab === 'RISK_RADAR' && (
-            <View>
-              {/* Executive Summary Card */}
-              <View style={[styles.card, { borderColor: '#EF4444', borderWidth: 1.5 }]}>
-                <View style={styles.cardHeaderRow}>
-                  <View>
-                    <Text style={[styles.cardTitle, isLightMode && { color: '#0F172A' }]}>
-                      3-Week Predictive Attendance Health
-                    </Text>
-                    <Text style={styles.cardSubtitle}>
-                      Algorithmic velocity projection vs 75% university debarment cutoff
-                    </Text>
-                  </View>
-                  <View style={[styles.scoreBadge, { backgroundColor: riskSummary.overallHealthScore >= 80 ? '#10B981' : riskSummary.overallHealthScore >= 60 ? '#F59E0B' : '#EF4444' }]}>
-                    <Text style={styles.scoreBadgeText}>{riskSummary.overallHealthScore}%</Text>
-                    <Text style={styles.scoreBadgeSub}>Health</Text>
-                  </View>
-                </View>
-
-                {/* Urgency Headline */}
-                <View style={[styles.noticeBanner, { borderColor: riskSummary.criticalCount > 0 ? '#EF4444' : '#10B981', backgroundColor: riskSummary.criticalCount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)' }]}>
-                  <Text style={[styles.noticeBannerText, { color: riskSummary.criticalCount > 0 ? '#F87171' : '#34D399' }]}>
-                    {riskSummary.urgencyHeadline}
-                  </Text>
-                </View>
-
-                {/* Tally Metrics */}
-                <View style={styles.metricsRow}>
-                  <View style={styles.metricItem}>
-                    <Text style={[styles.metricVal, { color: '#EF4444' }]}>{riskSummary.criticalCount}</Text>
-                    <Text style={styles.metricLabel}>Debarment Risk</Text>
-                  </View>
-                  <View style={styles.metricItem}>
-                    <Text style={[styles.metricVal, { color: '#F59E0B' }]}>{riskSummary.borderlineCount}</Text>
-                    <Text style={styles.metricLabel}>Borderline (74-78%)</Text>
-                  </View>
-                  <View style={styles.metricItem}>
-                    <Text style={[styles.metricVal, { color: '#10B981' }]}>{riskSummary.safeCount}</Text>
-                    <Text style={styles.metricLabel}>Safe Buffer</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Subject Breakdown List */}
-              <Text style={[styles.sectionHeading, isLightMode && { color: '#0F172A' }]}>
-                Course-by-Course Prescriptions ({riskSummary.subjectAssessments.length} Subjects)
-              </Text>
-
-              {riskSummary.subjectAssessments.map((subj) => (
-                <View
-                  key={subj.code}
-                  style={[
-                    styles.courseCard,
-                    isLightMode && styles.courseCardLight,
-                    subj.riskTier === 'CRITICAL_DEBARMENT_RISK' && { borderColor: '#EF4444', borderWidth: 1.5 },
-                    subj.riskTier === 'BORDERLINE_WATCH' && { borderColor: '#F59E0B', borderWidth: 1.2 },
-                  ]}
-                >
-                  <View style={styles.courseHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.courseCode, isLightMode && { color: '#0284C7' }]}>{subj.code}</Text>
-                      <Text style={[styles.courseName, isLightMode && { color: '#0F172A' }]}>{subj.name}</Text>
-                    </View>
-                    <View style={[styles.statusPill, { backgroundColor: subj.riskTier === 'CRITICAL_DEBARMENT_RISK' ? 'rgba(239,68,68,0.2)' : subj.riskTier === 'BORDERLINE_WATCH' ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)' }]}>
-                      <Text style={[styles.statusPillText, { color: subj.riskTier === 'CRITICAL_DEBARMENT_RISK' ? '#F87171' : subj.riskTier === 'BORDERLINE_WATCH' ? '#FBBF24' : '#34D399' }]}>
-                        {subj.currentPercentage}%
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text style={[styles.prescriptionText, { color: subj.riskTier === 'CRITICAL_DEBARMENT_RISK' ? '#F87171' : subj.riskTier === 'BORDERLINE_WATCH' ? '#FBBF24' : '#94A3B8' }]}>
-                    📌 {subj.statusMessage}
-                  </Text>
-
-                  {/* Future Projection Bar */}
-                  <View style={styles.projectionRow}>
-                    <View style={styles.projectionCol}>
-                      <Text style={styles.projectionLabel}>Conducted / Attended</Text>
-                      <Text style={styles.projectionVal}>
-                        {subj.attendedHours} / {subj.totalConductedHours} hrs
-                      </Text>
-                    </View>
-                    <View style={styles.projectionCol}>
-                      <Text style={styles.projectionLabel}>Max Possible End %</Text>
-                      <Text style={[styles.projectionVal, { color: '#10B981' }]}>
-                        {subj.projectedEndPercentageIfAllAttended}%
-                      </Text>
-                    </View>
-                    <View style={styles.projectionCol}>
-                      <Text style={styles.projectionLabel}>If 1 Bunk / Wk</Text>
-                      <Text style={[styles.projectionVal, { color: subj.projectedEndPercentageIfOneBunkPerWeek < 75 ? '#EF4444' : '#F59E0B' }]}>
-                        {subj.projectedEndPercentageIfOneBunkPerWeek}%
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* TAB 2: PLACEMENT & RESUME FIT MATCHER */}
+          {/* TAB: PLACEMENT & RESUME FIT MATCHER */}
           {activeTab === 'CAREER_FIT' && (
             <View>
               {/* Target Company Selectors */}
@@ -538,20 +411,14 @@ export const Mark85CopilotModal: React.FC<Mark85CopilotModalProps> = ({
                 <Text style={[styles.sectionHeading, { color: '#60A5FA' }]}>
                   PSGIM One • 3-Pillar Hackathon Architecture:
                 </Text>
-                <View style={{ gap: 8, marginTop: 4 }}>
                   <Text style={{ color: '#E2E8F0', fontSize: 11, lineHeight: 16 }}>
-                    <Text style={{ fontWeight: '800', color: '#F87171' }}>1. Academic Health Radar: </Text>
-                    3-week predictive modeling to eliminate debarment surprises before exam week.
-                  </Text>
-                  <Text style={{ color: '#E2E8F0', fontSize: 11, lineHeight: 16 }}>
-                    <Text style={{ fontWeight: '800', color: '#FBBF24' }}>2. Career Fit AI: </Text>
+                    <Text style={{ fontWeight: '800', color: '#FBBF24' }}>1. Career Fit AI: </Text>
                     Semantic match scoring for top campus recruiters (Deloitte, Federal Bank, Goldman Sachs, Amazon).
                   </Text>
                   <Text style={{ color: '#E2E8F0', fontSize: 11, lineHeight: 16 }}>
-                    <Text style={{ fontWeight: '800', color: '#34D399' }}>3. Ultrasound Quorum: </Text>
+                    <Text style={{ fontWeight: '800', color: '#34D399' }}>2. Ultrasound Quorum: </Text>
                     Physical presence verified at the speed of sound without teacher hardware or manual roll call.
                   </Text>
-                </View>
               </View>
             </View>
           )}

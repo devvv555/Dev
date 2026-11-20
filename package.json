@@ -24,10 +24,12 @@
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.26",
     "firebase": "^12.19.0",
+    "lucide-react-native": "^1.75.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
+    "react-native-svg": "^15.16.1",
     "react-native-web": "^0.21.2",
     "react-native-webview": "13.16.1",
     "string-width": "^8.3.0"

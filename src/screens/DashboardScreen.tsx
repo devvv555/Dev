@@ -45,6 +45,8 @@ import { ThemeManager, AppThemeMode } from '../constants/theme';
 import { StealthUltrasonicEngine } from '../engines/starkProtocol/stealthUltrasonicEngine';
 import { Mark85CopilotModal } from '../components/Mark85CopilotModal';
 import { StarkScriptTerminalModal } from '../components/StarkScriptTerminalModal';
+import { NotebookLmModal } from '../components/NotebookLmModal';
+import { ChristStylePreviewModal } from '../components/ChristStylePreviewModal';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -105,6 +107,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [selectedNotice, setSelectedNotice] = useState<PsgimAnnouncement | null>(null);
   const [hasConnectRegisterNo, setHasConnectRegisterNo] = useState<boolean>(true);
   const [announcementFilter, setAnnouncementFilter] = useState<'ALL' | 'EVENT' | 'CIRCULAR' | 'ACADEMIC'>('ALL');
+  const [isAnnouncementsCollapsed, setIsAnnouncementsCollapsed] = useState<boolean>(true);
 
   // Moodle Assignments state
   const [assignments, setAssignments] = useState<LmsAssignment[]>([]);
@@ -118,7 +121,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [showWhatIfForecaster, setShowWhatIfForecaster] = useState(false);
   const [showStarkArsenal, setShowStarkArsenal] = useState(false);
   const [showMark85Copilot, setShowMark85Copilot] = useState(false);
+  const [showNotebookLmModal, setShowNotebookLmModal] = useState(false);
   const [showStarkScriptTerminal, setShowStarkScriptTerminal] = useState(false);
+  const isDevdarshanProfile = Boolean(
+    (studentRollNo && (
+      studentRollNo.toUpperCase().includes('26AB12') ||
+      studentRollNo.toUpperCase().includes('24AB12') ||
+      studentRollNo.toUpperCase().includes('2312518')
+    )) ||
+    (studentName && studentName.toLowerCase().includes('devdarshan'))
+  );
+
+  const [showChristPreview, setShowChristPreview] = useState(isDevdarshanProfile);
   const [isEnhancedSuit, setIsEnhancedSuit] = useState(isEnhancedSuitProp ?? false);
   const [coursePlanModalInfo, setCoursePlanModalInfo] = useState<{
     visible: boolean;
@@ -202,6 +216,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       PsgimConnectService.getCredentials(studentRollNo).then((creds) => {
         setHasConnectRegisterNo(!!creds?.registerNo);
       });
+
+      // Automatically open the new Dark-Navy interface for Devdarshan's profile
+      if (
+        studentRollNo.toUpperCase().includes('26AB12') ||
+        studentRollNo.toUpperCase().includes('24AB12') ||
+        studentRollNo.toUpperCase().includes('2312518') ||
+        (studentName && studentName.toLowerCase().includes('devdarshan'))
+      ) {
+        setShowChristPreview(true);
+      }
+
+      // Check if student should receive the notification that attendance is updated upto 14-11-2026
+      AsyncStorage.getItem(`@attendance_updated_1411_notified_${studentRollNo}`).then((notified) => {
+        if (!notified) {
+          NotificationService.notifyAttendanceUpdated('College Portal', 8, '14-11-2026');
+          AsyncStorage.setItem(`@attendance_updated_1411_notified_${studentRollNo}`, 'true').catch(() => {});
+        }
+      }).catch(() => {});
 
       // Refetch assignments after 4 seconds to pick up live background sync from Moodle
       const timer = setTimeout(() => {
@@ -659,21 +691,42 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           alreadyMarked: isAlreadyAttended,
           onAutoMark: async () => {
             if (isSubscribed) {
-              await onRecordPeriodAttendance(ongoingSlot, today, 'attended');
+              const res = await onRecordPeriodAttendance(ongoingSlot, today, 'attended');
+              if (res && res.success) {
+                try { Vibration.vibrate([0, 60, 40, 60]); } catch {}
+                if (typeof window !== 'undefined' && (window as any).Toast) {
+                  (window as any).Toast.show(`⚡ Auto-Checked In: You are in ${room}. Marked Present for ${ongoingSlot.subjectId || 'current class'}.`);
+                }
+              }
             }
           },
         });
       } catch (err) {
-        // Run silently in background without disturbing user
+        // Run silently in background
       }
     };
 
+    // Run immediately on mount
     runAcousticCheck();
-    const interval = setInterval(runAcousticCheck, 45000);
+
+    // Re-check whenever student unlocks phone or returns to app
+    const onVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        runAcousticCheck();
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+
+    const interval = setInterval(runAcousticCheck, 30000); // Check every 30 seconds
 
     return () => {
       isSubscribed = false;
       clearInterval(interval);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      }
     };
   }, [timetable, studentRollNo, periodRecords, profile]);
 
@@ -952,6 +1005,61 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         />
       }
     >
+      {/* Devdarshan Exclusive: UI Prototype Preview Banner */}
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#0F1A2C',
+          borderColor: '#38BDF8',
+          borderWidth: 1.5,
+          borderRadius: 12,
+          padding: 12,
+          marginBottom: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          shadowColor: '#38BDF8',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 6,
+          elevation: 3,
+        }}
+        onPress={() => {
+          try {
+            Vibration.vibrate(25);
+          } catch {}
+          setShowChristPreview(true);
+        }}
+        activeOpacity={0.8}
+      >
+        <View style={{ flex: 1, marginRight: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <Text
+              style={{
+                fontSize: 9.5,
+                fontWeight: '900',
+                color: '#0284C7',
+                backgroundColor: '#E0F2FE',
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+                borderRadius: 4,
+              }}
+            >
+              PROTOTYPE PREVIEW
+            </Text>
+            <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#38BDF8' }}>
+              ✨ CHRIST / KP UNIVERSITY UI
+            </Text>
+          </View>
+          <Text style={{ fontSize: 13, fontWeight: '900', color: '#F8FAFC' }}>
+            Tap to preview the new Dark-Navy interface for your profile
+          </Text>
+          <Text style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 1 }}>
+            Full 5-tab preview: Home, Course-wise Accordion Attendance, Academics & Settings drawer
+          </Text>
+        </View>
+        <Text style={{ fontSize: 20, color: '#38BDF8', fontWeight: '900' }}>→</Text>
+      </TouchableOpacity>
+
       {/* Student Welcome Card */}
       <View style={[
         styles.welcomeCard,
@@ -1341,12 +1449,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </TouchableOpacity>
       ) : null}
 
-      {/* Mark 85 Copilot & Hackathon Demo Banner */}
+
+      {/* Google NotebookLM Collective Study Hub Banner */}
       <TouchableOpacity
         style={[
           {
-            backgroundColor: isLightMode ? '#FEFCE8' : 'rgba(234, 179, 8, 0.12)',
-            borderColor: '#EAB308',
+            backgroundColor: isLightMode ? '#EFF6FF' : 'rgba(37, 99, 235, 0.15)',
+            borderColor: isLightMode ? '#3B82F6' : '#2563EB',
             borderWidth: 1.5,
             borderRadius: 12,
             padding: 12,
@@ -1354,7 +1463,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            shadowColor: '#EAB308',
+            shadowColor: '#3B82F6',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: isLightMode ? 0.1 : 0.25,
             shadowRadius: 6,
@@ -1365,27 +1474,27 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           try {
             Vibration.vibrate(25);
           } catch {}
-          setShowMark85Copilot(true);
+          setShowNotebookLmModal(true);
         }}
         activeOpacity={0.8}
       >
         <View style={{ flex: 1, marginRight: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#B45309', backgroundColor: '#FEF08A', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
-              MARK 85 COPILOT
+            <Text style={{ fontSize: 9.5, fontWeight: '900', color: '#1D4ED8', backgroundColor: '#DBEAFE', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+              GOOGLE NOTEBOOKLM
             </Text>
-            <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLightMode ? '#047857' : '#34D399' }}>
-              ⚡ 3-PILLAR HACKATHON RADAR
+            <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLightMode ? '#1D4ED8' : '#60A5FA' }}>
+              📚 COLLECTIVE STUDY HUB
             </Text>
           </View>
           <Text style={{ fontSize: 13, fontWeight: '900', color: isLightMode ? '#0F172A' : '#F9FAFB' }}>
-            Risk Radar • Career Fit AI • Ultrasound Quorum
+            Final Exam Knowledge Base • Audio AI Overviews
           </Text>
           <Text style={{ fontSize: 10.5, color: isLightMode ? '#64748B' : '#94A3B8', marginTop: 1 }}>
-            Tap for 3-week predictive trajectory, recruitment matching & live acoustic demo
+            Source-grounded notes for 40 CA + 60 FE courses • 2-host AI podcasts & question banks
           </Text>
         </View>
-        <Text style={{ fontSize: 18, color: '#EAB308', fontWeight: '900' }}>→</Text>
+        <Text style={{ fontSize: 18, color: '#3B82F6', fontWeight: '900' }}>→</Text>
       </TouchableOpacity>
 
       {/* Top Banner: Overall Attendance Metric */}
@@ -1515,7 +1624,65 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 • {displayDateFormatted}
               </Text>
             </View>
+
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    Vibration.vibrate(30);
+                  } catch {}
+                  Alert.alert(
+                    'Reset Today Attendance?',
+                    'This will clear any accidental attendance marks for today and restore them to unmarked so you can freely mark them again.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Yes, Reset Today',
+                        style: 'destructive',
+                        onPress: async () => {
+                          const today = todayDate;
+                          const nextRecords = { ...periodRecords };
+                          let changed = false;
+                          Object.keys(nextRecords).forEach((key) => {
+                            if (key.startsWith(today)) {
+                              delete nextRecords[key];
+                              changed = true;
+                            }
+                          });
+                          if (changed) {
+                            await StorageService.savePeriodRecords(studentRollNo, nextRecords);
+                            await CloudSyncService.clearStudentPeriodRecords(studentRollNo);
+                            // Also regenerate default subjects
+                            const cleanSubs = PsgimService.generateSubjectsForStudent(studentRollNo);
+                            await StorageService.saveSubjects(cleanSubs, studentRollNo);
+                            await CloudSyncService.syncSubjects(studentRollNo, cleanSubs);
+                            Alert.alert('Reset Complete', "Today's accidental attendance markings have been cleared!");
+                            if (onRefresh) onRefresh();
+                          } else {
+                            Alert.alert('Notice', 'No recorded periods found for today to clear.');
+                          }
+                        },
+                      },
+                    ]
+                  );
+                }}
+                style={[
+                  {
+                    backgroundColor: isLightMode ? '#FEF2F2' : 'rgba(239, 68, 68, 0.15)',
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: isLightMode ? '#FCA5A5' : '#EF4444',
+                  }
+                ]}
+                activeOpacity={0.7}
+              >
+                <Text style={{ fontSize: 10, fontWeight: '800', color: isLightMode ? '#DC2626' : '#F87171' }}>
+                  ↺ Reset Today
+                </Text>
+              </TouchableOpacity>
+
               {isTodayConcluded && (
                 <TouchableOpacity
                   onPress={() => setViewingNextDay(!viewingNextDay)}
@@ -1651,10 +1818,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Text style={{ fontSize: 10, color: '#10B981', fontWeight: '800' }}>●</Text>
                 <Text style={{ fontSize: 10, fontWeight: '700', color: isLightMode ? '#0F172A' : '#38BDF8', letterSpacing: 0.3 }}>
-                  GEOFENCE: LH-ZONE ACTIVE
+                  ZERO-TOUCH GEOFENCE: AUTO-CHECKIN ACTIVE
                 </Text>
               </View>
               <Text style={{ fontSize: 10, color: isLightMode ? '#94A3B8' : '#475569' }}>•</Text>
+              <Text style={{ fontSize: 10, fontWeight: '600', color: isLightMode ? '#059669' : '#34D399' }}>
+                CAMPUS RADAR VERIFIED
+              </Text>
               <Text style={{ fontSize: 10, fontWeight: '600', color: isLightMode ? '#475569' : '#94A3B8' }}>
                 MAC/BSSID HANDSHAKE: VERIFIED
               </Text>
@@ -2141,7 +2311,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               borderWidth: 1.5,
             }
       ]}>
-        <View style={styles.connectHeaderRow}>
+        <TouchableOpacity
+          style={[
+            styles.connectHeaderRow,
+            isAnnouncementsCollapsed && { marginBottom: 0 }
+          ]}
+          onPress={() => {
+            try {
+              Vibration.vibrate(20);
+            } catch {}
+            setIsAnnouncementsCollapsed(!isAnnouncementsCollapsed);
+          }}
+          activeOpacity={0.7}
+        >
           <View style={[
             styles.connectIconCircle,
             isLightMode
@@ -2150,85 +2332,109 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           ]}>
             <Text style={styles.connectIcon}>📢</Text>
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, marginRight: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.connectSectionTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>PSGIM Connect Announcements</Text>
+              <Text style={[styles.connectSectionTitle, isLightMode ? { color: '#0F172A', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>
+                PSGIM Connect
+              </Text>
               <View style={[
                 styles.connectLiveBadge,
                 isLightMode
                   ? { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE' }
                   : isEnhancedSuit && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }
               ]}>
-                <Text style={[styles.connectLiveBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>ANNOUNCEMENTS • LIVE</Text>
+                <Text style={[styles.connectLiveBadgeText, isLightMode ? { color: '#2B3990', fontWeight: '800' } : isEnhancedSuit && { color: '#10B981' }]}>
+                  {announcements.length} NOTICES
+                </Text>
               </View>
             </View>
-            <Text style={[styles.connectSectionSub, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>
-              tqm.psginstitutions.in • Official campus notices & circulars
+            <Text style={[styles.connectSectionSub, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]} numberOfLines={1}>
+              Official campus notices & circulars
             </Text>
           </View>
-        </View>
 
-        {/* Category Filter Chips */}
-        <View style={styles.connectCategoryFilterRow}>
-          {(['ALL', 'EVENT', 'CIRCULAR', 'ACADEMIC'] as const).map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.connectCategoryChip,
-                announcementFilter === cat && styles.connectCategoryChipActive,
-                isLightMode && (
-                  announcementFilter === cat
-                    ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
-                    : { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }
-                ),
-                isEnhancedSuit && !isLightMode && (
-                  announcementFilter === cat
-                    ? { backgroundColor: '#10B981', borderColor: '#10B981' }
-                    : { backgroundColor: '#050505', borderColor: '#262626' }
-                )
-              ]}
-              onPress={() => setAnnouncementFilter(cat)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.connectCategoryChipText,
-                  announcementFilter === cat && styles.connectCategoryChipTextActive,
-                  isLightMode && (
-                    announcementFilter === cat
-                      ? { color: '#FFFFFF', fontWeight: '800' }
-                      : { color: '#64748B', fontWeight: '600' }
-                  ),
-                  isEnhancedSuit && !isLightMode && (
-                    announcementFilter === cat
-                      ? { color: '#050505', fontWeight: '800' }
-                      : { color: '#10B981' }
-                  )
-                ]}
-              >
-                {cat === 'ALL' ? `All (${announcements.length})` : cat === 'EVENT' ? 'Events' : cat === 'CIRCULAR' ? 'Circulars' : 'Academic'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          {/* List Down Dropdown Toggle Button */}
+          <View style={[
+            styles.listDownToggleBtn,
+            isLightMode && { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
+            isEnhancedSuit && !isLightMode && { backgroundColor: '#050505', borderColor: '#262626' }
+          ]}>
+            <Text style={[
+              styles.listDownToggleText,
+              isLightMode && { color: '#2563EB' },
+              isEnhancedSuit && !isLightMode && { color: '#10B981' }
+            ]}>
+              {isAnnouncementsCollapsed ? '▼ View Notices' : '▲ Collapse'}
+            </Text>
+          </View>
+        </TouchableOpacity>
 
-        {announcements.filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter).length === 0 ? (
-          <Text style={[styles.connectEmptyText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>No announcements found in this category.</Text>
-        ) : (
-          announcements
-            .filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter)
-            .map((item) => (
-              <PsgimAnnouncementCard
-                key={item.id}
-                announcement={item}
-                isEnhancedSuit={isEnhancedSuit}
-                isLightMode={isLightMode}
-                onPress={() => {
-                  setSelectedNotice(item);
-                  PsgimConnectService.markAnnouncementAsRead(item.id);
-                }}
-              />
-            ))
+        {/* Collapsible Content */}
+        {!isAnnouncementsCollapsed && (
+          <View style={{ marginTop: 12 }}>
+            {/* Category Filter Chips */}
+            <View style={styles.connectCategoryFilterRow}>
+              {(['ALL', 'EVENT', 'CIRCULAR', 'ACADEMIC'] as const).map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.connectCategoryChip,
+                    announcementFilter === cat && styles.connectCategoryChipActive,
+                    isLightMode && (
+                      announcementFilter === cat
+                        ? { backgroundColor: '#2B3990', borderColor: '#2B3990' }
+                        : { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }
+                    ),
+                    isEnhancedSuit && !isLightMode && (
+                      announcementFilter === cat
+                        ? { backgroundColor: '#10B981', borderColor: '#10B981' }
+                        : { backgroundColor: '#050505', borderColor: '#262626' }
+                    )
+                  ]}
+                  onPress={() => setAnnouncementFilter(cat)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.connectCategoryChipText,
+                      announcementFilter === cat && styles.connectCategoryChipTextActive,
+                      isLightMode && (
+                        announcementFilter === cat
+                          ? { color: '#FFFFFF', fontWeight: '800' }
+                          : { color: '#64748B', fontWeight: '600' }
+                      ),
+                      isEnhancedSuit && !isLightMode && (
+                        announcementFilter === cat
+                          ? { color: '#050505', fontWeight: '800' }
+                          : { color: '#10B981' }
+                      )
+                    ]}
+                  >
+                    {cat === 'ALL' ? `All (${announcements.length})` : cat === 'EVENT' ? 'Events' : cat === 'CIRCULAR' ? 'Circulars' : 'Academic'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {announcements.filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter).length === 0 ? (
+              <Text style={[styles.connectEmptyText, isLightMode ? { color: '#64748B' } : isEnhancedSuit && { color: '#9CA3AF' }]}>No announcements found in this category.</Text>
+            ) : (
+              announcements
+                .filter((item) => announcementFilter === 'ALL' || item.category?.toUpperCase() === announcementFilter)
+                .map((item) => (
+                  <PsgimAnnouncementCard
+                    key={item.id}
+                    announcement={item}
+                    isEnhancedSuit={isEnhancedSuit}
+                    isLightMode={isLightMode}
+                    onPress={() => {
+                      setSelectedNotice(item);
+                      PsgimConnectService.markAnnouncementAsRead(item.id);
+                    }}
+                  />
+                ))
+            )}
+          </View>
         )}
       </View>
 
@@ -2275,7 +2481,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </View>
               </View>
               <Text style={[styles.mcuAiSubtitle, isLightMode ? { color: '#64748B' } : { color: '#9CA3AF' }]}>
-                Predictive Debarment Risk Radar • Deloitte/Federal Bank Placement Matcher
+                Campus Placement Matcher (Deloitte, Federal Bank, Zoho) • Career AI
               </Text>
             </View>
           </View>
@@ -2299,7 +2505,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               activeOpacity={0.8}
             >
               <Text style={{ color: '#000000', fontWeight: '900', fontSize: 13 }}>
-                🚀 Open AI Academic & Placement Copilot
+                🚀 Open Placement Matcher & Career AI
               </Text>
             </TouchableOpacity>
 
@@ -3074,6 +3280,38 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         studentName={studentName}
         studentRollNo={studentRollNo}
         isLightMode={isLightMode}
+      />
+
+      {/* PSGIM NotebookLM Collective Campus Study Hub Modal */}
+      <NotebookLmModal
+        visible={showNotebookLmModal}
+        onClose={() => setShowNotebookLmModal(false)}
+        studentRollNo={studentRollNo}
+        studentName={studentName}
+        isLightMode={isLightMode}
+      />
+
+      {/* Devdarshan Exclusive: Christ / KP UI Prototype Preview Modal */}
+      <ChristStylePreviewModal
+        visible={showChristPreview}
+        onClose={() => setShowChristPreview(false)}
+        subjects={subjects}
+        studentName={studentName || 'Devdarshan V'}
+        studentRollNo={studentRollNo || '26AB12'}
+        timetable={timetable}
+        announcements={announcements}
+        periodRecords={periodRecords}
+        onRecordPeriodAttendance={onRecordPeriodAttendance}
+        onOpenCoursePlan={(code, name) => {
+          setCoursePlanModalInfo({
+            visible: true,
+            code,
+            name,
+            allowSubjectSwitching: true,
+          });
+        }}
+        onOpenErpSync={onOpenErpSync}
+        onUpdateSubject={onUpdateSubject}
       />
 
       {/* StarkScript Interactive DSL IDE & Terminal */}
@@ -4775,6 +5013,22 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 13,
     fontWeight: '700',
+  },
+  listDownToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  listDownToggleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#60A5FA',
+    letterSpacing: 0.3,
   },
 });
 

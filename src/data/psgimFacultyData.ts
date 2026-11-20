@@ -342,7 +342,7 @@ export const FacultyDataService = {
       room: string;
     }[] = [];
 
-    const days = dayFilter ? [dayFilter] : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = dayFilter ? [dayFilter] : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
     days.forEach((dayName) => {
       MASTER_SCHEDULE.filter((slot) => slot.day === dayName).forEach((slot, index) => {

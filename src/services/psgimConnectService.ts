@@ -34,8 +34,29 @@ export const LAUNCH_ANNOUNCEMENT: PsgimAnnouncement = {
   actionLabel: '🌐 Open Web App & Share Link',
 };
 
+// Official Notice: College Attendance Updated up to 14-11-2026
+export const ATTENDANCE_UPDATE_ANNOUNCEMENT: PsgimAnnouncement = {
+  id: 101,
+  title: '📢 Official Studzone Attendance Updated: Published up to 14-11-2026',
+  category: 'Academic',
+  priority: 'urgent',
+  status: 'published',
+  is_pinned: 1,
+  publish_at: '2026-11-18 23:00:00',
+  created_at: '2026-11-18 23:00:00',
+  created_by: 'PSGIM Administration & Portal Sync',
+  venue: 'Studzone ERP & PSGIM One App',
+  eventDate: 'Updated up to November 14, 2026 (14-11-2026)',
+  eventTime: 'Live on Portal',
+  summary: 'Official college attendance records have been refreshed and published on Studzone up to 14-11-2026. Check your updated attendance in ERP Reconcile.',
+  content: 'Attention Students,\n\nThe college has officially updated and published attendance records on the Studzone Portal up to 14-11-2026 (17-08-2026 to 14-11-2026).\n\n📊 Status Summary:\n• Attendance update window: 17-08-2026 to 14-11-2026\n• Subjects Updated: MCOB (24GM11), EDM (24GM12), ADM (24GM13), BS (24GM14), MC (24GM15), SSA (24GM16), SSM (24GM18), LA (24GM19)\n• Tap the "Sync Studzone" / "ERP Reconcile" button in the app to pull your refreshed official hours directly into your local dashboard and verify your safe bunk limits.',
+  actionUrl: 'https://attendance-tracker-9e4f7.web.app',
+  actionLabel: '📊 Check ERP Reconcile',
+};
+
 // Enriched static metadata for known PSGIM announcements & circular attachments
 const ENRICHED_METADATA: Record<number, Partial<PsgimAnnouncement>> = {
+  101: ATTENDANCE_UPDATE_ANNOUNCEMENT,
   100: LAUNCH_ANNOUNCEMENT,
   31: {
     venue: 'Amphitheatre & Seminar Hall, PSGIM',
@@ -106,6 +127,7 @@ const ENRICHED_METADATA: Record<number, Partial<PsgimAnnouncement>> = {
 
 // Fallback seed announcements if device is completely offline on first launch
 const SEED_ANNOUNCEMENTS: PsgimAnnouncement[] = [
+  ATTENDANCE_UPDATE_ANNOUNCEMENT,
   LAUNCH_ANNOUNCEMENT,
   {
     id: 31,
@@ -270,10 +292,14 @@ export const PsgimConnectService = {
             };
           });
 
-          const withLaunch = merged.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)
-            ? merged
-            : [LAUNCH_ANNOUNCEMENT, ...merged];
-          const sorted = this.sortAnnouncements(withLaunch);
+          let withSpecials = merged;
+          if (!withSpecials.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)) {
+            withSpecials = [LAUNCH_ANNOUNCEMENT, ...withSpecials];
+          }
+          if (!withSpecials.some((m) => m.id === ATTENDANCE_UPDATE_ANNOUNCEMENT.id)) {
+            withSpecials = [ATTENDANCE_UPDATE_ANNOUNCEMENT, ...withSpecials];
+          }
+          const sorted = this.sortAnnouncements(withSpecials);
 
           // Check if there are brand-new announcements to notify
           const cached = await this.getCachedAnnouncements();
@@ -315,10 +341,14 @@ export const PsgimConnectService = {
             ...(ENRICHED_METADATA[item.id] || {}),
             isRead: readIds.includes(item.id),
           }));
-          const withLaunch = merged.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)
-            ? merged
-            : [LAUNCH_ANNOUNCEMENT, ...merged];
-          const sorted = this.sortAnnouncements(withLaunch);
+          let withSpecials = merged;
+          if (!withSpecials.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)) {
+            withSpecials = [LAUNCH_ANNOUNCEMENT, ...withSpecials];
+          }
+          if (!withSpecials.some((m) => m.id === ATTENDANCE_UPDATE_ANNOUNCEMENT.id)) {
+            withSpecials = [ATTENDANCE_UPDATE_ANNOUNCEMENT, ...withSpecials];
+          }
+          const sorted = this.sortAnnouncements(withSpecials);
           await AsyncStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(sorted));
           return sorted;
         }
@@ -330,10 +360,14 @@ export const PsgimConnectService = {
     // 3. Fallback to local cache or complete seed list
     const cached = await this.getCachedAnnouncements();
     if (cached && cached.length > 0) {
-      const withLaunch = cached.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)
-        ? cached
-        : [LAUNCH_ANNOUNCEMENT, ...cached];
-      return this.sortAnnouncements(withLaunch);
+      let withSpecials = cached;
+      if (!withSpecials.some((m) => m.id === LAUNCH_ANNOUNCEMENT.id)) {
+        withSpecials = [LAUNCH_ANNOUNCEMENT, ...withSpecials];
+      }
+      if (!withSpecials.some((m) => m.id === ATTENDANCE_UPDATE_ANNOUNCEMENT.id)) {
+        withSpecials = [ATTENDANCE_UPDATE_ANNOUNCEMENT, ...withSpecials];
+      }
+      return this.sortAnnouncements(withSpecials);
     }
     return this.sortAnnouncements(SEED_ANNOUNCEMENTS);
   },

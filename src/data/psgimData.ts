@@ -183,11 +183,7 @@ export const MASTER_SCHEDULE: MasterScheduleSlot[] = [
   { day: 'Friday', startTime: '13:40', endTime: '15:30', course: 'SSA', applicableBatches: ['SSA1', 'SSA2'], defaultRoom: 'LH-401/405' },
   { day: 'Friday', startTime: '13:40', endTime: '15:30', course: 'LA', applicableBatches: ['LA2'], defaultRoom: 'LH-109' },
   { day: 'Friday', startTime: '15:40', endTime: '16:35', course: 'SSM', applicableBatches: ['SSM3'], defaultRoom: 'LH-401' },
-  { day: 'Friday', startTime: '15:40', endTime: '16:35', course: 'SPORTS', applicableBatches: ['SPORTS1'], defaultRoom: 'Ground' },
-
-  // SATURDAY
-  { day: 'Saturday', startTime: '08:30', endTime: '12:30', course: 'SSM', applicableBatches: ['SSM1', 'SSM2', 'SSM3', 'SSM4'], defaultRoom: 'SSM' },
-  { day: 'Saturday', startTime: '13:40', endTime: '16:35', course: 'SSM', applicableBatches: ['SSM1', 'SSM2', 'SSM3', 'SSM4'], defaultRoom: 'SSM' }
+  { day: 'Friday', startTime: '15:40', endTime: '16:35', course: 'SPORTS', applicableBatches: ['SPORTS1'], defaultRoom: 'Ground' }
 ];
 
 export interface StudentRecord {

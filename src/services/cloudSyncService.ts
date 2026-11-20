@@ -4,23 +4,51 @@ import { Subject, PeriodAttendanceRecord, MedicalClaimRecord, StudentFeedback, S
 
 export const CloudSyncService = {
   /**
-   * Syncs student profile and last login to Firestore
+   * Syncs student profile and last login to Firestore.
+   * Dispatches a first-time login alert email to devdarshanv2005@gmail.com.
    */
   async syncStudentProfile(rollNo: string, name: string, batch: string): Promise<void> {
     if (!rollNo) return;
     try {
       const studentRef = doc(db, 'students', rollNo);
-      await setDoc(
-        studentRef,
-        {
-          rollNo,
-          name,
-          batch,
-          lastActiveAt: new Date().toISOString(),
-          appVersion: '1.0.0',
-        },
-        { merge: true }
-      );
+      const existingSnap = await getDoc(studentRef);
+      const isFirstLogin = !existingSnap.exists() || !existingSnap.data()?.firstLoginAt;
+
+      const nowIso = new Date().toISOString();
+      const payload: any = {
+        rollNo,
+        name,
+        batch,
+        lastActiveAt: nowIso,
+        appVersion: '1.0.0',
+      };
+
+      if (isFirstLogin) {
+        payload.firstLoginAt = nowIso;
+      }
+
+      await setDoc(studentRef, payload, { merge: true });
+
+      // If this is a first-time login, dispatch notification email to Devdarshan
+      if (isFirstLogin && rollNo.toUpperCase() !== 'GUEST') {
+        fetch('https://formspree.io/f/xovkllqq', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            _to: 'devdarshanv2005@gmail.com',
+            subject: `🎉 [PSGIM One] First-Time Student Login: ${name} (${rollNo}) - Batch ${batch}`,
+            event: 'FIRST_TIME_LOGIN',
+            studentName: name,
+            rollNo: rollNo,
+            batch: batch,
+            firstLoginTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            message: `A new student just logged into PSGIM One for the very first time! Roll: ${rollNo}, Name: ${name}, Batch: ${batch}.`,
+          }),
+        }).catch((err) => console.warn('[CloudSync] First login notification email error:', err));
+      }
     } catch (e) {
       console.warn('[CloudSync] syncStudentProfile failed (offline or permissions):', e);
     }
@@ -64,6 +92,7 @@ export const CloudSyncService = {
         {
           rollNo,
           subjects,
+          lastActiveAt: new Date().toISOString(),
           syncedAt: new Date().toISOString(),
         },
         { merge: true }
@@ -217,6 +246,28 @@ export const CloudSyncService = {
     } catch (e) {
       console.warn('[CloudSync] fetchCloudPeriodRecords failed:', e);
       return {};
+    }
+  },
+
+  /**
+   * Clears all period attendance records and resets cloud subject totals for a student
+   */
+  async clearStudentPeriodRecords(rollNo: string): Promise<void> {
+    if (!rollNo) return;
+    try {
+      const periodsCol = collection(db, 'students', rollNo, 'periods');
+      const snap = await getDocs(periodsCol);
+      const batch = writeBatch(db);
+      snap.forEach((d) => {
+        batch.delete(d.ref);
+      });
+      await batch.commit();
+
+      // Also remove cloud attendance totals override
+      const attendanceRef = doc(db, 'attendance', rollNo);
+      await deleteDoc(attendanceRef);
+    } catch (e) {
+      console.warn('[CloudSync] clearStudentPeriodRecords failed:', e);
     }
   },
 

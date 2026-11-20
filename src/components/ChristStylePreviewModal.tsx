@@ -25,6 +25,7 @@ import { ACADEMIC_CALENDAR, AcademicCalendarItem } from '../data/academicCalenda
 import { NOTEBOOK_LM_SHARED_URL } from './NotebookLmModal';
 import { getCoursePlanForSubject } from '../data/coursePlanData';
 import { getCourseSyllabus, CourseSyllabus } from '../data/courseSyllabusData';
+import { StorageService } from '../services/storageService';
 
 // Subject-specific Google NotebookLM AI Study Hub URLs (Only for Core Courses that have official NotebookLM)
 const STORAGE_READ_NOTIFS_KEY = '@psgim_read_notifications_';
@@ -111,6 +112,8 @@ import {
   Edit2,
   Save,
   LogOut,
+  PlusCircle,
+  Plus,
 } from 'lucide-react-native';
 
 interface ChristStylePreviewProps {
@@ -129,6 +132,7 @@ interface ChristStylePreviewProps {
   ) => Promise<any> | void;
   onOpenCoursePlan?: (code: string, name: string) => void;
   onOpenErpSync?: () => void;
+  onUpdateSubject?: (subject: Subject) => void;
 }
 
 type BottomTab = 'HOME' | 'ATTENDANCE' | 'PORTALS' | 'CALENDAR' | 'ACADEMICS';
@@ -147,6 +151,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   onRecordPeriodAttendance,
   onOpenCoursePlan,
   onOpenErpSync,
+  onUpdateSubject,
 }) => {
   const [activeTab, setActiveTab] = useState<BottomTab>('HOME');
   const [expandedSubjectId, setExpandedSubjectId] = useState<string | null>(null);
@@ -532,6 +537,129 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   // Safe bunks / classes needed
   const overallMetrics = calculateAttendanceMetrics(totalAttended, totalConducted, false, 75, 65);
 
+  // Manual Attendance & Extra Class Modal State
+  const [showManualAttendanceModal, setShowManualAttendanceModal] = useState<boolean>(false);
+  const [manualModalMode, setManualModalMode] = useState<'EXTRA_CLASS' | 'DIRECT_ADJUST'>('EXTRA_CLASS');
+  const [manualSubjectId, setManualSubjectId] = useState<string>(attendanceSubjects[0]?.id || subjects[0]?.id || '');
+  const [manualDate, setManualDate] = useState<string>(displayDateStr);
+  const [manualClassType, setManualClassType] = useState<string>('Extra Lecture');
+  const [manualHours, setManualHours] = useState<number>(1);
+  const [manualTiming, setManualTiming] = useState<string>('16:45 - 17:45');
+  const [manualRoom, setManualRoom] = useState<string>('LH-101');
+  const [manualStatus, setManualStatus] = useState<AttendanceStatus>('attended');
+  const [directAttendedInput, setDirectAttendedInput] = useState<string>('');
+  const [directTotalInput, setDirectTotalInput] = useState<string>('');
+  const [manualToastMsg, setManualToastMsg] = useState<string | null>(null);
+
+  const handleOpenManualModal = (subjectId?: string, defaultDate?: string) => {
+    const targetId = subjectId || manualSubjectId || attendanceSubjects[0]?.id || subjects[0]?.id;
+    if (targetId) {
+      setManualSubjectId(targetId);
+      const sub = subjects.find((s) => s.id === targetId);
+      if (sub) {
+        setDirectAttendedInput(String(sub.attended || 0));
+        setDirectTotalInput(String(sub.total || 0));
+      }
+    }
+    if (defaultDate) {
+      setManualDate(defaultDate);
+    }
+    setShowManualAttendanceModal(true);
+  };
+
+  const handleSaveExtraClass = async () => {
+    const targetSub = subjects.find((s) => s.id === manualSubjectId) || subjects[0];
+    if (!targetSub) return;
+
+    const startPart = manualTiming.split('-')[0]?.trim() || '16:45';
+    const [startHStr, startMStr] = startPart.split(':');
+    const startH = parseInt(startHStr, 10) || 16;
+    const startM = parseInt(startMStr, 10) || 45;
+    const endH = startH + manualHours;
+    const startTimeFormatted = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
+    const endTimeFormatted = `${String(endH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
+
+    const dateObj = new Date(manualDate);
+    const dayNamesList: Array<'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday'> = [
+      'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+    ];
+    const dayOfWeek = dayNamesList[isNaN(dateObj.getDay()) ? 5 : dateObj.getDay()];
+
+    const extraSlotId = `extra_${targetSub.id}_${manualDate}_${Date.now()}`;
+    const extraSlot: TimetableSlot = {
+      id: extraSlotId,
+      day: dayOfWeek,
+      startTime: startTimeFormatted,
+      endTime: endTimeFormatted,
+      subjectId: targetSub.id,
+      room: manualRoom || 'LH-101',
+      faculty: targetSub.faculty,
+      isRescheduled: true,
+      rescheduledDate: manualDate,
+    };
+
+    if (onRecordPeriodAttendance) {
+      try {
+        await onRecordPeriodAttendance(extraSlot, manualDate, manualStatus);
+      } catch (err) {
+        console.warn('Error recording extra class period:', err);
+      }
+    } else {
+      const deltaAttended = manualStatus === 'attended' ? manualHours : 0;
+      const deltaTotal = manualHours;
+      const updated: Subject = {
+        ...targetSub,
+        attended: Math.max(0, (targetSub.attended || 0) + deltaAttended),
+        total: Math.max(0, (targetSub.total || 0) + deltaTotal),
+      };
+      if (onUpdateSubject) {
+        onUpdateSubject(updated);
+      }
+      try {
+        const nextSubs = subjects.map((s) => (s.id === targetSub.id ? updated : s));
+        await StorageService.saveSubjects(nextSubs);
+      } catch {}
+    }
+
+    const hoursLabel = `${manualHours} ${manualHours === 1 ? 'hr' : 'hrs'}`;
+    const statusLabel = manualStatus === 'attended' ? 'Attended (Present)' : 'Missed (Absent)';
+    setManualToastMsg(`Extra Class recorded: ${targetSub.code || targetSub.name} (+${hoursLabel} - ${statusLabel}).`);
+    setShowManualAttendanceModal(false);
+    setTimeout(() => setManualToastMsg(null), 4000);
+  };
+
+  const handleSaveDirectAdjustment = async () => {
+    const targetSub = subjects.find((s) => s.id === manualSubjectId) || subjects[0];
+    if (!targetSub) return;
+
+    const newAttended = parseInt(directAttendedInput, 10);
+    const newTotal = parseInt(directTotalInput, 10);
+
+    if (isNaN(newAttended) || isNaN(newTotal) || newTotal < 0 || newAttended < 0 || newAttended > newTotal) {
+      Alert.alert('Invalid Input', 'Please enter valid non-negative numbers where attended hours do not exceed total conducted hours.');
+      return;
+    }
+
+    const updated: Subject = {
+      ...targetSub,
+      attended: newAttended,
+      total: newTotal,
+    };
+
+    if (onUpdateSubject) {
+      onUpdateSubject(updated);
+    }
+    try {
+      const nextSubs = subjects.map((s) => (s.id === targetSub.id ? updated : s));
+      await StorageService.saveSubjects(nextSubs);
+    } catch {}
+
+    const newPct = newTotal > 0 ? ((newAttended / newTotal) * 100).toFixed(2) : '100.00';
+    setManualToastMsg(`Manual Attendance Updated: ${targetSub.code || targetSub.name} is now ${newAttended}/${newTotal} hrs (${newPct}%).`);
+    setShowManualAttendanceModal(false);
+    setTimeout(() => setManualToastMsg(null), 4000);
+  };
+
   // Dynamic Holiday Leave & Recovery Planner Calculations:
   // If user takes `simulatedLeaveHours` off:
   const simTotalConducted = totalConducted + simulatedLeaveHours;
@@ -591,6 +719,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
         room: string;
         status: 'attended' | 'bunked' | 'cancelled';
         hours: number;
+        isExtra?: boolean;
       }>;
     }> = {};
 
@@ -601,14 +730,16 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
       }
       const matchedSub = subjects.find((s) => s.id === rec.subjectId);
       const matchedSlot = timetable.find((t) => t.id === rec.slotId);
+      const isExtra = rec.slotId?.startsWith('extra_') || rec.isRescheduled || Boolean(matchedSlot?.isRescheduled);
       dateMap[rec.date].slots.push({
         periodKey: rec.periodKey,
         subjectName: matchedSub ? matchedSub.name : 'Class Session',
         subjectCode: matchedSub ? matchedSub.code : '24GMxx',
-        time: matchedSlot ? `${matchedSlot.startTime} - ${matchedSlot.endTime}` : '09:00 - 10:00',
+        time: matchedSlot ? `${matchedSlot.startTime} - ${matchedSlot.endTime}` : (isExtra ? '16:45 - 17:45' : '09:00 - 10:00'),
         room: (matchedSlot && matchedSlot.room) || 'LH-101',
         status: rec.status,
         hours: rec.hours || 1,
+        isExtra,
       });
     });
 
@@ -707,6 +838,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
     // 2. Course syllabus/plan modal open -> close it
     if (selectedCourseDetails) {
       setSelectedCourseDetails(null);
+      return true;
+    }
+    // 2.5. Manual Attendance / Extra Class modal open -> close it
+    if (showManualAttendanceModal) {
+      setShowManualAttendanceModal(false);
       return true;
     }
     // 3. Holiday / Recovery Planner modal open -> close it
@@ -897,54 +1033,74 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     </Text>
                   </View>
 
-                  {/* Reset button pill matching screenshot: red outline with dark crimson fill */}
-                  <TouchableOpacity
-                    onPress={async () => {
-                      try {
-                        Vibration.vibrate(30);
-                      } catch {}
-                      Alert.alert(
-                        'Reset Today Attendance?',
-                        'This will clear any accidental attendance marks for today and restore them to unmarked so you can freely mark them again.',
-                        [
-                          { text: 'Cancel', style: 'cancel' },
-                          {
-                            text: 'Yes, Reset Today',
-                            style: 'destructive',
-                            onPress: async () => {
-                              const today = displayDateStr;
-                              const nextLocal = { ...localPeriodStatuses };
-                              let changed = false;
-                              Object.keys(nextLocal).forEach((key) => {
-                                if (key.startsWith(today)) {
-                                  delete nextLocal[key];
-                                  changed = true;
-                                }
-                              });
-                              setLocalPeriodStatuses(nextLocal);
-                              Alert.alert('Reset Complete', "Today's accidental attendance markings have been cleared!");
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TouchableOpacity
+                      onPress={() => handleOpenManualModal(undefined, displayDateStr)}
+                      style={{
+                        backgroundColor: isLight ? '#E0F2FE' : '#1E293B',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3.5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: isLight ? '#BAE6FD' : '#334155',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <PlusCircle size={11} color="#0284C7" strokeWidth={2.5} />
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#0369A1' : '#38BDF8' }}>
+                        + Extra Class
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={async () => {
+                        const todaySlots = activeDaySlots;
+                        if (!todaySlots.length) {
+                          Alert.alert('Notice', 'No periods scheduled for today to reset.');
+                          return;
+                        }
+                        Alert.alert(
+                          'Reset Attendance',
+                          "Are you sure you want to clear your marked attendance for today's periods?",
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Reset',
+                              style: 'destructive',
+                              onPress: async () => {
+                                const nextLocal = { ...localPeriodStatuses };
+                                todaySlots.forEach((slot) => {
+                                  const pKey = `${displayDateStr}_${slot.id}`;
+                                  delete nextLocal[pKey];
+                                });
+                                setLocalPeriodStatuses(nextLocal);
+                                Alert.alert('Reset Complete', "Today's accidental attendance markings have been cleared!");
+                              },
                             },
-                          },
-                        ]
-                      );
-                    }}
-                    style={{
-                      backgroundColor: isLight ? '#FEF2F2' : 'rgba(153, 27, 27, 0.45)',
-                      paddingHorizontal: 10,
-                      paddingVertical: 3.5,
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: isLight ? '#FCA5A5' : '#EF4444',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 3,
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#DC2626' : '#FCA5A5' }}>
-                      ↺ Reset
-                    </Text>
-                  </TouchableOpacity>
+                          ]
+                        );
+                      }}
+                      style={{
+                        backgroundColor: isLight ? '#FEF2F2' : 'rgba(153, 27, 27, 0.45)',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3.5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: isLight ? '#FCA5A5' : '#EF4444',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 3,
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#DC2626' : '#FCA5A5' }}>
+                        ↺ Reset
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {isWeekendOrNoClass ? (
@@ -952,9 +1108,27 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     <Text style={{ fontSize: 15, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
                       No Classes Scheduled Today ({currentDayName})
                     </Text>
-                    <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center' }}>
+                    <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginBottom: 10 }}>
                       Enjoy your break! Classes resume as per official college timetable.
                     </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: isLight ? '#0284C7' : '#0369A1',
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
+                        borderRadius: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                      onPress={() => handleOpenManualModal(undefined, displayDateStr)}
+                      activeOpacity={0.8}
+                    >
+                      <PlusCircle size={13} color="#FFFFFF" strokeWidth={2.4} />
+                      <Text style={{ color: '#FFFFFF', fontSize: 11.5, fontWeight: '800' }}>
+                        + Log Extra / Weekend Class Today
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 ) : currentSlot ? (
                   <>
@@ -1454,6 +1628,26 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                   {/* Title Header */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <Text style={[styles.sectionPageTitle, { marginBottom: 0 }]}>Course-wise Attendance</Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: isLight ? '#E0F2FE' : '#1E293B',
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: isLight ? '#BAE6FD' : '#334155',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
+                      onPress={() => handleOpenManualModal()}
+                      activeOpacity={0.8}
+                    >
+                      <PlusCircle size={13} color="#0284C7" strokeWidth={2.4} />
+                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: isLight ? '#0369A1' : '#38BDF8' }}>
+                        + Extra Class
+                      </Text>
+                    </TouchableOpacity>
                   </View>
 
                   {/* Accordion Cards per Subject (Screenshot 3) */}
@@ -1540,6 +1734,52 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                                     ? `You can safely take ${safeBunks} more classes off while maintaining attendance above the mandatory 75% threshold.`
                                     : `You must attend the next ${recoveryNeeded} consecutive classes without missing any sessions to recover and achieve 75% attendance.`}
                                 </Text>
+
+                                <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                                  <TouchableOpacity
+                                    style={{
+                                      flex: 1,
+                                      backgroundColor: isLight ? '#0284C7' : '#0369A1',
+                                      paddingVertical: 7,
+                                      paddingHorizontal: 10,
+                                      borderRadius: 8,
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: 6,
+                                    }}
+                                    onPress={() => handleOpenManualModal(sub.id)}
+                                    activeOpacity={0.8}
+                                  >
+                                    <PlusCircle size={13} color="#FFFFFF" strokeWidth={2.4} />
+                                    <Text style={{ color: '#FFFFFF', fontSize: 11.5, fontWeight: '800' }}>
+                                      + Log Extra Class
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    style={{
+                                      backgroundColor: isLight ? '#F1F5F9' : '#1E293B',
+                                      paddingVertical: 7,
+                                      paddingHorizontal: 10,
+                                      borderRadius: 8,
+                                      borderWidth: 1,
+                                      borderColor: isLight ? '#CBD5E1' : '#334155',
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: 4,
+                                    }}
+                                    onPress={() => {
+                                      handleOpenManualModal(sub.id);
+                                      setManualModalMode('DIRECT_ADJUST');
+                                    }}
+                                    activeOpacity={0.8}
+                                  >
+                                    <Text style={{ color: isLight ? '#475569' : '#94A3B8', fontSize: 11.5, fontWeight: '700' }}>
+                                      Adjust Count
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
                               </View>
                             </View>
                           )}
@@ -1553,6 +1793,30 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
               ) : (
                 /* EVERYDAY ATTENDANCE VIEW (Day-by-Day Historical Logs) */
                 <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <Text style={[styles.sectionPageTitle, { marginBottom: 0 }]}>Everyday History</Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: isLight ? '#E0F2FE' : '#1E293B',
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: isLight ? '#BAE6FD' : '#334155',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
+                      onPress={() => handleOpenManualModal()}
+                      activeOpacity={0.8}
+                    >
+                      <PlusCircle size={13} color="#0284C7" strokeWidth={2.4} />
+                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: isLight ? '#0369A1' : '#38BDF8' }}>
+                        + Extra Class
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
                   {/* Search and Status Filters */}
                   <View style={styles.searchBar}>
                     <Search size={16} color="#64748B" style={{ marginRight: 8 }} />
@@ -1653,7 +1917,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                                           {slot.subjectName}
                                         </Text>
                                         <Text style={styles.everydaySlotSubjectCode}>
-                                          {slot.subjectCode} • {slot.hours} hr
+                                          {slot.subjectCode} • {slot.hours} hr{slot.isExtra ? ' • EXTRA CLASS' : ''}
                                         </Text>
                                       </View>
 
@@ -3253,6 +3517,610 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
             </Modal>
           );
         })()}
+
+        {/* Manual Attendance & Extra Classes Modal */}
+        <Modal
+          visible={showManualAttendanceModal}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowManualAttendanceModal(false)}
+        >
+          <View style={styles.holidayModalBackdrop}>
+            <View style={[styles.holidayModalContainer, { maxHeight: Dimensions.get('window').height * 0.9 }]}>
+              {/* Modal Header */}
+              <View style={styles.holidayModalHeader}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.holidayModalTitle}>Manual Attendance & Extra Classes</Text>
+                  <Text style={styles.holidayModalSubtitle}>
+                    Log extra lectures, lab extensions, or directly adjust subject attendance counts
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.holidayModalCloseBtn}
+                  onPress={() => setShowManualAttendanceModal(false)}
+                  activeOpacity={0.7}
+                >
+                  <X size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                style={{ flex: 1 }}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ padding: 18, paddingBottom: 40 }}
+              >
+                {/* Toast Message banner if set */}
+                {manualToastMsg ? (
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                      borderColor: '#10B981',
+                      borderWidth: 1,
+                      borderRadius: 8,
+                      padding: 10,
+                      marginBottom: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <Check size={16} color="#10B981" strokeWidth={2.5} />
+                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700', flex: 1 }}>
+                      {manualToastMsg}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Mode Switcher: Log Extra Class vs Direct Adjustment */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    backgroundColor: isLight ? '#F1F5F9' : '#0B1322',
+                    borderRadius: 10,
+                    padding: 4,
+                    marginBottom: 16,
+                    borderWidth: 1,
+                    borderColor: isLight ? '#CBD5E1' : '#1E293B',
+                  }}
+                >
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      backgroundColor: manualModalMode === 'EXTRA_CLASS' ? (isLight ? '#FFFFFF' : '#1E293B') : 'transparent',
+                      alignItems: 'center',
+                      shadowColor: manualModalMode === 'EXTRA_CLASS' ? '#000' : 'transparent',
+                      shadowOpacity: 0.1,
+                      shadowRadius: 2,
+                      elevation: manualModalMode === 'EXTRA_CLASS' ? 2 : 0,
+                    }}
+                    onPress={() => setManualModalMode('EXTRA_CLASS')}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: manualModalMode === 'EXTRA_CLASS' ? (isLight ? '#0284C7' : '#38BDF8') : '#64748B',
+                      }}
+                    >
+                      Log Extra Class Session
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      backgroundColor: manualModalMode === 'DIRECT_ADJUST' ? (isLight ? '#FFFFFF' : '#1E293B') : 'transparent',
+                      alignItems: 'center',
+                      shadowColor: manualModalMode === 'DIRECT_ADJUST' ? '#000' : 'transparent',
+                      shadowOpacity: 0.1,
+                      shadowRadius: 2,
+                      elevation: manualModalMode === 'DIRECT_ADJUST' ? 2 : 0,
+                    }}
+                    onPress={() => {
+                      const activeSub = subjects.find((s) => s.id === manualSubjectId) || subjects[0];
+                      if (activeSub) {
+                        setDirectAttendedInput(String(activeSub.attended || 0));
+                        setDirectTotalInput(String(activeSub.total || 0));
+                      }
+                      setManualModalMode('DIRECT_ADJUST');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: manualModalMode === 'DIRECT_ADJUST' ? (isLight ? '#0284C7' : '#38BDF8') : '#64748B',
+                      }}
+                    >
+                      Direct Count Override
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* 1. Subject Selector Chips */}
+                <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 8 }}>
+                  SELECT COURSE
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
+                  {attendanceSubjects.map((sub) => {
+                    const isSelected = sub.id === manualSubjectId;
+                    const codeLabel = sub.code || sub.name.substring(0, 4).toUpperCase();
+                    return (
+                      <TouchableOpacity
+                        key={sub.id}
+                        onPress={() => {
+                          setManualSubjectId(sub.id);
+                          setDirectAttendedInput(String(sub.attended || 0));
+                          setDirectTotalInput(String(sub.total || 0));
+                        }}
+                        style={{
+                          backgroundColor: isSelected ? (isLight ? '#E0F2FE' : '#1E293B') : (isLight ? '#F8FAFC' : '#0B1322'),
+                          borderColor: isSelected ? '#0284C7' : (isLight ? '#CBD5E1' : '#1E293B'),
+                          borderWidth: 1.5,
+                          borderRadius: 9,
+                          paddingVertical: 7,
+                          paddingHorizontal: 12,
+                          alignItems: 'center',
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ fontSize: 11.5, fontWeight: '800', color: isSelected ? (isLight ? '#0369A1' : '#38BDF8') : (isLight ? '#334155' : '#94A3B8') }}>
+                          {codeLabel}
+                        </Text>
+                        <Text style={{ fontSize: 9.5, color: '#64748B', marginTop: 1 }}>
+                          {sub.attended || 0}/{sub.total || 0} hrs
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                {(() => {
+                  const targetSub = subjects.find((s) => s.id === manualSubjectId) || subjects[0];
+                  if (!targetSub) return null;
+                  const curAttended = targetSub.attended || 0;
+                  const curTotal = targetSub.total || 0;
+                  const curPct = curTotal > 0 ? (curAttended / curTotal) * 100 : 100;
+
+                  if (manualModalMode === 'DIRECT_ADJUST') {
+                    const parsedAttended = parseInt(directAttendedInput, 10) || 0;
+                    const parsedTotal = parseInt(directTotalInput, 10) || 0;
+                    const projPct = parsedTotal > 0 ? (parsedAttended / parsedTotal) * 100 : 100;
+                    const isProjSafe = projPct >= 75;
+
+                    return (
+                      <View style={{ gap: 14 }}>
+                        {/* Course Header Banner */}
+                        <View style={{ backgroundColor: isLight ? '#F8FAFC' : '#0B1322', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: isLight ? '#E2E8F0' : '#1E293B' }}>
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: isLight ? '#0F172A' : '#F8FAFC' }}>
+                            {targetSub.name}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                            Current Attendance: {curAttended} / {curTotal} hrs ({curPct.toFixed(1)}%)
+                          </Text>
+                        </View>
+
+                        {/* Direct Steppers */}
+                        <View style={{ gap: 12 }}>
+                          {/* Attended Hours Stepper */}
+                          <View style={{ backgroundColor: isLight ? '#F0FDF4' : 'rgba(16, 185, 129, 0.08)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#10B981', marginBottom: 8 }}>
+                              HOURS ATTENDED (PRESENT)
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                              <TouchableOpacity
+                                style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#DCFCE7' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                                onPress={() => setDirectAttendedInput(String(Math.max(0, parsedAttended - 1)))}
+                              >
+                                <Text style={{ fontSize: 18, fontWeight: '900', color: '#10B981' }}>-</Text>
+                              </TouchableOpacity>
+                              <TextInput
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                                  borderRadius: 8,
+                                  borderWidth: 1,
+                                  borderColor: isLight ? '#CBD5E1' : '#334155',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 8,
+                                  textAlign: 'center',
+                                  fontSize: 16,
+                                  fontWeight: '800',
+                                  color: isLight ? '#0F172A' : '#FFFFFF',
+                                }}
+                                keyboardType="number-pad"
+                                value={directAttendedInput}
+                                onChangeText={setDirectAttendedInput}
+                              />
+                              <TouchableOpacity
+                                style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#DCFCE7' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                                onPress={() => setDirectAttendedInput(String(parsedAttended + 1))}
+                              >
+                                <Text style={{ fontSize: 18, fontWeight: '900', color: '#10B981' }}>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+
+                          {/* Total Hours Stepper */}
+                          <View style={{ backgroundColor: isLight ? '#F8FAFC' : '#0B1322', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: isLight ? '#E2E8F0' : '#1E293B' }}>
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', marginBottom: 8 }}>
+                              TOTAL HOURS CONDUCTED
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                              <TouchableOpacity
+                                style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#E2E8F0' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                                onPress={() => setDirectTotalInput(String(Math.max(parsedAttended, parsedTotal - 1)))}
+                              >
+                                <Text style={{ fontSize: 18, fontWeight: '900', color: '#64748B' }}>-</Text>
+                              </TouchableOpacity>
+                              <TextInput
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                                  borderRadius: 8,
+                                  borderWidth: 1,
+                                  borderColor: isLight ? '#CBD5E1' : '#334155',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 8,
+                                  textAlign: 'center',
+                                  fontSize: 16,
+                                  fontWeight: '800',
+                                  color: isLight ? '#0F172A' : '#FFFFFF',
+                                }}
+                                keyboardType="number-pad"
+                                value={directTotalInput}
+                                onChangeText={setDirectTotalInput}
+                              />
+                              <TouchableOpacity
+                                style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isLight ? '#E2E8F0' : '#1E293B', alignItems: 'center', justifyContent: 'center' }}
+                                onPress={() => setDirectTotalInput(String(parsedTotal + 1))}
+                              >
+                                <Text style={{ fontSize: 18, fontWeight: '900', color: '#64748B' }}>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Projection Card */}
+                        <View style={{ backgroundColor: isProjSafe ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: isProjSafe ? '#10B981' : '#EF4444' }}>
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: isProjSafe ? '#10B981' : '#EF4444' }}>
+                            PROJECTED ATTENDANCE PERCENTAGE
+                          </Text>
+                          <Text style={{ fontSize: 20, fontWeight: '900', color: isProjSafe ? '#10B981' : '#EF4444', marginTop: 2 }}>
+                            {projPct.toFixed(1)}%
+                          </Text>
+                          <Text style={{ fontSize: 11, color: isLight ? '#475569' : '#94A3B8', marginTop: 3 }}>
+                            {parsedAttended} attended out of {parsedTotal} total conducted hours
+                          </Text>
+                        </View>
+
+                        {/* Save Button */}
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: '#0284C7',
+                            paddingVertical: 12,
+                            borderRadius: 10,
+                            alignItems: 'center',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            gap: 8,
+                          }}
+                          onPress={handleSaveDirectAdjustment}
+                          activeOpacity={0.8}
+                        >
+                          <Save size={16} color="#FFFFFF" strokeWidth={2.4} />
+                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
+                            Save Adjusted Attendance Numbers
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
+                  // EXTRA_CLASS MODE
+                  const extraHours = manualHours;
+                  const newAttended = curAttended + (manualStatus === 'attended' ? extraHours : 0);
+                  const newTotal = curTotal + extraHours;
+                  const newPct = newTotal > 0 ? (newAttended / newTotal) * 100 : 100;
+                  const isNewSafe = newPct >= 75;
+                  const newSafeBunks = newTotal > 0 ? Math.max(0, Math.floor((100 * newAttended - 75 * newTotal) / 75)) : 0;
+
+                  return (
+                    <View style={{ gap: 14 }}>
+                      {/* Active Course Banner */}
+                      <View style={{ backgroundColor: isLight ? '#F8FAFC' : '#0B1322', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: isLight ? '#E2E8F0' : '#1E293B' }}>
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: isLight ? '#0F172A' : '#F8FAFC' }}>
+                          {targetSub.name}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                          Current: {curAttended}/{curTotal} hrs ({curPct.toFixed(1)}%) • Code: {targetSub.code || '24GMxx'}
+                        </Text>
+                      </View>
+
+                      {/* Class Category Chips */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          CLASS CATEGORY
+                        </Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                          {['Extra Lecture', 'Compensatory Class', 'Remedial Session', 'Guest Lecture', 'Lab Extension'].map((type) => {
+                            const isTypeSel = manualClassType === type;
+                            return (
+                              <TouchableOpacity
+                                key={type}
+                                onPress={() => setManualClassType(type)}
+                                style={{
+                                  backgroundColor: isTypeSel ? (isLight ? '#0284C7' : '#0369A1') : (isLight ? '#F1F5F9' : '#1E293B'),
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 6,
+                                  borderRadius: 8,
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: isTypeSel ? '#FFFFFF' : (isLight ? '#475569' : '#94A3B8') }}>
+                                  {type}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+
+                      {/* Date Input with Quick Chips */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          DATE (YYYY-MM-DD)
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                          {['Today', 'Yesterday'].map((quickLabel) => {
+                            const qDate = new Date();
+                            if (quickLabel === 'Yesterday') {
+                              qDate.setDate(qDate.getDate() - 1);
+                            }
+                            const y = qDate.getFullYear();
+                            const m = String(qDate.getMonth() + 1).padStart(2, '0');
+                            const d = String(qDate.getDate()).padStart(2, '0');
+                            const qDateStr = `${y}-${m}-${d}`;
+                            const isMatch = manualDate === qDateStr;
+                            return (
+                              <TouchableOpacity
+                                key={quickLabel}
+                                onPress={() => setManualDate(qDateStr)}
+                                style={{
+                                  backgroundColor: isMatch ? (isLight ? '#E0F2FE' : '#1E293B') : (isLight ? '#F1F5F9' : '#0B1322'),
+                                  borderWidth: 1,
+                                  borderColor: isMatch ? '#0284C7' : (isLight ? '#CBD5E1' : '#334155'),
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 5,
+                                  borderRadius: 7,
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: isMatch ? (isLight ? '#0369A1' : '#38BDF8') : (isLight ? '#475569' : '#94A3B8') }}>
+                                  {quickLabel} ({qDateStr})
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <TextInput
+                          style={{
+                            backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: isLight ? '#CBD5E1' : '#334155',
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            fontSize: 13,
+                            color: isLight ? '#0F172A' : '#FFFFFF',
+                          }}
+                          value={manualDate}
+                          onChangeText={setManualDate}
+                          placeholder="2026-11-20"
+                          placeholderTextColor="#64748B"
+                        />
+                      </View>
+
+                      {/* Duration (Hours) */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          DURATION
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          {[1, 2, 3].map((hrs) => {
+                            const isHrsSel = manualHours === hrs;
+                            return (
+                              <TouchableOpacity
+                                key={hrs}
+                                onPress={() => {
+                                  setManualHours(hrs);
+                                  if (hrs === 1) setManualTiming('16:45 - 17:45');
+                                  if (hrs === 2) setManualTiming('16:45 - 18:45');
+                                  if (hrs === 3) setManualTiming('16:45 - 19:45');
+                                }}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: isHrsSel ? (isLight ? '#0284C7' : '#0369A1') : (isLight ? '#F1F5F9' : '#1E293B'),
+                                  paddingVertical: 8,
+                                  borderRadius: 8,
+                                  alignItems: 'center',
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={{ fontSize: 12, fontWeight: '800', color: isHrsSel ? '#FFFFFF' : (isLight ? '#475569' : '#94A3B8') }}>
+                                  {hrs} {hrs === 1 ? 'Hour' : 'Hours'}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+
+                      {/* Slot Timing */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          TIMING
+                        </Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                          {['16:45 - 17:45', '16:45 - 18:45', '08:00 - 09:00', '10:00 - 11:00', '14:30 - 15:30'].map((time) => {
+                            const isTimeSel = manualTiming === time;
+                            return (
+                              <TouchableOpacity
+                                key={time}
+                                onPress={() => setManualTiming(time)}
+                                style={{
+                                  backgroundColor: isTimeSel ? (isLight ? '#0284C7' : '#0369A1') : (isLight ? '#F1F5F9' : '#1E293B'),
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 6,
+                                  borderRadius: 8,
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: isTimeSel ? '#FFFFFF' : (isLight ? '#475569' : '#94A3B8') }}>
+                                  {time}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+
+                      {/* Classroom */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          CLASSROOM / LAB
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          {['LH-101', 'LH-109', 'LH-401', 'LH-405', 'Comp Lab'].map((rm) => {
+                            const isRmSel = manualRoom === rm;
+                            return (
+                              <TouchableOpacity
+                                key={rm}
+                                onPress={() => setManualRoom(rm)}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: isRmSel ? (isLight ? '#0284C7' : '#0369A1') : (isLight ? '#F1F5F9' : '#1E293B'),
+                                  paddingVertical: 6,
+                                  borderRadius: 8,
+                                  alignItems: 'center',
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: isRmSel ? '#FFFFFF' : (isLight ? '#475569' : '#94A3B8') }}>
+                                  {rm}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+
+                      {/* Attendance Status (Present vs Absent) */}
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#475569' : '#94A3B8', letterSpacing: 0.5, marginBottom: 6 }}>
+                          YOUR ATTENDANCE STATUS
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              backgroundColor: manualStatus === 'attended' ? 'rgba(16, 185, 129, 0.15)' : (isLight ? '#F8FAFC' : '#0B1322'),
+                              borderColor: manualStatus === 'attended' ? '#10B981' : (isLight ? '#CBD5E1' : '#334155'),
+                              borderWidth: 1.5,
+                              paddingVertical: 10,
+                              borderRadius: 10,
+                              alignItems: 'center',
+                              flexDirection: 'row',
+                              justifyContent: 'center',
+                              gap: 6,
+                            }}
+                            onPress={() => setManualStatus('attended')}
+                            activeOpacity={0.8}
+                          >
+                            <Check size={16} color="#10B981" strokeWidth={2.6} />
+                            <Text style={{ fontSize: 13, fontWeight: '800', color: '#10B981' }}>
+                              Attended (Present)
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              backgroundColor: manualStatus === 'bunked' ? 'rgba(239, 68, 68, 0.15)' : (isLight ? '#F8FAFC' : '#0B1322'),
+                              borderColor: manualStatus === 'bunked' ? '#EF4444' : (isLight ? '#CBD5E1' : '#334155'),
+                              borderWidth: 1.5,
+                              paddingVertical: 10,
+                              borderRadius: 10,
+                              alignItems: 'center',
+                              flexDirection: 'row',
+                              justifyContent: 'center',
+                              gap: 6,
+                            }}
+                            onPress={() => setManualStatus('bunked')}
+                            activeOpacity={0.8}
+                          >
+                            <X size={16} color="#EF4444" strokeWidth={2.6} />
+                            <Text style={{ fontSize: 13, fontWeight: '800', color: '#EF4444' }}>
+                              Missed (Absent)
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {/* Live Mathematical Projection Card */}
+                      <View style={{ backgroundColor: isNewSafe ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: isNewSafe ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: isNewSafe ? '#10B981' : '#EF4444' }}>
+                            PROJECTED POST-EXTRA CLASS METRIC
+                          </Text>
+                          <Text style={{ fontSize: 14, fontWeight: '900', color: isNewSafe ? '#10B981' : '#EF4444' }}>
+                            {newPct.toFixed(1)}%
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 11, color: isLight ? '#475569' : '#94A3B8', marginTop: 4 }}>
+                          {manualStatus === 'attended'
+                            ? `Attending this ${extraHours} hr session lifts your subject attendance to ${newAttended}/${newTotal} hrs (${newSafeBunks} safe bunks available).`
+                            : `Missing this ${extraHours} hr session drops your subject attendance to ${newAttended}/${newTotal} hrs.`}
+                        </Text>
+                      </View>
+
+                      {/* Action Button: Record Extra Class */}
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#0284C7',
+                          paddingVertical: 12,
+                          borderRadius: 10,
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          gap: 8,
+                          shadowColor: '#0284C7',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3,
+                          elevation: 3,
+                        }}
+                        onPress={handleSaveExtraClass}
+                        activeOpacity={0.8}
+                      >
+                        <PlusCircle size={16} color="#FFFFFF" strokeWidth={2.4} />
+                        <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
+                          Record Extra Class Attendance
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })()}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
         {/* Smart Holiday Leave & Continuous Recovery Modal */}
         <Modal

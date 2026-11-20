@@ -243,6 +243,20 @@ export const StorageService = {
     }
   },
 
+  async clearAllPeriodRecords(rollNo: string): Promise<void> {
+    try {
+      if (!rollNo) return;
+      const canonicalRoll = (toNewRollNo(rollNo) || rollNo).toUpperCase();
+      const oldRoll = (toOldRollNo(rollNo) || rollNo).toUpperCase();
+      await AsyncStorage.removeItem(`${STORAGE_KEYS.PERIOD_RECORDS}${canonicalRoll}`);
+      await AsyncStorage.removeItem(`${STORAGE_KEYS.PERIOD_RECORDS}${oldRoll}`);
+      await AsyncStorage.removeItem(`${STORAGE_KEYS.SUBJECTS}_${canonicalRoll}`);
+      await AsyncStorage.removeItem(`${STORAGE_KEYS.SUBJECTS}_${oldRoll}`);
+    } catch (e) {
+      console.warn('Error clearing period records:', e);
+    }
+  },
+
   async getPeriodReminders(rollNo: string): Promise<PeriodReminder[]> {
     try {
       if (!rollNo) return [];

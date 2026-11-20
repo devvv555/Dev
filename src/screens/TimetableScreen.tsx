@@ -23,14 +23,14 @@ interface TimetableScreenProps {
   isLightMode?: boolean;
 }
 
-const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 const getTodayDayOfWeek = (): DayOfWeek => {
-  const dayIndex = new Date().getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
-  if (dayIndex === 0) {
-    return 'Monday'; // Default to Monday on Sundays
+  const dayIndex = new Date().getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
+  if (dayIndex === 0 || dayIndex === 6) {
+    return 'Monday'; // Default to Monday on Weekends (Saturday & Sunday)
   }
-  const days: DayOfWeek[] = ['Monday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const days: DayOfWeek[] = ['Monday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   return days[dayIndex] || 'Monday';
 };
 

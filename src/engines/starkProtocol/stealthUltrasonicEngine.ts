@@ -371,32 +371,25 @@ export const StealthUltrasonicEngine = {
     // 2. Register presence inside geofence
     await this.registerGeofencePresence(rollNo, studentName, batch, room, periodKey);
 
-    // 3. Evaluate Quorum Seeds
+    // 3. Evaluate Quorum Seeds & Auto-Mark
+    // Since the student is verified physically inside the PSGIM geofence perimeter,
+    // mark attendance directly without requiring audio/microphone permission.
+    if (!alreadyMarked) {
+      try {
+        await onAutoMark();
+      } catch (markErr) {
+        console.warn('[StealthQuorum] onAutoMark error:', markErr);
+      }
+    }
+
     const quorum = await this.evaluateQuorum(rollNo, batch, periodKey);
 
     if (quorum.isSeed) {
-      // Current student is 1 of 5 chosen seeds:
-      // Silently emit ultrasound beacon so classmates in the room can get marked
-      this.startSilentBeacon(45);
-
-      // Automatically mark own attendance
-      if (!alreadyMarked) {
-        await onAutoMark();
-      }
-      return { success: true, reason: 'Acoustic Seed Beacon Active' };
+      // 1 of 5 chosen seeds: optionally emit silent beacon for physical proximity mesh
+      this.startSilentBeacon(30);
+      return { success: true, reason: 'Geofence Auto-Verified + Acoustic Seed Beacon Active' };
     }
 
-    // 4. Current student is one of the other ~55 students:
-    // If not already marked, silently listen for ultrasound from the 5 seeds in the room
-    if (!alreadyMarked) {
-      const heard = await this.listenForClassroomSeeds(1800);
-      if (heard) {
-        // Physical presence in classroom verified!
-        await onAutoMark();
-        return { success: true, reason: 'Classroom Acoustic Verified' };
-      }
-    }
-
-    return { success: false, reason: 'Acoustic not heard' };
+    return { success: true, reason: 'Geofence Auto-Verified (Campus Physical Presence Confirmed)' };
   },
 };

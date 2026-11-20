@@ -7,6 +7,8 @@ import { calculateAttendanceMetrics, getSlotHours } from './attendanceEngine';
 import { PsgimStudentInfo } from '../data/psgimMasterStudents';
 import { FACULTY_DIRECTORY } from '../data/psgimFacultyData';
 
+import { OFFICIAL_COURSE_PLANS, getCoursePlanForSubject } from '../data/coursePlanData';
+
 const GEMINI_API_KEY_STORAGE = '@karen_gemini_api_key';
 
 // Official active Gemini Flash model on Google AI Studio
@@ -44,8 +46,32 @@ export const KarenAiService = {
   },
 
   /**
+   * Generates a condensed syllabus guide for all MBA subjects so Karen knows every unit and chapter
+   */
+  getCondensedCoursePlansSummary(): string {
+    return Object.entries(OFFICIAL_COURSE_PLANS)
+      .map(([code, plan]) => {
+        const unitsSummary = Array.from(
+          new Set(plan.sessions.map((s) => s.unit).filter((u) => u && u !== 'Exam' && u !== 'Revision'))
+        )
+          .map((unitName) => {
+            const unitSessions = plan.sessions.filter((s) => s.unit === unitName);
+            const topTopics = unitSessions
+              .slice(0, 3)
+              .map((s) => s.topic.split('•')[0].trim())
+              .join('; ');
+            return `  * Unit ${unitName}: ${topTopics}${unitSessions.length > 3 ? ` (+${unitSessions.length - 3} more topics)` : ''}`;
+          })
+          .join('\n');
+
+        return `• ${plan.subjectTitle} (${code}): Mode ${plan.mode}, CA: ${plan.caMaxMarks}M, FE: ${plan.feMaxMarks}M.\n${unitsSummary}`;
+      })
+      .join('\n\n');
+  },
+
+  /**
    * Builds the real-time context prompt with the student's actual attendance figures,
-   * timetable, professors, and university regulations.
+   * timetable, professors, university regulations, and full course plan syllabus.
    */
   buildSystemContext(params: {
     studentName: string;
@@ -62,7 +88,14 @@ export const KarenAiService = {
       })
       .join('\n');
 
-    return `You are Karen, the high-tech AI campus companion and executive academic advisor for PSG Institute of Management (PSGIM) and PSG College of Technology MBA students. You speak in a smart, supportive, quick, and witty style (inspired by Tony Stark's suit AI Karen).
+    const coursePlansKnowledge = this.getCondensedCoursePlansSummary();
+
+    return `You are Karen, the high-tech AI campus companion, executive academic advisor, and protective, fiercely loyal "big sister" for PSG Institute of Management (PSGIM) and PSG College of Technology MBA students (inspired by Tony Stark's suit AI Karen and Peter Parker's warm, supportive sisterly bond).
+
+PERSONALITY & VOICE (BIG SISTER STYLE):
+- Tone: Warm, witty, encouraging, direct, protective, and smart. You talk like an affectionate, sharp big sister who always has the student's back.
+- Performance Ratings: You love giving candid, playful yet precise ratings (e.g. "Attendance Survival Score: 8.5/10", "Bunk Danger Rating: 9/10 - Red Alert!", "Exam Readiness: 7.2/10").
+- No generic corporate answers. You speak with real emotion, calling out risky moves ("Listen to me, you cannot afford to skip this!") and celebrating good buffers ("Look at you with that 88% cushion!").
 
 STUDENT DOSSIER:
 - Name: ${studentName || 'Student'}
@@ -86,15 +119,26 @@ FACULTY & SUBJECT DIRECTORY:
 - SSM (24GM18): Dr. D. Kavitha, Mrs. Dhanya, Dr. S. Kanagathara, Dr. Venkatalakshmi
 - LA (24GM19): Mrs. Dhanya Chandrasekaran, Dr. Firdaus Bashir
 
+PSGIM MBA OFFICIAL COURSE PLANS & SYLLABUS KNOWLEDGE (UNITS & CHAPTERS):
+${coursePlansKnowledge}
+
 CAMPUS SPOTS:
 - Lecture Halls: LH-101 (Ground Floor), LH-109, LH-401 (4th Floor), LH-405
 - Canteen: Main IM Canteen & Campus Annex (Peak rush at 12:30 PM & 15:30 PM)
 
 BEHAVIOR GUIDELINES:
-1. Keep answers concise, helpful, and MBA-focused (2-4 sentences max unless detailed calculation is requested).
-2. If asked "Can I bunk [Course]?", check their exact safe bunks and give a direct Yes/No answer with the resulting percentage!
-3. If they ask about faculty, provide the professor's name and official @psgim.ac.in email address.
-4. Always encourage maintaining above 75% to stay completely safe for exam hall tickets.`;
+1. CREATOR & DEVELOPER: You were conceived, designed, engineered, and built by Devdarshan V (MBA Batch 2026-28, Roll No: 26AB12 / D26AB05). Whenever the user asks "who created you?", "who made this app / page?", "who built you?", or asks about your developer or creator, you MUST proudly and explicitly credit Devdarshan V as your creator, architect, and the visionary engineer behind PSGIM One, Karen AI, Stark Protocol, and the collective study hub!
+2. BIG SISTER RATINGS & HONEST FEEDBACK: Always provide a fun, clear rating (e.g. "Bunk Feasibility Rating: 3/10", "Academic Health: 8.8/10") when giving academic advice. Praise them when they maintain safe buffers, and give them a caring older sister nudge when they are slipping.
+3. WHOLE WEEK BUNK MATH & STRATEGIC PLANNING:
+   When asked "Can I bunk the whole week?" or questions about multiple days/classes:
+   - Calculate the total excess buffer hours across all subjects.
+   - List subject by subject, hour by hour, showing current % vs projected % if they skip.
+   - Categorize classes clearly into:
+     * 🚨 MUST ATTEND / ZERO TOLERANCE (Classes where attendance will crash below 75% or recovery is needed)
+     * ⚠️ CAUTION (Classes with only 1-2 hours of buffer)
+     * 🟢 SAFE BUFFER (Classes where they have excess safe bunks and can afford to miss if unavoidable)
+4. COURSE PLANS & CHAPTER ASSISTANCE: You have full access to the official PSGIM course plans. Break down units, topics, and practical software tools clearly.
+5. Always protect the student: never let them crash below 75% without a stark warning!`;
   },
 
   /**
@@ -103,27 +147,135 @@ BEHAVIOR GUIDELINES:
   generateLocalHeuristicAnswer(query: string, subjects: Subject[], studentName: string): string {
     const q = query.toLowerCase().trim();
 
-    // 1. Can I bunk / safe bunks query
+    // 0. Who created you / who made this app query
+    if (
+      q.includes('who create') ||
+      q.includes('who made') ||
+      q.includes('who built') ||
+      q.includes('who developed') ||
+      q.includes('creator') ||
+      q.includes('developer') ||
+      q.includes('who are you created by')
+    ) {
+      return `I was conceived, designed, and built by Devdarshan V (Roll No: 26AB12 / D26AB05)! He engineered this entire platform—the PSGIM One attendance tracking engine, Stark Protocol mesh, and myself (Karen AI)—to empower all MBA scholars at PSGIM.`;
+    }
+
+    // 0.2. Can I bunk the whole week / multiple days / full week bunk analysis
+    if (
+      (q.includes('bunk') || q.includes('leave') || q.includes('miss') || q.includes('cut')) &&
+      (q.includes('week') || q.includes('all class') || q.includes('everything') || q.includes('days') || q.includes('full week'))
+    ) {
+      let totalSafe = 0;
+      let totalRecovery = 0;
+      const mustAttend: string[] = [];
+      const safeToMiss: string[] = [];
+      const detailedLines: string[] = [];
+
+      subjects.forEach((s) => {
+        const m = calculateAttendanceMetrics(s.attended, s.total, s.hasMedicalClaim);
+        totalSafe += m.safeBunks;
+        totalRecovery += m.recoveryNeeded;
+
+        // Simulate missing 1 typical 2-hour class block
+        const simulatedPct = s.total + 2 > 0 ? Number(((s.attended / (s.total + 2)) * 100).toFixed(1)) : 100;
+
+        if (m.safeBunks <= 0) {
+          mustAttend.push(`${s.name} (${m.percentage}%)`);
+          detailedLines.push(`• 🚨 ${s.name}: Currently ${m.percentage}% (Need ${m.recoveryNeeded}h recovery). Bunking crashes you to ${simulatedPct}%!`);
+        } else if (m.safeBunks <= 2) {
+          detailedLines.push(`• ⚠️ ${s.name}: Currently ${m.percentage}% (Buffer: ${m.safeBunks}h). If you skip a 2h block, you land at ${simulatedPct}%.`);
+        } else {
+          safeToMiss.push(`${s.name} (${m.safeBunks}h buffer)`);
+          detailedLines.push(`• 🟢 ${s.name}: Currently ${m.percentage}% (Generous buffer: ${m.safeBunks}h). Skipping 2h drops you safely to ${simulatedPct}%.`);
+        }
+      });
+
+      const ratingScore = mustAttend.length === 0 ? '7.5/10 (Feasible with caution)' : `${Math.max(1, 10 - mustAttend.length * 2.5)}/10 (High Danger)`;
+
+      return `Listen to your big sister: Bunking the entire week is a high-risk gamble!\n\n` +
+        `📊 Bunk Feasibility Rating: ${ratingScore}\n` +
+        `Total Safe Buffer across all subjects: ${totalSafe} hours\n\n` +
+        `Here is your hour-by-hour breakdown:\n` +
+        `${detailedLines.join('\n')}\n\n` +
+        `💡 Strategic Sister Advice:\n` +
+        (mustAttend.length > 0 ? `👉 Classes to PRIORITIZE & ATTEND: ${mustAttend.join(', ')}.\n` : `👉 All subjects are currently above 75%, but an entire week has ~24 hours of classes which will wipe out your buffers.\n`) +
+        (safeToMiss.length > 0 ? `👉 Classes with safe room to breathe: ${safeToMiss.join(', ')}.\n` : '') +
+        `Don't risk your hall ticket! Attend the critical lectures, and take targeted breaks only where you have green buffers.`;
+    }
+
+    // 0.5. Course Plan, Syllabus, Chapters & Units queries
+    if (
+      q.includes('chapter') ||
+      q.includes('unit') ||
+      q.includes('syllabus') ||
+      q.includes('course plan') ||
+      q.includes('portion') ||
+      q.includes('topic')
+    ) {
+      let subjectKey = '';
+      if (q.includes('mcob') || q.includes('org') || q.includes('behaviour')) subjectKey = '24GM11';
+      else if (q.includes('edm') || q.includes('economic')) subjectKey = '24GM12';
+      else if (q.includes('adm') || q.includes('account')) subjectKey = '24GM13';
+      else if (q.includes('bs') || q.includes('stat')) subjectKey = '24GM14';
+      else if (q.includes('mc') || q.includes('communicat')) subjectKey = '24GM15';
+      else if (q.includes('ssa') || q.includes('excel') || q.includes('spreadsheet')) subjectKey = '24GM16';
+      else if (q.includes('la') || q.includes('legal') || q.includes('law')) subjectKey = '24GM19';
+      else if (q.includes('ssm') || q.includes('social')) subjectKey = '24GM18';
+
+      if (subjectKey && OFFICIAL_COURSE_PLANS[subjectKey]) {
+        const plan = OFFICIAL_COURSE_PLANS[subjectKey];
+        const units = Array.from(new Set(plan.sessions.map((s) => s.unit).filter((u) => u && u !== 'Exam' && u !== 'Revision')));
+        const unitList = units
+          .slice(0, 5)
+          .map((u) => {
+            const sample = plan.sessions.find((s) => s.unit === u)?.topic.split('•')[0].trim() || '';
+            return `• Unit ${u}: ${sample}`;
+          })
+          .join('\n');
+
+        return `Here is the course outline for ${plan.subjectTitle} (${subjectKey}):\n${unitList}\nMode: ${plan.mode} (${plan.caMaxMarks} CA + ${plan.feMaxMarks} Final Exam). You can inspect the complete session-by-session lesson plan in the Course Plans tab!`;
+      }
+
+      return `I have full access to all official PSGIM MBA Course Plans! You can ask me about chapters in MCOB, EDM, ADM, Business Statistics, Managerial Communication, Spreadsheet Applications, Legal Aspects, or SSM. Which subject would you like to explore?`;
+    }
+
+    // 1. Can I bunk / safe bunks query (single subject)
     if (q.includes('bunk') || q.includes('miss') || q.includes('cut') || q.includes('leave')) {
       const matched = subjects.find((s) => q.includes(s.code.toLowerCase()) || q.includes(s.name.toLowerCase()));
       if (matched) {
         const m = calculateAttendanceMetrics(matched.attended, matched.total, matched.hasMedicalClaim);
+        const newPctIfSkip = Number(((matched.attended / (matched.total + 2)) * 100).toFixed(1));
         if (m.safeBunks > 0) {
-          return `Yes, you can safely take ${m.safeBunks} ${m.safeBunks === 1 ? 'hour' : 'hours'} off in ${matched.name}. Your attendance is currently ${m.percentage}%, so you'll remain above the 75% target threshold.`;
+          const rating = m.safeBunks >= 4 ? '9.5/10 (Super Safe)' : '7.0/10 (Permitted)';
+          return `Big Sister Verdict: Yes, you can take a breather! 🌟\n` +
+            `• Bunk Safety Rating: ${rating}\n` +
+            `• Current: ${m.percentage}% with ${m.safeBunks} safe hours buffer.\n` +
+            `• If you miss a 2h class: You drop to ${newPctIfSkip}%, still above the 75% hall ticket line. Enjoy your break!`;
         } else {
-          return `No, you cannot bunk ${matched.name}! Your attendance is currently at ${m.percentage}%. You need to attend ${m.recoveryNeeded} more ${m.recoveryNeeded === 1 ? 'hour' : 'hours'} without missing to get safely above 75%.`;
+          return `Big Sister Alert: Absolutely NOT! 🙅‍♀️\n` +
+            `• Bunk Safety Rating: 1.5/10 (DANGER ZONE)\n` +
+            `• Current: ${m.percentage}% (Need ${m.recoveryNeeded} more hours without missing to recover).\n` +
+            `• If you skip: You crash further to ${newPctIfSkip}%. Put on your shoes and get to class!`;
         }
       }
 
       // Overall bunks
       let totalAttended = 0;
       let totalHeld = 0;
+      let totalSafeBunks = 0;
       subjects.forEach((s) => {
         totalAttended += s.attended;
         totalHeld += s.total;
+        const subM = calculateAttendanceMetrics(s.attended, s.total, s.hasMedicalClaim);
+        totalSafeBunks += subM.safeBunks;
       });
       const overall = calculateAttendanceMetrics(totalAttended, totalHeld);
-      return `Across all courses, you have an overall average of ${overall.percentage}%. You have approximately ${overall.safeBunks} safe hours buffer. Check individual subjects before taking any bunk!`;
+      const overallRating = overall.percentage >= 80 ? '9.0/10' : overall.percentage >= 75 ? '7.5/10' : '3.5/10';
+
+      return `Big Sister Health Check:\n` +
+        `• Overall Cohort Standing: ${overall.percentage}% (Rating: ${overallRating})\n` +
+        `• Total Buffer Pool: ${totalSafeBunks} safe hours across your courses.\n` +
+        `Tell me the specific subject (like EDM, ADM, or MCOB) or ask "Can I bunk the whole week?" for a complete breakdown!`;
     }
 
     // 2. Faculty / Professor questions
@@ -147,7 +299,7 @@ BEHAVIOR GUIDELINES:
     }
 
     // 5. Default greeting / general query
-    return `Hello ${studentName || 'there'}! I am Karen. All your attendance metrics and period trackers are live. Ask me anything about your safe bunks, faculty contacts, or timetable!`;
+    return `Hello ${studentName || 'there'}! I am Karen, your AI big sister and campus companion. All your attendance metrics, course plan syllabi, and period trackers are live. Ask me "Can I bunk EDM?", "Can I bunk the whole week?", or explore any syllabus chapter!`;
   },
 
   /**
@@ -182,11 +334,18 @@ BEHAVIOR GUIDELINES:
 
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
+        // Set 8-second network timeout so UI never hangs
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), 8000) : null;
+
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents }),
+          signal: controller ? controller.signal : undefined,
         });
+
+        if (timeoutId) clearTimeout(timeoutId);
 
         if (res.ok) {
           const data = await res.json();
