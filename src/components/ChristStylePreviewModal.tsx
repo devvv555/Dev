@@ -1579,11 +1579,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                   ) : (
                     <View style={{ gap: 14 }}>
                       {filteredEverydayLogs.map((dayLog) => {
-                        const dayAttended = dayLog.slots.filter((s) => s.status === 'attended').length;
-                        const dayTotal = dayLog.slots.length;
-                        const dayPct = dayTotal > 0 ? (dayAttended / dayTotal) * 100 : 100;
-                        const isDaySafe = dayPct >= 75;
-
                         // Format friendly date
                         const dObj = new Date(dayLog.date);
                         const dayName = isNaN(dObj.getTime())
@@ -1620,52 +1615,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                                   <Text style={styles.everydayDayTitle}>
                                     {dayName ? `${dayName}, ${monthDay}` : dayLog.date}
                                   </Text>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                                    <View style={styles.miniSummaryPresentPill}>
-                                      <Text style={styles.miniSummaryPresentText}>
-                                        ✓ {dayAttended} Present
-                                      </Text>
-                                    </View>
-                                    {dayTotal - dayAttended > 0 ? (
-                                      <View style={styles.miniSummaryAbsentPill}>
-                                        <Text style={styles.miniSummaryAbsentText}>
-                                          ✕ {dayTotal - dayAttended} Absent
-                                        </Text>
-                                      </View>
-                                    ) : (
-                                      <Text style={styles.everydayDaySub}>
-                                        {dayTotal} hrs attended (100%)
-                                      </Text>
-                                    )}
-                                  </View>
                                 </View>
                               </View>
 
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                <View
-                                  style={[
-                                    styles.everydayDayBadge,
-                                    {
-                                      backgroundColor: isDaySafe
-                                        ? 'rgba(16, 185, 129, 0.15)'
-                                        : 'rgba(239, 68, 68, 0.15)',
-                                      borderColor: isDaySafe ? '#10B981' : '#EF4444',
-                                    },
-                                  ]}
-                                >
-                                  <Text
-                                    style={[
-                                      styles.everydayDayBadgeText,
-                                      { color: isDaySafe ? '#34D399' : '#F87171' },
-                                    ]}
-                                  >
-                                    {dayPct.toFixed(0)}%
-                                  </Text>
-                                </View>
-
-                                {/* Dropdown Chevron */}
-                                <Text style={styles.accordionChevron}>{isDateExpanded ? '⌃' : '⌄'}</Text>
-                              </View>
+                              {/* Dropdown Chevron */}
+                              <Text style={styles.accordionChevron}>{isDateExpanded ? '⌃' : '⌄'}</Text>
                             </TouchableOpacity>
 
                             {/* Session Periods List - Appears when Date is clicked */}
