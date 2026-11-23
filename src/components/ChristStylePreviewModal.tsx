@@ -18,7 +18,7 @@ import {
   Vibration,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Subject, TimetableSlot, PsgimAnnouncement, PeriodAttendanceRecord, AttendanceStatus } from '../types';
+import { Subject, TimetableSlot, PsgimAnnouncement, PeriodAttendanceRecord, AttendanceStatus, DayOfWeek } from '../types';
 import { toNewRollNo } from '../data/psgimMasterStudents';
 import { calculateAttendanceMetrics, getSlotHours } from '../services/attendanceEngine';
 import { ACADEMIC_CALENDAR, AcademicCalendarItem } from '../data/academicCalendarData';
@@ -169,7 +169,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   const [notifFilterTab, setNotifFilterTab] = useState<'IMPORTANT' | 'ALL' | 'UNREAD'>('IMPORTANT');
   const [notifSearch, setNotifSearch] = useState<string>('');
   const [selectedNoticeModal, setSelectedNoticeModal] = useState<PsgimAnnouncement | null>(null);
-  const [readNotifIds, setReadNotifIds] = useState<Set<string>>(new Set());
+  const [readNotifIds, setReadNotifIds] = useState<Set<number | string>>(new Set());
 
   // Load persistent read notification IDs on mount or student roll change
   useEffect(() => {
@@ -191,7 +191,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   }, [studentRollNo]);
 
   // Persist read notification IDs
-  const persistReadNotifs = async (updatedSet: Set<string>) => {
+  const persistReadNotifs = async (updatedSet: Set<number | string>) => {
     try {
       const key = `${STORAGE_READ_NOTIFS_KEY}${studentRollNo || 'GUEST'}`;
       await AsyncStorage.setItem(key, JSON.stringify(Array.from(updatedSet)));
@@ -591,10 +591,10 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
     const endTimeFormatted = `${String(endH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
 
     const dateObj = new Date(manualDate);
-    const dayNamesList: Array<'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday'> = [
-      'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+    const dayNamesList: DayOfWeek[] = [
+      'Monday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
     ];
-    const dayOfWeek = dayNamesList[isNaN(dateObj.getDay()) ? 5 : dateObj.getDay()];
+    const dayOfWeek: DayOfWeek = dayNamesList[isNaN(dateObj.getDay()) ? 5 : dateObj.getDay()];
 
     const extraSlotId = `extra_${targetSub.id}_${manualDate}_${Date.now()}`;
     const extraSlot: TimetableSlot = {

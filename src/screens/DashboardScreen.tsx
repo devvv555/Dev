@@ -79,7 +79,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   studentName,
   periodRecords,
   onRecordPeriodAttendance,
+  onUpdateSubject,
   onUpdateFaculty,
+  onQuickAttend,
+  onQuickBunk,
   onOpenCalendar,
   onOpenAdmin,
   onOpenEnhancedHub,
@@ -1001,7 +1004,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     };
 
     const nextSubjects = subjects.map((s) => (s.id === targetSub.id ? updatedSub : s));
-    setSubjects(nextSubjects);
     if (onUpdateSubject) {
       onUpdateSubject(updatedSub);
     }
@@ -1024,7 +1026,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (studentRollNo) {
       const stored = await StorageService.getPeriodRecords(studentRollNo);
       const merged = { ...stored, ...periodRecords, [periodKey]: newRecord };
-      setPeriodRecords(merged);
       await StorageService.savePeriodRecords(studentRollNo, merged);
       CloudSyncService.syncSubjects(studentRollNo, nextSubjects);
       CloudSyncService.syncPeriodRecord(studentRollNo, newRecord);
