@@ -995,6 +995,164 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
               </Animated.View>
 
               {/* ════════════════════════════════════════════════════════════
+                  OVERALL ATTENDANCE CARD WITH "+ EXTRA CLASS" OPTION
+                  ════════════════════════════════════════════════════════════ */}
+              <View
+                style={[
+                  styles.liveAttendanceCard,
+                  {
+                    marginBottom: 16,
+                    padding: 14,
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.3)',
+                    backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                    elevation: 3,
+                  },
+                ]}
+              >
+                {/* Header: Label + Add Extra Class Button */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: isSafeAttendance ? '#10B981' : '#EF4444',
+                        shadowColor: isSafeAttendance ? '#10B981' : '#EF4444',
+                        shadowRadius: 4,
+                        shadowOpacity: 0.8,
+                      }}
+                    />
+                    <Text style={styles.liveAttBadge}>OVERALL ATTENDANCE</Text>
+                    <Text style={{ fontSize: 10.5, color: isLight ? '#64748B' : '#94A3B8', fontWeight: '700' }}>
+                      Live Status
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => handleOpenManualModal(undefined, displayDateStr)}
+                    style={{
+                      backgroundColor: isLight ? '#0284C7' : '#0284C7',
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 5,
+                      shadowColor: '#0284C7',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <PlusCircle size={13} color="#FFFFFF" strokeWidth={2.4} />
+                    <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                      + Extra Class
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Stats row: Tappable to jump to Attendance tab */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setActiveTab('ATTENDANCE')}
+                  style={styles.liveAttTopRow}
+                >
+                  <View style={{ flex: 1, paddingRight: 10 }}>
+                    <Text style={[styles.liveAttSubTitle, { fontSize: 14 }]}>
+                      {totalAttended} of {totalConducted} Total Hours Attended
+                    </Text>
+                    <Text
+                      style={[
+                        styles.liveAttBunkText,
+                        { color: isSafeAttendance ? '#10B981' : '#F87171', marginTop: 4 },
+                      ]}
+                    >
+                      {overallMetrics.safeBunks > 0
+                        ? `You can skip ${overallMetrics.safeBunks} more classes (>75%)`
+                        : overallMetrics.recoveryNeeded > 0
+                        ? `Shortage: Attend next ${overallMetrics.recoveryNeeded} classes to hit 75%`
+                        : 'On track at 75% threshold'}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 10.5,
+                        color: isLight ? '#0284C7' : '#38BDF8',
+                        fontWeight: '700',
+                        marginTop: 5,
+                      }}
+                    >
+                      Tap for full course breakdown →
+                    </Text>
+                  </View>
+
+                  {/* Overall Percentage Badge */}
+                  <View
+                    style={{
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      paddingLeft: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                        backgroundColor: isSafeAttendance
+                          ? isLight
+                            ? 'rgba(16, 185, 129, 0.12)'
+                            : 'rgba(16, 185, 129, 0.16)'
+                          : isLight
+                          ? 'rgba(239, 68, 68, 0.12)'
+                          : 'rgba(239, 68, 68, 0.16)',
+                        borderWidth: 1.5,
+                        borderColor: isSafeAttendance ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                        alignItems: 'center',
+                        minWidth: 82,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 19,
+                          fontWeight: '900',
+                          color: isSafeAttendance ? '#10B981' : '#EF4444',
+                        }}
+                      >
+                        {overallPctFormatted}%
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 9.5,
+                          fontWeight: '800',
+                          color: isSafeAttendance ? '#10B981' : '#EF4444',
+                          letterSpacing: 0.5,
+                          marginTop: 2,
+                        }}
+                      >
+                        {isSafeAttendance ? 'ELIGIBLE' : 'SHORTAGE'}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* ════════════════════════════════════════════════════════════
                   HERO CARD: LIVE SCHEDULE & ONGOING CLASS TRACKER
                   ════════════════════════════════════════════════════════════ */}
               <View
@@ -1410,77 +1568,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                 ) : null}
               </View>
 
-              {/* BOX 1: LIVE ATTENDANCE STATUS CARD (Replacing "No attendance data available") */}
-              <TouchableOpacity
-                style={styles.liveAttendanceCard}
-                onPress={() => setActiveTab('ATTENDANCE')}
-                activeOpacity={0.8}
-              >
-                <View style={styles.liveAttTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <Text style={styles.liveAttBadge}>LIVE ATTENDANCE</Text>
-                      <Text style={{ fontSize: 10, color: '#94A3B8', fontWeight: '700' }}>
-                        Upto 14-11-2026
-                      </Text>
-                    </View>
-                    <Text style={styles.liveAttSubTitle}>
-                      {totalAttended} of {totalConducted} Total Hours Attended
-                    </Text>
-                    <Text style={[styles.liveAttBunkText, { color: isSafeAttendance ? '#10B981' : '#F87171' }]}>
-                      {overallMetrics.safeBunks > 0
-                        ? `You can skip ${overallMetrics.safeBunks} more classes (>75%)`
-                        : overallMetrics.recoveryNeeded > 0
-                        ? `Shortage: Attend next ${overallMetrics.recoveryNeeded} classes to hit 75%`
-                        : 'On track at 75% threshold'}
-                    </Text>
-                  </View>
-
-                  {/* Overall Percentage Badge (Clean pill replacing the circular ring) */}
-                  <View
-                    style={{
-                      alignItems: 'flex-end',
-                      justifyContent: 'center',
-                      paddingLeft: 12,
-                    }}
-                  >
-                    <View
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 10,
-                        backgroundColor: isSafeAttendance ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                        borderWidth: 1,
-                        borderColor: isSafeAttendance ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 17,
-                          fontWeight: '900',
-                          color: isSafeAttendance ? '#10B981' : '#EF4444',
-                        }}
-                      >
-                        {overallPctFormatted}%
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          fontWeight: '800',
-                          color: isSafeAttendance ? '#10B981' : '#EF4444',
-                          letterSpacing: 0.5,
-                          marginTop: 2,
-                        }}
-                      >
-                        {isSafeAttendance ? 'ELIGIBLE' : 'SHORTAGE'}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              {/* BOX 2: IMPORTANT NOTIFICATIONS (Screenshot 2 & Screenshot 6 - PSGIM Connect) */}
+              {/* BOX 1: IMPORTANT NOTIFICATIONS (Screenshot 2 & Screenshot 6 - PSGIM Connect) */}
               <View style={styles.cardBox}>
                 <View style={styles.notifCardHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -1593,6 +1681,150 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     Everyday Attendance
                   </Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* ════════════════════════════════════════════════════════════
+                  OVERALL ATTENDANCE SUMMARY CARD WITH "+ EXTRA CLASS" OPTION
+                  ════════════════════════════════════════════════════════════ */}
+              <View
+                style={[
+                  styles.liveAttendanceCard,
+                  {
+                    marginBottom: 16,
+                    padding: 14,
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.3)',
+                    backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                    elevation: 3,
+                  },
+                ]}
+              >
+                {/* Header: Label + Add Extra Class Button */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: isSafeAttendance ? '#10B981' : '#EF4444',
+                        shadowColor: isSafeAttendance ? '#10B981' : '#EF4444',
+                        shadowRadius: 4,
+                        shadowOpacity: 0.8,
+                      }}
+                    />
+                    <Text style={styles.liveAttBadge}>OVERALL ATTENDANCE</Text>
+                    <Text style={{ fontSize: 10.5, color: isLight ? '#64748B' : '#94A3B8', fontWeight: '700' }}>
+                      Cumulative
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => handleOpenManualModal(undefined, displayDateStr)}
+                    style={{
+                      backgroundColor: isLight ? '#0284C7' : '#0284C7',
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 5,
+                      shadowColor: '#0284C7',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <PlusCircle size={13} color="#FFFFFF" strokeWidth={2.4} />
+                    <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                      + Extra Class
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Stats row */}
+                <View style={styles.liveAttTopRow}>
+                  <View style={{ flex: 1, paddingRight: 10 }}>
+                    <Text style={[styles.liveAttSubTitle, { fontSize: 14 }]}>
+                      {totalAttended} of {totalConducted} Total Hours Attended
+                    </Text>
+                    <Text
+                      style={[
+                        styles.liveAttBunkText,
+                        { color: isSafeAttendance ? '#10B981' : '#F87171', marginTop: 4 },
+                      ]}
+                    >
+                      {overallMetrics.safeBunks > 0
+                        ? `You can skip ${overallMetrics.safeBunks} more classes (>75%)`
+                        : overallMetrics.recoveryNeeded > 0
+                        ? `Shortage: Attend next ${overallMetrics.recoveryNeeded} classes to hit 75%`
+                        : 'On track at 75% threshold'}
+                    </Text>
+                  </View>
+
+                  {/* Overall Percentage Badge */}
+                  <View
+                    style={{
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      paddingLeft: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                        backgroundColor: isSafeAttendance
+                          ? isLight
+                            ? 'rgba(16, 185, 129, 0.12)'
+                            : 'rgba(16, 185, 129, 0.16)'
+                          : isLight
+                          ? 'rgba(239, 68, 68, 0.12)'
+                          : 'rgba(239, 68, 68, 0.16)',
+                        borderWidth: 1.5,
+                        borderColor: isSafeAttendance ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                        alignItems: 'center',
+                        minWidth: 82,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 19,
+                          fontWeight: '900',
+                          color: isSafeAttendance ? '#10B981' : '#EF4444',
+                        }}
+                      >
+                        {overallPctFormatted}%
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 9.5,
+                          fontWeight: '800',
+                          color: isSafeAttendance ? '#10B981' : '#EF4444',
+                          letterSpacing: 0.5,
+                          marginTop: 2,
+                        }}
+                      >
+                        {isSafeAttendance ? 'ELIGIBLE' : 'SHORTAGE'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               </View>
 
               {attendanceSubView === 'COURSE' ? (
