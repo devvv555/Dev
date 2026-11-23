@@ -73,49 +73,54 @@ const getNotebookUrlForSubject = (code: string, name?: string): string => {
   }
   return '';
 };
-import {
-  Bell,
-  Settings,
-  Home,
-  CalendarCheck,
-  LayoutGrid,
-  CalendarDays,
-  BookOpen,
-  GraduationCap,
-  Library,
-  Megaphone,
-  Download,
-  FileText,
-  Search,
-  Check,
-  Sparkles,
-  Sun,
-  Moon,
-  Smartphone,
-  Fingerprint,
-  ChevronRight,
-  ChevronDown,
-  X,
-  Phone,
-  Mail,
-  User,
-  Clock,
-  AlertCircle,
-  ExternalLink,
-  Brain,
-  Layers,
-  Share2,
-  Plane,
-  TrendingUp,
-  AlertTriangle,
-  Info,
-  Edit2,
-  Save,
-  LogOut,
-  PlusCircle,
-  Plus,
-  Minus,
-} from 'lucide-react-native';
+// Web & Native safe Vector Icon / Glyph components (Zero-dependency, avoids react-native-svg web crash)
+const makeIcon = (glyph: string) => ({ size = 16, color = '#38BDF8', style }: { size?: number; color?: string; strokeWidth?: number; style?: any }) => (
+  <Text style={[{ fontSize: size, color, fontWeight: '700', lineHeight: size + 2, textAlign: 'center' }, style]}>
+    {glyph}
+  </Text>
+);
+
+const Bell = makeIcon('🔔');
+const Settings = makeIcon('⚙️');
+const Home = makeIcon('🏠');
+const CalendarCheck = makeIcon('📅');
+const LayoutGrid = makeIcon('⊞');
+const CalendarDays = makeIcon('📆');
+const BookOpen = makeIcon('📖');
+const GraduationCap = makeIcon('🎓');
+const Library = makeIcon('🏛️');
+const Megaphone = makeIcon('📢');
+const Download = makeIcon('⬇️');
+const FileText = makeIcon('📄');
+const Search = makeIcon('🔍');
+const Check = makeIcon('✓');
+const Sparkles = makeIcon('✨');
+const Sun = makeIcon('☀️');
+const Moon = makeIcon('🌙');
+const Smartphone = makeIcon('📱');
+const Fingerprint = makeIcon('🛡️');
+const ChevronRight = makeIcon('›');
+const ChevronDown = makeIcon('˅');
+const X = makeIcon('✕');
+const Phone = makeIcon('📞');
+const Mail = makeIcon('✉️');
+const User = makeIcon('👤');
+const Clock = makeIcon('⏰');
+const AlertCircle = makeIcon('⚠️');
+const ExternalLink = makeIcon('↗');
+const Brain = makeIcon('🧠');
+const Layers = makeIcon('📚');
+const Share2 = makeIcon('🔗');
+const Plane = makeIcon('✈️');
+const TrendingUp = makeIcon('📈');
+const AlertTriangle = makeIcon('⚠️');
+const Info = makeIcon('ℹ️');
+const Edit2 = makeIcon('✏️');
+const Save = makeIcon('💾');
+const LogOut = makeIcon('🚪');
+const PlusCircle = makeIcon('⊕');
+const Plus = makeIcon('+');
+const Minus = makeIcon('−');
 
 interface ChristStylePreviewProps {
   visible: boolean;

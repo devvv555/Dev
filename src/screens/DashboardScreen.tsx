@@ -47,7 +47,6 @@ import { Mark85CopilotModal } from '../components/Mark85CopilotModal';
 import { StarkScriptTerminalModal } from '../components/StarkScriptTerminalModal';
 import { NotebookLmModal } from '../components/NotebookLmModal';
 import { ChristStylePreviewModal } from '../components/ChristStylePreviewModal';
-import { PlusCircle, Check, X, Clock, Plus, Minus, Save } from 'lucide-react-native';
 
 interface DashboardScreenProps {
   subjects: Subject[];
@@ -1652,7 +1651,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <PlusCircle size={15} color={isLightMode ? '#0284C7' : '#38BDF8'} strokeWidth={2.5} />
+          <Text style={{ fontSize: 15, fontWeight: '800', color: isLightMode ? '#0284C7' : '#38BDF8', lineHeight: 16 }}>＋</Text>
           <Text
             style={{
               fontSize: 12.5,
@@ -3445,7 +3444,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 }}
                 activeOpacity={0.7}
               >
-                <X size={18} color="#94A3B8" />
+                <Text style={{ fontSize: 16, color: '#94A3B8', fontWeight: '700' }}>✕</Text>
               </TouchableOpacity>
             </View>
 
@@ -3464,7 +3463,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   gap: 8,
                 }}
               >
-                <Check size={16} color="#10B981" strokeWidth={2.5} />
+                <Text style={{ fontSize: 15, color: '#10B981', fontWeight: '800' }}>✓</Text>
                 <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700', flex: 1 }}>
                   {extraClassToast}
                 </Text>
@@ -3721,7 +3720,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       onPress={handleRecordExtraClassInHours}
                       activeOpacity={0.8}
                     >
-                      <PlusCircle size={16} color="#FFFFFF" strokeWidth={2.4} />
+                      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900', lineHeight: 18 }}>＋</Text>
                       <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
                         Confirm & Add Extra Class (+{attendedHrs}/{conductedHrs} hrs)
                       </Text>
