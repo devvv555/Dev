@@ -73,54 +73,51 @@ const getNotebookUrlForSubject = (code: string, name?: string): string => {
   }
   return '';
 };
-// Web & Native safe Vector Icon / Glyph components (Zero-dependency, avoids react-native-svg web crash)
-const makeIcon = (glyph: string) => ({ size = 16, color = '#38BDF8', style }: { size?: number; color?: string; strokeWidth?: number; style?: any }) => (
-  <Text style={[{ fontSize: size, color, fontWeight: '700', lineHeight: size + 2, textAlign: 'center' }, style]}>
-    {glyph}
-  </Text>
-);
-
-const Bell = makeIcon('🔔');
-const Settings = makeIcon('⚙️');
-const Home = makeIcon('🏠');
-const CalendarCheck = makeIcon('📅');
-const LayoutGrid = makeIcon('⊞');
-const CalendarDays = makeIcon('📆');
-const BookOpen = makeIcon('📖');
-const GraduationCap = makeIcon('🎓');
-const Library = makeIcon('🏛️');
-const Megaphone = makeIcon('📢');
-const Download = makeIcon('⬇️');
-const FileText = makeIcon('📄');
-const Search = makeIcon('🔍');
-const Check = makeIcon('✓');
-const Sparkles = makeIcon('✨');
-const Sun = makeIcon('☀️');
-const Moon = makeIcon('🌙');
-const Smartphone = makeIcon('📱');
-const Fingerprint = makeIcon('🛡️');
-const ChevronRight = makeIcon('›');
-const ChevronDown = makeIcon('˅');
-const X = makeIcon('✕');
-const Phone = makeIcon('📞');
-const Mail = makeIcon('✉️');
-const User = makeIcon('👤');
-const Clock = makeIcon('⏰');
-const AlertCircle = makeIcon('⚠️');
-const ExternalLink = makeIcon('↗');
-const Brain = makeIcon('🧠');
-const Layers = makeIcon('📚');
-const Share2 = makeIcon('🔗');
-const Plane = makeIcon('✈️');
-const TrendingUp = makeIcon('📈');
-const AlertTriangle = makeIcon('⚠️');
-const Info = makeIcon('ℹ️');
-const Edit2 = makeIcon('✏️');
-const Save = makeIcon('💾');
-const LogOut = makeIcon('🚪');
-const PlusCircle = makeIcon('⊕');
-const Plus = makeIcon('+');
-const Minus = makeIcon('−');
+import {
+  Bell,
+  Settings,
+  Home,
+  CalendarCheck,
+  LayoutGrid,
+  CalendarDays,
+  BookOpen,
+  GraduationCap,
+  Library,
+  Megaphone,
+  Download,
+  FileText,
+  Search,
+  Check,
+  Sparkles,
+  Sun,
+  Moon,
+  Smartphone,
+  Fingerprint,
+  ChevronRight,
+  ChevronDown,
+  X,
+  Phone,
+  Mail,
+  User,
+  Clock,
+  AlertCircle,
+  ExternalLink,
+  Brain,
+  Layers,
+  Share2,
+  Plane,
+  TrendingUp,
+  AlertTriangle,
+  Info,
+  Edit2,
+  Save,
+  LogOut,
+  PlusCircle,
+  Plus,
+  Minus,
+  RotateCcw,
+  Circle,
+} from './WhiteIcon';
 
 interface ChristStylePreviewProps {
   visible: boolean;
@@ -1265,8 +1262,9 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                       }}
                       activeOpacity={0.7}
                     >
+                      <RotateCcw size={11} color={isLight ? '#DC2626' : '#FCA5A5'} strokeWidth={2.4} />
                       <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#DC2626' : '#FCA5A5' }}>
-                        ↺ Reset
+                        Reset
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -1427,25 +1425,53 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                                   No Att.
                                 </Text>
                               ) : rec ? (
-                                <Text
-                                  style={{
-                                    fontSize: 10,
-                                    fontWeight: '800',
-                                    color: isSelected
-                                      ? '#FFFFFF'
-                                      : rec.status === 'attended'
-                                      ? (isLight ? '#059669' : '#34D399')
-                                      : rec.status === 'bunked'
-                                      ? (isLight ? '#DC2626' : '#F87171')
-                                      : '#94A3B8',
-                                  }}
-                                >
-                                  {rec.status === 'attended' ? '✓ Attended' : rec.status === 'bunked' ? '✕ Missed' : '○ Free'}
-                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                  {rec.status === 'attended' ? (
+                                    <>
+                                      <Check size={10} color={isSelected ? '#FFFFFF' : (isLight ? '#059669' : '#34D399')} strokeWidth={2.8} />
+                                      <Text
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: '800',
+                                          color: isSelected
+                                            ? '#FFFFFF'
+                                            : (isLight ? '#059669' : '#34D399'),
+                                        }}
+                                      >
+                                        Attended
+                                      </Text>
+                                    </>
+                                  ) : rec.status === 'bunked' ? (
+                                    <>
+                                      <X size={10} color={isSelected ? '#FFFFFF' : (isLight ? '#DC2626' : '#F87171')} strokeWidth={2.8} />
+                                      <Text
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: '800',
+                                          color: isSelected
+                                            ? '#FFFFFF'
+                                            : (isLight ? '#DC2626' : '#F87171'),
+                                        }}
+                                      >
+                                        Missed
+                                      </Text>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Circle size={9} color={isSelected ? '#FFFFFF' : '#94A3B8'} strokeWidth={2.2} />
+                                      <Text style={{ fontSize: 10, fontWeight: '800', color: isSelected ? '#FFFFFF' : '#94A3B8' }}>
+                                        Free
+                                      </Text>
+                                    </>
+                                  )}
+                                </View>
                               ) : (
-                                <Text style={{ fontSize: 9.5, fontWeight: '700', color: isSelected ? 'rgba(255,255,255,0.85)' : '#64748B' }}>
-                                  ○ Unmarked
-                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                  <Circle size={9} color={isSelected ? 'rgba(255,255,255,0.85)' : '#64748B'} strokeWidth={2} />
+                                  <Text style={{ fontSize: 9.5, fontWeight: '700', color: isSelected ? 'rgba(255,255,255,0.85)' : '#64748B' }}>
+                                    Unmarked
+                                  </Text>
+                                </View>
                               )}
                             </TouchableOpacity>
                           );
@@ -1477,9 +1503,28 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                           marginBottom: 14,
                         }}
                       >
-                        <Text style={{ fontSize: 22 }}>
-                          {currentRecord.status === 'attended' ? '✓' : currentRecord.status === 'bunked' ? '✕' : '○'}
-                        </Text>
+                        <View
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 14,
+                            backgroundColor: currentRecord.status === 'attended'
+                              ? '#10B981'
+                              : currentRecord.status === 'bunked'
+                              ? '#EF4444'
+                              : '#64748B',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {currentRecord.status === 'attended' ? (
+                            <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                          ) : currentRecord.status === 'bunked' ? (
+                            <X size={16} color="#FFFFFF" strokeWidth={3} />
+                          ) : (
+                            <Circle size={16} color="#FFFFFF" strokeWidth={2.5} />
+                          )}
+                        </View>
                         <Text
                           style={{
                             fontSize: 15,
