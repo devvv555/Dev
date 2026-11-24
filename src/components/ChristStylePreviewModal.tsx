@@ -1254,7 +1254,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                 {isWeekendOrNoClass ? (
                   <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#0F172A', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 }}>
                     <Text style={{ fontSize: 15, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
-                      No Classes Scheduled Today ({currentDayName})
+                      No Classes Scheduled Today
                     </Text>
                     <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center' }}>
                       Enjoy your break! Classes resume as per official college timetable.
@@ -1614,7 +1614,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         letterSpacing: 0.3,
                       }}
                     >
-                      Everyday Timetable
+                      Timetable
                     </Text>
                     <TouchableOpacity
                       onPress={() => {
@@ -1641,27 +1641,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         VIEW ALL →
                       </Text>
                     </TouchableOpacity>
-                  </View>
-
-                  <View
-                    style={{
-                      backgroundColor: isLight ? '#E0F2FE' : 'rgba(56, 189, 248, 0.15)',
-                      paddingHorizontal: 7,
-                      paddingVertical: 2.5,
-                      borderRadius: 6,
-                      borderWidth: 1,
-                      borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.35)',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 10,
-                        fontWeight: '800',
-                        color: isLight ? '#0369A1' : '#38BDF8',
-                      }}
-                    >
-                      {currentDayName} (Today)
-                    </Text>
                   </View>
                 </View>
 
@@ -1826,7 +1805,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     }}
                   >
                     <Text style={{ fontSize: 13, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
-                      No Classes Scheduled Today ({currentDayName})
+                      No Classes Scheduled Today
                     </Text>
                     <Text style={{ fontSize: 11, color: '#64748B', textAlign: 'center', marginBottom: 10 }}>
                       Enjoy your break! Click 'VIEW ALL' to check your timetable for Monday to Friday.
@@ -5011,7 +4990,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
               {/* Horizontal Day Selector Pills */}
               <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => {
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => {
                     const isSelected = selectedWeeklyDay === day;
                     const isToday = day === currentDayName;
                     return (
