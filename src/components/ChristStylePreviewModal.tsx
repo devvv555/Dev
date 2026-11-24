@@ -1203,27 +1203,6 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <TouchableOpacity
-                      onPress={() => handleOpenManualModal(undefined, displayDateStr)}
-                      style={{
-                        backgroundColor: isLight ? '#E0F2FE' : '#1E293B',
-                        paddingHorizontal: 8,
-                        paddingVertical: 3.5,
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: isLight ? '#BAE6FD' : '#334155',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <PlusCircle size={11} color="#0284C7" strokeWidth={2.5} />
-                      <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#0369A1' : '#38BDF8' }}>
-                        + Extra Class
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
                       onPress={async () => {
                         const todaySlots = activeDaySlots;
                         if (!todaySlots.length) {
@@ -1277,27 +1256,9 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     <Text style={{ fontSize: 15, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
                       No Classes Scheduled Today ({currentDayName})
                     </Text>
-                    <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginBottom: 10 }}>
+                    <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center' }}>
                       Enjoy your break! Classes resume as per official college timetable.
                     </Text>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: isLight ? '#0284C7' : '#0369A1',
-                        paddingHorizontal: 12,
-                        paddingVertical: 7,
-                        borderRadius: 8,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                      onPress={() => handleOpenManualModal(undefined, displayDateStr)}
-                      activeOpacity={0.8}
-                    >
-                      <PlusCircle size={13} color="#FFFFFF" strokeWidth={2.4} />
-                      <Text style={{ color: '#FFFFFF', fontSize: 11.5, fontWeight: '800' }}>
-                        + Log Extra / Weekend Class Today
-                      </Text>
-                    </TouchableOpacity>
                   </View>
                 ) : currentSlot ? (
                   <>
