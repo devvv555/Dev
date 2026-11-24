@@ -357,6 +357,8 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   const now = new Date();
   const currentDayIndex = now.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
   const currentDayName = dayNames[currentDayIndex];
+  const defaultWeeklyDay = (currentDayName === 'Sunday' || currentDayName === 'Saturday') ? 'Monday' : currentDayName;
+  const [selectedWeeklyDay, setSelectedWeeklyDay] = useState<string>(defaultWeeklyDay);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const todayFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
   const todayDateStr = now.toISOString().split('T')[0];
@@ -1611,6 +1613,282 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                     </View>
                   </>
                 ) : null}
+              </View>
+
+              {/* CARD: EVERYDAY TIMETABLE (Today's Timetable with VIEW ALL button in top left) */}
+              <View
+                style={[
+                  styles.cardBox,
+                  {
+                    padding: 14,
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.35)',
+                    backgroundColor: isLight ? '#FFFFFF' : '#0B1322',
+                    marginBottom: 16,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                    elevation: 3,
+                  },
+                ]}
+              >
+                {/* Header Row: Everyday Timetable Title with VIEW ALL on Top Left and Today badge on right */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                    <CalendarCheck size={18} color="#38BDF8" strokeWidth={2.4} />
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '900',
+                        color: isLight ? '#0F172A' : '#F8FAFC',
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      Everyday Timetable
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedWeeklyDay(defaultWeeklyDay);
+                        setActiveWeeklyModal(true);
+                      }}
+                      style={{
+                        backgroundColor: isLight ? '#EFF6FF' : 'rgba(37, 99, 235, 0.2)',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3.5,
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: isLight ? '#BFDBFE' : '#2563EB',
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: '800',
+                          color: isLight ? '#2563EB' : '#60A5FA',
+                        }}
+                      >
+                        VIEW ALL →
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View
+                    style={{
+                      backgroundColor: isLight ? '#E0F2FE' : 'rgba(56, 189, 248, 0.15)',
+                      paddingHorizontal: 7,
+                      paddingVertical: 2.5,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: isLight ? '#BAE6FD' : 'rgba(56, 189, 248, 0.35)',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: '800',
+                        color: isLight ? '#0369A1' : '#38BDF8',
+                      }}
+                    >
+                      {currentDayName} (Today)
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Today's Timetable Periods List */}
+                {todaySlots.length > 0 ? (
+                  <View style={{ gap: 8 }}>
+                    {todaySlots.map((slot, sIdx) => {
+                      const slotSub = subjects.find((s) => s.id === slot.subjectId);
+                      const isSportsSlot = slot.subjectId === 'sub_sports' || slotSub?.code === 'SPORTS';
+                      const pKey = `${displayDateStr}_${slot.id}`;
+                      const rec = localPeriodStatuses[pKey] ? { status: localPeriodStatuses[pKey] } : periodRecords[pKey];
+                      const sStart = timeToMinutes(slot.startTime);
+                      const sEnd = timeToMinutes(slot.endTime);
+                      const isCurrentActive = currentMinutes >= sStart && currentMinutes < sEnd;
+
+                      return (
+                        <View
+                          key={slot.id || sIdx}
+                          style={{
+                            backgroundColor: isLight ? '#F8FAFC' : '#121F35',
+                            borderRadius: 12,
+                            padding: 10,
+                            borderWidth: 1,
+                            borderColor: isCurrentActive
+                              ? '#38BDF8'
+                              : isLight
+                              ? '#E2E8F0'
+                              : '#1E2D4A',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 10,
+                          }}
+                        >
+                          {/* Left Time Box */}
+                          <View
+                            style={{
+                              backgroundColor: isLight ? '#F1F5F9' : '#0B1322',
+                              borderRadius: 8,
+                              paddingVertical: 6,
+                              paddingHorizontal: 8,
+                              minWidth: 72,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderWidth: 1,
+                              borderColor: isLight ? '#E2E8F0' : '#1E293B',
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: '900',
+                                color: isLight ? '#0F172A' : '#FFFFFF',
+                              }}
+                            >
+                              {slot.startTime}
+                            </Text>
+                            <View style={{ width: 14, height: 1, backgroundColor: isLight ? '#CBD5E1' : '#334155', marginVertical: 2 }} />
+                            <Text style={{ fontSize: 9.5, color: '#64748B' }}>
+                              {slot.endTime}
+                            </Text>
+                          </View>
+
+                          {/* Center Slot Details */}
+                          <View style={{ flex: 1, borderLeftWidth: 3, borderLeftColor: slotSub?.color || '#38BDF8', paddingLeft: 8 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                              <Text
+                                style={{
+                                  fontSize: 12.5,
+                                  fontWeight: '900',
+                                  color: isLight ? '#0284C7' : '#38BDF8',
+                                }}
+                              >
+                                {slotSub?.code || 'CLASS'}
+                              </Text>
+                              {slot.room ? (
+                                <View
+                                  style={{
+                                    backgroundColor: isLight ? '#F1F5F9' : '#0B1322',
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 1.5,
+                                    borderRadius: 5,
+                                    borderWidth: 1,
+                                    borderColor: isLight ? '#CBD5E1' : '#334155',
+                                  }}
+                                >
+                                  <Text style={{ fontSize: 9.5, fontWeight: '700', color: isLight ? '#475569' : '#94A3B8' }}>
+                                    {slot.room}
+                                  </Text>
+                                </View>
+                              ) : null}
+                              {isCurrentActive ? (
+                                <View
+                                  style={{
+                                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 1.5,
+                                    borderRadius: 5,
+                                    borderWidth: 1,
+                                    borderColor: '#10B981',
+                                  }}
+                                >
+                                  <Text style={{ fontSize: 9, fontWeight: '800', color: '#10B981' }}>
+                                    LIVE NOW
+                                  </Text>
+                                </View>
+                              ) : null}
+                            </View>
+
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: '700',
+                                color: isLight ? '#0F172A' : '#F1F5F9',
+                              }}
+                              numberOfLines={1}
+                            >
+                              {slotSub?.name || 'Academic Class'}
+                            </Text>
+
+                            {(slot.faculty || slotSub?.faculty) ? (
+                              <Text style={{ fontSize: 10.5, color: '#64748B', marginTop: 1 }}>
+                                {slot.faculty || slotSub?.faculty}
+                              </Text>
+                            ) : null}
+                          </View>
+
+                          {/* Right Attendance Status Tag */}
+                          <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
+                            {isSportsSlot ? (
+                              <View style={{ backgroundColor: 'rgba(99, 102, 241, 0.12)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 }}>
+                                <Text style={{ fontSize: 9, fontWeight: '700', color: '#818CF8' }}>No Att.</Text>
+                              </View>
+                            ) : rec?.status === 'attended' ? (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(16, 185, 129, 0.12)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#10B981' }}>
+                                <Check size={10} color="#10B981" strokeWidth={3} />
+                                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#10B981' }}>Attended</Text>
+                              </View>
+                            ) : rec?.status === 'bunked' ? (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(239, 68, 68, 0.12)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#EF4444' }}>
+                                <X size={10} color="#EF4444" strokeWidth={3} />
+                                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#EF4444' }}>Missed</Text>
+                              </View>
+                            ) : (
+                              <View style={{ backgroundColor: isLight ? '#F1F5F9' : '#0B1322', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: isLight ? '#E2E8F0' : '#1E293B' }}>
+                                <Text style={{ fontSize: 9.5, fontWeight: '700', color: '#64748B' }}>Scheduled</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <View
+                    style={{
+                      backgroundColor: isLight ? '#F8FAFC' : '#121F35',
+                      borderRadius: 12,
+                      padding: 14,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: isLight ? '#E2E8F0' : '#1E2D4A',
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: isLight ? '#0F172A' : '#F1F5F9', marginBottom: 2 }}>
+                      No Classes Scheduled Today ({currentDayName})
+                    </Text>
+                    <Text style={{ fontSize: 11, color: '#64748B', textAlign: 'center', marginBottom: 10 }}>
+                      Enjoy your break! Click 'VIEW ALL' to check your timetable for Monday to Friday.
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedWeeklyDay('Monday');
+                        setActiveWeeklyModal(true);
+                      }}
+                      style={{
+                        backgroundColor: '#2563EB',
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 11.5, fontWeight: '800' }}>
+                        View Full Week Timetable →
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
 
               {/* BOX 1: IMPORTANT NOTIFICATIONS (Screenshot 2 & Screenshot 6 - PSGIM Connect) */}
@@ -4728,72 +5006,316 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
           onRequestClose={() => setActiveWeeklyModal(false)}
         >
           <View style={styles.holidayModalBackdrop}>
-            <View style={[styles.holidayModalContainer, { height: '88%' }]}>
-              <View style={styles.holidayModalHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={styles.holidayHeaderIconCircle}>
-                    <CalendarDays size={18} color="#38BDF8" strokeWidth={2.2} />
+            <View style={[styles.holidayModalContainer, { height: '88%', backgroundColor: isLight ? '#FFFFFF' : '#0B1322', borderColor: isLight ? '#E2E8F0' : '#1E2D4A' }]}>
+              <View style={[styles.holidayModalHeader, { borderBottomColor: isLight ? '#E2E8F0' : '#1E2D4A' }]}>
+                <View style={{ flex: 1, marginRight: 12 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    <View style={styles.holidayHeaderIconCircle}>
+                      <CalendarDays size={18} color="#38BDF8" strokeWidth={2.2} />
+                    </View>
+                    <Text style={[styles.holidayModalTitle, { color: isLight ? '#0F172A' : '#F8FAFC' }]}>Weekly Period Index</Text>
+                    {studentRollNo ? (
+                      <View style={{
+                        backgroundColor: isLight ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
+                        borderWidth: 1,
+                        borderColor: isLight ? '#BFDBFE' : '#38BDF8',
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                        borderRadius: 6,
+                      }}>
+                        <Text style={{
+                          color: isLight ? '#2563EB' : '#38BDF8',
+                          fontSize: 11,
+                          fontWeight: '800',
+                          letterSpacing: 0.5,
+                        }}>
+                          Roll No: {toNewRollNo(studentRollNo)}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
-                  <View>
-                    <Text style={styles.holidayModalTitle}>Weekly Timetable</Text>
-                    <Text style={styles.holidayModalSubtitle}>Full Monday–Friday Schedule & Class Venues</Text>
-                  </View>
+                  <Text style={[styles.holidayModalSubtitle, { color: isLight ? '#64748B' : '#94A3B8' }]}>
+                    Showing {selectedWeeklyDay}'s schedule{selectedWeeklyDay === currentDayName ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
+                  </Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => setActiveWeeklyModal(false)}
-                  style={styles.holidayModalCloseBtn}
+                  style={[styles.holidayModalCloseBtn, { backgroundColor: isLight ? '#F1F5F9' : '#121F35', borderColor: isLight ? '#E2E8F0' : '#1E2D4A' }]}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ fontSize: 16, color: '#94A3B8' }}>✕</Text>
+                  <Text style={{ fontSize: 16, color: isLight ? '#64748B' : '#94A3B8' }}>✕</Text>
                 </TouchableOpacity>
               </View>
 
-              <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => {
-                  const daySlots = timetable.filter((s) => s.day === day);
-                  const isCurrentDay = day === currentDayName;
-                  return (
-                    <View key={day} style={{ marginBottom: 16 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <Text style={[styles.sectionPageTitle, { fontSize: sFont(14), marginBottom: 0 }, isCurrentDay && { color: '#38BDF8' }]}>
-                          {day} {isCurrentDay ? '(Today)' : ''}
+              {/* Horizontal Day Selector Pills */}
+              <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => {
+                    const isSelected = selectedWeeklyDay === day;
+                    const isToday = day === currentDayName;
+                    return (
+                      <TouchableOpacity
+                        key={day}
+                        onPress={() => setSelectedWeeklyDay(day)}
+                        activeOpacity={0.7}
+                        style={{
+                          paddingHorizontal: 14,
+                          paddingVertical: 8,
+                          borderRadius: 10,
+                          backgroundColor: isSelected
+                            ? '#2563EB'
+                            : isLight
+                            ? '#F1F5F9'
+                            : '#121F35',
+                          borderWidth: 1,
+                          borderColor: isSelected
+                            ? '#3B82F6'
+                            : isToday
+                            ? '#38BDF8'
+                            : isLight
+                            ? '#CBD5E1'
+                            : '#1E2D4A',
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: isSelected
+                              ? '#FFFFFF'
+                              : isLight
+                              ? isToday
+                                ? '#2563EB'
+                                : '#475569'
+                              : isToday
+                              ? '#38BDF8'
+                              : '#94A3B8',
+                            fontWeight: isSelected || isToday ? '800' : '600',
+                            fontSize: 12.5,
+                          }}
+                        >
+                          {day.slice(0, 3)}{isToday ? ' •' : ''}
                         </Text>
-                        <Text style={{ color: '#64748B', fontSize: sFont(11), fontWeight: '700' }}>
-                          {daySlots.length} sessions
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
+              {/* Slot Cards List for the Selected Day */}
+              <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+                {(() => {
+                  const daySlots = timetable.filter((s) => s.day === selectedWeeklyDay);
+                  if (daySlots.length === 0) {
+                    return (
+                      <View
+                        style={{
+                          padding: 24,
+                          borderRadius: 14,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isLight ? '#F8FAFC' : '#0F1A2C',
+                          borderWidth: 1,
+                          borderColor: isLight ? '#E2E8F0' : '#192841',
+                          marginTop: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            fontWeight: '800',
+                            color: isLight ? '#0F172A' : '#F8FAFC',
+                            marginBottom: 4,
+                          }}
+                        >
+                          No periods scheduled for {selectedWeeklyDay}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: isLight ? '#64748B' : '#94A3B8',
+                          }}
+                        >
+                          Enjoy your day off!
                         </Text>
                       </View>
+                    );
+                  }
 
-                      {daySlots.length > 0 ? (
-                        <View style={{ gap: 8 }}>
-                          {daySlots.map((slot, sIdx) => {
-                            const sub = subjects.find((s) => s.id === slot.subjectId);
-                            return (
-                              <View key={slot.id || sIdx} style={styles.scheduleItemRow}>
-                                <View style={styles.timeTag}>
-                                  <Text style={styles.timeTagText}>{slot.startTime} - {slot.endTime}</Text>
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                  <Text style={styles.scheduleSubTitle}>
-                                    {sub?.name || 'Academic Lecture'}
-                                  </Text>
-                                  <Text style={styles.scheduleRoom}>
-                                    {sub?.code || '24GMxx'} • Room: {slot.room || 'LH-101'}
-                                  </Text>
-                                </View>
-                              </View>
-                            );
-                          })}
-                        </View>
-                      ) : (
-                        <View style={[styles.scheduleItemRow, { opacity: 0.6 }]}>
-                          <Text style={{ color: '#64748B', fontSize: sFont(11), fontStyle: 'italic' }}>
-                            No scheduled academic lectures for {day}.
+                  return daySlots.map((slot, sIdx) => {
+                    const subject = subjects.find((s) => s.id === slot.subjectId);
+                    const isSports = subject?.noAttendance || subject?.code === 'SPORTS' || slot.subjectId === 'sub_sports';
+
+                    return (
+                      <View
+                        key={slot.id || sIdx}
+                        style={{
+                          flexDirection: 'row',
+                          backgroundColor: isLight ? '#FFFFFF' : '#0F1A2C',
+                          borderRadius: 14,
+                          borderWidth: 1,
+                          borderColor: isLight ? '#E2E8F0' : '#192841',
+                          overflow: 'hidden',
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.06,
+                          shadowRadius: 4,
+                          elevation: 1,
+                        }}
+                      >
+                        {/* Left Time Column */}
+                        <View
+                          style={{
+                            width: 75,
+                            backgroundColor: isLight ? '#F8FAFC' : '#070D18',
+                            padding: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRightWidth: 1,
+                            borderRightColor: isLight ? '#E2E8F0' : '#131F33',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: isLight ? '#0F172A' : '#F1F5F9',
+                              fontWeight: '800',
+                              fontSize: 13,
+                            }}
+                          >
+                            {slot.startTime}
+                          </Text>
+                          <View
+                            style={{
+                              width: 2,
+                              height: 12,
+                              backgroundColor: isLight ? '#CBD5E1' : '#1E2D4A',
+                              marginVertical: 4,
+                            }}
+                          />
+                          <Text
+                            style={{
+                              color: isLight ? '#64748B' : '#94A3B8',
+                              fontSize: 11.5,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {slot.endTime}
                           </Text>
                         </View>
-                      )}
-                    </View>
-                  );
-                })}
+
+                        {/* Right Slot Info */}
+                        <View
+                          style={{
+                            flex: 1,
+                            padding: 12,
+                            borderLeftWidth: 4,
+                            borderLeftColor: subject?.color || '#38BDF8',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {/* Top Row: Code & Room */}
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginBottom: 4,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: isLight ? '#2563EB' : '#38BDF8',
+                                fontSize: 12,
+                                fontWeight: '800',
+                                letterSpacing: 0.3,
+                              }}
+                            >
+                              {subject?.code || 'GEN'}
+                            </Text>
+
+                            {isSports ? (
+                              <View
+                                style={{
+                                  backgroundColor: isLight ? '#EFF6FF' : 'rgba(56, 189, 248, 0.12)',
+                                  borderColor: isLight ? '#BFDBFE' : '#38BDF8',
+                                  borderWidth: 1,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 5,
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    color: isLight ? '#2563EB' : '#38BDF8',
+                                    fontSize: 10,
+                                    fontWeight: '700',
+                                  }}
+                                >
+                                  No Attendance
+                                </Text>
+                              </View>
+                            ) : slot.room ? (
+                              <View
+                                style={{
+                                  backgroundColor: isLight ? '#F1F5F9' : '#070D18',
+                                  borderColor: isLight ? '#CBD5E1' : '#1E2D4A',
+                                  borderWidth: 1,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 5,
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    color: isLight ? '#475569' : '#CBD5E1',
+                                    fontSize: 10,
+                                    fontWeight: '700',
+                                  }}
+                                >
+                                  {slot.room}
+                                </Text>
+                              </View>
+                            ) : null}
+                          </View>
+
+                          {/* Subject Title */}
+                          <Text
+                            style={{
+                              color: isLight ? '#0F172A' : '#F8FAFC',
+                              fontSize: 14,
+                              fontWeight: '800',
+                              marginBottom: 6,
+                            }}
+                            numberOfLines={2}
+                          >
+                            {subject?.name || 'Class Slot'}
+                          </Text>
+
+                          {/* Alert Notice Row */}
+                          <View
+                            style={{
+                              backgroundColor: isLight ? '#F8FAFC' : '#070D18',
+                              borderColor: isLight ? '#E2E8F0' : '#131F33',
+                              borderWidth: 1,
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: 6,
+                              alignSelf: 'flex-start',
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: isLight ? '#64748B' : '#94A3B8',
+                                fontSize: 10.5,
+                                fontWeight: '600',
+                              }}
+                            >
+                              {isSports ? 'Not tracked in the ERP' : `Hourly alert scheduled for: ${slot.endTime}`}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  });
+                })()}
               </ScrollView>
             </View>
           </View>
