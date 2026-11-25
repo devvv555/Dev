@@ -32,7 +32,7 @@ export const PSGIM_MASTER_STUDENTS: Record<string, PsgimStudentInfo> = {
   "D26AA10": { dRollNo: "D26AA10", collegeRollNo: "26AA24", name: "KANISHKA SUNDARESAN", batch: "A" },
   "D26AA11": { dRollNo: "D26AA11", collegeRollNo: "26AA39", name: "RAAMPRASANTH R", batch: "A" },
   "D26AA12": { dRollNo: "D26AA12", collegeRollNo: "26AA10", name: "GOPIKA K", batch: "A" },
-  "D26AA13": { dRollNo: "D26AA13", collegeRollNo: "26AA34", name: "POOJA VARSINEE P", batch: "A" },
+  "D26AA13": { dRollNo: "D26AA13", collegeRollNo: "26AA34", name: "POOJA VARSINEE P", batch: "A", dob: "2006-02-23", dobPassword: "23FEB06" },
   "D26AA14": { dRollNo: "D26AA14", collegeRollNo: "26AA35", name: "PRAKASH VELLINGIRI G", batch: "A" },
   "D26AA15": { dRollNo: "D26AA15", collegeRollNo: "26AA36", name: "PRITHIVE RAJ M", batch: "A" },
   "D26AA16": { dRollNo: "D26AA16", collegeRollNo: "26AA18", name: "HARSHAVARDHAN A", batch: "A" },

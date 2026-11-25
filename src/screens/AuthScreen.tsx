@@ -125,15 +125,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     // In Web / PWA mode or if the external Studzone portal is unreachable, check against the Master Directory
     if (!result.success) {
       const student = getMasterStudent(cleanRollNo) || getMasterStudent(officialRoll) || getMasterStudent(toOldRollNo(cleanRollNo));
-      const cleanPass = rawPassword.trim().toUpperCase();
+      const cleanPass = rawPassword.trim().toUpperCase().replace(/[\/\-\s]/g, '');
       const isDevdarshanMatch =
         (student?.collegeRollNo === '26AB12' || student?.dRollNo === 'D26AB05' || cleanRollNo === '26AB12' || cleanRollNo === 'D26AB05' || cleanRollNo === '26AB05') &&
         (cleanPass === '13DEC05' || cleanPass === '13AUG05');
       const isRaksathaMatch =
         (student?.collegeRollNo === '26AC38' || student?.dRollNo === 'D26AC45' || cleanRollNo === '26AC38' || cleanRollNo === 'D26AC45') &&
-        (cleanPass === '19DEC05' || cleanPass === '19DEC2005' || cleanPass === '19/12/2005' || cleanPass === '19-12-2005');
+        (cleanPass === '19DEC05' || cleanPass === '19DEC2005' || cleanPass === '19122005' || cleanPass === '191205');
+      const isPoojaMatch =
+        (student?.collegeRollNo === '26AA34' || student?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13' || cleanRollNo === 'D26AA34') &&
+        (cleanPass === '23FEB06' || cleanPass === '23FEB2006' || cleanPass === '23022006' || cleanPass === '230206');
 
-      if ((student && student.dobPassword && student.dobPassword.toUpperCase() === cleanPass) || isDevdarshanMatch || isRaksathaMatch) {
+      const isDobPasswordMatch = student?.dobPassword && (
+        student.dobPassword.toUpperCase().replace(/[\/\-\s]/g, '') === cleanPass ||
+        (cleanPass.endsWith('2006') && student.dobPassword.toUpperCase().endsWith('06') && cleanPass.startsWith(student.dobPassword.substring(0, 5).toUpperCase()))
+      );
+
+      if (isDobPasswordMatch || isDevdarshanMatch || isRaksathaMatch || isPoojaMatch) {
         result = { success: true, rollNo: officialRoll };
       } else {
         setLoginStep('credentials');

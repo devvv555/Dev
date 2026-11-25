@@ -522,6 +522,8 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
   const [simulatedLeaveHours, setSimulatedLeaveHours] = useState<number>(1);
 
   const displayRollNo = toNewRollNo(studentRollNo) || studentRollNo;
+  const studentBatchLetter = (displayRollNo && displayRollNo.length >= 5 ? displayRollNo.charAt(3).toUpperCase() : (studentRollNo && studentRollNo.length >= 5 ? studentRollNo.charAt(3).toUpperCase() : 'B'));
+  const displaySection = studentBatchLetter === 'A' ? 'Section A' : studentBatchLetter === 'C' ? 'Section C' : studentBatchLetter === 'D' ? 'Section D' : 'Section B';
   const avatarLetter = (studentName || 'D').trim().charAt(0).toUpperCase();
 
   // Aggregate overall attendance stats across subjects
@@ -989,7 +991,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                   Hello, <Text style={{ color: isLight ? '#0F172A' : '#FFFFFF' }}>{studentName.toUpperCase()}</Text> ({displayRollNo})
                 </Text>
                 <View style={styles.classPill}>
-                  <Text style={styles.classPillText}>Class: I MBA - Section B</Text>
+                  <Text style={styles.classPillText}>Class: I MBA - {displaySection}</Text>
                 </View>
               </Animated.View>
 
@@ -3056,7 +3058,7 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
                         {studentRollNo && studentRollNo !== displayRollNo ? ` (${studentRollNo})` : ''}
                       </Text>
                       <View style={styles.profileClassPill}>
-                        <Text style={styles.profileClassPillText}>I MBA - Section B</Text>
+                        <Text style={styles.profileClassPillText}>I MBA - {displaySection}</Text>
                       </View>
                     </View>
                   </View>
@@ -4948,35 +4950,11 @@ export const ChristStylePreviewModal: React.FC<ChristStylePreviewProps> = ({
           <View style={styles.holidayModalBackdrop}>
             <View style={[styles.holidayModalContainer, { height: '88%', backgroundColor: isLight ? '#FFFFFF' : '#0B1322', borderColor: isLight ? '#E2E8F0' : '#1E2D4A' }]}>
               <View style={[styles.holidayModalHeader, { borderBottomColor: isLight ? '#E2E8F0' : '#1E2D4A' }]}>
-                <View style={{ flex: 1, marginRight: 12 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                    <View style={styles.holidayHeaderIconCircle}>
-                      <CalendarDays size={18} color="#38BDF8" strokeWidth={2.2} />
-                    </View>
-                    <Text style={[styles.holidayModalTitle, { color: isLight ? '#0F172A' : '#F8FAFC' }]}>Weekly Period Index</Text>
-                    {studentRollNo ? (
-                      <View style={{
-                        backgroundColor: isLight ? '#EFF6FF' : 'rgba(56, 189, 248, 0.15)',
-                        borderWidth: 1,
-                        borderColor: isLight ? '#BFDBFE' : '#38BDF8',
-                        paddingHorizontal: 8,
-                        paddingVertical: 2,
-                        borderRadius: 6,
-                      }}>
-                        <Text style={{
-                          color: isLight ? '#2563EB' : '#38BDF8',
-                          fontSize: 11,
-                          fontWeight: '800',
-                          letterSpacing: 0.5,
-                        }}>
-                          Roll No: {toNewRollNo(studentRollNo)}
-                        </Text>
-                      </View>
-                    ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <View style={styles.holidayHeaderIconCircle}>
+                    <CalendarDays size={18} color="#38BDF8" strokeWidth={2.2} />
                   </View>
-                  <Text style={[styles.holidayModalSubtitle, { color: isLight ? '#64748B' : '#94A3B8' }]}>
-                    Showing {selectedWeeklyDay}'s schedule{selectedWeeklyDay === currentDayName ? ' (Today)' : ''}. Hourly attendance alerts trigger at the end of each slot.
-                  </Text>
+                  <Text style={[styles.holidayModalTitle, { color: isLight ? '#0F172A' : '#F8FAFC' }]}>Weekly Period Index</Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => setActiveWeeklyModal(false)}
