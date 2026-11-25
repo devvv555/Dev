@@ -55,7 +55,7 @@ const scriptMatches = distHtml.match(/<script[^>]+src=["'][^"']+["'][^>]*><\/scr
 
 // Use public/index.html as template and inject the Expo bundle script
 let finalHtml = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
-const scriptsToInject = scriptMatches.join('\n  ');
+const scriptsToInject = scriptMatches.map((tag) => tag.replace(/(src=["'][^"']+)["']/, '$1?v=127"')).join('\n  ');
 finalHtml = finalHtml.replace('</body>', `  ${scriptsToInject}\n  </body>`);
 
 fs.writeFileSync(indexPath, finalHtml, 'utf8');

@@ -96,6 +96,24 @@
       }
     </style>
 
+    <!-- Auto-Cache Busting on Mobile: Purge stale CacheStorage when version bumps -->
+    <script>
+      (function() {
+        var APP_VER = 'v127';
+        try {
+          var saved = localStorage.getItem('psgim_app_ver');
+          if (saved !== APP_VER) {
+            localStorage.setItem('psgim_app_ver', APP_VER);
+            if (typeof window !== 'undefined' && 'caches' in window) {
+              caches.keys().then(function(keys) {
+                return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+              });
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Anti-Zoom System: Block pinch-to-zoom, iOS Safari gestures, double-tap zoom & trackpad/wheel zoom -->
     <script>
       (function() {
@@ -189,7 +207,7 @@
           }
         } else {
           window.addEventListener('load', function () {
-            navigator.serviceWorker.register('/sw.js')
+            navigator.serviceWorker.register('/sw.js?v=127')
               .then(function (registration) {
                 console.log('[PWA] Service Worker registered with scope: ', registration.scope);
                 registration.update();
@@ -200,9 +218,8 @@
                     installingWorker.onstatechange = () => {
                       if (installingWorker.state === 'installed') {
                         if (navigator.serviceWorker.controller) {
-                          // Prompt or auto-reload when new version is installed
                           console.log('[PWA] New version installed. Reloading cleanly...');
-                          window.location.reload();
+                          window.location.href = window.location.origin + '/?v=127&t=' + Date.now();
                         }
                       }
                     };
@@ -219,7 +236,7 @@
           navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (!refreshing) {
               refreshing = true;
-              window.location.reload();
+              window.location.href = window.location.origin + '/?v=127&t=' + Date.now();
             }
           });
         }

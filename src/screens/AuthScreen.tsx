@@ -125,19 +125,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
     // In Web / PWA mode or if the external Studzone portal is unreachable, check against the Master Directory
     if (!result.success) {
       const student = getMasterStudent(cleanRollNo) || getMasterStudent(officialRoll) || getMasterStudent(toOldRollNo(cleanRollNo));
-      const cleanPass = rawPassword.trim().toUpperCase().replace(/[\/\-\s]/g, '');
+      const cleanPass = rawPassword.trim().toUpperCase().replace(/[\/\-\s\.]/g, '');
       const isDevdarshanMatch =
         (student?.collegeRollNo === '26AB12' || student?.dRollNo === 'D26AB05' || cleanRollNo === '26AB12' || cleanRollNo === 'D26AB05' || cleanRollNo === '26AB05') &&
-        (cleanPass === '13DEC05' || cleanPass === '13AUG05');
+        (cleanPass === '13DEC05' || cleanPass === '13AUG05' || cleanPass === '13082005' || cleanPass === '130805' || cleanPass === '13122005' || cleanPass === '131205');
       const isRaksathaMatch =
         (student?.collegeRollNo === '26AC38' || student?.dRollNo === 'D26AC45' || cleanRollNo === '26AC38' || cleanRollNo === 'D26AC45') &&
         (cleanPass === '19DEC05' || cleanPass === '19DEC2005' || cleanPass === '19122005' || cleanPass === '191205');
       const isPoojaMatch =
-        (student?.collegeRollNo === '26AA34' || student?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13') &&
+        (student?.collegeRollNo === '26AA34' || student?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13' || cleanRollNo === '26AA13' || cleanRollNo === 'D26AA34') &&
         (cleanPass === '23FEB06' || cleanPass === '23FEB2006' || cleanPass === '23022006' || cleanPass === '230206');
 
       const isDobPasswordMatch = student?.dobPassword && (
-        student.dobPassword.toUpperCase().replace(/[\/\-\s]/g, '') === cleanPass ||
+        student.dobPassword.toUpperCase().replace(/[\/\-\s\.]/g, '') === cleanPass ||
         (cleanPass.endsWith('2006') && student.dobPassword.toUpperCase().endsWith('06') && cleanPass.startsWith(student.dobPassword.substring(0, 5).toUpperCase()))
       );
 
@@ -304,6 +304,42 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
           {errorMessage && !isLoading && (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>[!] {errorMessage}</Text>
+              {Platform.OS === 'web' && (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      if (typeof window !== 'undefined') {
+                        if (window.caches) {
+                          const keys = await caches.keys();
+                          await Promise.all(keys.map((k) => caches.delete(k)));
+                        }
+                        if ('serviceWorker' in navigator) {
+                          const regs = await navigator.serviceWorker.getRegistrations();
+                          await Promise.all(regs.map((r) => r.unregister()));
+                        }
+                        window.location.href = window.location.origin + '/?force_reload=' + Date.now();
+                      }
+                    } catch (e) {
+                      window.location.reload();
+                    }
+                  }}
+                  style={{
+                    marginTop: 8,
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    borderRadius: 6,
+                    alignSelf: 'flex-start',
+                    borderWidth: 1,
+                    borderColor: 'rgba(239, 68, 68, 0.4)',
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: '#FCA5A5', fontSize: 11, fontWeight: '800' }}>
+                    🔄 Clear Mobile Cache & Force Update
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 

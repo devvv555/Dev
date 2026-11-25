@@ -251,19 +251,19 @@ export const StudzoneService = {
 
     const checkMasterCredentials = (): boolean => {
       const master = getMasterStudent(cleanRollNo) || getMasterStudent(collegeRollNo) || getMasterStudent(outboundRollNo);
+      const passNorm = cleanPassword.toUpperCase().replace(/[\/\-\s\.]/g, '');
       const isDevdarshanMatch =
         (master?.collegeRollNo === '26AB12' || master?.dRollNo === 'D26AB05' || cleanRollNo === '26AB12' || cleanRollNo === 'D26AB05' || cleanRollNo === '26AB05') &&
-        (cleanPassword === '13DEC05' || cleanPassword === '13AUG05');
+        (passNorm === '13DEC05' || passNorm === '13AUG05' || passNorm === '13082005' || passNorm === '130805' || passNorm === '13122005' || passNorm === '131205');
       if (isDevdarshanMatch) return true;
 
       const isPoojaMatch =
-        (master?.collegeRollNo === '26AA34' || master?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13') &&
-        (cleanPassword === '23FEB06' || cleanPassword === '23FEB2006' || cleanPassword === '23022006' || cleanPassword === '23/02/2006' || cleanPassword === '23-02-2006' || cleanPassword === '230206');
+        (master?.collegeRollNo === '26AA34' || master?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13' || cleanRollNo === '26AA13' || cleanRollNo === 'D26AA34') &&
+        (passNorm === '23FEB06' || passNorm === '23FEB2006' || passNorm === '23022006' || passNorm === '230206');
       if (isPoojaMatch) return true;
 
       if (master && master.dobPassword) {
-        const storedNorm = master.dobPassword.toUpperCase().replace(/[\/\-\s]/g, '');
-        const passNorm = cleanPassword.toUpperCase().replace(/[\/\-\s]/g, '');
+        const storedNorm = master.dobPassword.toUpperCase().replace(/[\/\-\s\.]/g, '');
         if (storedNorm === passNorm) return true;
         if (passNorm.endsWith('2006') && storedNorm.endsWith('06') && passNorm.startsWith(storedNorm.substring(0, 5))) return true;
         if (storedNorm.endsWith('2006') && passNorm.endsWith('06') && storedNorm.startsWith(passNorm.substring(0, 5))) return true;
