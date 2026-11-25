@@ -257,7 +257,7 @@ export const StudzoneService = {
       if (isDevdarshanMatch) return true;
 
       const isPoojaMatch =
-        (master?.collegeRollNo === '26AA34' || master?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13' || cleanRollNo === 'D26AA34') &&
+        (master?.collegeRollNo === '26AA34' || master?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13') &&
         (cleanPassword === '23FEB06' || cleanPassword === '23FEB2006' || cleanPassword === '23022006' || cleanPassword === '23/02/2006' || cleanPassword === '23-02-2006' || cleanPassword === '230206');
       if (isPoojaMatch) return true;
 

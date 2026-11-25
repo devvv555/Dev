@@ -133,7 +133,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, onAdminL
         (student?.collegeRollNo === '26AC38' || student?.dRollNo === 'D26AC45' || cleanRollNo === '26AC38' || cleanRollNo === 'D26AC45') &&
         (cleanPass === '19DEC05' || cleanPass === '19DEC2005' || cleanPass === '19122005' || cleanPass === '191205');
       const isPoojaMatch =
-        (student?.collegeRollNo === '26AA34' || student?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13' || cleanRollNo === 'D26AA34') &&
+        (student?.collegeRollNo === '26AA34' || student?.dRollNo === 'D26AA13' || cleanRollNo === '26AA34' || cleanRollNo === 'D26AA13') &&
         (cleanPass === '23FEB06' || cleanPass === '23FEB2006' || cleanPass === '23022006' || cleanPass === '230206');
 
       const isDobPasswordMatch = student?.dobPassword && (
